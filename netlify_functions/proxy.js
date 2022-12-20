@@ -1,23 +1,25 @@
 const axios = require('axios');
-const cors = require('cors')({origin: true});
 
 exports.handler = async (event, context) => {
-  return new Promise((resolve, reject) => {
-    cors(event, context, () => {
-      const { url } = event.queryStringParameters;
-      axios.get(url)
-        .then(response => {
-          resolve({
-            statusCode: 200,
-            body: response.data
-          });
-        })
-        .catch(error => {
-          reject({
-            statusCode: error.response.status,
-            body: error.response.statusText
-          });
-        });
-    });
-  });
+  const { url } = event.queryStringParameters;
+  try {
+    const response = await axios.get(url);
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      body: response.data
+    };
+  } catch (error) {
+    return {
+      statusCode: error.response.status,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      body: error.response.statusText
+    };
+  }
 };
