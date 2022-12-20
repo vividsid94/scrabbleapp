@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+@import url('https://fonts.googleapis.com/css?family=Dancing+Script');
 *{
 	font-family: 'Josefin Sans';
 }
@@ -7,10 +8,28 @@
 	padding: 10px;
 }
 
+.page{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title{
+  display: flex;
+  justify-content: center;
+  font-size: 50px;
+  margin-top: 25px;
+  font-family: 'Dancing Script';
+}
+
+.mainPanel{
+  display: flex;
+  flex-direction: row;
+}
+
 .playerPanel{
   width: 350px;
   height: auto;
-  margin-bottom: 35px;
   font-size: 20px;
   background-color: linear-gradient(45deg, transparent 5%, #9c79b8 5%);
   background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
@@ -123,9 +142,26 @@
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
+  justify-content: space-evenly;
 }
+
+
 
 .Rack{
 	display: flex;
   justify-content: center;
+}
+
+@media screen and (max-width: 992px) {
+  .rightPanel{
+    padding: 24px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
+  .mainPanel{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
 }

@@ -213,9 +213,12 @@ export default function Home(){
   }
 
   return (
-    <Box sx={{ display: 'flex' }} onKeyDown={() => nextPlay(moves[currentMove])}>
+    <Box className={styles.page}>
       <Sidenav/>
-      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+      <Box className={styles.title}>
+        Annotated Game Viewer
+      </Box>
+      <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Board board={createBoard()} points={pointsScored} move={moves[currentMove]}/>   
         </Box>
