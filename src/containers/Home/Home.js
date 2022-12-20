@@ -8,6 +8,7 @@ import dictionary from '../../components/AppContent/Dictionary/nwl20bings.json';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
+import { GoQuestion } from "react-icons/go";
 
 import cellBonusMap from "../../components/AppContent/Board/cellBonusMap.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
@@ -213,10 +214,11 @@ export default function Home(){
   }
 
   return (
-    <Box className={styles.page}>
+    <Box sx={{ display: 'flex' }}>
       <Sidenav/>
+      <Box className={styles.page}>
       <Box className={styles.title}>
-        Annotated Game Viewer
+        Annotated Game Viewer <GoQuestion className={styles.questionMark}></GoQuestion>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -253,7 +255,8 @@ export default function Home(){
           </Box>  
         </Box>
 
-      </Box>     
+      </Box>  
+      </Box>   
     </Box>
   )
 }

@@ -4,6 +4,11 @@
 	font-family: 'Josefin Sans';
 }
 
+.questionMark{
+  font-size: 26px;
+  cursor: pointer;
+}
+
 .poolBox{
 	padding: 10px;
 }
