@@ -4,37 +4,38 @@ export default function cellBonusMap(type){
         case 0:
             result = {
                 "value": "",
-                "color": "white"
+                "color": "#FDF5D8",
+                "image": "url('https://www.transparenttextures.com/patterns/bright-squares.png')"
             };
             break;
         case 1:
             result = {
                 "value": "",
-                "color": "lightblue"
+                "color": "#B4D6F8"
             };
             break;
         case 2:
             result = {
                 "value": "",
-                "color": "purple"
+                "color": "#4C3DE0"
             };
             break;
         case 3:
             result = {
                 "value": "",
-                "color": "pink"
+                "color": "#F8B4F1"
             };
             break;
         case 4:
             result = {
                 "value": "",
-                "color": "red"
+                "color": "#BE3939"
             };
             break;
         default:
             result = {
                 "value": type,
-                "color": "#FF013C"
+                "color": "#49694B"
             };
     }
     return result;

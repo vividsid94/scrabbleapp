@@ -22,13 +22,13 @@ export default function Cell(rowIndex, colIndex, bonus, type) {
 
     if (type === "board"){
         //return (<img style={{ width: '20px', height: '20px'}} src="images/white-pro/A.png"></img>);
-        return (<div style={{ backgroundColor: bonus.color, display: 'flex', width: '30px', height: '30px', textAlign: 'center', justifyContent: 'center', alignItems: 'flex-end', fontSize: '25px' }}>{bonus.value}</div>);
+        return (<div style={{ backgroundColor: bonus.color, backgroundImage: bonus.image, display: 'flex', width: '30px', height: '30px', textAlign: 'center', justifyContent: 'center', alignItems: 'flex-end', fontSize: '25px' }}>{bonus.value}</div>);
     }
     else if (type === "pool"){
         return (<div style={{ backgroundColor: "lightgrey", display: 'flex', width: '15px', height: '15px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', border: "2px solid black", color: "black", fontSize: '12px' }}>{bonus.value}</div>);
     }
     else if (type === "rack"){
-        return (<div style={{ backgroundColor: bonus.color, display: 'flex', width: '45px', height: '45px', textAlign: 'center', justifyContent: 'center', alignItems: 'center', fontSize: '33px' }}>{bonus.value}</div>);
+        return bonus.value;
     }
     else{
         return (<div style={{ backgroundColor: bonus.color, display: 'flex', width: '40px', height: '40px', textAlign: 'center', justifyContent: 'center', alignItems: 'flex-end' }}>{bonus.value}</div>);

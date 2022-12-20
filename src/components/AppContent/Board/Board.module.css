@@ -8,6 +8,13 @@
   margin-bottom: 10px;
 }
 
+.tableContainer table{
+	border-spacing: 0px !important;
+	border: 1px solid rgb(173, 88, 39);
+	background-color: lightgray;
+	background-image: url("https://www.transparenttextures.com/patterns/brushed-alum.png");
+}
+
 .Footer{
   position: relative;
   background: purple;

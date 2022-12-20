@@ -1,5 +1,4 @@
 import Cell from './Cell';
-import cellBonusMap from './cellBonusMap';
 import styles from './Board.module.css';
 import { Box } from '@mui/system';
 
@@ -11,7 +10,7 @@ export default function Board(props) {
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
-                    Left element
+                    
                 </Box>
                 <Box className={styles.tableContainer}>
                     <table>
@@ -25,7 +24,7 @@ export default function Board(props) {
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    Right element
+                    
                 </Box>
             </Box>
             <Box sx={{display: props.points == "0" ? 'none' : 'flex'}} className={styles.Footer}>

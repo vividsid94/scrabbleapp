@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+*{
+	font-family: 'Josefin Sans', sans-serif;
+}
+
+.Rack{
+    display: flex;
+    flex-direction: row;
+    font-size: 25px;
+}
+.Tile{
+    width: 45px;
+    height: 45px;
+    background-color: purple;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1.5px;
+    border-radius: 6px;
+    font-size: 30px;
+}

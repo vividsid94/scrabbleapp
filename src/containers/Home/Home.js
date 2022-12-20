@@ -67,8 +67,19 @@ export default function Home(){
     },(errRes)=>{
         console.log(errRes)
     })
+
+
   }, []);
 
+  function handleKeyDown(event) {
+    // Check if the key pressed is the right arrow key
+    if (event.keyCode === 39) {
+      setMoves(prevMoves => [...prevMoves, 'Right arrow key pressed']);
+      console.log(moves)
+      nextPlay(moves[currentMove]);
+    }
+  }
+  
   function createBoard() {
     return (
         boardCoords.map((row, rowIndex) => (
@@ -85,7 +96,7 @@ export default function Home(){
       move = "LOADING LOADING LOADING LOADING";
     }
     const parts = move.split(" ");
-    const rack = parts[1].split('');
+    const rack = parts[1].replace(/\?/g, " ").split('');
     return (
       rack.map((col, colIndex) => (
         Cell("0", colIndex, {"color": "purple", "value": col}, "rack")
@@ -202,20 +213,15 @@ export default function Home(){
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex' }} onKeyDown={() => nextPlay(moves[currentMove])}>
       <Sidenav/>
       <Box sx={{ display: 'flex', flexDirection: 'row' }}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board board={createBoard()} points={pointsScored} move={moves[currentMove]}/>  
-          <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
-            <button className={styles.progressBtn} onClick={() => previousPlay(moves[currentMove - 1])}>Previous Play</button> 
-            <button className={styles.progressBtn} onClick={() => nextPlay(moves[currentMove])}>Next Play</button> 
-            <button className={styles.progressBtn}>New Game</button> 
-          </Box>  
+          <Board board={createBoard()} points={pointsScored} move={moves[currentMove]}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
-          <Box sx={{height: '200px', width: "350px", marginBottom: "50px"}} className={styles.progressBtn}>
+          <Box className={styles.playerPanel}>
             Player 1
             <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 1 ? 'hidden' : 'visible'}}>
               <Rack board={createRack()}/> 
@@ -224,7 +230,7 @@ export default function Home(){
               {player1points} points
             </Box>
           </Box>  
-          <Box sx={{height: '200px', width: "350px", marginBottom: "50px"}} className={styles.progressBtn}>
+          <Box className={styles.playerPanel}>
             Player 2
             <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 0 ? 'hidden' : 'visible'}}>
               <Rack sx={{display: "none !important"}} board={createRack()}/>  
@@ -233,7 +239,11 @@ export default function Home(){
               {player2points} points
             </Box>
           </Box>  
-          <Box sx={{height: '200px', width: "350px", marginBottom: "50px"}} className={styles.progressBtn}>
+          <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
+            <button className={styles.progressBtn} onClick={() => previousPlay(moves[currentMove - 1])}>Previous Play</button> 
+            <button className={styles.progressBtn} onClick={() => nextPlay(moves[currentMove])}>Next Play</button> 
+          </Box> 
+          <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
               <Pool board={createPool()}/>  
             </Box>

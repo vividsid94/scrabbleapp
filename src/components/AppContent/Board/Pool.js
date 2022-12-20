@@ -5,8 +5,8 @@ export default function Pool(props) {
     // Create a new 2D array with 7 elements per inner array
 
     const rows = [];
-    for (let i = 0; i < props.board.length; i += 15) {
-      rows.push(props.board.slice(i, i + 15));
+    for (let i = 0; i < props.board.length; i += 14) {
+      rows.push(props.board.slice(i, i + 14));
     }
   
     return (
