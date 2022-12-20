@@ -1,0 +1,25 @@
+
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+*{
+	font-family: 'Josefin Sans';
+}
+
+.link{
+	color: blue !important;
+    text-decoration: none !important;
+}
+.link:hover{
+	color: black !important;
+    text-decoration: none !important;
+}
+.cfLogoContainer{
+    padding: 20px !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+.btnContainer{
+    margin-left: 5% !important;
+}
+.customDrawer{
+    position: relative !important;
+}
