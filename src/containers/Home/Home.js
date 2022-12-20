@@ -59,8 +59,8 @@ export default function Home(){
   useEffect(() => {
     let randomNumber = getRandomNumber(10000, 40000).toString();
     let first3 = Math.floor(randomNumber / 100).toString().substring(0, 3);
-    let link = 'https://thingproxy.freeboard.io/fetch/http://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + randomNumber + '.gcg';
-    axios.get(link)
+    let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + randomNumber + '.gcg';
+    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
     .then((posRes)=>{
         setGameArray(posRes.data.toString().split("\n"));
         setMoves(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
