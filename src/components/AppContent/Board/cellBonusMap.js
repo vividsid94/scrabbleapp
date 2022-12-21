@@ -35,7 +35,7 @@ export default function cellBonusMap(type){
         default:
             result = {
                 "value": type,
-                "color": "#49694B"
+                "color": "#306B73"
             };
     }
     return result;

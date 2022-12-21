@@ -40,7 +40,6 @@
   background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
   border: 0;
   color: #fff;
-  box-shadow: 6px 0px 0px #00E6F6;
   position: relative;
   line-height: 50px;
 }
@@ -155,6 +154,11 @@
   flex-direction: column;
   justify-content: space-between;
   height: 400px;
+}
+
+.Arrows{
+  cursor: pointer;
+  font-size: 25px;
 }
 
 
