@@ -67,7 +67,13 @@ export default function Home({ onChange }){
   }
 
   useEffect(() => {
-    let randomNumber = getRandomNumber(10000, 40000).toString();
+    let randomNumber;
+    if (mode === "VIEWER"){
+      randomNumber = 36230;
+    }
+    else{
+      randomNumber = getRandomNumber(10000, 40000).toString();
+    }
     let first3 = Math.floor(randomNumber / 100).toString().substring(0, 3);
     let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + randomNumber + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
@@ -77,9 +83,7 @@ export default function Home({ onChange }){
     },(errRes)=>{
         console.log(errRes)
     })
-
-
-  }, []);
+  }, [mode]);
   
   function createBoard() {
     return (
@@ -158,6 +162,7 @@ export default function Home({ onChange }){
   }
 
   function nextPlay(move){
+    move = move.replace(/\s+/g, ' ');
     console.log(move)
     const lookup = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9, J: 10, K: 11, L: 12, M: 13, N: 14, O: 15 };
     const parts = move.split(" ");
@@ -168,6 +173,7 @@ export default function Home({ onChange }){
     let score = parts[5];
     let newBoardCoords = [...boardCoords];
     let newPool = [...pool];
+    console.log(parts)
     if (location[0] !== "-"){
       if (Number.isInteger(parseInt(location[0]))) {
         const locationParts = location.match(/(\d+)(\D+)/);  // This will create an array with the parts ["12", "G"]
@@ -176,11 +182,11 @@ export default function Home({ onChange }){
         for (let i = 0; i < play.length; i++) {
           if (play[i].match(/[a-z]/)){
             setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part1 - 1][lookup[part2] - 1 + i] = " ";
+            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = " ";
           }
           else if (play[i] !== "."){
             setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part1 - 1][lookup[part2] - 1 + i] = play[i];
+            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = play[i];
           }
         }
       }
@@ -191,11 +197,11 @@ export default function Home({ onChange }){
         for (let i = 0; i < play.length; i++) {
           if (play[i].match(/[a-z]/)){
             setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part2 - 1  + i][lookup[part1] - 1] = " ";
+            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = " ";
           }
           else  if (play[i] !== "."){
             setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part2 - 1  + i][lookup[part1] - 1] = play[i];
+            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = play[i];
           }
         }
       }
