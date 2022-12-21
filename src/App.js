@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router, Route, Routes
 } from "react-router-dom";
 import "./App.css";
+import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
 
 function App() {
@@ -12,7 +13,8 @@ function App() {
       <header className="App-header" style={{backgroundColor: appState === '' ? '#282c34' : '#E7AD7D'}}>
         <Router>
           <Routes>
-            <Route path="/" element={<Home onChange={setAppState}/>} />
+            <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
+            <Route path="/" element={<Home/>} />
           </Routes>
         </Router>
       </header>

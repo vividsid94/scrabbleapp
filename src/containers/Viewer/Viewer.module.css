@@ -27,34 +27,6 @@
   font-family: 'Dancing Script';
 }
 
-.subTitle{
-  width: 50%;
-  margin: 25px auto;
-}
-
-.homeButtonContainer{
-  width: 50%;
-  margin: 25px auto;
-}
-
-/* CSS */
-.homeButton {
-  padding: 0px 25px;
-  cursor: pointer;
-  height: 50px; 
-  background: linear-gradient(45deg, transparent 5%, #14000b 5%);
-  border: 0;
-  color: #fff;
-  letter-spacing: 2px;
-  box-shadow: 6px 0px 0px #00E6F6;
-  outline: transparent;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-}
-
-
 .mainPanel{
   display: flex;
   flex-direction: row;
