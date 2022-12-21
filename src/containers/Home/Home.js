@@ -119,8 +119,9 @@ export default function Home({ onChange }){
   }
 
   function previousPlay(move){
+    move = move.replace(/\s+/g, ' ');
     const lookup = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9, J: 10, K: 11, L: 12, M: 13, N: 14, O: 15 };
-
+    console.log(move);
     const parts = move.split(" ");
     const location = parts[2];
     const play = parts[3];
@@ -135,7 +136,7 @@ export default function Home({ onChange }){
         const part2 = locationParts[2];  // This will be "G"
         for (let i = 0; i < play.length; i++) {
           if (play[i] !== ".")
-            newBoardCoords[part1 - 1][lookup[part2] - 1 + i] = origBoardCoords[part1 - 1][lookup[part2] - 1 + i];
+            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = origBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i];
         }
       }
       else {
@@ -144,7 +145,7 @@ export default function Home({ onChange }){
         const part2 = locationParts[2];  // This will be "G"
         for (let i = 0; i < play.length; i++) {
           if (play[i] !== ".")
-            newBoardCoords[part2 - 1  + i][lookup[part1] - 1] = origBoardCoords[part2 - 1  + i][lookup[part1] - 1];
+            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = origBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1];
         }
       }
     }
@@ -168,7 +169,6 @@ export default function Home({ onChange }){
     const parts = move.split(" ");
     const location = parts[2];
     const play = parts[3];
-
     let points = parts[4];
     let score = parts[5];
     let newBoardCoords = [...boardCoords];
