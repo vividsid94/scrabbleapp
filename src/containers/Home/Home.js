@@ -18,10 +18,10 @@ export default function Home(){
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.title}>
-          Scrabble Sense<GoQuestion className={styles.questionMark}></GoQuestion>
+          Word Sense<GoQuestion className={styles.questionMark}></GoQuestion>
         </Box>
         <Box className={styles.subTitle}>
-          Hello! I am Scrabble Sense. I am a React-only project designed as a happy marriage between Scrabble and UX. I will be rolling out a wide variety of games and tools, so come on in and join the fun!
+          Hello! I am Word Sense. I am a React-only project designed as a happy marriage between Scrabble® and UX. I will be rolling out a wide variety of games and tools, so come on in and join the fun!
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
