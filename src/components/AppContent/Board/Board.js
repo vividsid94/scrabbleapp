@@ -28,7 +28,7 @@ export default function Board(props) {
                 </Box>
             </Box>
             <Box sx={{display: props.points == "0" ? 'none' : 'flex'}} className={styles.Footer}>
-                {props.move}
+                {props.move != null ? props.move : "No previous play"}
             </Box>
         </Box>
     )

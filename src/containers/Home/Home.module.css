@@ -147,7 +147,14 @@
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: space-between;
+}
+
+.topPlayerPanel{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 400px;
 }
 
 

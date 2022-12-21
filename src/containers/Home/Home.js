@@ -15,6 +15,8 @@ import Cell from "../../components/AppContent/Board/Cell.js";
 
 export default function Home({ onChange }){
   const [gameArray, setGameArray] = useState("");
+  const [player1, setPlayer1] = useState("");
+  const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moves, setMoves] = useState("");
   const [currentMove, setCurrentMove] = useState(0);
@@ -80,10 +82,30 @@ export default function Home({ onChange }){
     .then((posRes)=>{
         setGameArray(posRes.data.toString().split("\n"));
         setMoves(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
+        setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
+        setPlayer2(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))));
     },(errRes)=>{
         console.log(errRes)
     })
   }, [mode]);
+
+  const getPlayerName = (input) => {
+    const regex = /#player\d+\s+(\S+)/;
+    return input[0].replace(regex, "");
+  }
+
+  function getMove(moveString){
+    let play;
+    if (moveString){
+      let move = moveString.replace(/\s+/g, ' ');
+      const parts = move.split(" ");
+      play = parts[2] + " " + parts[3];
+    }
+    else{
+      play = "N/A";
+    }
+    return play;
+  }
   
   function createBoard() {
     return (
@@ -218,7 +240,7 @@ export default function Home({ onChange }){
       setPlayer2points(score)
     setPointsScored(points);
   }
-
+  
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -228,32 +250,34 @@ export default function Home({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} move={moves[currentMove]}/>   
+          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} move={getMove(moves[currentMove - 1])}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
-          <Box className={styles.playerPanel}>
-            Player 1
-            <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 1 ? 'hidden' : 'visible'}}>
-              <Rack board={createRack()}/> 
+          <Box className={styles.topPlayerPanel}>
+            <Box className={styles.playerPanel}>
+              {mode === "VIEWER" ? player1 : "Player 1"} 
+              <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 1 ? 'hidden' : 'visible'}}>
+                <Rack board={createRack()}/> 
+              </Box> 
+              <Box>
+                {player1points} points
+              </Box>
+            </Box>  
+            <Box className={styles.playerPanel}>
+            {mode === "VIEWER" ? player2 : "Player 2"} 
+              <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 0 ? 'hidden' : 'visible'}}>
+                <Rack sx={{display: "none !important"}} board={createRack()}/>  
+              </Box>
+              <Box>
+                {player2points} points
+              </Box>
+            </Box>  
+            <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
+              <button className={styles.progressBtn} onClick={() => previousPlay(moves[currentMove - 1])}>Previous Play</button> 
+              <button className={styles.progressBtn} onClick={() => nextPlay(moves[currentMove])}>Next Play</button> 
             </Box> 
-            <Box>
-              {player1points} points
-            </Box>
-          </Box>  
-          <Box className={styles.playerPanel}>
-            Player 2
-            <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 0 ? 'hidden' : 'visible'}}>
-              <Rack sx={{display: "none !important"}} board={createRack()}/>  
-            </Box>
-            <Box>
-              {player2points} points
-            </Box>
-          </Box>  
-          <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-            <button className={styles.progressBtn} onClick={() => previousPlay(moves[currentMove - 1])}>Previous Play</button> 
-            <button className={styles.progressBtn} onClick={() => nextPlay(moves[currentMove])}>Next Play</button> 
-          </Box> 
+          </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
               <Pool board={createPool()}/>  
