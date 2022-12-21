@@ -14,6 +14,9 @@ const drawerWidth = 190;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
+  background: "#14000b",
+  color: "white",
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
@@ -26,6 +29,8 @@ const closedMixin = (theme) => ({
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
+  background: "#14000b",
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
   overflowX: 'hidden',
   width: `calc(${theme.spacing(7)} + 1px)`,
   [theme.breakpoints.up('sm')]: {
@@ -76,7 +81,7 @@ export default function MiniDrawer() {
     <Box>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img onClick={handleDrawer} className={styles.cfLogo} id="logo" width="50" height="50"/>
+          <img onClick={handleDrawer} src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </DrawerHeader>
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
