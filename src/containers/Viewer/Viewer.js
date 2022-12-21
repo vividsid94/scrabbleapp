@@ -15,6 +15,7 @@ import Cell from "../../components/AppContent/Board/Cell.js";
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
+  const [gameNum, setGameNum] = useState(28625);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
@@ -35,26 +36,13 @@ export default function Viewer({ onChange }){
     [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
     [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
     [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],]); 
-  const [boardCoords, setBoardCoords] = useState([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
-    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-    [4,0,0,1,0,0,0,3,0,0,0,1,0,0,4],
-    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],]); 
+  const [boardCoords, setBoardCoords] = useState([]); 
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
   const [pointsScored, setPointsScored] = useState(0);
   const [pool, setPool] = useState("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??");
-  const [mode, setMode] = useState("VIEWER")
+  const [mode, setMode] = useState("VIEWER");
+  const [resetCount, setResetCount] = useState(0);
 
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -69,18 +57,30 @@ export default function Viewer({ onChange }){
   }
 
   useEffect(() => {
-    let randomNumber;
-    if (mode === "VIEWER"){
-      randomNumber = 36230//Gibson
-      randomNumber = 40000;
-    }
-    else{
-      randomNumber = getRandomNumber(10000, 40000).toString();
-    }
-    let first3 = Math.floor(randomNumber / 100).toString().substring(0, 3);
-    let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + randomNumber + '.gcg';
+    setBoardCoords([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
+      [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
+      [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
+      [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
+      [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
+      [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
+      [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
+      [4,0,0,1,0,0,0,3,0,0,0,1,0,0,4],
+      [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
+      [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
+      [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
+      [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
+      [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
+      [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
+      [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],]); 
+    setPlayer1points(0);
+    setPlayer2points(0);
+    setPointsScored(0);
+    setPool("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??");
+    let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
+    let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
     .then((posRes)=>{
+        console.log("Game reset");
         setGameArray(posRes.data.toString().split("\n"));
         setMoves(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
         setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
@@ -88,7 +88,7 @@ export default function Viewer({ onChange }){
     },(errRes)=>{
         console.log(errRes)
     })
-  }, [mode]);
+  }, [mode, gameNum, resetCount]);
 
   const getPlayerName = (input) => {
     const regex = /#player\d+\s+(\S+)/;
@@ -139,6 +139,10 @@ export default function Viewer({ onChange }){
         Cell("0", colIndex, {"color": "grey", "value": col}, "pool")
       ))
     ); 
+  }
+
+  function clearBoard(){
+
   }
 
   function previousPlay(move){
@@ -240,6 +244,25 @@ export default function Viewer({ onChange }){
     else
       setPlayer2points(score)
     setPointsScored(points);
+
+
+    console.log(boardCoords)
+  }
+
+  function randomizeGame(){
+    setResetCount(resetCount + 1);
+    setBoardCoords((prevBoardCoords) => {
+      // Create a new array based on the previous state value of boardCoords
+      let newBoardCoords = [...prevBoardCoords];
+      newBoardCoords = origBoardCoords;
+      console.log(newBoardCoords)
+      return newBoardCoords;
+    });
+    // O
+
+    let randomNumber = getRandomNumber(10000, 40000).toString();
+    setGameNum(randomNumber);
+    setCurrentMove(0);
   }
   
   return (
@@ -277,6 +300,8 @@ export default function Viewer({ onChange }){
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
               <GoTriangleLeft className={styles.Arrows} onClick={() => previousPlay(moves[currentMove - 1])}></GoTriangleLeft>
               <GoTriangleRight className={styles.Arrows} onClick={() => nextPlay(moves[currentMove])}></GoTriangleRight>
+              <button onClick={randomizeGame}>Randomize</button>
+              <input ></input>
             </Box> 
           </Box>
           <Box className={styles.playerPanel}>
