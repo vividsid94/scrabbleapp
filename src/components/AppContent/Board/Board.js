@@ -4,7 +4,7 @@ import { Box } from '@mui/system';
 
 export default function Board(props) {
     return (
-        <Box className={styles.Board}>
+        <Box className={styles.Board} onClick={props.onBoardChildClick}>
             <Box sx={{display: props.points == "0" ? 'none' : 'flex'}} className={styles.Header}>
                 {props.points}
             </Box>

@@ -1,5 +1,5 @@
 import { createTheme, responsiveFontSizes, ThemeProvider } from '@mui/material/styles';
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router, Route, Routes
 } from "react-router-dom";
@@ -7,12 +7,13 @@ import "./App.css";
 import Home from "./containers/Home/Home";
 
 function App() {
+  const [appState, setAppState] = useState('');
   return (
     <div className="App">
-      <header className="App-header">
+      <header className="App-header" style={{backgroundColor: appState === '' ? '#282c34' : '#D5CF4C'}}>
             <Router>
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Home onChange={setAppState}/>} />
               </Routes>
             </Router>
       </header>

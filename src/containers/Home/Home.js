@@ -13,8 +13,9 @@ import { GoQuestion } from "react-icons/go";
 import cellBonusMap from "../../components/AppContent/Board/cellBonusMap.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 
-export default function Home(){
+export default function Home({ onChange }){
   const [gameArray, setGameArray] = useState("");
+  const [boardClickCount, setBoardClickCount] = useState(0);
   const [moves, setMoves] = useState("");
   const [currentMove, setCurrentMove] = useState(0);
   const [origBoardCoords] = useState([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
@@ -51,10 +52,18 @@ export default function Home(){
   const [player2points, setPlayer2points] = useState(0);
   const [pointsScored, setPointsScored] = useState(0);
   const [pool, setPool] = useState("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??");
-
+  const [mode, setMode] = useState("VIEWER")
 
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  const handleBoardClick = () => {
+    setBoardClickCount(prevCount => prevCount + 1);
+    if (boardClickCount > 10){
+      setMode("GUESSELO");
+      onChange("GUESSELO");
+    }
   }
 
   useEffect(() => {
@@ -71,15 +80,6 @@ export default function Home(){
 
 
   }, []);
-
-  function handleKeyDown(event) {
-    // Check if the key pressed is the right arrow key
-    if (event.keyCode === 39) {
-      setMoves(prevMoves => [...prevMoves, 'Right arrow key pressed']);
-      console.log(moves)
-      nextPlay(moves[currentMove]);
-    }
-  }
   
   function createBoard() {
     return (
@@ -214,15 +214,15 @@ export default function Home(){
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex'}}>
       <Sidenav/>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        Annotated Game Viewer <GoQuestion className={styles.questionMark}></GoQuestion>
+        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <GoQuestion className={styles.questionMark}></GoQuestion>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board board={createBoard()} points={pointsScored} move={moves[currentMove]}/>   
+          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} move={moves[currentMove]}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
