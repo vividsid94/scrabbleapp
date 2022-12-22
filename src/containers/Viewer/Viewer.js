@@ -50,7 +50,12 @@ export default function Viewer({ onChange }){
 
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
-    if (boardClickCount > 10){
+    let result = (Math.floor(boardClickCount / 10) % 10);
+    if (result % 2 === 0) {
+      setMode("VIEWER");
+      onChange("VIEWER");
+    }
+    else{
       setMode("GUESSELO");
       onChange("GUESSELO");
     }
