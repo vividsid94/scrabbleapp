@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
 import styles from './Home.module.css';
 import axios from 'axios';
-import dictionary from '../../components/AppContent/Dictionary/nwl20bings.json';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
