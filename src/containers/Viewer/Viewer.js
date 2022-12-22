@@ -9,7 +9,7 @@ import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import { GoQuestion, GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 
-import cellBonusMap from "../../components/AppContent/Board/cellType.js";
+import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
@@ -88,11 +88,15 @@ export default function Viewer({ onChange }){
   
   function createBoard() {
     return (
-        boardCoords.map((row, rowIndex) => (
-            row.map((col, colIndex) => (
-              Cell(rowIndex, colIndex, cellBonusMap(col), "board")
-            ))
-        ))
+      boardCoords.map((row, rowIndex) => (
+        row.map((col, colIndex) => {
+          if (rowIndex === 7 && colIndex === 7) {
+            return Cell(rowIndex, colIndex, cellType(col+"*"), "board");
+          } else {
+            return Cell(rowIndex, colIndex, cellType(col), "board");
+          }
+        })
+      ))
     ); 
   }
 

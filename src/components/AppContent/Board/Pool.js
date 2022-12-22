@@ -1,5 +1,4 @@
 import Cell from './Cell';
-import cellBonusMap from './cellType';
 import styles from './Pool.module.css';
 
 export default function Pool(props) {
