@@ -4,6 +4,11 @@
 	font-family: 'Josefin Sans';
 }
 
+.homeLogo{
+    color: white;
+    font-size: 50px;
+}
+
 .link{
 	color: blue !important;
     text-decoration: none !important;

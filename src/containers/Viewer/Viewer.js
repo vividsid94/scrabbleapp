@@ -305,8 +305,8 @@ export default function Viewer({ onChange }){
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
               <GoTriangleLeft className={styles.Arrows} onClick={() => previousPlay(moves[currentMove - 1])}></GoTriangleLeft>
               <GoTriangleRight className={styles.Arrows} onClick={() => nextPlay(moves[currentMove])}></GoTriangleRight>
-              <button onClick={randomizeGame}>Randomize</button>
-              <input ></input>
+              <button className={styles.randomizeBtn} onClick={randomizeGame}>Randomize</button>
+              <input type="number" className={styles.customInputNum} placeholder="num"></input>
             </Box> 
           </Box>
           <Box className={styles.playerPanel}>

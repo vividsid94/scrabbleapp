@@ -9,6 +9,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 
+import { IoHome } from "react-icons/io5";
+
 import styles from './Sidenav.module.css';
 const drawerWidth = 190;
 
@@ -85,35 +87,11 @@ export default function MiniDrawer() {
         </DrawerHeader>
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
-            <ListItem button>
+            <ListItem sx={{padding: '5px', display: 'flex'}}>
               <ListItemIcon>
-                <img className="cf-logo" id="logo"/>
+                <IoHome className={styles.homeLogo}/>
               </ListItemIcon>
               <ListItemText primary={"Home"} />
-            </ListItem>
-          </a>
-          <a id="marketBtn" className={styles.link} href="/">
-            <ListItem button>
-              <ListItemIcon>
-                <img className="cf-logo" id="logo"/>
-              </ListItemIcon>
-              <ListItemText primary={"Test"} />
-            </ListItem>
-          </a>
-          <a id="learnBtn" className={styles.link} href="/">
-            <ListItem button>
-              <ListItemIcon>
-                <img className="cf-logo" id="logo"/>
-              </ListItemIcon>
-              <ListItemText primary={"Test"} />
-            </ListItem>
-          </a>
-          <a id="profileBtn" className={styles.link} href="/">
-            <ListItem button>
-              <ListItemIcon>
-                <img className="cf-logo" id="logo"/>
-              </ListItemIcon>
-              <ListItemText primary={"Test"} />
             </ListItem>
           </a>
         </List>
