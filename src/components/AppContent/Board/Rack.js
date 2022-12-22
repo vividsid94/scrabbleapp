@@ -1,5 +1,5 @@
 import Cell from './Cell';
-import cellBonusMap from './cellBonusMap';
+import cellBonusMap from './cellType';
 import styles from './Rack.module.css';
 import { Box } from '@mui/system';
 

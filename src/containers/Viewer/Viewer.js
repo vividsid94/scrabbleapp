@@ -9,10 +9,10 @@ import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import { GoQuestion, GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 
-import cellBonusMap from "../../components/AppContent/Board/cellBonusMap.js";
+import cellBonusMap from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 
-import { lookup, origPool, origBoardCoords} from "../../components/AppContent/References/staticData.js";
+import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -48,22 +48,8 @@ export default function Viewer({ onChange }){
   }
 
   useEffect(() => {
-    console.log([...origBoardCoords]);
-    setBoardCoords([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
-      [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-      [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-      [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-      [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-      [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-      [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-      [4,0,0,1,0,0,0,3,0,0,0,1,0,0,4],
-      [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-      [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-      [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-      [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-      [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-      [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-      [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],]); 
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    setBoardCoords(parsedOrigBoardCoords); 
     setPlayer1points(0);
     setPlayer2points(0);
     setPointsScored(0);
@@ -134,6 +120,7 @@ export default function Viewer({ onChange }){
   }
 
   function previousPlay(move){
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number))
     move = move.replace(/\s+/g, ' ');
     const parts = move.split(" ");
     const location = parts[2];
@@ -149,7 +136,7 @@ export default function Viewer({ onChange }){
         const part2 = locationParts[2];  // This will be "G"
         for (let i = 0; i < play.length; i++) {
           if (play[i] !== ".")
-            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = origBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i];
+            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = parsedOrigBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i];
         }
       }
       else {
@@ -158,7 +145,7 @@ export default function Viewer({ onChange }){
         const part2 = locationParts[2];  // This will be "G"
         for (let i = 0; i < play.length; i++) {
           if (play[i] !== ".")
-            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = origBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1];
+            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = parsedOrigBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1];
         }
       }
     }
@@ -191,11 +178,11 @@ export default function Viewer({ onChange }){
         for (let i = 0; i < play.length; i++) {
           if (play[i].match(/[a-z]/)){
             setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = " ";
+            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = " ";
           }
           else if (play[i] !== "."){
             setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part1 - 1][lookup[part2.toUpperCase()] - 1 + i] = play[i];
+            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = play[i];
           }
         }
       }
@@ -206,11 +193,11 @@ export default function Viewer({ onChange }){
         for (let i = 0; i < play.length; i++) {
           if (play[i].match(/[a-z]/)){
             setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = " ";
+            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = " ";
           }
           else  if (play[i] !== "."){
             setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part2 - 1  + i][lookup[part1.toUpperCase()] - 1] = play[i];
+            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = play[i];
           }
         }
       }
@@ -226,7 +213,6 @@ export default function Viewer({ onChange }){
     else
       setPlayer2points(score)
     setPointsScored(points);
-    console.log(origBoardCoords)
   }
 
   function randomizeGame(){

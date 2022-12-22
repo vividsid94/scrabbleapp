@@ -1,4 +1,4 @@
-export default function cellBonusMap(type){
+export default function cellType(type){
     let result;
     switch (type) {
         case 0:
