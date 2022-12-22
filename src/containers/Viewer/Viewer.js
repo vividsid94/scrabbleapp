@@ -87,13 +87,21 @@ export default function Viewer({ onChange }){
   }
   
   function createBoard() {
+    console.log(moves[currentMove]);
+
+
+    const startRow = 6;
+    const endRow = 6;
+    const startCol = 8;
+    const endCol = 10;
+  
     return (
       boardCoords.map((row, rowIndex) => (
         row.map((col, colIndex) => {
-          if (rowIndex === 7 && colIndex === 7) {
-            return Cell(rowIndex, colIndex, cellType(col+"*"), "board");
+          if (rowIndex >= startRow && rowIndex <= endRow && colIndex >= startCol && colIndex <= endCol) {
+            return Cell(rowIndex, colIndex, cellType(col, "flagged"), "board");
           } else {
-            return Cell(rowIndex, colIndex, cellType(col), "board");
+            return Cell(rowIndex, colIndex, cellType(col, "apple"), "board");
           }
         })
       ))
@@ -178,7 +186,7 @@ export default function Viewer({ onChange }){
       score = parts[4];
     }
     type === "previous" ? setCurrentMove(currentMove - 1) : setCurrentMove(currentMove + 1);
-    if (currentMove % 2 === type === "previous" ? 1 : 0)
+    if (currentMove % 2 === (type === "previous" ? 1 : 0))
       setPlayer1points(score)
     else
       setPlayer2points(score)

@@ -1,4 +1,4 @@
-export default function cellType(type){
+export default function cellType(type, flag){
     let result;
     switch (type) {
         case 0:
@@ -35,7 +35,7 @@ export default function cellType(type){
         default:
             result = {
                 "value": type,
-                "color": "#306B73"
+                "color": flag === "apple" ? "#306B73" : "lightgreen"
             };
     }
     return result;
