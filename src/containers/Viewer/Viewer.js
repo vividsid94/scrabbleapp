@@ -119,96 +119,62 @@ export default function Viewer({ onChange }){
     ); 
   }
 
-  function previousPlay(move){
+  function extractLoc(str) {
+    let parts = str.match(/^(\d+)(\D+)|^(\D+)(\d+)$/);
+    let part1 = parts[1] || parts[3];
+    let part2 = parts[2] || parts[4];
+    return [part1, part2];
+  } 
+
+  function updateBoard(location, play, type) {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number))
-    move = move.replace(/\s+/g, ' ');
-    const parts = move.split(" ");
-    const location = parts[2];
-    const play = parts[3];
-    let points = parts[4];
-    let score = parts[5];
-
     let newBoardCoords = [...boardCoords];
-    if (location[0] !== "-"){
-      if (Number.isInteger(parseInt(location[0]))) {
-        const locationParts = location.match(/(\d+)(\D+)/);  // This will create an array with the parts ["12", "G"]
-        const part1 = locationParts[1];  // This will be "12"
-        const part2 = locationParts[2];  // This will be "G"
-        for (let i = 0; i < play.length; i++) {
-          if (play[i] !== ".")
-            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = parsedOrigBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i];
+    const locationParts = extractLoc(location);
+    const part1 = locationParts[0]; 
+    const part2 = locationParts[1];
+    let i, coord1, coord2;
+    if (Number.isInteger(Number(part1))) {
+      // Horizontal play
+      coord1 = part1 - 1;
+      coord2 = letterLookup[part2.toUpperCase()] - 1; 
+      for (i = 0; i < play.length; i++) {
+        if (play[i].match(/[a-z]/)) {
+          newBoardCoords[coord1][coord2 + i] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1][coord2 + i];
+        } else if (play[i] !== '.') {
+          newBoardCoords[coord1][coord2 + i] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1][coord2 + i];
         }
       }
-      else {
-        const locationParts = location.match(/(\D+)(\d+)/);  // This will create an array with the parts ["12", "G"]
-        const part1 = locationParts[1];  // This will be "12"
-        const part2 = locationParts[2];  // This will be "G"
-        for (let i = 0; i < play.length; i++) {
-          if (play[i] !== ".")
-            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = parsedOrigBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1];
+    } else {
+      // Vertical play
+      coord1 = part2 - 1;
+      coord2 = letterLookup[part1.toUpperCase()] - 1;
+      for (i = 0; i < play.length; i++) {
+        if (play[i].match(/[a-z]/)) {
+          newBoardCoords[coord1 + i][coord2] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1 + i][coord2];
+        } else if (play[i] !== '.') {
+          newBoardCoords[coord1 + i][coord2] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1 + i][coord2];
         }
       }
     }
-    else{
-      points = parts[2];
-      score = parts[4];
-    }
-    setBoardCoords(newBoardCoords);
-    setCurrentMove(currentMove - 1);
-    if (currentMove % 2 === 1)
-      setPlayer1points(score)
-    else
-      setPlayer2points(score)
-    setPointsScored(points);
+    return newBoardCoords;
   }
-
-  function nextPlay(move){
+  
+  function handleMove(move, type){
     move = move.replace(/\s+/g, ' ');
+    console.log(move);
     const parts = move.split(" ");
     const location = parts[2];
     const play = parts[3];
     let points = parts[4];
     let score = parts[5];
-    let newBoardCoords = [...boardCoords];
     if (location[0] !== "-"){
-      if (Number.isInteger(parseInt(location[0]))) {
-        const locationParts = location.match(/(\d+)(\D+)/);  // This will create an array with the parts ["12", "G"]
-        const part1 = locationParts[1];  // This will be "12"
-        const part2 = locationParts[2];  // This will be "G"
-        for (let i = 0; i < play.length; i++) {
-          if (play[i].match(/[a-z]/)){
-            setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = " ";
-          }
-          else if (play[i] !== "."){
-            setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part1 - 1][letterLookup[part2.toUpperCase()] - 1 + i] = play[i];
-          }
-        }
-      }
-      else {
-        const locationParts = location.match(/(\D+)(\d+)/);  // This will create an array with the parts ["12", "G"]
-        const part1 = locationParts[1];  // This will be "12"
-        const part2 = locationParts[2];  // This will be "G"
-        for (let i = 0; i < play.length; i++) {
-          if (play[i].match(/[a-z]/)){
-            setPool(prevPool => prevPool.replace(/\?/, ''));
-            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = " ";
-          }
-          else  if (play[i] !== "."){
-            setPool(prevPool => prevPool.replace(new RegExp(play[i]), ''));
-            newBoardCoords[part2 - 1  + i][letterLookup[part1.toUpperCase()] - 1] = play[i];
-          }
-        }
-      }
-    }
-    else{
+      type === "previous" ? setBoardCoords(updateBoard(location, play, "remove")) : setBoardCoords(updateBoard(location, play, "add"));
+    } else{
       points = parts[2];
       score = parts[4];
     }
-    setBoardCoords(newBoardCoords);
-    setCurrentMove(currentMove + 1);
-    if (currentMove % 2 === 0)
+    type === "previous" ? setCurrentMove(currentMove - 1) : setCurrentMove(currentMove + 1);
+    if (currentMove % 2 === type === "previous" ? 1 : 0)
       setPlayer1points(score)
     else
       setPlayer2points(score)
@@ -255,8 +221,8 @@ export default function Viewer({ onChange }){
               </Box>
             </Box>  
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <GoTriangleLeft className={styles.Arrows} onClick={() => previousPlay(moves[currentMove - 1])}></GoTriangleLeft>
-              <GoTriangleRight className={styles.Arrows} onClick={() => nextPlay(moves[currentMove])}></GoTriangleRight>
+              <GoTriangleLeft className={styles.Arrows} onClick={() => handleMove(moves[currentMove - 1], "previous")}></GoTriangleLeft>
+              <GoTriangleRight className={styles.Arrows} onClick={() => handleMove(moves[currentMove], "next")}></GoTriangleRight>
               <button className={styles.randomizeBtn} onClick={randomizeGame}>Randomize</button>
               <input type="number" className={styles.customInputNum} placeholder="num"></input>
             </Box> 
