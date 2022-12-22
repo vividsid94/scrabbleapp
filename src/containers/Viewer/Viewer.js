@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
 import styles from './Viewer.module.css';
 import axios from 'axios';
-import dictionary from '../../components/AppContent/Dictionary/nwl20bings.json';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
@@ -12,6 +11,8 @@ import { GoQuestion, GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 
 import cellBonusMap from "../../components/AppContent/Board/cellBonusMap.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
+
+import { lookup, origPool, origBoardCoords} from "../../components/AppContent/References/staticData.js";
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -21,26 +22,11 @@ export default function Viewer({ onChange }){
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moves, setMoves] = useState("");
   const [currentMove, setCurrentMove] = useState(0);
-  const [origBoardCoords] = useState([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
-    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-    [4,0,0,1,0,0,0,3,0,0,0,1,0,0,4],
-    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
-    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
-    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
-    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
-    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
-    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
-    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],]); 
   const [boardCoords, setBoardCoords] = useState([]); 
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
   const [pointsScored, setPointsScored] = useState(0);
-  const [pool, setPool] = useState("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??");
+  const [pool, setPool] = useState(origPool);
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
 
@@ -62,6 +48,7 @@ export default function Viewer({ onChange }){
   }
 
   useEffect(() => {
+    console.log([...origBoardCoords]);
     setBoardCoords([    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
       [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
       [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
@@ -80,7 +67,7 @@ export default function Viewer({ onChange }){
     setPlayer1points(0);
     setPlayer2points(0);
     setPointsScored(0);
-    setPool("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??");
+    setPool(origPool);
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
     let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
@@ -93,7 +80,7 @@ export default function Viewer({ onChange }){
     },(errRes)=>{
         console.log(errRes)
     })
-  }, [mode, gameNum, resetCount]);
+  }, [mode, resetCount]);
 
   const getPlayerName = (input) => {
     const regex = /#player\d+\s+(\S+)/;
@@ -146,14 +133,8 @@ export default function Viewer({ onChange }){
     ); 
   }
 
-  function clearBoard(){
-
-  }
-
   function previousPlay(move){
     move = move.replace(/\s+/g, ' ');
-    const lookup = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9, J: 10, K: 11, L: 12, M: 13, N: 14, O: 15 };
-    console.log(move);
     const parts = move.split(" ");
     const location = parts[2];
     const play = parts[3];
@@ -196,16 +177,12 @@ export default function Viewer({ onChange }){
 
   function nextPlay(move){
     move = move.replace(/\s+/g, ' ');
-    console.log(move)
-    const lookup = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9, J: 10, K: 11, L: 12, M: 13, N: 14, O: 15 };
     const parts = move.split(" ");
     const location = parts[2];
     const play = parts[3];
     let points = parts[4];
     let score = parts[5];
     let newBoardCoords = [...boardCoords];
-    let newPool = [...pool];
-    console.log(parts)
     if (location[0] !== "-"){
       if (Number.isInteger(parseInt(location[0]))) {
         const locationParts = location.match(/(\d+)(\D+)/);  // This will create an array with the parts ["12", "G"]
@@ -249,22 +226,11 @@ export default function Viewer({ onChange }){
     else
       setPlayer2points(score)
     setPointsScored(points);
-
-
-    console.log(boardCoords)
+    console.log(origBoardCoords)
   }
 
   function randomizeGame(){
     setResetCount(resetCount + 1);
-    setBoardCoords((prevBoardCoords) => {
-      // Create a new array based on the previous state value of boardCoords
-      let newBoardCoords = [...prevBoardCoords];
-      newBoardCoords = origBoardCoords;
-      console.log(newBoardCoords)
-      return newBoardCoords;
-    });
-    // O
-
     let randomNumber = getRandomNumber(10000, 40000).toString();
     setGameNum(randomNumber);
     setCurrentMove(0);

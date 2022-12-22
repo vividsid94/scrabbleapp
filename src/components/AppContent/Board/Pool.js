@@ -1,5 +1,6 @@
 import Cell from './Cell';
 import cellBonusMap from './cellBonusMap';
+import styles from './Pool.module.css';
 
 export default function Pool(props) {
     // Create a new 2D array with 7 elements per inner array
@@ -10,7 +11,7 @@ export default function Pool(props) {
     }
   
     return (
-      <div>
+      <div className={styles.poolTbl}>
         <table>
           <tbody>
             {rows.map((row, rowIndex) => (
