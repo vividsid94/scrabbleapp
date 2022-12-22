@@ -9,6 +9,16 @@
     font-size: 50px;
 }
 
+.listItem{
+    padding: 5px !important;
+    display: flex;
+}
+
+.listItemText{
+    color: white;
+    margin-left: 25px;
+}
+
 .link{
 	color: blue !important;
     text-decoration: none !important;
