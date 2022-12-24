@@ -3,16 +3,19 @@ import styles from './Board.module.css';
 import { Box } from '@mui/system';
 
 export default function Board(props) {
+    let boardTheme = "Board__" + props.theme;
+    let tableTheme = "Table__" + props.theme;
+    let pointsShown = props.points == "0" || props.theme === "APPLE";
     return (
-        <Box className={styles.Board} onClick={props.onBoardChildClick}>
-            <Box sx={{display: props.points == "0" ? 'none' : 'flex'}} className={styles.Header}>
+        <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
+            <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
                 {props.points}
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
                     
                 </Box>
-                <Box className={styles.tableContainer}>
+                <Box className={`${styles.tableContainer} ${styles[tableTheme]}`}>
                     <table>
                         <tbody>
                             {props.board.map((row, rowIndex) =>
@@ -27,7 +30,7 @@ export default function Board(props) {
                     
                 </Box>
             </Box>
-            <Box sx={{display: props.points == "0" ? 'none' : 'flex'}} className={styles.Footer}>
+            <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Footer}>
                 {props.move != null ? props.move : "No previous play"}
             </Box>
         </Box>

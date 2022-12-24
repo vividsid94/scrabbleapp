@@ -1,6 +1,14 @@
-.cellBoard{
-    width: 20px;
-    height: 20px;
+.Cell__APPLE{
+    width: 23px;
+    height: 23px;
+    display: flex;  
+    font-size: 20px;
+    justify-content: center;
+    align-items: flex-end;
+}
+.Cell__STANDARD{
+    width: 30px;
+    height: 30px;
     display: flex;  
     font-size: 25px;
     justify-content: center;
@@ -15,4 +23,5 @@
     align-items: center;
     font-size: 12px;
     border: 2px solid black;
+    user-select: none;
 }

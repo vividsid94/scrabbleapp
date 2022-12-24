@@ -35,7 +35,7 @@ export default function cellType(type, flag){
         default:
             result = {
                 "value": type,
-                "color": flag === "apple" ? "#306B73" : "lightgreen"
+                "color": flag === "apple" ? "#306B73" : "#41bf9e"
             };
     }
     return result;

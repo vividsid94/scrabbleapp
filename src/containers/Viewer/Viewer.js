@@ -8,9 +8,11 @@ import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import { GoQuestion, GoTriangleLeft, GoTriangleRight } from "react-icons/go";
+import Modal from '@mui/material/Modal';
 
 import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
+import { IoIosSettings } from "react-icons/io";
 
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
 
@@ -22,6 +24,7 @@ export default function Viewer({ onChange }){
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moves, setMoves] = useState("");
   const [currentMove, setCurrentMove] = useState(0);
+  const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
   const [boardCoords, setBoardCoords] = useState([]); 
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
@@ -29,6 +32,25 @@ export default function Viewer({ onChange }){
   const [pool, setPool] = useState(origPool);
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
+  const [theme, setTheme] = useState("STANDARD");
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleThemeChange = event => {
+    setTheme(event.target.value);
+  };
+
+  const style = {
+    position: 'absolute',
+    border: '5px solid rgb(173, 88, 39)',
+    width: 'auto',
+    outline: 'none',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    p: 4,
+  };
 
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -85,21 +107,13 @@ export default function Viewer({ onChange }){
   }
   
   function createBoard() {
-    console.log(moves[currentMove]);
-
-
-    const startRow = 6;
-    const endRow = 6;
-    const startCol = 8;
-    const endCol = 10;
-  
     return (
       boardCoords.map((row, rowIndex) => (
         row.map((col, colIndex) => {
-          if (rowIndex >= startRow && rowIndex <= endRow && colIndex >= startCol && colIndex <= endCol) {
-            return Cell(rowIndex, colIndex, cellType(col, "flagged"), "board");
+          if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
+            return Cell(rowIndex, colIndex, cellType(col, "flagged"), "board", theme);
           } else {
-            return Cell(rowIndex, colIndex, cellType(col, "apple"), "board");
+            return Cell(rowIndex, colIndex, cellType(col, "apple"), "board", theme);
           }
         })
       ))
@@ -139,6 +153,7 @@ export default function Viewer({ onChange }){
   function updateBoard(location, play, type) {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number))
     let newBoardCoords = [...boardCoords];
+    let curMoveCoords = [];
     const locationParts = extractLoc(location);
     const part1 = locationParts[0]; 
     const part2 = locationParts[1];
@@ -150,8 +165,10 @@ export default function Viewer({ onChange }){
       for (i = 0; i < play.length; i++) {
         if (play[i].match(/[a-z]/)) {
           newBoardCoords[coord1][coord2 + i] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1][coord2 + i];
+          curMoveCoords.push([coord1, coord2 + i]);
         } else if (play[i] !== '.') {
           newBoardCoords[coord1][coord2 + i] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1][coord2 + i];
+          curMoveCoords.push([coord1, coord2 + i]);
         }
       }
     } else {
@@ -161,11 +178,14 @@ export default function Viewer({ onChange }){
       for (i = 0; i < play.length; i++) {
         if (play[i].match(/[a-z]/)) {
           newBoardCoords[coord1 + i][coord2] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1 + i][coord2];
+          curMoveCoords.push([coord1 + i, coord2]);
         } else if (play[i] !== '.') {
           newBoardCoords[coord1 + i][coord2] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1 + i][coord2];
+          curMoveCoords.push([coord1 + i, coord2]);
         }
       }
     }
+    setCurrentMoveCoords(curMoveCoords);
     return newBoardCoords;
   }
   
@@ -197,17 +217,37 @@ export default function Viewer({ onChange }){
     setGameNum(randomNumber);
     setCurrentMove(0);
   }
+
+  function chooseGame(event){
+    event.preventDefault();
+    setResetCount(resetCount + 1);
+    setGameNum(event.target.elements.num.value);
+    setCurrentMove(0);
+  };
   
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
+            <option value="STANDARD">Standard</option>
+            <option value="APPLE">Apple</option>
+          </select>
+        </Box>
+      </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
         {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <GoQuestion className={styles.questionMark}></GoQuestion>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} move={getMove(moves[currentMove - 1])}/>   
+          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMove - 1])}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
@@ -233,9 +273,10 @@ export default function Viewer({ onChange }){
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
               <GoTriangleLeft className={styles.Arrows} onClick={() => handleMove(moves[currentMove - 1], "previous")}></GoTriangleLeft>
               <GoTriangleRight className={styles.Arrows} onClick={() => handleMove(moves[currentMove], "next")}></GoTriangleRight>
-              <button className={styles.randomizeBtn} onClick={randomizeGame}>Randomize</button>
-              <input type="number" className={styles.customInputNum} placeholder="num"></input>
+              <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
+              <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
             </Box> 
+
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
