@@ -37,13 +37,11 @@ export default function Viewer({ onChange }){
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
     let result = (Math.floor(boardClickCount / 10) % 10);
-    if (result % 2 === 0) {
-      setMode("VIEWER");
-      onChange("VIEWER");
-    }
-    else{
-      setMode("GUESSELO");
-      onChange("GUESSELO");
+    let newMode = result % 2 === 0 ? "VIEWER" : "GUESSELO";
+    if (mode !== newMode) {
+      setCurrentMove(0);
+      setMode(newMode);
+      onChange(newMode);
     }
   }
 
