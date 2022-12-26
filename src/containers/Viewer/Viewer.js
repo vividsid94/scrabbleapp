@@ -18,7 +18,7 @@ import { letterLookup, origPool, origBoard} from "../../components/AppContent/Re
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
-  const [gameNum, setGameNum] = useState(28625);
+  const [gameNum, setGameNum] = useState(17614);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
@@ -74,6 +74,7 @@ export default function Viewer({ onChange }){
     setPlayer2points(0);
     setPointsScored(0);
     setPool(origPool);
+    console.log(gameNum)
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
     let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
@@ -107,9 +108,19 @@ export default function Viewer({ onChange }){
     const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
     // Replace every instance of "." with each letter found, in that order
     let result = play;
+    console.log(letters, letters.length)
     letters.forEach((letter, index) => {
+      console.log(letters, letters.length)
+      console.log(index)
+      /*if (result[index - 1] === "." || result[index + 1] === ".") {
+        result = "(" + letters[index] + ")";
+      }*/
       if (letters.length === 1) {
         result = result.replace(".", "(" + letter + ")");
+      } else if (result[index - 1] === "."){
+        result = result.replace(".", "(" + letter);
+      } else if (result[index + 1] === "."){
+        result = result.replace(".", letter + ")");
       } else if (index === 0) {
         result = result.replace(".", "(" + letter);
       } else if (index === letters.length - 1) {
@@ -214,12 +225,10 @@ export default function Viewer({ onChange }){
       coord1 = part1 - 1;
       coord2 = letterLookup[part2.toUpperCase()] - 1; 
       for (i = 0; i < play.length; i++) {
-        if (play[i].match(/[a-z]/)) {
-          curMoveCoords.push([coord1, coord2 + i]);
-        } else if (play[i] !== '.') {
+        if (play[i] !== '.') {
           curMoveCoords.push([coord1, coord2 + i]);
         } else {
-          curMoveCoords.push(play[i]);
+          curMoveCoords.push(boardCoords[coord1][coord2 + i]);
         }
       }
     } else {
@@ -227,12 +236,10 @@ export default function Viewer({ onChange }){
       coord1 = part2 - 1;
       coord2 = letterLookup[part1.toUpperCase()] - 1;
       for (i = 0; i < play.length; i++) {
-        if (play[i].match(/[a-z]/)) {
-          curMoveCoords.push([coord1 + i, coord2]);
-        } else if (play[i] !== '.') {
+        if (play[i] !== '.') {
           curMoveCoords.push([coord1 + i, coord2]);
         } else {
-          curMoveCoords.push(play[i]);
+          curMoveCoords.push(boardCoords[coord1 + i][coord2]);
         }
       }
     }
