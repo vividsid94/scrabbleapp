@@ -191,7 +191,6 @@ export default function Viewer({ onChange }){
         }
       }
     }
-    console.log(curMoveCoords);
     setCurrentMoveCoords(curMoveCoords);
     return newBoardCoords;
   }
@@ -233,6 +232,7 @@ export default function Viewer({ onChange }){
     console.log("USEREF lastmove", lastMove);
     console.log("USEREF thismove", thisMove);
     console.log("USEREF nextmove", nextMove);
+    console.log("------------------------------------------")
   
     const moves = [
       { move: lastMove, parts: lastMove ? lastMove.split(" ") : null, location: null, play: null, points: null, score: null },
