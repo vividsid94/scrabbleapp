@@ -18,7 +18,7 @@ import { letterLookup, origPool, origBoard} from "../../components/AppContent/Re
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
-  const [gameNum, setGameNum] = useState(17614);
+  const [gameNum, setGameNum] = useState(39600);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
@@ -104,32 +104,14 @@ export default function Viewer({ onChange }){
     else{
       play = "N/A";
     }
-    // Find all the letters in currentMoveCoords
     const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
-    // Replace every instance of "." with each letter found, in that order
     let result = play;
-    console.log(letters, letters.length)
     letters.forEach((letter, index) => {
-      console.log(letters, letters.length)
-      console.log(index)
-      /*if (result[index - 1] === "." || result[index + 1] === ".") {
-        result = "(" + letters[index] + ")";
-      }*/
-      if (letters.length === 1) {
-        result = result.replace(".", "(" + letter + ")");
-      } else if (result[index - 1] === "."){
-        result = result.replace(".", "(" + letter);
-      } else if (result[index + 1] === "."){
-        result = result.replace(".", letter + ")");
-      } else if (index === 0) {
-        result = result.replace(".", "(" + letter);
-      } else if (index === letters.length - 1) {
-        result = result.replace(".", letter + ")");
-      } else {
-        result = result.replace(".", letter);
-      }
+      result = result.replace(".", "(" + letter + ")");
+      result = result.replace(")(", "");
     });
     return result;
+    
   }
   
   function createBoard() {
