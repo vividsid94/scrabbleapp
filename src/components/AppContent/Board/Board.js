@@ -9,7 +9,7 @@ export default function Board(props) {
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
-                {props.points}
+                NWL
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
@@ -31,7 +31,7 @@ export default function Board(props) {
                 </Box>
             </Box>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Footer}>
-                {props.move != null ? props.move : "No previous play"}
+                {props.move != null && props.move !== "N/A" ? props.move + " " + props.points : "No previous play"}
             </Box>
         </Box>
     )
