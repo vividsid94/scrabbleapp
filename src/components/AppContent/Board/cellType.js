@@ -34,7 +34,7 @@ export default function cellType(type, flag){
             break;
         default:
             result = {
-                "value": type,
+                "value": (type.toLowerCase() === type) ? " " : type,
                 "color": flag === "apple" ? "#306B73" : "#41bf9e"
             };
     }

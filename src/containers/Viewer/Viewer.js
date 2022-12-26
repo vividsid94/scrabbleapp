@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
@@ -23,7 +23,6 @@ export default function Viewer({ onChange }){
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moves, setMoves] = useState("");
-  const [currentMove, setCurrentMove] = useState(0);
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
   const [boardCoords, setBoardCoords] = useState([]); 
   const [player1points, setPlayer1points] = useState(0);
@@ -34,6 +33,7 @@ export default function Viewer({ onChange }){
   const [resetCount, setResetCount] = useState(0);
   const [theme, setTheme] = useState("STANDARD");
   const [open, setOpen] = React.useState(false);
+  const currentMoveRef = useRef(-1);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -61,7 +61,7 @@ export default function Viewer({ onChange }){
     let result = (Math.floor(boardClickCount / 10) % 10);
     let newMode = result % 2 === 0 ? "VIEWER" : "GUESSELO";
     if (mode !== newMode) {
-      setCurrentMove(0);
+      randomizeGame();
       setMode(newMode);
       onChange(newMode);
     }
@@ -86,7 +86,7 @@ export default function Viewer({ onChange }){
     },(errRes)=>{
         console.log(errRes)
     })
-  }, [mode, resetCount]);
+  }, [resetCount]);
 
   const getPlayerName = (input) => {
     const regex = /#player\d+\s+(\S+)/;
@@ -103,7 +103,22 @@ export default function Viewer({ onChange }){
     else{
       play = "N/A";
     }
-    return play;
+    // Find all the letters in currentMoveCoords
+    const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
+    // Replace every instance of "." with each letter found, in that order
+    let result = play;
+    letters.forEach((letter, index) => {
+      if (letters.length === 1) {
+        result = result.replace(".", "(" + letter + ")");
+      } else if (index === 0) {
+        result = result.replace(".", "(" + letter);
+      } else if (index === letters.length - 1) {
+        result = result.replace(".", letter + ")");
+      } else {
+        result = result.replace(".", letter);
+      }
+    });
+    return result;
   }
   
   function createBoard() {
@@ -121,7 +136,7 @@ export default function Viewer({ onChange }){
   }
 
   function createRack() {
-    var move = moves[currentMove];
+    var move = moves[currentMoveRef.current + 1];
     if (move === undefined){
       move = "LOADING LOADING LOADING LOADING";
     }
@@ -163,12 +178,48 @@ export default function Viewer({ onChange }){
       coord1 = part1 - 1;
       coord2 = letterLookup[part2.toUpperCase()] - 1; 
       for (i = 0; i < play.length; i++) {
-        if (play[i].match(/[a-z]/)) {
-          newBoardCoords[coord1][coord2 + i] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1][coord2 + i];
-          curMoveCoords.push([coord1, coord2 + i]);
-        } else if (play[i] !== '.') {
+        if (play[i] !== '.') {
           newBoardCoords[coord1][coord2 + i] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1][coord2 + i];
           curMoveCoords.push([coord1, coord2 + i]);
+        } else {
+          curMoveCoords.push(boardCoords[coord1][coord2 + i]);
+        }
+      }
+    } else {
+      // Vertical play
+      coord1 = part2 - 1;
+      coord2 = letterLookup[part1.toUpperCase()] - 1;
+      for (i = 0; i < play.length; i++) {
+        if (play[i] !== '.') {
+          newBoardCoords[coord1 + i][coord2] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1 + i][coord2];
+          curMoveCoords.push([coord1 + i, coord2]);
+        } else {
+          curMoveCoords.push(boardCoords[coord1 + i][coord2]);
+        }
+      }
+    }
+    console.log(curMoveCoords);
+    setCurrentMoveCoords(curMoveCoords);
+    return newBoardCoords;
+  }
+
+  function highlightPreviousMove(location, play){
+    let curMoveCoords = [];
+    const locationParts = extractLoc(location);
+    const part1 = locationParts[0]; 
+    const part2 = locationParts[1];
+    let i, coord1, coord2;
+    if (Number.isInteger(Number(part1))) {
+      // Horizontal play
+      coord1 = part1 - 1;
+      coord2 = letterLookup[part2.toUpperCase()] - 1; 
+      for (i = 0; i < play.length; i++) {
+        if (play[i].match(/[a-z]/)) {
+          curMoveCoords.push([coord1, coord2 + i]);
+        } else if (play[i] !== '.') {
+          curMoveCoords.push([coord1, coord2 + i]);
+        } else {
+          curMoveCoords.push(play[i]);
         }
       }
     } else {
@@ -177,54 +228,90 @@ export default function Viewer({ onChange }){
       coord2 = letterLookup[part1.toUpperCase()] - 1;
       for (i = 0; i < play.length; i++) {
         if (play[i].match(/[a-z]/)) {
-          newBoardCoords[coord1 + i][coord2] = type === "add" ? ' ' : parsedOrigBoardCoords[coord1 + i][coord2];
           curMoveCoords.push([coord1 + i, coord2]);
         } else if (play[i] !== '.') {
-          newBoardCoords[coord1 + i][coord2] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1 + i][coord2];
           curMoveCoords.push([coord1 + i, coord2]);
+        } else {
+          curMoveCoords.push(play[i]);
         }
       }
     }
     setCurrentMoveCoords(curMoveCoords);
-    return newBoardCoords;
   }
   
-  function handleMove(move, type){
-    move = move.replace(/\s+/g, ' ');
-    console.log(move);
-    const parts = move.split(" ");
-    const location = parts[2];
-    const play = parts[3];
-    let points = parts[4];
-    let score = parts[5];
-    if (location[0] !== "-"){
-      type === "previous" ? setBoardCoords(updateBoard(location, play, "remove")) : setBoardCoords(updateBoard(location, play, "add"));
-    } else{
-      points = parts[2];
-      score = parts[4];
+  function handleMove(lastMove, thisMove, nextMove, type) {
+    console.log("USEREF", currentMoveRef.current);
+    console.log("USEREF lastmove", lastMove);
+    console.log("USEREF thismove", thisMove);
+    console.log("USEREF nextmove", nextMove);
+  
+    const moves = [
+      { move: lastMove, parts: lastMove ? lastMove.split(" ") : null, location: null, play: null, points: null, score: null },
+      { move: thisMove, parts: thisMove ? thisMove.split(" ") : null, location: null, play: null, points: null, score: null },
+      { move: nextMove, parts: nextMove ? nextMove.split(" ") : null, location: null, play: null, points: null, score: null }
+    ];
+
+    //lastMove = lastMove.replace(/\s+/g, ' ');
+    //thisMove = thisMove.replace(/\s+/g, ' ');
+    //nextMove = nextMove.replace(/\s+/g, ' ');
+
+    moves.forEach(move => {
+      move.location = move.parts ? move.parts[2] : null;
+      move.play = move.parts ? move.parts[3] : null;
+      move.points = move.parts ? move.parts[4] : null;
+      move.score = move.parts ? move.parts[5] : null;
+    });
+
+    if (type === "previous"){
+      if (moves[2].location[0] === null){
+
+      }
+      else if (moves[2].location[0] !== "-"){
+        setBoardCoords(updateBoard(moves[2].location, moves[2].play, "remove")) 
+        highlightPreviousMove(moves[1].location, moves[1].play);
+      }
+      else {
+        moves[2].points = moves[2].parts[2];
+        moves[2].score = moves[2].parts[4];
+      }
+      if (currentMoveRef.current % 2 === 1) {
+        setPlayer1points(moves[0].score)
+      } else {
+        setPlayer2points(moves[0].score)
+      } 
+    } else {
+      if (moves[1].location[0] === null){
+
+      }
+      else if (moves[1].location[0] !== "-"){
+        setBoardCoords(updateBoard(moves[1].location, moves[1].play, "add"));
+      }
+      else {
+        moves[1].points = moves[1].parts[2];
+        moves[1].score = moves[1].parts[4];
+      }
+      if (currentMoveRef.current % 2 === 0) {
+        setPlayer1points(moves[1].score)
+      } else {
+        setPlayer2points(moves[1].score)
+      } 
     }
-    type === "previous" ? setCurrentMove(currentMove - 1) : setCurrentMove(currentMove + 1);
-    if (currentMove % 2 === (type === "previous" ? 1 : 0))
-      setPlayer1points(score)
-    else
-      setPlayer2points(score)
-    setPointsScored(points);
+    setPointsScored(moves[1].points);
   }
 
   function randomizeGame(){
+    currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
     let randomNumber = getRandomNumber(10000, 40000).toString();
     setGameNum(randomNumber);
-    setCurrentMove(0);
   }
 
   function chooseGame(event){
     event.preventDefault();
     setResetCount(resetCount + 1);
     setGameNum(event.target.elements.num.value);
-    setCurrentMove(0);
   };
-  
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -247,14 +334,14 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMove - 1])}/>   
+          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMoveRef.current])}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? player1 : "Player 1"} 
-              <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 1 ? 'hidden' : 'visible'}}>
+              <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
                 <Rack board={createRack()}/> 
               </Box> 
               <Box>
@@ -263,7 +350,7 @@ export default function Viewer({ onChange }){
             </Box>  
             <Box className={styles.playerPanel}>
             {mode === "VIEWER" ? player2 : "Player 2"} 
-              <Box className={styles.Rack} sx={{visibility: currentMove % 2 === 0 ? 'hidden' : 'visible'}}>
+              <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 0 ? 'hidden' : 'visible'}}>
                 <Rack sx={{display: "none !important"}} board={createRack()}/>  
               </Box>
               <Box>
@@ -271,8 +358,8 @@ export default function Viewer({ onChange }){
               </Box>
             </Box>  
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <GoTriangleLeft className={styles.Arrows} onClick={() => handleMove(moves[currentMove - 1], "previous")}></GoTriangleLeft>
-              <GoTriangleRight className={styles.Arrows} onClick={() => handleMove(moves[currentMove], "next")}></GoTriangleRight>
+              <GoTriangleLeft className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}></GoTriangleLeft>
+              <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
               <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
               <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
             </Box> 
