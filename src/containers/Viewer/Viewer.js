@@ -32,7 +32,8 @@ export default function Viewer({ onChange }){
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [theme, setTheme] = useState("STANDARD");
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [gameDictionary, setGameDictionary] = useState("unknown")
   const currentMoveRef = useRef(-1);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -84,6 +85,22 @@ export default function Viewer({ onChange }){
         setMoves(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
         setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
         setPlayer2(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))));
+    },(errRes)=>{
+        console.log(errRes)
+    })
+
+    let gameInfoLink = 'https://www.cross-tables.com/annotated.php?u=' + gameNum;
+    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(gameInfoLink))
+    .then((posRes)=>{
+        let text = posRes.data;
+        const startIndex = text.indexOf('<p>Dictionary: <b>');
+        if (startIndex !== -1) {
+          const endIndex = text.indexOf('</b>', startIndex);
+          if (endIndex !== -1) {
+            const extractedText = text.substring(startIndex + 18, endIndex);
+            setGameDictionary(extractedText);
+          }
+        }
     },(errRes)=>{
         console.log(errRes)
     })
@@ -323,7 +340,7 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMoveRef.current])}/>   
+          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMoveRef.current])}/>   
         </Box>
 
         <Box className={styles.rightPanel}>

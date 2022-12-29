@@ -9,7 +9,7 @@ export default function Board(props) {
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
-                NWL
+                {props.dictionary}
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
