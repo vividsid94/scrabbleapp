@@ -10,7 +10,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import Typography from '@mui/material/Typography';
+import { Link } from 'react-router-dom';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -125,13 +125,13 @@ export default function MiniDrawer() {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose}>Menu item 1</MenuItem>
-            <MenuItem onClick={handleClose}>Menu item 2</MenuItem>
-            <MenuItem onClick={handleClose}>Menu item 3</MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/">
+              Home
+            </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/viewer">
+              Annotated Game Viewer
+            </MenuItem>
           </Menu>
-          <Typography variant="h6">
-            My App
-          </Typography>
         </Toolbar>
       </MyAppBar>
       <Drawer className={styles.myDrawer} variant="permanent" open={open}>
