@@ -90,7 +90,7 @@ form{
   justify-content: center;
   font-size: 50px;
   margin-top: 25px;
-  font-family: 'Dancing Script';
+  font-family: 'Dancing Script' !important;
 }
 
 .mainPanel{

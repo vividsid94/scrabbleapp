@@ -1,3 +1,8 @@
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+*{
+	font-family: 'Josefin Sans' !important;
+}
+
 .App {
   text-align: center;
 }
