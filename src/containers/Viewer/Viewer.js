@@ -328,6 +328,12 @@ export default function Viewer({ onChange }){
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
+            <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
+              <GoTriangleLeft className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}></GoTriangleLeft>
+              <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
+              <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
+              <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
+            </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? player1 : "Player 1"} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
@@ -346,13 +352,6 @@ export default function Viewer({ onChange }){
                 {player2points} points
               </Box>
             </Box>  
-            <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <GoTriangleLeft className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}></GoTriangleLeft>
-              <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
-              <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
-              <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
-            </Box> 
-
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
