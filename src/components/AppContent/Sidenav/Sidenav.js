@@ -18,8 +18,8 @@ import ListItemText from "@mui/material/ListItemText";
 
 //import { useMediaQuery } from '@material-ui/core';
 
-import { IoHome } from "react-icons/io5";
-import { IoEyeSharp } from "react-icons/io5";
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import styles from './Sidenav.module.css';
 const drawerWidth = 190;
@@ -142,7 +142,7 @@ export default function MiniDrawer() {
           <a id="homeBtn" className={styles.link} href="/">
             <ListItem className={styles.listItem}>
               <ListItemIcon>
-                <IoHome className={styles.homeLogo}/>
+                <HomeOutlinedIcon className={styles.homeLogo}/>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Home"} />
             </ListItem>
@@ -152,7 +152,7 @@ export default function MiniDrawer() {
           <a id="viewerBtn" className={styles.link} href="/viewer">
             <ListItem className={styles.listItem}>
               <ListItemIcon>
-                <IoEyeSharp className={styles.homeLogo}/>
+                <VisibilityOutlinedIcon className={styles.homeLogo}/>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Viewer"} />
             </ListItem>

@@ -12,8 +12,8 @@ import Modal from '@mui/material/Modal';
 
 import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
-import { IoIosSettings } from "react-icons/io";
 import KeyIcon from '@mui/icons-material/Key';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
 
@@ -52,6 +52,7 @@ export default function Viewer({ onChange }){
     border: '5px solid rgb(173, 88, 39)',
     width: 'auto',
     outline: 'none',
+    background: 'white',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
@@ -352,7 +353,7 @@ export default function Viewer({ onChange }){
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
+        <Box className={styles.modalContainer}>
           <select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
             <option value="STANDARD">Standard</option>
             <option value="APPLE">Apple</option>
@@ -373,9 +374,9 @@ export default function Viewer({ onChange }){
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
               <GoTriangleLeft className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}></GoTriangleLeft>
               <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
-              <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
-              <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
-              <KeyIcon className={styles.keyBtn} onClick={revealPlayers} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}></KeyIcon> 
+              <button className={styles.randomizeBtn} onClick={randomizeGame}>{mode === "GUESSELO" ? 'new' : 'random'}</button>
+              <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
+              <KeyIcon className={styles.keyBtn} onClick={revealPlayers} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}/>
             </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? player1 : revealedName1} 
