@@ -28,8 +28,8 @@
 
 @media screen and (max-width: 676px) {
     .Cell__APPLE{
-        width: 15px;
-        height: 15px;
+        width: 13px;
+        height: 13px;
         display: flex;  
         font-size: 15px;
         justify-content: center;
@@ -39,7 +39,7 @@
         width: 15px;
         height: 15px;
         display: flex;  
-        font-size: 15px;
+        font-size: 13px;
         justify-content: center;
         align-items: flex-end;
     }

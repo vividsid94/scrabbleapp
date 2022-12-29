@@ -229,4 +229,18 @@ form{
     flex-direction: column;
     justify-content: space-evenly;
   }
+  .settingsBtn{
+    display: none;
+  }
+  .questionMark{
+    display: none;
+  }
+  .title{
+    width: 50%;
+    margin: auto;
+    font-size: 30px;
+  }
+  body{
+    font-size: 10px;
+  }
 }
