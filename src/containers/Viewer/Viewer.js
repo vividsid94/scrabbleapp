@@ -34,7 +34,7 @@ export default function Viewer({ onChange }){
   const [resetCount, setResetCount] = useState(0);
   const [theme, setTheme] = useState("STANDARD");
   const [open, setOpen] = useState(false);
-  const [gameDictionary, setGameDictionary] = useState("unknown")
+  const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
