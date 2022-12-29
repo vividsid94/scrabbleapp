@@ -4,6 +4,24 @@
 	font-family: 'Josefin Sans';
 }
 
+@media screen and (max-width: 992px) {
+    .myAppBar {
+        display: flex;
+    }
+    .myDrawer{
+        display: none !important;
+    }
+}
+
+@media screen and (min-width: 993px) {
+    .myAppBar {
+        display: none !important;
+    }
+    .myDrawer{
+        display: flex;
+    }
+}
+
 .homeLogo{
     color: white;
     font-size: 50px;

@@ -4,6 +4,13 @@ import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import CssBaseline from '@mui/material/CssBaseline';
+import MenuItem from '@mui/material/MenuItem';
+import Menu from '@mui/material/Menu';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import Typography from '@mui/material/Typography';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -70,9 +77,17 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
+const MyAppBar = styled(AppBar)({
+  position: 'fixed',
+  fontFamily: 'Josefin Sans',
+  background: "#14000b",
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
+});
+
 export default function MiniDrawer() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleDrawer = () => {
     if (open){
@@ -83,9 +98,43 @@ export default function MiniDrawer() {
     }
   };
 
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <Box>
-      <Drawer variant="permanent" open={open}>
+      <MyAppBar className={styles.myAppBar}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open menu"
+            edge="start"
+            onClick={handleClick}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Menu
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleClose}>Menu item 1</MenuItem>
+            <MenuItem onClick={handleClose}>Menu item 2</MenuItem>
+            <MenuItem onClick={handleClose}>Menu item 3</MenuItem>
+          </Menu>
+          <Typography variant="h6">
+            My App
+          </Typography>
+        </Toolbar>
+      </MyAppBar>
+      <Drawer className={styles.myDrawer} variant="permanent" open={open}>
         <DrawerHeader className={styles.cfLogoContainer}>
           <img onClick={handleDrawer} src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </DrawerHeader>
