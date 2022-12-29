@@ -13,6 +13,7 @@ import Modal from '@mui/material/Modal';
 import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 import { IoIosSettings } from "react-icons/io";
+import KeyIcon from '@mui/icons-material/Key';
 
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
 
@@ -37,6 +38,10 @@ export default function Viewer({ onChange }){
   const currentMoveRef = useRef(-1);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const [name1, setName1] = useState('');
+  const [name2, setName2] = useState('');
+  const [revealedName1, setRevealedName1] = useState('Player 1');
+  const [revealedName2, setRevealedName2] = useState('Player 2');
 
   const handleThemeChange = event => {
     setTheme(event.target.value);
@@ -74,6 +79,8 @@ export default function Viewer({ onChange }){
     setPlayer1points(0);
     setPlayer2points(0);
     setPointsScored(0);
+    setRevealedName1("Player 1");
+    setRevealedName2("Player 2");
     setPool(origPool);
     console.log(gameNum)
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
@@ -100,6 +107,19 @@ export default function Viewer({ onChange }){
             const extractedText = text.substring(startIndex + 18, endIndex);
             setGameDictionary(extractedText);
           }
+        }
+
+        const regex = /<tr><td>([^<]+)<\/td>/g;
+        const matches = text.matchAll(regex);
+        
+        let i = 0;
+        for (const match of matches) {
+          if (i === 0) {
+            setName1(match[1]);
+          } else if (i === 1) {
+            setName2(match[1]);
+          }
+          i++;
         }
     },(errRes)=>{
         console.log(errRes)
@@ -318,6 +338,11 @@ export default function Viewer({ onChange }){
     setGameNum(event.target.elements.num.value);
   };
 
+  function revealPlayers(){
+    setRevealedName1(name1);
+    setRevealedName2(name2);
+  }
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -350,9 +375,10 @@ export default function Viewer({ onChange }){
               <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
               <button className={styles.randomizeBtn} onClick={randomizeGame}>random</button>
               <IoIosSettings onClick={handleOpen} className={styles.settingsBtn}/>
+              <KeyIcon className={styles.keyBtn} onClick={revealPlayers} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}></KeyIcon> 
             </Box> 
             <Box className={styles.playerPanel}>
-              {mode === "VIEWER" ? player1 : "Player 1"} 
+              {mode === "VIEWER" ? player1 : revealedName1} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
                 <Rack board={createRack()}/> 
               </Box> 
@@ -361,7 +387,7 @@ export default function Viewer({ onChange }){
               </Box>
             </Box>  
             <Box className={styles.playerPanel}>
-            {mode === "VIEWER" ? player2 : "Player 2"} 
+            {mode === "VIEWER" ? player2 : revealedName2} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 0 ? 'hidden' : 'visible'}}>
                 <Rack sx={{display: "none !important"}} board={createRack()}/>  
               </Box>

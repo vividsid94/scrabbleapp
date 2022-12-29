@@ -36,8 +36,8 @@ form{
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-.settingsBtn{
-  font-size: 35px;
+.settingsBtn, .keyBtn{
+  font-size: 35px !important;
   cursor: pointer;
 }
 .customInputNum{

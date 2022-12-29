@@ -5,7 +5,7 @@ import { Box } from '@mui/system';
 export default function Board(props) {
     let boardTheme = "Board__" + props.theme;
     let tableTheme = "Table__" + props.theme;
-    let pointsShown = props.points == "0" || props.theme === "APPLE";
+    let pointsShown = props.theme === "APPLE";
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
@@ -31,7 +31,7 @@ export default function Board(props) {
                 </Box>
             </Box>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Footer}>
-                {props.move != null && props.move !== "N/A" ? props.move + " " + props.points : "No previous play"}
+                {props.move != null && props.move !== "N/A" ? props.move + " " + props.points : "Start of game"}
             </Box>
         </Box>
     )
