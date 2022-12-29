@@ -25,3 +25,22 @@
     border: 2px solid black;
     user-select: none;
 }
+
+@media screen and (max-width: 676px) {
+    .Cell__APPLE{
+        width: 15px;
+        height: 15px;
+        display: flex;  
+        font-size: 15px;
+        justify-content: center;
+        align-items: flex-end;
+    }
+    .Cell__STANDARD{
+        width: 15px;
+        height: 15px;
+        display: flex;  
+        font-size: 15px;
+        justify-content: center;
+        align-items: flex-end;
+    }
+}

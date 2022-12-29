@@ -60,18 +60,6 @@
   flex-direction: row;
 }
 
-.playerPanel{
-  width: 350px;
-  height: auto;
-  font-size: 20px;
-  background-color: linear-gradient(45deg, transparent 5%, #9c79b8 5%);
-  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
-  border: 0;
-  color: #fff;
-  position: relative;
-  line-height: 50px;
-}
-
 .playerToggle{
   display: flex;
   justify-content: space-evenly;

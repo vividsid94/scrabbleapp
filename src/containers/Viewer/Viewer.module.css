@@ -69,7 +69,7 @@ form{
 }
 
 .playerPanel{
-  width: 350px;
+  width: auto;
   height: auto;
   font-size: 20px;
   background-color: linear-gradient(45deg, transparent 5%, #9c79b8 5%);
@@ -213,6 +213,18 @@ form{
     justify-content: space-evenly;
   }
   .mainPanel{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  .page{
+    margin-top: 100px;
+  }
+}
+
+@media screen and (max-width: 676px) {
+  .rightPanel{
+    padding: 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
