@@ -76,6 +76,7 @@ export default function Viewer({ onChange }){
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    document.title = 'Game Viewer';
     setBoardCoords(parsedOrigBoardCoords); 
     setPlayer1points(0);
     setPlayer2points(0);
