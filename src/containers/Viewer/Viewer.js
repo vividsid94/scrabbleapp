@@ -7,12 +7,14 @@ import axios from 'axios';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
-import { GoQuestion, GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 import Modal from '@mui/material/Modal';
 
 import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 import KeyIcon from '@mui/icons-material/Key';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
@@ -363,7 +365,7 @@ export default function Viewer({ onChange }){
       </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <GoQuestion className={styles.questionMark}></GoQuestion>
+        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <PsychologyAltIcon className={styles.questionMark}/>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -373,8 +375,8 @@ export default function Viewer({ onChange }){
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <GoTriangleLeft className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}></GoTriangleLeft>
-              <GoTriangleRight className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}></GoTriangleRight>
+              <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
+              <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
               <button className={styles.randomizeBtn} onClick={randomizeGame}>{mode === "GUESSELO" ? 'new' : 'random'}</button>
               <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
               <KeyIcon className={styles.keyBtn} onClick={revealPlayers} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}/>

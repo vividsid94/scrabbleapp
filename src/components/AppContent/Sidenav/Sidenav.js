@@ -108,9 +108,6 @@ export default function MiniDrawer() {
 
   return (
     <Box>
-      <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Sans"/>
-      </head>
       <MyAppBar className={styles.myAppBar}>
         <Toolbar>
           <IconButton
