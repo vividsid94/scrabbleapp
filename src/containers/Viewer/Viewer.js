@@ -16,7 +16,7 @@ import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-
+import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
 
 export default function Viewer({ onChange }){
@@ -44,21 +44,12 @@ export default function Viewer({ onChange }){
   const [name2, setName2] = useState('');
   const [revealedName1, setRevealedName1] = useState('Player 1');
   const [revealedName2, setRevealedName2] = useState('Player 2');
+  const [displayedElo, setDisplayedElo] = useState("");
+  const [revaledElo, setRevealedElo] = useState("");
+  const [tourneyNum, setTourneyNum] = useState(0);
 
   const handleThemeChange = event => {
     setTheme(event.target.value);
-  };
-
-  const style = {
-    position: 'absolute',
-    border: '5px solid rgb(173, 88, 39)',
-    width: 'auto',
-    outline: 'none',
-    background: 'white',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    p: 4,
   };
 
   function getRandomNumber(min, max) {
@@ -125,6 +116,12 @@ export default function Viewer({ onChange }){
           }
           i++;
         }
+
+        let matchTourney = text.match(/<a href='tourney\.php\?t=(\d+)'>/);
+        let tourneyNumber = 0;
+        if (matchTourney)
+          tourneyNumber = matchTourney[1];
+        console.log("Tourney: " + tourneyNumber);
     },(errRes)=>{
         console.log(errRes)
     })
@@ -380,6 +377,10 @@ export default function Viewer({ onChange }){
     setRevealedName2(name2);
   }
 
+  function revealElo(){
+
+  }
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -410,12 +411,27 @@ export default function Viewer({ onChange }){
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
               <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
               <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
-              <button className={styles.randomizeBtn} onClick={randomizeGame}>{mode === "GUESSELO" ? 'new' : 'random'}</button>
               <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
-              <KeyIcon className={styles.keyBtn} onClick={revealPlayers} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}/>
+              <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
             </Box> 
+            <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
+              background: mode === "VIEWER" ? "repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)" : ""
+            }}>
+              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                Players
+              </Box>  
+              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                Elo
+              </Box> 
+              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                Details
+              </Box> 
+            </Box>
             <Box className={styles.playerPanel}>
-              {mode === "VIEWER" ? player1 : revealedName1} 
+              {mode === "VIEWER" ? name1 : revealedName1} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
                 <Rack board={createRack()}/> 
               </Box> 
@@ -424,7 +440,7 @@ export default function Viewer({ onChange }){
               </Box>
             </Box>  
             <Box className={styles.playerPanel}>
-            {mode === "VIEWER" ? player2 : revealedName2} 
+            {mode === "VIEWER" ? name2 : revealedName2} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 0 ? 'hidden' : 'visible'}}>
                 <Rack sx={{display: "none !important"}} board={createRack()}/>  
               </Box>

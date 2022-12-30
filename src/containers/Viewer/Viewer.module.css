@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
+@import url('https://fonts.googleapis.com/css?family=Syne+Mono');
 *{
 	font-family: 'Josefin Sans';
 }
@@ -47,8 +48,13 @@ form{
   height: 50px !important;
 }
 
-.randomizeBtn, .styleSelection{
-  padding: 10px;
+.randomizeBtn{
+  cursor: pointer;
+  font-size: 35px !important;
+}
+
+.styleSelection{
+  padding: 5px;
   cursor: pointer;
   height: auto; 
   background: linear-gradient(45deg, transparent 5%, #14000b 5%);
@@ -102,7 +108,6 @@ form{
   width: 380px;
   height: auto;
   font-size: 20px;
-  background-color: linear-gradient(45deg, transparent 5%, #9c79b8 5%);
   background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
   border: 0;
   color: #fff;
@@ -220,8 +225,14 @@ form{
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
+  height: 500px;
   padding-bottom: 24px;
+}
+
+.revealBox{
+  font-size: 10px;
+  font-family: 'Syne Mono' !important;
+  height: 35px;
 }
 
 .Arrows{
