@@ -299,6 +299,7 @@ export default function Viewer({ onChange }){
       else if (moves[2].location[0] !== "-"){
         setBoardCoords(updateBoard(moves[2].location, moves[2].play, "remove")) 
         highlightPreviousMove(moves[1].location, moves[1].play);
+        setPool(addToPool(moves[2].play, pool));
       }
       else {
         moves[2].points = moves[2].parts[2];
@@ -331,19 +332,36 @@ export default function Viewer({ onChange }){
   }
 
   function removeFromPool(play, pool) {
-    let newPool = pool.split("").map(char => {
-      if (play.includes(char)) {
-        play = play.replace(char, "");
-        return "";
-      } else if (play.includes(char.toUpperCase())) {
-        play = play.replace(char.toLowerCase(), "");
-        return "";
+    let newPool = pool;
+    for (let i = 0; i < play.length; i++) {
+      const char = play[i];
+      if (char.toLowerCase() === char && char !== ".") {
+        newPool = newPool.replace("?", "");
+      } else {
+        newPool = newPool.replace(char, "");
       }
-      console.log(char)
-      return char;
-    }).join("");
+    }
     return newPool;
   }
+  
+  function addToPool(play, pool) {
+    let newPool = pool;
+    for (let i = 0; i < play.length; i++) {
+      const char = play[i];
+      if (char.toLowerCase() === char && char !== ".") {
+        newPool += "?";
+      } else if (char !== ".") {
+        newPool += char;
+      }
+    }
+    newPool = newPool.split('').sort((a, b) => {
+      if (a === '?') return 1;
+      if (b === '?') return -1;
+      return a.localeCompare(b);
+    }).join('');
+    return newPool;
+  }
+
   function randomizeGame(){
     currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
