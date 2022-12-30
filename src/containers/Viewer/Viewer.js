@@ -315,6 +315,7 @@ export default function Viewer({ onChange }){
       }
       else if (moves[1].location[0] !== "-"){
         setBoardCoords(updateBoard(moves[1].location, moves[1].play, "add"));
+        setPool(removeFromPool(moves[1].play, pool));
       }
       else {
         moves[1].points = moves[1].parts[2];
@@ -329,6 +330,20 @@ export default function Viewer({ onChange }){
     setPointsScored(moves[1].points);
   }
 
+  function removeFromPool(play, pool) {
+    let newPool = pool.split("").map(char => {
+      if (play.includes(char)) {
+        play = play.replace(char, "");
+        return "";
+      } else if (play.includes(char.toUpperCase())) {
+        play = play.replace(char.toLowerCase(), "");
+        return "";
+      }
+      console.log(char)
+      return char;
+    }).join("");
+    return newPool;
+  }
   function randomizeGame(){
     currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
@@ -402,7 +417,7 @@ export default function Viewer({ onChange }){
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
-              <Pool board={createPool()}/>  
+              <Pool board={pool}/>  
             </Box>
           </Box>  
         </Box>

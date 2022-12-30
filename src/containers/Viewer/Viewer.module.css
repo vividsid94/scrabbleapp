@@ -99,7 +99,7 @@ form{
 }
 
 .playerPanel{
-  width: auto;
+  width: 380px;
   height: auto;
   font-size: 20px;
   background-color: linear-gradient(45deg, transparent 5%, #9c79b8 5%);
@@ -213,7 +213,7 @@ form{
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-evenly;
 }
 
 .topPlayerPanel{
