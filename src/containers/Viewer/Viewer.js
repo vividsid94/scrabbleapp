@@ -365,7 +365,7 @@ export default function Viewer({ onChange }){
       </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <PsychologyAltIcon className={styles.questionMark}/>
+        {mode === "VIEWER" ? "annotated game viewer" : "guess the elo!"} <PsychologyAltIcon className={styles.questionMark}/>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -406,7 +406,6 @@ export default function Viewer({ onChange }){
             </Box>
           </Box>  
         </Box>
-
       </Box>  
       </Box>   
     </Box>

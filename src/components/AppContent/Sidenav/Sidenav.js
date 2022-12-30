@@ -82,6 +82,13 @@ const MyAppBar = styled(AppBar)({
   fontFamily: 'Josefin Sans',
   background: "#14000b",
   backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
+  display: "flex",
+  justifyContent: "space-between"
+});
+
+const MyToolbar = styled(Toolbar)({
+  display: "flex",
+  justifyContent: "space-between"
 });
 
 export default function MiniDrawer() {
@@ -109,7 +116,7 @@ export default function MiniDrawer() {
   return (
     <Box>
       <MyAppBar className={styles.myAppBar}>
-        <Toolbar>
+        <MyToolbar>
           <IconButton
             color="inherit"
             aria-label="open menu"
@@ -132,7 +139,9 @@ export default function MiniDrawer() {
               Annotated Game Viewer
             </MenuItem>
           </Menu>
-        </Toolbar>
+          Tile Turnover
+          <img src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
+        </MyToolbar>
       </MyAppBar>
       <Drawer className={styles.myDrawer} variant="permanent" open={open}>
         <DrawerHeader className={styles.cfLogoContainer}>

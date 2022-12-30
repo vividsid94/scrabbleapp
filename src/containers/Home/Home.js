@@ -12,10 +12,10 @@ export default function Home(){
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.title}>
-          Word Sense<PsychologyAltIcon className={styles.questionMark}/>
+          Tile Turnover<PsychologyAltIcon className={styles.questionMark}/>
         </Box>
         <Box className={styles.subTitle}>
-          Hello! I am Word Sense. I am a React-only project designed as a happy marriage between Scrabble® and UX. I will be rolling out a wide variety of games and tools, so come on in and join the fun!
+          Hi! I am The Tile Turnover, a React-only project combining Scrabble® and UX. I will be rolling out a wide variety of games and tools, so come on in and join the fun!
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
