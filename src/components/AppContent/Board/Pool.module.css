@@ -16,3 +16,12 @@
     margin: 0 0.8em 0 0;
     font-family: 'Syne Mono' !important;
 }
+.red{
+    color: red !important;
+    font-family: 'Syne Mono' !important;
+    overflow-wrap: break-word;
+    text-align: justify;
+    font-size: 14px;
+    line-height: 28px;
+    font-family: 'Syne Mono' !important;
+}

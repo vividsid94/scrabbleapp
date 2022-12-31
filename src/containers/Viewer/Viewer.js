@@ -451,7 +451,7 @@ export default function Viewer({ onChange }){
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
-              <Pool board={pool}/>  
+              <Pool board={pool} rack={createRack()}/>  
             </Box>
           </Box>  
         </Box>

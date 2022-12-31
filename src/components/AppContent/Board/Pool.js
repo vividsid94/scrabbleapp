@@ -4,12 +4,19 @@ export default function Pool(props) {
   const board = [];
   let currentChar = null;
   let currentSpan = [];
-
+  let rack = props.rack;
   for (const char of props.board) {
     if (char !== currentChar) {
       if (currentSpan.length > 0) {
+        let className = styles.charGroup;
+        if (rack.includes(currentChar)) {
+          // Only apply the "red" class to the first X characters in the span
+          for (let i = 0; i < rack.filter(char => char === currentChar).length; i++) {
+            currentSpan[i] = <span className={`${styles.red}`}>{currentSpan[i]}</span>;
+          }
+        }
         board.push(
-          <span className={styles.charGroup}>{currentSpan}</span>
+          <span className={className}>{currentSpan}</span>
         );
       }
       currentChar = char;
@@ -20,14 +27,19 @@ export default function Pool(props) {
   }
 
   if (currentSpan.length > 0) {
+    let className = styles.charGroup;
+    if (rack.includes(currentChar)) {
+      // Only apply the "red" class to the first character in the span
+      currentSpan[0] = <span className={`${styles.red}`}>{currentSpan[0]}</span>;
+    }
     board.push(
-      <span className={styles.charGroup}>{currentSpan}</span>
+      <span className={className}>{currentSpan}</span>
     );
   }
 
   return (
     <div className={styles.poolTbl}>
-      {board} ({props.board.length})
+      {board} <br/>({props.board.length} - {rack.length})
     </div>
   );
 }
