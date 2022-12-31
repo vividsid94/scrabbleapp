@@ -266,67 +266,69 @@ export default function Viewer({ onChange }){
   }
   
   function handleMove(lastMove, thisMove, nextMove, type) {
-    console.log("USEREF", currentMoveRef.current);
-    console.log("USEREF lastmove", lastMove);
-    console.log("USEREF thismove", thisMove);
-    console.log("USEREF nextmove", nextMove);
+    console.log("MOVE", currentMoveRef.current);
+    console.log("MOVE lastmove", lastMove);
+    console.log("MOVE thismove", thisMove);
+    console.log("MOVE nextmove", nextMove);
     console.log("------------------------------------------")
   
-    const moves = [
-      { move: lastMove, parts: lastMove ? lastMove.split(" ") : null, location: null, play: null, points: null, score: null },
-      { move: thisMove, parts: thisMove ? thisMove.split(" ") : null, location: null, play: null, points: null, score: null },
-      { move: nextMove, parts: nextMove ? nextMove.split(" ") : null, location: null, play: null, points: null, score: null }
-    ];
+    const moves = {
+      lastmove: { move: lastMove, parts: lastMove ? lastMove.split(" ") : null, location: null, play: null, points: null, score: null },
+      thismove: { move: thisMove, parts: thisMove ? thisMove.split(" ") : null, location: null, play: null, points: null, score: null },
+      nextmove: { move: nextMove, parts: nextMove ? nextMove.split(" ") : null, location: null, play: null, points: null, score: null }
+    };
 
     //lastMove = lastMove.replace(/\s+/g, ' ');
     //thisMove = thisMove.replace(/\s+/g, ' ');
     //nextMove = nextMove.replace(/\s+/g, ' ');
 
-    moves.forEach(move => {
+    for (const id in moves) {
+      const move = moves[id];
       move.location = move.parts ? move.parts[2] : null;
       move.play = move.parts ? move.parts[3] : null;
       move.points = move.parts ? move.parts[4] : null;
       move.score = move.parts ? move.parts[5] : null;
-    });
+    }    
 
+    console.log(moves['nextmove'].location)
     if (type === "previous"){
-      if (moves[2].location[0] === null){
+      if (moves['nextmove'].location[0] === null){
 
       }
-      else if (moves[2].location[0] !== "-"){
-        setBoardCoords(updateBoard(moves[2].location, moves[2].play, "remove"))
-        if (moves[1].move !== undefined)
-          highlightPreviousMove(moves[1].location, moves[1].play);
-        setPool(addToPool(moves[2].play, pool));
+      else if (moves['nextmove'].location[0] !== "-"){
+        setBoardCoords(updateBoard(moves['nextmove'].location, moves['nextmove'].play, "remove"))
+        if (moves['thismove'].move !== undefined)
+          highlightPreviousMove(moves['thismove'].location, moves['thismove'].play);
+        setPool(addToPool(moves['nextmove'].play, pool));
       }
       else {
-        moves[2].points = moves[2].parts[2];
-        moves[2].score = moves[2].parts[4];
+        moves['nextmove'].points = moves['nextmove'].parts[2];
+        moves['nextmove'].score = moves['nextmove'].parts[4];
       }
       if (currentMoveRef.current % 2 === 1) {
-        setPlayer1points(moves[0].score)
+        setPlayer1points(moves['lastmove'].score)
       } else {
-        setPlayer2points(moves[0].score)
+        setPlayer2points(moves['lastmove'].score)
       } 
     } else {
-      if (moves[1].location[0] === null){
+      if (moves['thismove'].location[0] === null){
 
       }
-      else if (moves[1].location[0] !== "-"){
-        setBoardCoords(updateBoard(moves[1].location, moves[1].play, "add"));
-        setPool(removeFromPool(moves[1].play, pool));
+      else if (moves['thismove'].location[0] !== "-"){
+        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else {
-        moves[1].points = moves[1].parts[2];
-        moves[1].score = moves[1].parts[4];
+        moves['thismove'].points = moves['thismove'].parts[2];
+        moves['thismove'].score = moves['thismove'].parts[4];
       }
       if (currentMoveRef.current % 2 === 0) {
-        setPlayer1points(moves[1].score)
+        setPlayer1points(moves['thismove'].score)
       } else {
-        setPlayer2points(moves[1].score)
+        setPlayer2points(moves['thismove'].score)
       } 
     }
-    setPointsScored(moves[1].points);
+    setPointsScored(moves['thismove'].points);
   }
 
   function removeFromPool(play, pool) {
