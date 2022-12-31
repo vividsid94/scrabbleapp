@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
-@import url('https://fonts.googleapis.com/css?family=Syne+Mono');
+@import url('https://fonts.googleapis.com/css?family=Syne');
 *{
 	font-family: 'Josefin Sans', sans-serif;
 }
@@ -9,19 +9,19 @@
     text-align: justify;
     font-size: 14px;
     line-height: 28px;
-    font-family: 'Syne Mono' !important;
+    font-family: 'Syne' !important;
 }
 
 .charGroup {
     margin: 0 0.8em 0 0;
-    font-family: 'Syne Mono' !important;
+    font-family: 'Syne' !important;
 }
 .red{
     color: red !important;
-    font-family: 'Syne Mono' !important;
+    font-family: 'Syne' !important;
     overflow-wrap: break-word;
     text-align: justify;
     font-size: 14px;
     line-height: 28px;
-    font-family: 'Syne Mono' !important;
+    font-family: 'Syne' !important;
 }

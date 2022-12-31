@@ -39,7 +39,7 @@ export default function Pool(props) {
 
   return (
     <div className={styles.poolTbl}>
-      {board} <br/>({props.board.length} - {rack.length})
+      {board} <br/>({props.board.length} - {rack.length} unseen)
     </div>
   );
 }
