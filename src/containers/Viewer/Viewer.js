@@ -294,8 +294,9 @@ export default function Viewer({ onChange }){
 
       }
       else if (moves[2].location[0] !== "-"){
-        setBoardCoords(updateBoard(moves[2].location, moves[2].play, "remove")) 
-        highlightPreviousMove(moves[1].location, moves[1].play);
+        setBoardCoords(updateBoard(moves[2].location, moves[2].play, "remove"))
+        if (moves[1].move !== undefined)
+          highlightPreviousMove(moves[1].location, moves[1].play);
         setPool(addToPool(moves[2].play, pool));
       }
       else {
@@ -399,7 +400,7 @@ export default function Viewer({ onChange }){
       </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        {mode === "VIEWER" ? "annotated game viewer" : "guess the elo!"} <PsychologyAltIcon className={styles.questionMark}/>
+        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <PsychologyAltIcon className={styles.questionMark}/>
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
