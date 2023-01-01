@@ -14,7 +14,6 @@ import Cell from "../../components/AppContent/Board/Cell.js";
 import KeyIcon from '@mui/icons-material/Key';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
-import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";  
@@ -416,7 +415,7 @@ export default function Viewer({ onChange }){
       </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"} <PsychologyAltIcon className={styles.questionMark}/>
+        {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
       </Box>
       <Box className={styles.mainPanel}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
