@@ -20,7 +20,7 @@ import { letterLookup, origPool, origBoard } from "../../components/AppContent/R
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import FaceIcon from '@mui/icons-material/FaceRetouchingNatural';
 import RatingIcon from '@mui/icons-material/TwoKPlus';
-import DescriptionIcon from '@mui/icons-material/Description';
+import LaunchIcon from '@mui/icons-material/Launch';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -47,8 +47,8 @@ export default function Viewer({ onChange }){
   const [name2, setName2] = useState('');
   const [revealedName1, setRevealedName1] = useState('Player 1');
   const [revealedName2, setRevealedName2] = useState('Player 2');
-  const [displayedElo, setDisplayedElo] = useState("");
-  const [revaledElo, setRevealedElo] = useState("");
+  const [revealedElo, setRevealedElo] = useState("");
+  const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
   const [showUnlockText, setShowUnlockText] = useState(false);
@@ -93,6 +93,8 @@ export default function Viewer({ onChange }){
     setPointsScored(0);
     setRevealedName1("Player 1");
     setRevealedName2("Player 2");
+    setRevealedElo("");
+    setRevealedElo2("");
     setPool(origPool);
     console.log(gameNum)
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
@@ -138,6 +140,7 @@ export default function Viewer({ onChange }){
         let tourneyNumber = 0;
         if (matchTourney)
           tourneyNumber = matchTourney[1];
+        setTourneyNum(tourneyNumber);
         console.log("Tourney: " + tourneyNumber);
     },(errRes)=>{
         console.log(errRes)
@@ -398,7 +401,51 @@ export default function Viewer({ onChange }){
   }
 
   function revealElo(){
-
+    console.log(tourneyNum);
+    if (tourneyNum != 0){
+      axios.get('http://cross-tables.com/rest/tourney.php?tourney=' + tourneyNum + '&results=1')
+      .then((posRes)=>{
+          let sampleData = posRes.data;
+          let result = sampleData.tourney.results.find(
+            result => result.playername === name1
+          );
+          let result2 = sampleData.tourney.results.find(
+            result => result.playername === name2
+          );
+          if (result) {
+            setRevealedElo(result.oldrating + " at event");
+          }
+          if (result) {
+            setRevealedElo2(result2.oldrating + " at event");
+          }
+      },(errRes)=>{
+          console.log(errRes)
+      })
+    }
+    else{
+      axios.get('https://cross-tables.com/rest/players.php?search=' + name1)
+      .then((posRes)=>{
+          let sampleData = posRes.data;
+          for (let player of sampleData.players) {
+            if (player.name === name1) {
+              setRevealedElo(player.twlrating + " in general");
+            }
+          }
+      },(errRes)=>{
+          console.log(errRes)
+      })
+      axios.get('https://cross-tables.com/rest/players.php?search=' + name2)
+      .then((posRes)=>{
+          let sampleData = posRes.data;
+          for (let player of sampleData.players) {
+            if (player.name === name2) {
+              setRevealedElo2(player.twlrating + " in general");
+            }
+          }
+      },(errRes)=>{
+          console.log(errRes)
+      })
+    }
   }
 
   return (
@@ -446,15 +493,15 @@ export default function Viewer({ onChange }){
                   <FaceIcon className={styles.keyBtn} onClick={revealPlayers}/>
                 </Box>  
                 <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                  <RatingIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                  <RatingIcon className={styles.keyBtn} onClick={revealElo}/>
                 </Box> 
                 <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                  <DescriptionIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                  <LaunchIcon className={styles.keyBtn} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}/>
                 </Box> 
               </Box>
             </Box> 
             <Box className={styles.playerPanel}>
-              {mode === "VIEWER" ? name1 : revealedName1} 
+              {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
                 <Rack board={createRack()}/> 
               </Box> 
@@ -463,7 +510,7 @@ export default function Viewer({ onChange }){
               </Box>
             </Box>  
             <Box className={styles.playerPanel}>
-            {mode === "VIEWER" ? name2 : revealedName2} 
+            {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 0 ? 'hidden' : 'visible'}}>
                 <Rack sx={{display: "none !important"}} board={createRack()}/>  
               </Box>
