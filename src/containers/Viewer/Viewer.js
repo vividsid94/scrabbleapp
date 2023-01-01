@@ -403,7 +403,7 @@ export default function Viewer({ onChange }){
   function revealElo(){
     console.log(tourneyNum);
     if (tourneyNum != 0){
-      axios.get('http://cross-tables.com/rest/tourney.php?tourney=' + tourneyNum + '&results=1')
+      axios.get('https://cross-tables.com/rest/tourney.php?tourney=' + tourneyNum + '&results=1')
       .then((posRes)=>{
           let sampleData = posRes.data;
           let result = sampleData.tourney.results.find(
