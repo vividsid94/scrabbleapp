@@ -48,6 +48,7 @@ export default function Viewer({ onChange }){
   const [revaledElo, setRevealedElo] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
+  const [showUnlockText, setShowUnlockText] = useState(false);
 
   const handleThemeChange = event => {
     setTheme(event.target.value);
@@ -430,10 +431,10 @@ export default function Viewer({ onChange }){
                 <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
                 <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
                 <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
-                <SwapHorizIcon onClick={switchMode} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
+                <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
               </Box>
-              <Box sx={{display: !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
-                Hit board to unlock me!
+              <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
+                Hit the board to unlock me!
               </Box>
             </Box> 
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
