@@ -472,7 +472,7 @@ export default function Viewer({ onChange }){
         {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
       </Box>
       <Box className={styles.mainPanel}>
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMoveRef.current])}/>   
         </Box>
 

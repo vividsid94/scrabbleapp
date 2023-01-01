@@ -295,6 +295,7 @@ form{
   .topPlayerPanel{
     padding-bottom: 24px;
     padding-right: 0px;
+    height: 350px;
   }
   .title{
     width: 50%;
@@ -306,6 +307,8 @@ form{
   }
   .playerPanel{
     width: 90vw;
+    font-size: 15px;
+    line-height: 35px;
   }
 }
 
