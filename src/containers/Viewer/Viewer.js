@@ -436,8 +436,7 @@ export default function Viewer({ onChange }){
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                 Hit the board to unlock me!
               </Box>
-            </Box> 
-            <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
+              <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
               background: mode === "VIEWER" ? "repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)" : ""
             }}>
               <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
@@ -453,6 +452,7 @@ export default function Viewer({ onChange }){
                 Details
               </Box> 
             </Box>
+            </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? name1 : revealedName1} 
               <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>

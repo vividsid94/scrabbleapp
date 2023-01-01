@@ -226,14 +226,14 @@ form{
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: center;
 }
 
 .topPlayerPanel{
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 500px;
+  height: 450px;
   padding-bottom: 24px;
 }
 
