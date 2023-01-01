@@ -174,3 +174,28 @@
     height: 100%;
   }
 }
+
+@media screen and (min-width: 992px) and (max-width: 1200px){
+  .Board {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    background: none;
+    width: auto;
+    height: 100%;
+  }
+
+  .Board__STANDARD,
+  .Board__STANDARD:after {
+    width: auto;
+    height: 100%;
+  }
+
+  .Board__APPLE,
+  .Board__APPLE:after {
+    width: auto;
+    height: 100%;
+  }
+}
