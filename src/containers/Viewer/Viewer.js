@@ -24,7 +24,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
-  const [gameNum, setGameNum] = useState(39600);
+  const [gameNum, setGameNum] = useState(39600 /*- Josh*/ /*36230 Nigel*/);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
@@ -286,6 +286,9 @@ export default function Viewer({ onChange }){
   }
   
   function handleMove(lastMove, thisMove, nextMove, type) {
+    lastMove = lastMove ? lastMove.replace(/\s+/g, ' ') : lastMove;
+    thisMove = thisMove ? thisMove.replace(/\s+/g, ' ') : thisMove;
+    nextMove = nextMove ? nextMove.replace(/\s+/g, ' ') : nextMove;
     console.log("MOVE", currentMoveRef.current);
     console.log("MOVE lastmove", lastMove);
     console.log("MOVE thismove", thisMove);
