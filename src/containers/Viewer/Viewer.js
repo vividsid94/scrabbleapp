@@ -17,7 +17,8 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
-import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";
+import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";  
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -47,6 +48,7 @@ export default function Viewer({ onChange }){
   const [displayedElo, setDisplayedElo] = useState("");
   const [revaledElo, setRevealedElo] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
+  const [unlockEloMode, setUnlockEloMode] = useState(false);
 
   const handleThemeChange = event => {
     setTheme(event.target.value);
@@ -58,8 +60,20 @@ export default function Viewer({ onChange }){
 
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
-    let result = (Math.floor(boardClickCount / 10) % 10);
+    /*let result = (Math.floor(boardClickCount / 10) % 10);
     let newMode = result % 2 === 0 ? "VIEWER" : "GUESSELO";
+    if (mode !== newMode) {
+      randomizeGame();
+      setMode(newMode);
+      onChange(newMode);
+    }*/
+    if (boardClickCount >= 5) {
+      setUnlockEloMode(true);
+    }
+  }
+
+  const switchMode = () => {
+    let newMode = mode === "GUESSELO" ? "VIEWER" : "GUESSELO";
     if (mode !== newMode) {
       randomizeGame();
       setMode(newMode);
@@ -411,11 +425,17 @@ export default function Viewer({ onChange }){
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
-            <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
-              <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
-              <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
-              <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
+            <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
+              <Box className={`${styles.playerToggle}`}>
+                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
+                <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
+                <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
+                <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
+                <SwapHorizIcon onClick={switchMode} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
+              </Box>
+              <Box sx={{display: !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
+                Hit board to unlock me!
+              </Box>
             </Box> 
             <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
               background: mode === "VIEWER" ? "repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)" : ""

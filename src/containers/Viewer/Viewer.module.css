@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
-@import url('https://fonts.googleapis.com/css?family=Syne+Mono');
+@import url('https://fonts.googleapis.com/css?family=Syne');
 *{
 	font-family: 'Josefin Sans';
 }
@@ -122,6 +122,14 @@ form{
   align-items: center;
 }
 
+.unlockText{
+  font-size: 10px;
+  font-style: italic;
+  font-family: 'Syne' !important;
+  padding: 10px;
+  justify-content: flex-end;
+}
+
 .playerPanel:after {
   --slice-0: inset(50% 50% 50% 50%);
   --slice-1: inset(80% -6px 0 0);
@@ -231,7 +239,7 @@ form{
 
 .revealBox{
   font-size: 10px;
-  font-family: 'Syne Mono' !important;
+  font-family: 'Syne' !important;
   height: 35px;
 }
 
