@@ -16,8 +16,11 @@ import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
-import { letterLookup, origPool, origBoard} from "../../components/AppContent/References/staticData.js";  
+import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import FaceIcon from '@mui/icons-material/FaceRetouchingNatural';
+import RatingIcon from '@mui/icons-material/TwoKPlus';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -434,24 +437,21 @@ export default function Viewer({ onChange }){
                 <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
               </Box>
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
-                Hit the board to unlock me!
+                Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
               <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
-              background: mode === "VIEWER" ? "repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)" : ""
-            }}>
-              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
-                Players
-              </Box>  
-              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
-                Elo
-              </Box> 
-              <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                <KeyIcon className={styles.keyBtn} onClick={revealPlayers}/>
-                Details
-              </Box> 
-            </Box>
+                visibility: mode === "VIEWER" ? "off" : "visible"
+              }}>
+                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                  <FaceIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                </Box>  
+                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                  <RatingIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                </Box> 
+                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                  <DescriptionIcon className={styles.keyBtn} onClick={revealPlayers}/>
+                </Box> 
+              </Box>
             </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? name1 : revealedName1} 
