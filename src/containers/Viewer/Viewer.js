@@ -24,7 +24,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
-  const [gameNum, setGameNum] = useState(39600 /*- Josh*/ /*36230 Nigel*/);
+  const [gameNum, setGameNum] = useState(23936 /*- Josh*/ /*36230 Nigel*/);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
