@@ -70,7 +70,7 @@ form{
 .settingsBtn{
   font-size: 35px !important;
   cursor: pointer;
-  display: none;
+  display: none !important;
 }
 .keyBtn{
   font-size: 35px !important;
