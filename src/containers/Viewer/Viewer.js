@@ -13,7 +13,8 @@ import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 import KeyIcon from '@mui/icons-material/Key';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
@@ -505,15 +506,15 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current])}/>   
+          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current])} lastMove={currentMoveRef.current >= moveSet.length - 1}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
               <Box className={`${styles.playerToggle}`}>
-                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
-                <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
+                <KeyboardArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
+                <KeyboardArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
                 <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
                 <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
                 <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>

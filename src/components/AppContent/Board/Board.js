@@ -6,6 +6,18 @@ export default function Board(props) {
     let boardTheme = "Board__" + props.theme;
     let tableTheme = "Table__" + props.theme;
     let pointsShown = props.theme === "APPLE";
+    let message = "";
+    console.log(props.lastMove)
+    switch (props.move[0]) {
+        case "-":
+            message = "Challenged off";
+            break;
+        case "+":
+            message = props.move + " " + props.points + "(final)";
+            break;
+        default:
+            message = props.move + " " + props.points;
+    }
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
@@ -31,7 +43,7 @@ export default function Board(props) {
                 </Box>
             </Box>
             <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Footer}>
-                {props.move != null && props.move !== "N/A" ? props.move + " " + props.points : "Start of game"}
+                {message}
             </Box>
         </Box>
     )
