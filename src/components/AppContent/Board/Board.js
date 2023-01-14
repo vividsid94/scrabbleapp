@@ -16,7 +16,12 @@ export default function Board(props) {
             message = props.move + " " + props.points + "(final)";
             break;
         default:
-            message = props.move + " " + props.points;
+            if (props.move !== "N/A"){
+                message = props.move + " " + props.points;
+            }
+            else{
+                message = "Start of game";
+            }
     }
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
