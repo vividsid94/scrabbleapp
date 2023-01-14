@@ -24,11 +24,11 @@ import LaunchIcon from '@mui/icons-material/Launch';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
-  const [gameNum, setGameNum] = useState(12039 /*- Josh*/ /*36230 Nigel*/);
+  const [gameNum, setGameNum] = useState(39600 /*- Josh*/ /*36230 Nigel*/);
   const [player1, setPlayer1] = useState("");
   const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
-  const [moves, setMoves] = useState("");
+  const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
   const [boardCoords, setBoardCoords] = useState([]); 
   const [player1points, setPlayer1points] = useState(0);
@@ -52,6 +52,7 @@ export default function Viewer({ onChange }){
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
   const [showUnlockText, setShowUnlockText] = useState(false);
+  const [origPlayerRaw, setOrigPlayerRaw] = useState("");
 
   const handleThemeChange = event => {
     setTheme(event.target.value);
@@ -103,7 +104,8 @@ export default function Viewer({ onChange }){
     .then((posRes)=>{
         console.log("Game reset");
         setGameArray(posRes.data.toString().split("\n"));
-        setMoves(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
+        setMoveSet(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
+        setOrigPlayerRaw(posRes.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0]);
         setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
         setPlayer2(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))));
     },(errRes)=>{
@@ -187,12 +189,9 @@ export default function Viewer({ onChange }){
   }
 
   function createRack() {
-    var move = moves[currentMoveRef.current + 1];
-    if (move === undefined){
-      move = "LOADING LOADING LOADING LOADING";
-    }
-    const parts = move.split(" ");
-    const rack = parts[1].replace(/\?/g, " ").split('');
+    var move = moveSet[currentMoveRef.current + 1];
+    const parts = move ? move.split(" ") : '';
+    const rack = parts ? parts[1].replace(/\?/g, " ").split('') : [];
     return (
       rack.map((col, colIndex) => (
         Cell("0", colIndex, {"color": "purple", "value": col}, "rack")
@@ -313,9 +312,18 @@ export default function Viewer({ onChange }){
       move.score = move.parts ? move.parts[5] : null;
     }    
 
-    console.log(moves['nextmove'].location)
     if (type === "previous"){
-      if (moves['nextmove'].location[0] === null){
+      let moveName = thisMove ? moves['thismove'].parts[0] : 'empty';
+      let nextMoveName = nextMove ? moves['nextmove'].parts[0] : 'empty';
+      let firstMovePlayerName = moveSet[0].split(" ")[0];
+      let thisMovePlayerName = thisMove ? moves['thismove'].parts[0] : 'empty';
+      if (moveName === nextMoveName && moves['thismove'].location === "--"){
+        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        setPool(removeFromPool(moves['thismove'].play, pool));
+      }
+      else if (moveName === nextMoveName && moves['thismove'].location !== "--"){
+      }
+      else if (moves['nextmove'].location[0] === null){
 
       }
       else if (moves['nextmove'].location[0] !== "-"){
@@ -328,13 +336,31 @@ export default function Viewer({ onChange }){
         moves['nextmove'].points = moves['nextmove'].parts[2];
         moves['nextmove'].score = moves['nextmove'].parts[4];
       }
-      if (currentMoveRef.current % 2 === 1) {
-        setPlayer1points(moves['lastmove'].score)
+      if (moveName !== nextMoveName) {
+        if (thisMovePlayerName === firstMovePlayerName)
+          setPlayer2points(lastMove ? moves['lastmove'].score : 0)
+        else
+          setPlayer1points(lastMove ? moves['lastmove'].score : 0)
       } else {
-        setPlayer2points(moves['lastmove'].score)
+        if (thisMovePlayerName === firstMovePlayerName)
+          setPlayer2points(lastMove ? moves['lastmove'].score : 0)
+        else
+          setPlayer1points(lastMove ? moves['lastmove'].points : 0)
       } 
+
     } else {
-      if (moves['thismove'].location[0] === null){
+      let moveName = thisMove ? moves['thismove'].parts[0] : 'empty';
+      let lastMoveName = lastMove ? moves['lastmove'].parts[0] : 'empty';
+      let firstMovePlayerName = moveSet[0].split(" ")[0];
+      let thisMovePlayerName = moves['thismove'].parts[0];
+      if (moveName === lastMoveName && moves['thismove'].location === "--"){
+        setBoardCoords(updateBoard(moves['lastmove'].location, moves['lastmove'].play, "remove"));
+        setPool(addToPool(moves['lastmove'].play, pool));
+      }
+      else if (moveName === lastMoveName && moves['thismove'].location !== "--"){
+        moves['thismove'].score = moves['thismove'].play;
+      }
+      else if (moves['thismove'].location[0] === null){
 
       }
       else if (moves['thismove'].location[0] !== "-"){
@@ -345,10 +371,16 @@ export default function Viewer({ onChange }){
         moves['thismove'].points = moves['thismove'].parts[2];
         moves['thismove'].score = moves['thismove'].parts[4];
       }
-      if (currentMoveRef.current % 2 === 0) {
-        setPlayer1points(moves['thismove'].score)
+      if (moveName !== lastMoveName) {
+        if (thisMovePlayerName === firstMovePlayerName)
+          setPlayer1points(moves['thismove'].score)
+        else
+          setPlayer2points(moves['thismove'].score)
       } else {
-        setPlayer2points(moves['thismove'].score)
+        if (thisMovePlayerName === firstMovePlayerName)
+          setPlayer1points(moves['thismove'].score)
+        else
+          setPlayer2points(moves['thismove'].points)
       } 
     }
     setPointsScored(moves['thismove'].points);
@@ -473,15 +505,15 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moves[currentMoveRef.current])}/>   
+          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current])}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
               <Box className={`${styles.playerToggle}`}>
-                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
-                <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {currentMoveRef.current += 1; handleMove(moves[currentMoveRef.current - 1] /*last move*/, moves[currentMoveRef.current] /*this move*/, moves[currentMoveRef.current + 1] /*next move*/, "next");}}/>
+                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
+                <KeyboardDoubleArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
                 <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
                 <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
                 <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
@@ -505,7 +537,7 @@ export default function Viewer({ onChange }){
             </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
-              <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 1 ? 'hidden' : 'visible'}}>
+              <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'visible' : 'hidden'}}>
                 <Rack board={createRack()}/> 
               </Box> 
               <Box>
@@ -514,7 +546,7 @@ export default function Viewer({ onChange }){
             </Box>  
             <Box className={styles.playerPanel}>
             {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
-              <Box className={styles.Rack} sx={{visibility: (currentMoveRef.current + 1) % 2 === 0 ? 'hidden' : 'visible'}}>
+              <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'hidden' : 'visible'}}>
                 <Rack sx={{display: "none !important"}} board={createRack()}/>  
               </Box>
               <Box>
