@@ -4,7 +4,7 @@ export default function Pool(props) {
   const board = [];
   let currentChar = null;
   let currentSpan = [];
-  let rack = props.rack.map(val => val === " " ? "?" : val);;
+  let rack = props.rack.map(val => val === " " ? "?" : val);
   for (const char of props.board) {
     if (char !== currentChar) {
       if (currentSpan.length > 0) {
