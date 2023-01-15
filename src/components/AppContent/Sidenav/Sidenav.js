@@ -139,7 +139,6 @@ export default function MiniDrawer() {
               Annotated Game Viewer
             </MenuItem>
           </Menu>
-          Tile Turnover
           <img src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </MyToolbar>
       </MyAppBar>

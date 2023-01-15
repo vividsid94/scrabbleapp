@@ -287,7 +287,7 @@ form{
 
 @media screen and (max-width: 676px) {
   .rightPanel{
-    padding: 0px 24px;
+    padding: 0px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
@@ -308,9 +308,11 @@ form{
     height: 300px;
   }
   .title{
-    width: 50%;
     margin: auto;
-    font-size: 30px;
+    font-size: 25px;
+  }
+  .page{
+    margin-top: 80px;
   }
   body{
     font-size: 10px;
@@ -319,6 +321,9 @@ form{
     width: 90vw;
     font-size: 13px;
     line-height: 27px;
+  }
+  .mainBox{
+    padding: 16px !important;
   }
 }
 
