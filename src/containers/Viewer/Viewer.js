@@ -19,7 +19,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import FaceIcon from '@mui/icons-material/FaceRetouchingNatural';
+import GroupIcon from '@mui/icons-material/Group';
 import RatingIcon from '@mui/icons-material/TwoKPlus';
 import LaunchIcon from '@mui/icons-material/Launch';
 
@@ -454,7 +454,7 @@ export default function Viewer({ onChange }){
           let sampleData = posRes.data;
           for (let player of sampleData.players) {
             if (player.name === name1) {
-              setRevealedElo(player.twlrating + " in general");
+              setRevealedElo(player.twlrating + " currently");
             }
           }
       },(errRes)=>{
@@ -465,7 +465,7 @@ export default function Viewer({ onChange }){
           let sampleData = posRes.data;
           for (let player of sampleData.players) {
             if (player.name === name2) {
-              setRevealedElo2(player.twlrating + " in general");
+              setRevealedElo2(player.twlrating + " currently");
             }
           }
       },(errRes)=>{
@@ -512,16 +512,14 @@ export default function Viewer({ onChange }){
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                 Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
-              <Box className={`${styles.playerPanel} ${styles.playerToggle}`} style={{
-                visibility: mode === "VIEWER" ? "off" : "visible"
-              }}>
-                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
-                  <FaceIcon className={styles.keyBtn} onClick={revealPlayers}/>
+              <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
+                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'block' : 'none'}}>
+                  <GroupIcon className={styles.keyBtn} onClick={revealPlayers}/>
                 </Box>  
-                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'block' : 'none'}}>
                   <RatingIcon className={styles.keyBtn} onClick={revealElo}/>
                 </Box> 
-                <Box className={styles.revealBox} sx={{visibility: mode === "GUESSELO" ? 'visible' : 'hidden'}}>
+                <Box className={styles.revealBox}>
                   <LaunchIcon className={styles.keyBtn} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}/>
                 </Box> 
               </Box>
