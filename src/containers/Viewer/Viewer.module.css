@@ -287,7 +287,7 @@ form{
 
 @media screen and (max-width: 676px) {
   .rightPanel{
-    padding: 0px;
+    padding: 0px 0px 24px 0px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
@@ -303,9 +303,9 @@ form{
     display: none;
   }
   .topPlayerPanel{
-    padding-bottom: 18px;
+    padding-bottom: 12px;
     padding-right: 0px;
-    height: 300px;
+    height: 270px;
   }
   .title{
     margin: auto;
