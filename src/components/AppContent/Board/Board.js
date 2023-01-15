@@ -7,7 +7,6 @@ export default function Board(props) {
     let tableTheme = "Table__" + props.theme;
     let pointsShown = props.theme === "APPLE";
     let message = "";
-    console.log(props.lastMove)
     switch (props.move[0]) {
         case "-":
             message = "Challenged off";

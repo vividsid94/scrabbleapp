@@ -98,7 +98,6 @@ export default function Viewer({ onChange }){
     setRevealedElo("");
     setRevealedElo2("");
     setPool(origPool);
-    console.log(gameNum)
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
     let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
@@ -144,7 +143,6 @@ export default function Viewer({ onChange }){
         if (matchTourney)
           tourneyNumber = matchTourney[1];
         setTourneyNum(tourneyNumber);
-        console.log("Tourney: " + tourneyNumber);
     },(errRes)=>{
         console.log(errRes)
     })
@@ -196,15 +194,6 @@ export default function Viewer({ onChange }){
     return (
       rack.map((col, colIndex) => (
         Cell("0", colIndex, {"color": "purple", "value": col}, "rack")
-      ))
-    ); 
-  }
-
-  function createPool() {
-    const modifiedPool = pool.split('');
-    return (
-      modifiedPool.map((col, colIndex) => (
-        Cell("0", colIndex, {"color": "grey", "value": col}, "pool")
       ))
     ); 
   }
@@ -329,8 +318,9 @@ export default function Viewer({ onChange }){
       }
       else if (moves['nextmove'].location[0] !== "-"){
         setBoardCoords(updateBoard(moves['nextmove'].location, moves['nextmove'].play, "remove"))
-        if (moves['thismove'].move !== undefined)
+        if (moves['thismove'].move !== undefined && moves['thismove'].location[0] !== "-"){
           highlightPreviousMove(moves['thismove'].location, moves['thismove'].play);
+        }
         setPool(addToPool(moves['nextmove'].play, pool));
       }
       else {
