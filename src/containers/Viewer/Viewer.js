@@ -319,7 +319,8 @@ export default function Viewer({ onChange }){
         if (moves['thismove'].move !== undefined && moves['thismove'].location[0] !== "-"){
           highlightPreviousMove(moves['thismove'].location, moves['thismove'].play);
         }
-        setPool(addToPool(moves['nextmove'].play, pool));
+        if (moveName !== nextMoveName)
+          setPool(addToPool(moves['nextmove'].play, pool));
       }
       else if (moves['nextmove'].location === "--"){
         setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
