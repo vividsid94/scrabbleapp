@@ -321,7 +321,7 @@ export default function Viewer({ onChange }){
         }
         setPool(addToPool(moves['nextmove'].play, pool));
       }
-      else if (moves['nextmove'].location[0] === "-"){
+      else if (moves['nextmove'].location === "--"){
         setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
       }
       else {
@@ -518,7 +518,7 @@ export default function Viewer({ onChange }){
                   <GroupIcon className={styles.keyBtn} onClick={revealPlayers}/>
                 </Box>  
                 <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'block' : 'none'}}>
-                  <RatingIcon className={styles.keyBtn} onClick={revealElo}/>
+                  <img onClick={revealElo} className={styles.keyBtn} height = '32' src={'/images/ELO.png'}></img>
                 </Box> 
                 <Box className={styles.revealBox}>
                   <LaunchIcon className={styles.keyBtn} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}/>

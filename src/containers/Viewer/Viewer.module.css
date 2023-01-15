@@ -242,6 +242,8 @@ form{
   font-size: 10px;
   font-family: 'Syne' !important;
   height: 35px;
+  display: flex !important;
+  align-items: center;
 }
 
 .Arrows{
