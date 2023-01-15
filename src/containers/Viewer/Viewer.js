@@ -311,8 +311,6 @@ export default function Viewer({ onChange }){
         setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
-      else if (moveName === nextMoveName && moves['thismove'].location !== "--"){
-      }
       else if (moves['nextmove'].location[0] === null){
 
       }
@@ -322,6 +320,9 @@ export default function Viewer({ onChange }){
           highlightPreviousMove(moves['thismove'].location, moves['thismove'].play);
         }
         setPool(addToPool(moves['nextmove'].play, pool));
+      }
+      else if (moves['nextmove'].location[0] === "-"){
+        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
       }
       else {
         moves['nextmove'].points = moves['nextmove'].parts[2];
