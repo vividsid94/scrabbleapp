@@ -287,18 +287,25 @@ form{
 
 @media screen and (max-width: 676px) {
   .rightPanel{
-    padding: 24px;
+    padding: 0px 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
+  }
+  .playerToggle {
+    padding: auto;
+    height: 15px;
+  }
+  .playerToggle svg{
+    font-size: 20px !important
   }
   .questionMark{
     display: none;
   }
   .topPlayerPanel{
-    padding-bottom: 24px;
+    padding-bottom: 18px;
     padding-right: 0px;
-    height: 350px;
+    height: 300px;
   }
   .title{
     width: 50%;
@@ -310,8 +317,8 @@ form{
   }
   .playerPanel{
     width: 90vw;
-    font-size: 15px;
-    line-height: 35px;
+    font-size: 13px;
+    line-height: 27px;
   }
 }
 

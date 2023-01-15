@@ -25,3 +25,9 @@
     line-height: 28px;
     font-family: 'Syne' !important;
 }
+
+@media screen and (max-width: 676px) {
+    .poolTbl, .red{
+      font-size: 10px !important;
+    }
+  }
