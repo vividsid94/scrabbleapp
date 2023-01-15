@@ -324,6 +324,7 @@ export default function Viewer({ onChange }){
       }
       else if (moves['nextmove'].location === "--"){
         setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else {
         moves['nextmove'].points = moves['nextmove'].parts[2];
