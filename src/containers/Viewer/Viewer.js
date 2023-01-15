@@ -514,10 +514,10 @@ export default function Viewer({ onChange }){
                 Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
               <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'block' : 'none'}}>
+                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
                   <GroupIcon className={styles.keyBtn} onClick={revealPlayers}/>
                 </Box>  
-                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'block' : 'none'}}>
+                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
                   <img onClick={revealElo} className={styles.keyBtn} height = '32' src={'/images/ELO.png'}></img>
                 </Box> 
                 <Box className={styles.revealBox}>
