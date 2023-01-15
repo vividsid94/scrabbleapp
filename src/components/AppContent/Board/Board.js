@@ -7,20 +7,25 @@ export default function Board(props) {
     let tableTheme = "Table__" + props.theme;
     let pointsShown = props.theme === "APPLE";
     let message = "";
-    switch (props.move[0]) {
-        case "-":
-            message = "Challenged off";
-            break;
-        case "+":
-            message = props.move + " " + props.points + "(final)";
-            break;
-        default:
-            if (props.move !== "N/A"){
-                message = props.move + " " + props.points;
-            }
-            else{
-                message = "Start of game";
-            }
+    if (/^-[^-]/.test(props.move)){
+        message = "Unsuccessfully challenged"
+    }
+    else{
+        switch (props.move[0]) {
+            case "-":
+                message = "Challenged off";
+                break;
+            case "+":
+                message = props.move + " " + props.points + "(final)";
+                break;
+            default:
+                if (props.move !== "N/A"){
+                    message = props.move + " " + props.points;
+                }
+                else{
+                    message = "Start of game";
+                }
+        }
     }
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>

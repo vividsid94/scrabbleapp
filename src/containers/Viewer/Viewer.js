@@ -11,8 +11,6 @@ import Modal from '@mui/material/Modal';
 
 import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
-import KeyIcon from '@mui/icons-material/Key';
-import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -20,7 +18,6 @@ import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import GroupIcon from '@mui/icons-material/Group';
-import RatingIcon from '@mui/icons-material/TwoKPlus';
 import LaunchIcon from '@mui/icons-material/Launch';
 
 export default function Viewer({ onChange }){
