@@ -292,9 +292,6 @@ form{
     flex-direction: column;
     justify-content: space-evenly;
   }
-  .settingsBtn{
-    display: none !important;
-  }
   .questionMark{
     display: none;
   }
@@ -319,7 +316,23 @@ form{
 }
 
 @media screen and (max-width: 1200px) {
-  .settingsBtn{
-    display: none !important;
+
+}
+
+@media screen and (max-height: 992px) and (min-width: 1200px){
+  .Board {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+    height: 600px;
+  }
+  .playerPanel{
+    font-size: 16px;
+    line-height: 40px;
+  }
+  .topPlayerPanel{
+    height: 400px;
   }
 }
