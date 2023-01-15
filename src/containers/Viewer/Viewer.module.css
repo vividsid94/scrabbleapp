@@ -249,7 +249,10 @@ form{
   font-size: 35px !important;
 }
 
-
+.mainBox{
+  display: flex;
+  justify-content: center;
+}
 
 .Rack{
 	display: flex;
