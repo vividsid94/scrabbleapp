@@ -45,7 +45,7 @@
     }
 }
 
-@media screen and (max-height: 992px) {
+@media screen and (max-height: 992px)  and (min-width: 1200px){
     .Cell__STANDARD{
         width: 25px;
         height: 25px;
