@@ -514,7 +514,7 @@ export default function Viewer({ onChange }){
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
               <Box className={`${styles.playerToggle}`}>
                 <KeyboardArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
-                <KeyboardArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
+                <KeyboardArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
                 <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
                 <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
                 <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
