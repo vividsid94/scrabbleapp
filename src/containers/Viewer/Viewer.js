@@ -13,6 +13,7 @@ import cellType from "../../components/AppContent/Board/cellType.js";
 import Cell from "../../components/AppContent/Board/Cell.js";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
@@ -36,6 +37,7 @@ export default function Viewer({ onChange }){
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [theme, setTheme] = useState("STANDARD");
+  const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
@@ -52,10 +54,12 @@ export default function Viewer({ onChange }){
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
 
+  const handleDictionaryChange = event => {
+    setDictionary(event.target.value);
+  };
   const handleThemeChange = event => {
     setTheme(event.target.value);
   };
-
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -118,13 +122,18 @@ export default function Viewer({ onChange }){
           const endIndex = text.indexOf('</b>', startIndex);
           if (endIndex !== -1) {
             const extractedText = text.substring(startIndex + 18, endIndex);
+            if (dictionary === "TWL" && !(extractedText.startsWith("TWL") || extractedText.startsWith("NWL"))){
+              randomizeGame();
+            }
+            else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
+              randomizeGame();
+            }
             setGameDictionary(extractedText);
           }
         }
 
         const regex = /<tr><td>([^<]+)<\/td>/g;
         const matches = text.matchAll(regex);
-        
         let i = 0;
         for (const match of matches) {
           if (i === 0) {
@@ -426,6 +435,13 @@ export default function Viewer({ onChange }){
     setRevealedName2(name2);
   }
 
+  function beginningOfGame(){
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    setBoardCoords(parsedOrigBoardCoords); 
+    currentMoveRef.current = -1;
+    setPool(origPool);
+  }
+
   function revealElo(){
     console.log(tourneyNum);
     if (tourneyNum != 0){
@@ -484,10 +500,16 @@ export default function Viewer({ onChange }){
         aria-describedby="modal-modal-description"
       >
         <Box className={styles.modalContainer}>
-          <select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
+          Dictionary
+          {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
+            <option value="ANY">Any</option>
+            <option value="TWL">TWL/NWL</option>
+            <option value="CSW">CSW</option>
+          </select>}
+          {/*<select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
             <option value="STANDARD">Standard</option>
             <option value="APPLE">Apple</option>
-          </select>
+          </select>*/}
         </Box>
       </Modal>
       <Box className={styles.page}>
@@ -503,6 +525,7 @@ export default function Viewer({ onChange }){
           <Box className={styles.topPlayerPanel}>
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
               <Box className={`${styles.playerToggle}`}>
+                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={beginningOfGame}/>
                 <KeyboardArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
                 <KeyboardArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
                 <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>

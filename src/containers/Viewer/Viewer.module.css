@@ -26,6 +26,10 @@ form{
 
 .modalContainer{
   position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
   border: 5px solid rgb(173, 88, 39);
   padding: 25px;
   width: auto;
@@ -34,11 +38,6 @@ form{
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-.modalContainer select{
-  padding: 25px !important;
-  font-size: 16x;
 }
 
 .modalContainer option{
@@ -54,7 +53,9 @@ form{
 }
 
 .styleSelection{
-  padding: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 16x;
   cursor: pointer;
   height: auto; 
   background: linear-gradient(45deg, transparent 5%, #14000b 5%);
@@ -70,7 +71,6 @@ form{
 .settingsBtn{
   font-size: 35px !important;
   cursor: pointer;
-  display: none !important;
 }
 .keyBtn{
   font-size: 35px !important;
