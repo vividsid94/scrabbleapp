@@ -44,3 +44,14 @@
         align-items: flex-end;
     }
 }
+
+@media screen and (max-height: 992px) {
+    .Cell__STANDARD{
+        width: 25px;
+        height: 25px;
+        display: flex;  
+        font-size: 22px;
+        justify-content: center;
+        align-items: flex-end;
+    }
+}

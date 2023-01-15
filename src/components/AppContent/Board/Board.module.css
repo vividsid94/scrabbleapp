@@ -199,3 +199,14 @@
     height: 100%;
   }
 }
+
+@media screen and (max-height: 992px) and (min-width: 1200px){
+  .Board {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+    height: 600px;
+  }
+}
