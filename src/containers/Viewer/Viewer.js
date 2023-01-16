@@ -128,6 +128,9 @@ export default function Viewer({ onChange }){
             else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
               randomizeGame();
             }
+            else{
+              console.log("FINISHED")
+            }
             setGameDictionary(extractedText);
           }
         }

@@ -7,7 +7,6 @@ export default function Board(props) {
     let tableTheme = "Table__" + props.theme;
     let pointsShown = props.theme === "APPLE";
     let message = "";
-    console.log(props.move)
     if (/^-[^-\s]/.test(props.move)){
         message = "Exchanged: " + props.move.substring(1, props.move.indexOf(" ")); 
     }
