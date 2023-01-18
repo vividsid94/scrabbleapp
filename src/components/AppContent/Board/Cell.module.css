@@ -14,17 +14,6 @@
     justify-content: center;
     align-items: flex-end;
 }
-.cellPool{
-    width: 15px;
-    height: 15px;
-    display: flex;  
-    font-size: 25px;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-    border: 2px solid black;
-    user-select: none;
-}
 
 @media screen and (max-width: 676px) {
     .Cell__APPLE{

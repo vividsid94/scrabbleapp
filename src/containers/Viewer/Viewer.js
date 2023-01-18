@@ -37,6 +37,7 @@ export default function Viewer({ onChange }){
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [theme, setTheme] = useState("STANDARD");
+  const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
@@ -59,6 +60,9 @@ export default function Viewer({ onChange }){
   };
   const handleThemeChange = event => {
     setTheme(event.target.value);
+  };
+  const handleTileChange = event => {
+    setTiles(event.target.value);
   };
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -186,15 +190,30 @@ export default function Viewer({ onChange }){
     return (
       boardCoords.map((row, rowIndex) => (
         row.map((col, colIndex) => {
+          let border = { top: false, bottom: false, left: false, right: false };
           if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
-            return Cell(rowIndex, colIndex, cellType(col, "flagged"), "board", theme);
+            // Check if there is a neighboring cell in currentMoveCoords
+            if (!currentMoveCoords.some(coord => coord[0] === rowIndex - 1 && coord[1] === colIndex)) {
+              border.top = true;
+            }
+            if (!currentMoveCoords.some(coord => coord[0] === rowIndex + 1 && coord[1] === colIndex)) {
+              border.bottom = true;
+            }
+            if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex - 1)) {
+              border.left = true;
+            }
+            if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
+              border.right = true;
+            }
+            return Cell(rowIndex, colIndex, cellType(col, "flagged", border, tiles), "board", theme, tiles);
           } else {
-            return Cell(rowIndex, colIndex, cellType(col, "apple"), "board", theme);
+            return Cell(rowIndex, colIndex, cellType(col, "apple", border, tiles), "board", theme, tiles);
           }
         })
       ))
     ); 
   }
+  
 
   function createRack() {
     var move = moveSet[currentMoveRef.current + 1];
@@ -503,12 +522,21 @@ export default function Viewer({ onChange }){
         aria-describedby="modal-modal-description"
       >
         <Box className={styles.modalContainer}>
-          Dictionary
-          {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
-            <option value="ANY">Any</option>
-            <option value="TWL">TWL/NWL</option>
-            <option value="CSW">CSW</option>
-          </select>}
+          <Box className={styles.modalContainer__dictionary}>
+            Dictionary
+            {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
+              <option value="ANY">Any</option>
+              <option value="TWL">TWL/NWL</option>
+              <option value="CSW">CSW</option>
+            </select>}
+          </Box>
+          <Box className={styles.modalContainer__tiles}>
+            Tiles
+            {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
+              <option value="PROTILES">Protiles</option>
+              <option value="LETTERS">Letters</option>
+            </select>}
+          </Box>
           {/*<select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
             <option value="STANDARD">Standard</option>
             <option value="APPLE">Apple</option>

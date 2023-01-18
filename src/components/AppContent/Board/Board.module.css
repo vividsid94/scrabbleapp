@@ -1,4 +1,7 @@
 
+*{
+	border-spacing: 0px !important;
+}
 
 /* CSS */
 .Header{
@@ -45,10 +48,8 @@
   flex-direction: column;
 }
 
-.TableContainer {
-  flex: 6;
-  display: flex;
-  justify-content: center;
+td {
+  padding: 0px;
 }
 
 .Board__STANDARD,
