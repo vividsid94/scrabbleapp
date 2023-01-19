@@ -11,7 +11,7 @@ export default function Board(props) {
         message = "Exchanged: " + props.move.substring(1, props.move.indexOf(" ")); 
     }
     else if (/^-[^-]/.test(props.move)){
-        message = "Unsuccessfully challenged"
+        message = "Unsuccessfully challenged or passed"
     }
     else{
         switch (props.move[0]) {
