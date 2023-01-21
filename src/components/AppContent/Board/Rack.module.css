@@ -9,6 +9,15 @@
     font-size: 25px;
     height: 45px;
 }
+.Rack_protiles{
+    display: flex;
+    flex-direction: row;
+    font-size: 25px;
+    height: 100%;
+    width: 100%;
+    border-radius: 6px;
+    filter: contrast(150%) hue-rotate(90deg);
+}
 .Tile{
     width: 45px;
     height: 45px;

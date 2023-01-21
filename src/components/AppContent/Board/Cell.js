@@ -16,13 +16,6 @@ export default (function() {
       }
     let cellTheme = "Cell__" + theme;
 
-    function element(letter) {
-        if (letter){
-            let srcString = preloadedImages[/[a-z]/.test(letter) ? '_' : letter].src;
-            return <img className={styles.keyBtn} height='100%' src={srcString}></img>;
-        }
-    }
-
     function cell(letter){
         if (letter){
             let src = ( 'url(' + preloadedImages[/[a-z]/.test(letter) ? '_' : letter].src + ')');

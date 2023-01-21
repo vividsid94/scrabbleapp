@@ -581,7 +581,7 @@ export default function Viewer({ onChange }){
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
               <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'visible' : 'hidden'}}>
-                <Rack board={createRack()}/> 
+                <Rack board={createRack()} tiles={tiles}/> 
               </Box> 
               <Box>
                 {player1points} points
@@ -590,7 +590,7 @@ export default function Viewer({ onChange }){
             <Box className={styles.playerPanel}>
             {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
               <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'hidden' : 'visible'}}>
-                <Rack sx={{display: "none !important"}} board={createRack()}/>  
+                <Rack sx={{display: "none !important"}} board={createRack()} tiles={tiles}/>  
               </Box>
               <Box>
                 {player2points} points
