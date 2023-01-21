@@ -29,7 +29,7 @@ export default function cellType(type, flag, border, tiles){
             result = {
                 "value": "",
                 "color": "#FDF5D8",
-                "image": "url('https://www.transparenttextures.com/patterns/bright-squares.png')",
+                "image": "url('https://www.transparenttextures.com/patterns/white-carbon.png')",
                 "boxShadow": regBoxShadow
             };
             break;
