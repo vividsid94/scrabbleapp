@@ -90,6 +90,7 @@ form{
 }
 .keyBtn{
   font-size: 35px !important;
+  font-family: 'Dancing Script' !important;
   cursor: pointer;
   transform: translate(--slice-0);
 }

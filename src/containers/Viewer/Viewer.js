@@ -21,13 +21,10 @@ import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import HistoryIcon from '@mui/icons-material/History';
-//import { makeStyles } from '@material-ui/core/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
@@ -69,7 +66,6 @@ export default function Viewer({ onChange }){
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
 
-  const [latestGame, setLatestGame] = useState(40000);
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
   const [recentGameNums, setRecentGameNums] = useState([]);
@@ -122,7 +118,6 @@ export default function Viewer({ onChange }){
     setRevealedElo("");
     setRevealedElo2("");
     setPool(origPool);
-    setLatestGame(40000);
     setRecentNames([]);
     setRecentDictionaries([]);
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
@@ -194,7 +189,6 @@ export default function Viewer({ onChange }){
         let match = text.match(re);
         if (match) {
             let href = `${match[1]}`;
-            setLatestGame(href);
         } else {
             console.log("No match found for annotated game.");
         }
@@ -706,7 +700,7 @@ export default function Viewer({ onChange }){
                   <GroupIcon className={styles.keyBtn} onClick={revealPlayers}/>
                 </Box>  
                 <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
-                  <img onClick={revealElo} className={styles.keyBtn} height = '32' src={'/images/ELO.png'}></img>
+                  <Typography onClick={revealElo} className={styles.keyBtn}>Elo</Typography>
                 </Box> 
                 <Box className={styles.revealBox} sx={{display: mode !== "GUESSELO" ? 'flex' : 'none'}}>
                   <HistoryIcon className={styles.keyBtn} onClick={handleOpen2}/>
