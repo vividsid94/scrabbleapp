@@ -21,6 +21,16 @@ import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import HistoryIcon from '@mui/icons-material/History';
+//import { makeStyles } from '@material-ui/core/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import Pagination from '@mui/material/Pagination';
+import Typography from '@mui/material/Typography';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -62,6 +72,7 @@ export default function Viewer({ onChange }){
   const [latestGame, setLatestGame] = useState(40000);
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
+  const [recentGameNums, setRecentGameNums] = useState([]);
 
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
@@ -178,6 +189,7 @@ export default function Viewer({ onChange }){
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink))
       .then((posRes) => {
         let text = posRes.data;
+        console.log(text);
         let re = /<a href='annotated\.php\?u=(\d+)'>View<\/a>/;
         let match = text.match(re);
         if (match) {
@@ -186,12 +198,17 @@ export default function Viewer({ onChange }){
         } else {
             console.log("No match found for annotated game.");
         }
-        let re2 = /<td class='nobr'>(.*?)<\/td>/g;
+        let re2 = /<td class='nobr'>(.*?)<\/td>|<td class='nobr'>(.*)/g;
         let match2;
         let count = 0;
         let removeAnchorTag = /<a.*?>(.*?)<\/a>/g;
-        while ((match2 = re2.exec(text)) && count <= 20) {
-          let extractedTag = match2[1].replace(removeAnchorTag, "$1")
+        while ((match2 = re2.exec(text)) && count <= 50) {
+          let extractedTag;
+          if (match2[1]) {
+            extractedTag = match2[1].replace(removeAnchorTag, "$1");
+          } else if (match2[2]) {
+            extractedTag = match2[2].replace(removeAnchorTag, "$1").replace(/<td>$/, "");
+          }
           setRecentNames(prevRecentNames => [...prevRecentNames, extractedTag]);
           count++;
         }
@@ -201,10 +218,15 @@ export default function Viewer({ onChange }){
         let regex = /<td class='tdc nobr'>(.*?)<\/a><\/td>/g;
         let match3;
         let count2 = 0;
-        while ((match3 = regex.exec(text)) && count2 <= 40) {
+        while ((match3 = regex.exec(text)) && count2 <= 100) {
+            console.log(match3[1]);
             let extractedTag = match3[1].replace(removeAnchorTag, "$1")
             if (!extractedTag.match(/<a/)) {
               setRecentDictionaries(prevRecentNames => [...prevRecentNames, extractedTag]);
+            }
+            else{
+              let number = match3[1].match(/\d+/);
+              setRecentGameNums(prevRecentGameNums => [...prevRecentGameNums, number[0]]);
             }
             count2++;
         }        
@@ -565,28 +587,54 @@ export default function Viewer({ onChange }){
     }
   }
 
-  function getRecentGames(){
-    let game = latestGame;
+  function RecentGames() {
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const gamesPerPage = 10;
+  
+    const handlePageChange = (event, value) => {
+      setCurrentPage(value);
+    };
+  
+    const startIndex = (currentPage - 1) * gamesPerPage;
+    const endIndex = startIndex + gamesPerPage;
+    const currentGames = recentDictionaries.slice(startIndex, endIndex);
     return (
-      <table className={styles.recentGames}>
-        <thead>
-          <tr>
-            <th>Game</th>
-            <th>Dictionary</th>
-            <th>Players</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recentDictionaries.map((item, index) => (
-            <tr key={index}>
-              <td className={styles.viewRecentGames}><VisibilityOutlinedIcon target="_blank" className={styles.keyBtnSmall} onClick={() => chooseGame(game - index)}/>
-              <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + game--, '_blank')}/></td>
-              <td>{recentDictionaries[index]}</td>
-              <td>{recentNames[index + 1]}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div>
+        <Typography
+          variant="h8"
+          id="tableTitle"
+          component="div"
+        >
+          Recent Games
+        </Typography>
+        <Table className={styles.recentGames}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Game</TableCell>
+              <TableCell>Dictionary</TableCell>
+              <TableCell>Players</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentGames.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(recentGameNums[startIndex + index])}/>
+                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${recentGameNums[startIndex + index]}`, '_blank')}/>
+                </TableCell>
+                <TableCell>{recentDictionaries[startIndex + index]}</TableCell>
+                <TableCell>{recentNames[startIndex + index + 1]}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Pagination
+          count={Math.ceil(recentDictionaries.length / gamesPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color='primary'
+        />
+      </div>
     );
   }
 
@@ -627,7 +675,7 @@ export default function Viewer({ onChange }){
         onClose={handleClose2}
       >
         <Box className={styles.modalContainer}>
-          {getRecentGames()}
+          {RecentGames()}
         </Box>
       </Modal>
       <Box className={styles.page}>
