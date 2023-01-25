@@ -93,6 +93,21 @@ form{
   cursor: pointer;
   transform: translate(--slice-0);
 }
+.keyBtnSmall{
+  font-size: 18px !important;
+  cursor: pointer;
+  transform: translate(--slice-0);
+}
+.recentGames td{
+  padding: 5px;
+}
+.viewRecentGames{
+  display: flex;
+  align-items: center;
+}
+.viewRecentGames svg{
+  margin-left: 2px;
+}
 .customInputNum{
   padding: 10px;
   width: auto;

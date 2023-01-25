@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
-import Typography from "@mui/material/Typography";
 import styles from './Viewer.module.css';
 import axios from 'axios';
 import Board from "../../components/AppContent/Board/Board.js";
@@ -20,6 +19,8 @@ import { letterLookup, origPool, origBoard } from "../../components/AppContent/R
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import HistoryIcon from '@mui/icons-material/History';
 
 export default function Viewer({ onChange }){
   const [gameArray, setGameArray] = useState("");
@@ -40,10 +41,13 @@ export default function Viewer({ onChange }){
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
+  const [open2, setOpen2] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleOpen2 = () => setOpen2(true);
+  const handleClose2 = () => setOpen2(false);
   const [name1, setName1] = useState('');
   const [name2, setName2] = useState('');
   const [revealedName1, setRevealedName1] = useState('Player 1');
@@ -54,6 +58,10 @@ export default function Viewer({ onChange }){
   const [unlockEloMode, setUnlockEloMode] = useState(false);
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
+
+  const [latestGame, setLatestGame] = useState(40000);
+  const [recentNames, setRecentNames] = useState([]);
+  const [recentDictionaries, setRecentDictionaries] = useState([]);
 
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
@@ -103,6 +111,9 @@ export default function Viewer({ onChange }){
     setRevealedElo("");
     setRevealedElo2("");
     setPool(origPool);
+    setLatestGame(40000);
+    setRecentNames([]);
+    setRecentDictionaries([]);
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
     let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
     axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
@@ -112,6 +123,8 @@ export default function Viewer({ onChange }){
         setMoveSet(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
         setOrigPlayerRaw(posRes.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0]);
         setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
+        let name = getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))).trim();
+        let name2 = getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))).trim();
         setPlayer2(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))));
     },(errRes)=>{
         console.log(errRes)
@@ -159,6 +172,46 @@ export default function Viewer({ onChange }){
     },(errRes)=>{
         console.log(errRes)
     })
+
+
+    let searchLink = 'https://www.cross-tables.com/annolistself.php';
+    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink))
+      .then((posRes) => {
+        let text = posRes.data;
+        let re = /<a href='annotated\.php\?u=(\d+)'>View<\/a>/;
+        let match = text.match(re);
+        if (match) {
+            let href = `${match[1]}`;
+            setLatestGame(href);
+        } else {
+            console.log("No match found for annotated game.");
+        }
+        let re2 = /<td class='nobr'>(.*?)<\/td>/g;
+        let match2;
+        let count = 0;
+        let removeAnchorTag = /<a.*?>(.*?)<\/a>/g;
+        while ((match2 = re2.exec(text)) && count <= 20) {
+          let extractedTag = match2[1].replace(removeAnchorTag, "$1")
+          setRecentNames(prevRecentNames => [...prevRecentNames, extractedTag]);
+          count++;
+        }
+        if(count === 0){
+            console.log("No match found for <td class='nobr'><td>.")
+        }
+        let regex = /<td class='tdc nobr'>(.*?)<\/a><\/td>/g;
+        let match3;
+        let count2 = 0;
+        while ((match3 = regex.exec(text)) && count2 <= 40) {
+            let extractedTag = match3[1].replace(removeAnchorTag, "$1")
+            if (!extractedTag.match(/<a/)) {
+              setRecentDictionaries(prevRecentNames => [...prevRecentNames, extractedTag]);
+            }
+            count2++;
+        }        
+      }, (errRes) => {
+        console.log(errRes)
+      })
+    
   }, [resetCount]);
 
   const getPlayerName = (input) => {
@@ -446,10 +499,10 @@ export default function Viewer({ onChange }){
     setGameNum(randomNumber);
   }
 
-  function chooseGame(event){
-    event.preventDefault();
+  function chooseGame(gameNum){
+    currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
-    setGameNum(event.target.elements.num.value);
+    setGameNum(gameNum);
   };
 
   function revealPlayers(){
@@ -512,6 +565,32 @@ export default function Viewer({ onChange }){
     }
   }
 
+  function getRecentGames(){
+    let game = latestGame;
+    return (
+      <table className={styles.recentGames}>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Dictionary</th>
+            <th>Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recentDictionaries.map((item, index) => (
+            <tr key={index}>
+              <td className={styles.viewRecentGames}><VisibilityOutlinedIcon target="_blank" className={styles.keyBtnSmall} onClick={() => chooseGame(game - index)}/>
+              <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + game--, '_blank')}/></td>
+              <td>{recentDictionaries[index]}</td>
+              <td>{recentNames[index + 1]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -543,6 +622,14 @@ export default function Viewer({ onChange }){
           </select>*/}
         </Box>
       </Modal>
+      <Modal
+        open={open2}
+        onClose={handleClose2}
+      >
+        <Box className={styles.modalContainer}>
+          {getRecentGames()}
+        </Box>
+      </Modal>
       <Box className={styles.page}>
       <Box className={styles.title}>
         {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
@@ -572,6 +659,9 @@ export default function Viewer({ onChange }){
                 </Box>  
                 <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
                   <img onClick={revealElo} className={styles.keyBtn} height = '32' src={'/images/ELO.png'}></img>
+                </Box> 
+                <Box className={styles.revealBox} sx={{display: mode !== "GUESSELO" ? 'flex' : 'none'}}>
+                  <HistoryIcon className={styles.keyBtn} onClick={handleOpen2}/>
                 </Box> 
                 <Box className={styles.revealBox}>
                   <LaunchIcon className={styles.keyBtn} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}/>

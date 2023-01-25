@@ -19,7 +19,6 @@ export default (function() {
             preload();
         }
         function rackWithTiles(letter){
-            console.log(letter)
             if (letter){
                 let src = ( 'url(' + preloadedImages[/^\s$/.test(letter) ? '_' : letter].src + ')');
                 return (<div className={styles.Rack_protiles} style={{backgroundImage: src, backgroundSize: '100%', boxSizing: 'border-box'}}></div>);
