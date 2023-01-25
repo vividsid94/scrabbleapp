@@ -93,6 +93,7 @@ form{
   font-family: 'Dancing Script' !important;
   cursor: pointer;
   transform: translate(--slice-0);
+  user-select: none;
 }
 .keyBtnSmall{
   font-size: 18px !important;
@@ -359,6 +360,9 @@ form{
   }
   .mainBox{
     padding: 16px !important;
+  }
+  .keyBtn{
+    font-size: 20px !important;
   }
 }
 
