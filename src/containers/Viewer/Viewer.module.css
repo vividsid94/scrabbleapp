@@ -98,8 +98,11 @@ form{
   cursor: pointer;
   transform: translate(--slice-0);
 }
+.recentGames{
+  font-size: 16px !important;
+}
 .recentGames td{
-  padding: 5px;
+  padding: 8px;
 }
 .viewRecentGames{
   display: flex;
