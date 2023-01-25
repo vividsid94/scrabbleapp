@@ -29,6 +29,16 @@
     border-radius: 6px;
     font-size: 30px;
 }
+.Protile{
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1.5px;
+    border-radius: 6px;
+    font-size: 30px;
+}
 
 @media screen and (max-width: 676px) {
     .Rack{

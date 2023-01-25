@@ -60,7 +60,6 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
 } 
 
 export const createBoard = (boardCoords, currentMoveCoords, tiles, theme) => {
-    console.log(boardCoords)
     return (
         boardCoords.map((row, rowIndex) => (
             row.map((col, colIndex) => {

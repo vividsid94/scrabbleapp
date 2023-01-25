@@ -246,7 +246,7 @@ export default function Viewer({ onChange }){
       let firstMovePlayerName = moveSet[0].split(" ")[0];
       let thisMovePlayerName = moves['thismove'].parts[0];
       if (moveName === lastMoveName && moves['thismove'].location === "--"){
-        let props = {location: moves['lastmove'].location, play: moves['last'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
+        let props = {location: moves['lastmove'].location, play: moves['lastmove'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
         setBoardCoords(updateBoardShortcut({...props}));
         setPool(addToPool(moves['lastmove'].play, pool));
       }
@@ -483,8 +483,8 @@ export default function Viewer({ onChange }){
           <Box className={styles.topPlayerPanel}>
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
             <Box className={styles.playerToggle}>
-              {iconList.map(icon => (
-                <icon.icon 
+              {iconList.map((icon, index) => (
+                <icon.icon key={index}
                   className={styles.Arrows} 
                   onClick={icon.onClick}
                   sx={icon.condition}
@@ -495,8 +495,8 @@ export default function Viewer({ onChange }){
                 Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
               <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-                {revealBoxList.map(box => (
-                  <Box className={styles.revealBox} sx={box.condition}>
+                {revealBoxList.map((box, index) => (
+                  <Box key={index} className={styles.revealBox} sx={box.condition}>
                     <box.icon 
                       className={styles.keyBtn} 
                       onClick={box.onClick}

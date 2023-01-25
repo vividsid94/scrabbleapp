@@ -1,8 +1,6 @@
-import Cell from './Cell';
-import cellBonusMap from './cellType';
 import styles from './Rack.module.css';
 import { Box } from '@mui/system';
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 
 let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
 export default (function() {
@@ -26,12 +24,9 @@ export default (function() {
         }
         let rack = props.board;
         switch (props.tiles) {
-            case 'PROTdILES': {
-                return (<div>{rackWithTiles("A")}</div>);
-            }
             case 'PROTILES': {
                 return <Box className={styles.Rack} >
-                    {rack.map((col, colIndex) => <Box className={styles.Tile} key={colIndex}>{rackWithTiles(col)}</Box>)}
+                    {rack.map((col, colIndex) => <Box className={styles.Protile} key={colIndex}>{rackWithTiles(col)}</Box>)}
                 </Box>
             }
             default:
