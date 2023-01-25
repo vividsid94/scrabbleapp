@@ -269,7 +269,7 @@ form{
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 450px;
+  height: 380px;
   padding-bottom: 24px;
 }
 
@@ -340,7 +340,7 @@ form{
   .topPlayerPanel{
     padding-bottom: 12px;
     padding-right: 0px;
-    height: 270px;
+    height: 225px;
   }
   .title{
     margin: auto;

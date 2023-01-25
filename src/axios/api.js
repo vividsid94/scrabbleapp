@@ -1,0 +1,77 @@
+import axios from 'axios';
+
+export const getMoveSet = async (baseURL, gameNum) => {
+    let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
+    let fullLink = baseURL + first3 + '/anno' + gameNum + '.gcg'
+    let returnMoveSet = [];
+    let returnOrigPlayerRaw = [];
+    try {
+      const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(fullLink))
+      console.log("Game reset");
+      returnMoveSet = response.data.toString().split("\n").filter(str => str.startsWith(">"));
+      returnOrigPlayerRaw = response.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0];
+      return [returnMoveSet, returnOrigPlayerRaw]; 
+    } catch(err) {
+      console.log(err)
+    }
+}
+export const getGameInfo = async (baseURL, gameNum) => {
+    try {
+        const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(baseURL + gameNum));
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export const getRecentGameInfo = async (searchLink) => {
+    let returnRecentNames = [];
+    let returnRecentDictionaries = [];
+    let returnRecentGameNums = [];
+    try {
+      const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink))
+      let text = response.data;
+      let re = /<a href='annotated\.php\?u=(\d+)'>View<\/a>/;
+      let match = text.match(re);
+      if (match) {
+          let href = `${match[1]}`;
+      } else {
+          console.log("No match found for annotated game.");
+      }
+      let re2 = /<td class='nobr'>(.*?)<\/td>|<td class='nobr'>(.*)/g;
+      let match2;
+      let count = 0;
+      let removeAnchorTag = /<a.*?>(.*?)<\/a>/g;
+      while ((match2 = re2.exec(text)) && count <= 50) {
+        let extractedTag;
+        if (match2[1]) {
+          extractedTag = match2[1].replace(removeAnchorTag, "$1");
+        } else if (match2[2]) {
+          extractedTag = match2[2].replace(removeAnchorTag, "$1").replace(/<td>$/, "");
+        }
+        returnRecentNames.push(extractedTag);
+        count++;
+      }
+      if(count === 0){
+          console.log("No match found for <td class='nobr'><td>.")
+      }
+      let regex = /<td class='tdc nobr'>(.*?)<\/a><\/td>/g;
+      let match3;
+      let count2 = 0;
+      while ((match3 = regex.exec(text)) && count2 <= 100) {
+          let extractedTag = match3[1].replace(removeAnchorTag, "$1")
+          if (!extractedTag.match(/<a/)) {
+            returnRecentDictionaries.push(extractedTag);
+          }
+          else{
+            let number = match3[1].match(/\d+/);
+            returnRecentGameNums.push(number[0]);
+          }
+          count2++;
+      }   
+      return [returnRecentNames, returnRecentDictionaries, returnRecentGameNums]; 
+    } catch(err) {
+      console.log(err)
+    }
+}
+

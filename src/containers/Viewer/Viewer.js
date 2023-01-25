@@ -29,11 +29,14 @@ import TableRow from '@mui/material/TableRow';
 import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 
+import { getMoveSet, getRecentGameInfo, getGameInfo } from "../../axios/api.js";
+import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
+import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
+import { createRack } from "../../functions/rackFunctions.js";
+import { RecentGames } from "../../functions/modalFunctions.js";
+
 export default function Viewer({ onChange }){
-  const [gameArray, setGameArray] = useState("");
   const [gameNum, setGameNum] = useState(39600 /*- Josh*/ /*36230 Nigel*/);
-  const [player1, setPlayer1] = useState("");
-  const [player2, setPlayer2] = useState("");
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
@@ -48,13 +51,9 @@ export default function Viewer({ onChange }){
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
-  const [open2, setOpen2] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
-  const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const handleOpen2 = () => setOpen2(true);
-  const handleClose2 = () => setOpen2(false);
   const [name1, setName1] = useState('');
   const [name2, setName2] = useState('');
   const [revealedName1, setRevealedName1] = useState('Player 1');
@@ -85,13 +84,6 @@ export default function Viewer({ onChange }){
 
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
-    /*let result = (Math.floor(boardClickCount / 10) % 10);
-    let newMode = result % 2 === 0 ? "VIEWER" : "GUESSELO";
-    if (mode !== newMode) {
-      randomizeGame();
-      setMode(newMode);
-      onChange(newMode);
-    }*/
     if (boardClickCount >= 5) {
       setUnlockEloMode(true);
     }
@@ -120,256 +112,66 @@ export default function Viewer({ onChange }){
     setPool(origPool);
     setRecentNames([]);
     setRecentDictionaries([]);
-    let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
-    let link = 'https://www.cross-tables.com/annotated/selfgcg/' + first3 + '/anno' + gameNum + '.gcg';
-    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(link))
-    .then((posRes)=>{
-        console.log("Game reset");
-        setGameArray(posRes.data.toString().split("\n"));
-        setMoveSet(posRes.data.toString().split("\n").filter(str => str.startsWith(">")));
-        setOrigPlayerRaw(posRes.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0]);
-        setPlayer1(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))));
-        let name = getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player1"))).trim();
-        let name2 = getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))).trim();
-        setPlayer2(getPlayerName(posRes.data.toString().split("\n").filter(str => str.startsWith("#player2"))));
-    },(errRes)=>{
-        console.log(errRes)
-    })
-
-    let gameInfoLink = 'https://www.cross-tables.com/annotated.php?u=' + gameNum;
-    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(gameInfoLink))
-    .then((posRes)=>{
-        let text = posRes.data;
-        const startIndex = text.indexOf('<p>Dictionary: <b>');
-        if (startIndex !== -1) {
-          const endIndex = text.indexOf('</b>', startIndex);
-          if (endIndex !== -1) {
-            const extractedText = text.substring(startIndex + 18, endIndex);
-            if (dictionary === "TWL" && !(extractedText.startsWith("TWL") || extractedText.startsWith("NWL"))){
-              randomizeGame();
-            }
-            else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
-              randomizeGame();
-            }
-            else{
-              console.log("FINISHED")
-            }
-            setGameDictionary(extractedText);
+    const loadMoveSet = async () => {
+        const moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
+        setMoveSet(moveRes[0])
+        setOrigPlayerRaw(moveRes[1])
+    };
+    const loadRecentGameInfo = async () => {
+        const infoRes = await getRecentGameInfo('https://www.cross-tables.com/annolistself.php');
+        setRecentNames(infoRes[0])
+        setRecentDictionaries(infoRes[1])
+        setRecentGameNums(infoRes[2])
+    };
+    const loadGameInfo = async () => {
+      let text = await getGameInfo('https://www.cross-tables.com/annotated.php?u=', gameNum);
+      const startIndex = text.indexOf('<p>Dictionary: <b>');
+      if (startIndex !== -1) {
+        const endIndex = text.indexOf('</b>', startIndex);
+        if (endIndex !== -1) {
+          const extractedText = text.substring(startIndex + 18, endIndex);
+          if (dictionary === "TWL" && !(extractedText.startsWith("TWL") || extractedText.startsWith("NWL"))){
+            randomizeGame();
           }
-        }
-
-        const regex = /<tr><td>([^<]+)<\/td>/g;
-        const matches = text.matchAll(regex);
-        let i = 0;
-        for (const match of matches) {
-          if (i === 0) {
-            setName1(match[1]);
-          } else if (i === 1) {
-            setName2(match[1]);
+          else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
+            randomizeGame();
           }
-          i++;
-        }
-
-        let matchTourney = text.match(/<a href='tourney\.php\?t=(\d+)'>/);
-        let tourneyNumber = 0;
-        if (matchTourney)
-          tourneyNumber = matchTourney[1];
-        setTourneyNum(tourneyNumber);
-    },(errRes)=>{
-        console.log(errRes)
-    })
-
-
-    let searchLink = 'https://www.cross-tables.com/annolistself.php';
-    axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink))
-      .then((posRes) => {
-        let text = posRes.data;
-        console.log(text);
-        let re = /<a href='annotated\.php\?u=(\d+)'>View<\/a>/;
-        let match = text.match(re);
-        if (match) {
-            let href = `${match[1]}`;
-        } else {
-            console.log("No match found for annotated game.");
-        }
-        let re2 = /<td class='nobr'>(.*?)<\/td>|<td class='nobr'>(.*)/g;
-        let match2;
-        let count = 0;
-        let removeAnchorTag = /<a.*?>(.*?)<\/a>/g;
-        while ((match2 = re2.exec(text)) && count <= 50) {
-          let extractedTag;
-          if (match2[1]) {
-            extractedTag = match2[1].replace(removeAnchorTag, "$1");
-          } else if (match2[2]) {
-            extractedTag = match2[2].replace(removeAnchorTag, "$1").replace(/<td>$/, "");
+          else{
+            console.log("FINISHED")
           }
-          setRecentNames(prevRecentNames => [...prevRecentNames, extractedTag]);
-          count++;
+          setGameDictionary(extractedText);
         }
-        if(count === 0){
-            console.log("No match found for <td class='nobr'><td>.")
+      }
+
+      const regex = /<tr><td>([^<]+)<\/td>/g;
+      const matches = text.matchAll(regex);
+      let i = 0;
+      for (const match of matches) {
+        if (i === 0) {
+          setName1(match[1]);
+        } else if (i === 1) {
+          setName2(match[1]);
         }
-        let regex = /<td class='tdc nobr'>(.*?)<\/a><\/td>/g;
-        let match3;
-        let count2 = 0;
-        while ((match3 = regex.exec(text)) && count2 <= 100) {
-            console.log(match3[1]);
-            let extractedTag = match3[1].replace(removeAnchorTag, "$1")
-            if (!extractedTag.match(/<a/)) {
-              setRecentDictionaries(prevRecentNames => [...prevRecentNames, extractedTag]);
-            }
-            else{
-              let number = match3[1].match(/\d+/);
-              setRecentGameNums(prevRecentGameNums => [...prevRecentGameNums, number[0]]);
-            }
-            count2++;
-        }        
-      }, (errRes) => {
-        console.log(errRes)
-      })
-    
+        i++;
+      }
+
+      let matchTourney = text.match(/<a href='tourney\.php\?t=(\d+)'>/);
+      let tourneyNumber = 0;
+      if (matchTourney)
+        tourneyNumber = matchTourney[1];
+      setTourneyNum(tourneyNumber);
+    };
+
+    loadMoveSet();
+    loadRecentGameInfo();
+    loadGameInfo();
   }, [resetCount]);
-
-  const getPlayerName = (input) => {
-    const regex = /#player\d+\s+(\S+)/;
-    return input[0].replace(regex, "");
-  }
-
-  function getMove(moveString){
-    let play;
-    if (moveString){
-      let move = moveString.replace(/\s+/g, ' ');
-      const parts = move.split(" ");
-      play = parts[2] + " " + parts[3];
-    }
-    else{
-      play = "N/A";
-    }
-    const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
-    let result = play;
-    letters.forEach((letter, index) => {
-      result = result.replace(".", "(" + letter + ")");
-      result = result.replace(")(", "");
-    });
-    return result;
-    
-  }
   
-  function createBoard() {
-    return (
-      boardCoords.map((row, rowIndex) => (
-        row.map((col, colIndex) => {
-          let border = { top: false, bottom: false, left: false, right: false };
-          if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
-            // Check if there is a neighboring cell in currentMoveCoords
-            if (!currentMoveCoords.some(coord => coord[0] === rowIndex - 1 && coord[1] === colIndex)) {
-              border.top = true;
-            }
-            if (!currentMoveCoords.some(coord => coord[0] === rowIndex + 1 && coord[1] === colIndex)) {
-              border.bottom = true;
-            }
-            if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex - 1)) {
-              border.left = true;
-            }
-            if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
-              border.right = true;
-            }
-            return Cell(rowIndex, colIndex, cellType(col, "flagged", border, tiles), "board", theme, tiles);
-          } else {
-            return Cell(rowIndex, colIndex, cellType(col, "apple", border, tiles), "board", theme, tiles);
-          }
-        })
-      ))
-    ); 
-  }
-  
-
-  function createRack() {
-    var move = moveSet[currentMoveRef.current + 1];
-    const parts = move ? move.split(" ") : '';
-    const rack = parts ? parts[1].replace(/\?/g, " ").split('') : [];
-    return (
-      rack.map((col, colIndex) => (
-        Cell("0", colIndex, {"color": "purple", "value": col}, "rack")
-      ))
-    ); 
-  }
-
-  function extractLoc(str) {
-    let parts = str.match(/^(\d+)(\D+)|^(\D+)(\d+)$/);
-    let part1 = parts[1] || parts[3];
-    let part2 = parts[2] || parts[4];
-    return [part1, part2];
-  } 
-
-  function updateBoard(location, play, type) {
-    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number))
-    let newBoardCoords = [...boardCoords];
-    let curMoveCoords = [];
-    const locationParts = extractLoc(location);
-    const part1 = locationParts[0]; 
-    const part2 = locationParts[1];
-    let i, coord1, coord2;
-    if (Number.isInteger(Number(part1))) {
-      // Horizontal play
-      coord1 = part1 - 1;
-      coord2 = letterLookup[part2.toUpperCase()] - 1; 
-      for (i = 0; i < play.length; i++) {
-        if (play[i] !== '.') {
-          newBoardCoords[coord1][coord2 + i] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1][coord2 + i];
-          curMoveCoords.push([coord1, coord2 + i]);
-        } else {
-          curMoveCoords.push(boardCoords[coord1][coord2 + i]);
-        }
-      }
-    } else {
-      // Vertical play
-      coord1 = part2 - 1;
-      coord2 = letterLookup[part1.toUpperCase()] - 1;
-      for (i = 0; i < play.length; i++) {
-        if (play[i] !== '.') {
-          newBoardCoords[coord1 + i][coord2] = type === "add" ? play[i] : parsedOrigBoardCoords[coord1 + i][coord2];
-          curMoveCoords.push([coord1 + i, coord2]);
-        } else {
-          curMoveCoords.push(boardCoords[coord1 + i][coord2]);
-        }
-      }
-    }
-    setCurrentMoveCoords(curMoveCoords);
-    return newBoardCoords;
-  }
-
-  function highlightPreviousMove(location, play){
-    let curMoveCoords = [];
-    const locationParts = extractLoc(location);
-    const part1 = locationParts[0]; 
-    const part2 = locationParts[1];
-    let i, coord1, coord2;
-    if (Number.isInteger(Number(part1))) {
-      // Horizontal play
-      coord1 = part1 - 1;
-      coord2 = letterLookup[part2.toUpperCase()] - 1; 
-      for (i = 0; i < play.length; i++) {
-        if (play[i] !== '.') {
-          curMoveCoords.push([coord1, coord2 + i]);
-        } else {
-          curMoveCoords.push(boardCoords[coord1][coord2 + i]);
-        }
-      }
-    } else {
-      // Vertical play
-      coord1 = part2 - 1;
-      coord2 = letterLookup[part1.toUpperCase()] - 1;
-      for (i = 0; i < play.length; i++) {
-        if (play[i] !== '.') {
-          curMoveCoords.push([coord1 + i, coord2]);
-        } else {
-          curMoveCoords.push(boardCoords[coord1 + i][coord2]);
-        }
-      }
-    }
-    setCurrentMoveCoords(curMoveCoords);
-  }
+  const updateBoardShortcut = (boardProperties) => {
+    const board = updateBoard(boardProperties);
+    setCurrentMoveCoords(board[0]);
+    return board[1];
+  };
   
   function handleMove(lastMove, thisMove, nextMove, type) {
     lastMove = lastMove ? lastMove.replace(/\s+/g, ' ') : lastMove;
@@ -387,10 +189,6 @@ export default function Viewer({ onChange }){
       nextmove: { move: nextMove, parts: nextMove ? nextMove.split(" ") : null, location: null, play: null, points: null, score: null }
     };
 
-    //lastMove = lastMove.replace(/\s+/g, ' ');
-    //thisMove = thisMove.replace(/\s+/g, ' ');
-    //nextMove = nextMove.replace(/\s+/g, ' ');
-
     for (const id in moves) {
       const move = moves[id];
       move.location = move.parts ? move.parts[2] : null;
@@ -405,22 +203,25 @@ export default function Viewer({ onChange }){
       let firstMovePlayerName = moveSet[0].split(" ")[0];
       let thisMovePlayerName = thisMove ? moves['thismove'].parts[0] : 'empty';
       if (moveName === nextMoveName && moves['thismove'].location === "--"){
-        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
+        setBoardCoords(updateBoardShortcut({...props}));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else if (moves['nextmove'].location[0] === null){
 
       }
       else if (moves['nextmove'].location[0] !== "-"){
-        setBoardCoords(updateBoard(moves['nextmove'].location, moves['nextmove'].play, "remove"))
+        let props = {location: moves['nextmove'].location, play: moves['nextmove'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
+        setBoardCoords(updateBoardShortcut({...props}))
         if (moves['thismove'].move !== undefined && moves['thismove'].location[0] !== "-"){
-          highlightPreviousMove(moves['thismove'].location, moves['thismove'].play);
+          setCurrentMoveCoords(highlightPreviousMove(moves['thismove'].location, moves['thismove'].play, boardCoords));
         }
         if (moveName !== nextMoveName)
           setPool(addToPool(moves['nextmove'].play, pool));
       }
       else if (moves['nextmove'].location === "--"){
-        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
+        setBoardCoords(updateBoardShortcut({...props}));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else {
@@ -445,7 +246,8 @@ export default function Viewer({ onChange }){
       let firstMovePlayerName = moveSet[0].split(" ")[0];
       let thisMovePlayerName = moves['thismove'].parts[0];
       if (moveName === lastMoveName && moves['thismove'].location === "--"){
-        setBoardCoords(updateBoard(moves['lastmove'].location, moves['lastmove'].play, "remove"));
+        let props = {location: moves['lastmove'].location, play: moves['last'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
+        setBoardCoords(updateBoardShortcut({...props}));
         setPool(addToPool(moves['lastmove'].play, pool));
       }
       else if (moveName === lastMoveName && moves['thismove'].location !== "--"){
@@ -455,7 +257,8 @@ export default function Viewer({ onChange }){
 
       }
       else if (moves['thismove'].location[0] !== "-"){
-        setBoardCoords(updateBoard(moves['thismove'].location, moves['thismove'].play, "add"));
+        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
+        setBoardCoords(updateBoardShortcut({...props}));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else {
@@ -475,37 +278,6 @@ export default function Viewer({ onChange }){
       } 
     }
     setPointsScored(moves['thismove'].points);
-  }
-
-  function removeFromPool(play, pool) {
-    let newPool = pool;
-    for (let i = 0; i < play.length; i++) {
-      const char = play[i];
-      if (char.toLowerCase() === char && char !== ".") {
-        newPool = newPool.replace("?", "");
-      } else {
-        newPool = newPool.replace(char, "");
-      }
-    }
-    return newPool;
-  }
-  
-  function addToPool(play, pool) {
-    let newPool = pool;
-    for (let i = 0; i < play.length; i++) {
-      const char = play[i];
-      if (char.toLowerCase() === char && char !== ".") {
-        newPool += "?";
-      } else if (char !== ".") {
-        newPool += char;
-      }
-    }
-    newPool = newPool.split('').sort((a, b) => {
-      if (a === '?') return 1;
-      if (b === '?') return -1;
-      return a.localeCompare(b);
-    }).join('');
-    return newPool;
   }
 
   function randomizeGame(){
@@ -588,7 +360,7 @@ export default function Viewer({ onChange }){
     const handlePageChange = (event, value) => {
       setCurrentPage(value);
     };
-  
+    
     const startIndex = (currentPage - 1) * gamesPerPage;
     const endIndex = startIndex + gamesPerPage;
     const currentGames = recentDictionaries.slice(startIndex, endIndex);
@@ -632,6 +404,57 @@ export default function Viewer({ onChange }){
     );
   }
 
+  const [modalContent, setModalContent] = useState("dictionaryTiles")
+  
+  const handleDictionaryTilesOpen = () => {
+    setModalContent("dictionaryTiles")
+    setOpen(true);
+  };
+
+  const handleRecentGamesOpen = () => {
+    setModalContent("recentGames")
+    setOpen(true);
+  };
+  
+  const SettingsContent = () => (
+    <>
+      <Box className={styles.modalContainer__dictionary}>
+        Dictionary
+        {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
+          <option value="ANY">Any</option>
+          <option value="TWL">TWL/NWL</option>
+          <option value="CSW">CSW</option>
+        </select>}
+      </Box>
+      <Box className={styles.modalContainer__tiles}>
+        Tiles
+        {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
+          <option value="PROTILES">Protiles</option>
+          <option value="LETTERS">Letters</option>
+        </select>}
+      </Box>
+    </>
+  );
+  
+  const RecentGamesContent = () => (
+    <>
+      {RecentGames()}
+    </>
+  );
+
+  const iconList = [  {icon: KeyboardDoubleArrowLeftIcon, onClick: beginningOfGame},  {icon: KeyboardArrowLeftIcon, onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
+    {icon: KeyboardArrowRightIcon, onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
+    {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen},
+    {icon: FiberNewIcon, onClick: randomizeGame},
+    {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
+  ]
+
+  const revealBoxList = [
+    {icon: GroupIcon, onClick: revealPlayers,condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
+    {icon: Typography, onClick: revealElo, text: 'Elo',condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
+    {icon: HistoryIcon, onClick: handleRecentGamesOpen,condition: {display: mode !== "GUESSELO" ? 'flex' : 'none'}},
+    {icon: LaunchIcon, onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}
+  ]
 
   return (
     <Box sx={{ display: 'flex'}}>
@@ -643,91 +466,67 @@ export default function Viewer({ onChange }){
         aria-describedby="modal-modal-description"
       >
         <Box className={styles.modalContainer}>
-          <Box className={styles.modalContainer__dictionary}>
-            Dictionary
-            {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
-              <option value="ANY">Any</option>
-              <option value="TWL">TWL/NWL</option>
-              <option value="CSW">CSW</option>
-            </select>}
-          </Box>
-          <Box className={styles.modalContainer__tiles}>
-            Tiles
-            {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
-              <option value="PROTILES">Protiles</option>
-              <option value="LETTERS">Letters</option>
-            </select>}
-          </Box>
-          {/*<select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
-            <option value="STANDARD">Standard</option>
-            <option value="APPLE">Apple</option>
-          </select>*/}
+          {modalContent === "dictionaryTiles" && <SettingsContent />}
+          {modalContent === "recentGames" && <RecentGamesContent />}
         </Box>
-      </Modal>
-      <Modal
-        open={open2}
-        onClose={handleClose2}
-      >
-        <Box className={styles.modalContainer}>
-          {RecentGames()}
-        </Box>
-      </Modal>
+      </Modal>  
       <Box className={styles.page}>
       <Box className={styles.title}>
         {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard()} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current])} lastMove={currentMoveRef.current >= moveSet.length - 1}/>   
+          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)} lastMove={currentMoveRef.current >= moveSet.length - 1}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
-              <Box className={`${styles.playerToggle}`}>
-                <KeyboardDoubleArrowLeftIcon className={styles.Arrows} onClick={beginningOfGame}/>
-                <KeyboardArrowLeftIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "previous");}}}/>
-                <KeyboardArrowRightIcon className={styles.Arrows} onClick={() => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1] /*last move*/, moveSet[currentMoveRef.current] /*this move*/, moveSet[currentMoveRef.current + 1] /*next move*/, "next");}}/>
-                <SettingsOutlinedIcon onClick={handleOpen} className={styles.settingsBtn}/>
-                <FiberNewIcon className={styles.randomizeBtn} onClick={randomizeGame}/>
-                <SwapHorizIcon onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchMode())} sx={{color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}} className={styles.randomizeBtn}></SwapHorizIcon>
-              </Box>
+            <Box className={styles.playerToggle}>
+              {iconList.map(icon => (
+                <icon.icon 
+                  className={styles.Arrows} 
+                  onClick={icon.onClick}
+                  sx={icon.condition}
+                />
+              ))}
+            </Box>
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                 Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
               <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
-                  <GroupIcon className={styles.keyBtn} onClick={revealPlayers}/>
-                </Box>  
-                <Box className={styles.revealBox} sx={{display: mode === "GUESSELO" ? 'flex' : 'none'}}>
-                  <Typography onClick={revealElo} className={styles.keyBtn}>Elo</Typography>
-                </Box> 
-                <Box className={styles.revealBox} sx={{display: mode !== "GUESSELO" ? 'flex' : 'none'}}>
-                  <HistoryIcon className={styles.keyBtn} onClick={handleOpen2}/>
-                </Box> 
-                <Box className={styles.revealBox}>
-                  <LaunchIcon className={styles.keyBtn} onClick={() => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}/>
-                </Box> 
+                {revealBoxList.map(box => (
+                  <Box className={styles.revealBox} sx={box.condition}>
+                    <box.icon 
+                      className={styles.keyBtn} 
+                      onClick={box.onClick}
+                    >
+                      {box.text}
+                    </box.icon>
+                  </Box>
+                ))}
               </Box>
             </Box> 
             <Box className={styles.playerPanel}>
               {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
-              <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'visible' : 'hidden'}}>
-                <Rack board={createRack()} tiles={tiles}/> 
+              <Box className={styles.Rack}>
+                {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 
+                  <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
               </Box> 
               <Box>
                 {player1points} points
               </Box>
-            </Box>  
             <Box className={styles.playerPanel}>
-            {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
-              <Box className={styles.Rack} sx={{visibility: (moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 'hidden' : 'visible'}}>
-                <Rack sx={{display: "none !important"}} board={createRack()} tiles={tiles}/>  
+              {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
+              <Box className={styles.Rack}>
+                {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') !== origPlayerRaw ? 
+                  <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
               </Box>
               <Box>
                 {player2points} points
               </Box>
-            </Box>  
+            </Box> 
+            </Box> 
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
