@@ -28,6 +28,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { getMoveSet, getRecentGameInfo, getGameInfo } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
@@ -355,12 +356,22 @@ export default function Viewer({ onChange }){
 
   function RecentGames() {
     const [currentPage, setCurrentPage] = React.useState(1);
-    const gamesPerPage = 10;
+    const [gamesPerPage, setGamesPerPage] = React.useState(10);
+  
+    const matches = useMediaQuery('(max-width:676px)');
+  
+    React.useEffect(() => {
+      if (matches) {
+        setGamesPerPage(5);
+      } else {
+        setGamesPerPage(10);
+      }
+    }, [matches]);
   
     const handlePageChange = (event, value) => {
       setCurrentPage(value);
     };
-    
+  
     const startIndex = (currentPage - 1) * gamesPerPage;
     const endIndex = startIndex + gamesPerPage;
     const currentGames = recentDictionaries.slice(startIndex, endIndex);
@@ -385,7 +396,7 @@ export default function Viewer({ onChange }){
             {currentGames.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(recentGameNums[startIndex + index])}/>
+                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(recentGameNums[startIndex + index], handleClose())}/>
                   <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${recentGameNums[startIndex + index]}`, '_blank')}/>
                 </TableCell>
                 <TableCell>{recentDictionaries[startIndex + index]}</TableCell>
@@ -395,6 +406,7 @@ export default function Viewer({ onChange }){
           </TableBody>
         </Table>
         <Pagination
+          sx={{marginTop: '20px'}}
           count={Math.ceil(recentDictionaries.length / gamesPerPage)}
           page={currentPage}
           onChange={handlePageChange}
