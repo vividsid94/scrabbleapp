@@ -303,7 +303,7 @@ form{
   overflow-wrap: break-word;
   text-align: justify;
   font-size: 12px;
-  line-height: 28px;
+  line-height: 18px;
   font-family: 'Syne';
 }
 
@@ -374,6 +374,15 @@ form{
   }
   .keyBtn{
     font-size: 20px !important;
+  }
+  .commentaryBox{
+    padding: 10px;
+    font-family: 'Syne';
+    overflow-wrap: break-word;
+    text-align: justify;
+    font-size: 9px;
+    line-height: 14px;
+    font-family: 'Syne';
   }
 }
 
