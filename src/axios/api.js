@@ -18,7 +18,6 @@ export const getMoveSet = async (baseURL, gameNum) => {
               notes.push([lines[i].replace("#note ", ""), count]);
           }
       }
-      console.log(notes);
       return [returnMoveSet, returnOrigPlayerRaw, notes]; 
       
     } catch(err) {
@@ -83,5 +82,28 @@ export const getRecentGameInfo = async (searchLink) => {
     } catch(err) {
       console.log(err)
     }
+}
+
+export const getGibsonGameInfo = async (searchLink) => {
+  <td><a href='annotated.php?u=32194'>View</a></td>
+  try {
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink))
+    let text = response.data;
+    const regex = /<td><a href='annotated\.php\?u=(\d+)'>View<\/a><\/td>/g;
+
+    // Array to store the numbers
+    const numbers = [];
+    
+    // Use `match` method to find all matches
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        // The first captured group will contain the number
+        numbers.push(match[1]);
+    }
+    
+    return numbers;
+  } catch(err) {
+    console.log(err)
+  }
 }
 

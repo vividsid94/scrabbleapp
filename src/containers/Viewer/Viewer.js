@@ -28,7 +28,7 @@ import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { getMoveSet, getRecentGameInfo, getGameInfo } from "../../axios/api.js";
+import { getMoveSet, getRecentGameInfo, getGameInfo, getGibsonGameInfo } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -61,6 +61,8 @@ export default function Viewer({ onChange }){
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
+  const [unlockGibsonMode, setUnlockGibsonMode] = useState(false);
+  const [gibsonMode, setGibsonMode] = useState("NO");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
   const [notes, setNote] = useState([])
@@ -68,7 +70,11 @@ export default function Viewer({ onChange }){
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
   const [recentGameNums, setRecentGameNums] = useState([]);
+  const [gibsonGameNums, setGibsonGameNums] = useState([]);
 
+  const handleGibsonMode = event => {
+    setGibsonMode(event.target.value);
+  };
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
   };
@@ -87,6 +93,9 @@ export default function Viewer({ onChange }){
 
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
+    if (boardClickCount >= 20) {
+      setUnlockGibsonMode(true);
+    }
     if (boardClickCount >= 5) {
       setUnlockEloMode(true);
     }
@@ -127,6 +136,11 @@ export default function Viewer({ onChange }){
         setRecentDictionaries(infoRes[1])
         setRecentGameNums(infoRes[2])
     };
+    const loadGibsonGameInfo = async () => {
+      const infoRes = await getGibsonGameInfo('https://www.cross-tables.com/anno.php?p=1384');
+      setGibsonGameNums(infoRes);
+    };
+    loadGibsonGameInfo();
     const loadGameInfo = async () => {
       let text = await getGameInfo('https://www.cross-tables.com/annotated.php?u=', gameNum);
       const startIndex = text.indexOf('<p>Dictionary: <b>');
@@ -287,7 +301,14 @@ export default function Viewer({ onChange }){
   function randomizeGame(){
     currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
-    let randomNumber = getRandomNumber(10000, 40000).toString();
+    let randomNumber;
+    if (gibsonMode === "NO")
+      randomNumber = getRandomNumber(10000, 40000).toString();
+    else
+      {
+        let randomIndex = Math.floor(Math.random() * gibsonGameNums.length);
+        randomNumber = gibsonGameNums[randomIndex];
+      }
     setGameNum(randomNumber);
   }
 
@@ -448,9 +469,16 @@ export default function Viewer({ onChange }){
           <option value="LETTERS">Letters</option>
         </select>}
       </Box>
-      <Box className={styles.modalContainer__tiles}>
+      <Box className={styles.modalContainer__dictionary}>
         Secret Mode played<br></br> w/ Commentary?
         {<select className={styles.styleSelection} value={ELOCommentary} onChange={handleELOCommentaryChange}>
+          <option value="NO">No</option>
+          <option value="YES">Yes</option>
+        </select>}
+      </Box>
+      <Box className={styles.modalContainer__tiles} sx={{display: !unlockGibsonMode ? 'none' : "flex"}}>
+        Gibson Mode
+        {<select className={styles.styleSelection} value={gibsonMode} onChange={handleGibsonMode}>
           <option value="NO">No</option>
           <option value="YES">Yes</option>
         </select>}
@@ -477,8 +505,6 @@ export default function Viewer({ onChange }){
     {icon: HistoryIcon, onClick: handleRecentGamesOpen,condition: {display: mode !== "GUESSELO" ? 'flex' : 'none'}},
     {icon: LaunchIcon, onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}
   ]
-  console.log(ELOCommentary);
-  console.log(mode === "VIEWER")
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
