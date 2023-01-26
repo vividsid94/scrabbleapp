@@ -11,17 +11,17 @@
     font-size: 25px;
     height: 100%;
     width: 100%;
-    border-radius: 6px;
-    filter: contrast(150%) hue-rotate(90deg);
+    border-radius: 5px;
+    filter: contrast(200%);
 }
 .Tile{
-    width: 45px;
-    height: 45px;
+    width: 42px;
+    height: 42px;
     background-color: #521c76;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 1.5px;
+    margin: 2.5px;
     border-radius: 6px;
     font-size: 30px;
 }

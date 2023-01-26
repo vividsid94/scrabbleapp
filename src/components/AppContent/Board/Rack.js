@@ -7,7 +7,7 @@ export default (function() {
     let preloadedImages = {}; // define variable in closure scope
     function preload() {
       allLetters.forEach(letter => {
-        let srcString = '/images/white-pro/' + letter + '.png';
+        let srcString = '/images/black-pro/' + letter + '.png';
         preloadedImages[letter] = new Image();
         preloadedImages[letter].src = srcString;
       });
