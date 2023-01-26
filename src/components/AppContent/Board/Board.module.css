@@ -61,7 +61,7 @@ td {
 
 .Board__STANDARD,
 .Board__STANDARD:after {
-  background: linear-gradient(to right bottom,rgba(255, 255, 255, 0.6),rgba(255, 255, 255, 0.0));
+  background: linear-gradient(to right bottom,rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0));
   box-shadow: 2px 2px 2px rgb(70, 64, 64);
   display: flex;
   flex-direction: column;
