@@ -46,7 +46,7 @@ export default function Board(props) {
                             <tr> 
                                 <th className={styles.sideNumbering}/>
                                 {Object.keys(letterLookup).map(letter => (
-                                    <th className={styles.sideNumbering} key={letter}>{letter}</th>
+                                    <th className={styles.sideNumbering} key={letter}>{letter.toLowerCase()}</th>
                                 ))}
                             </tr>
                         </thead>
