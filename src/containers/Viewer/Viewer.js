@@ -48,6 +48,7 @@ export default function Viewer({ onChange }){
   const [theme, setTheme] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
+  const [ELOCommentary, setELOCommentary] = useState("NO");
   const [open, setOpen] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
@@ -70,6 +71,9 @@ export default function Viewer({ onChange }){
 
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
+  };
+  const handleELOCommentaryChange = event => {
+    setELOCommentary(event.target.value);
   };
   const handleThemeChange = event => {
     setTheme(event.target.value);
@@ -437,11 +441,18 @@ export default function Viewer({ onChange }){
           <option value="CSW">CSW</option>
         </select>}
       </Box>
-      <Box className={styles.modalContainer__tiles}>
+      <Box className={styles.modalContainer__dictionary}>
         Tiles
         {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
           <option value="PROTILES">Protiles</option>
           <option value="LETTERS">Letters</option>
+        </select>}
+      </Box>
+      <Box className={styles.modalContainer__tiles}>
+        Secret Mode played<br></br> w/ Commentary?
+        {<select className={styles.styleSelection} value={ELOCommentary} onChange={handleELOCommentaryChange}>
+          <option value="NO">No</option>
+          <option value="YES">Yes</option>
         </select>}
       </Box>
     </>
@@ -466,7 +477,8 @@ export default function Viewer({ onChange }){
     {icon: HistoryIcon, onClick: handleRecentGamesOpen,condition: {display: mode !== "GUESSELO" ? 'flex' : 'none'}},
     {icon: LaunchIcon, onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}
   ]
-
+  console.log(ELOCommentary);
+  console.log(mode === "VIEWER")
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -545,7 +557,7 @@ export default function Viewer({ onChange }){
             </Box>
             <Box className={styles.playerPanel}>
               {notes.map(([note, moveNumber], index) => (
-                <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && mode === "VIEWER" ? 'block' : 'none' }}>
+                <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
                   "{note}"
                 </Box>
               ))}

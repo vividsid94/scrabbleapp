@@ -51,7 +51,7 @@ form{
 .modalContainer__dictionary{
   display: flex;
   flex-direction: column;
-  margin-bottom: 25px;
+  margin-bottom: 5px;
   font-family: 'Syne' !important;
 }
 
