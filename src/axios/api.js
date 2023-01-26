@@ -10,7 +10,17 @@ export const getMoveSet = async (baseURL, gameNum) => {
       console.log("Game reset");
       returnMoveSet = response.data.toString().split("\n").filter(str => str.startsWith(">"));
       returnOrigPlayerRaw = response.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0];
-      return [returnMoveSet, returnOrigPlayerRaw]; 
+      var lines = response.data.toString().split("\n");
+      var notes = [];
+      for (var i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#note")) {
+              var count = lines.slice(0,i).filter(line => line.startsWith(">")).length;
+              notes.push([lines[i].replace("#note ", ""), count]);
+          }
+      }
+      console.log(notes);
+      return [returnMoveSet, returnOrigPlayerRaw, notes]; 
+      
     } catch(err) {
       console.log(err)
     }

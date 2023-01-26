@@ -297,6 +297,17 @@ form{
   justify-content: center;
 }
 
+.commentaryBox{
+  padding: 10px;
+  font-family: 'Syne';
+  overflow-wrap: break-word;
+  text-align: justify;
+  font-size: 12px;
+  line-height: 28px;
+  font-family: 'Syne';
+}
+
+
 @media screen and (max-width: 992px) {
   .rightPanel{
     padding: 24px;

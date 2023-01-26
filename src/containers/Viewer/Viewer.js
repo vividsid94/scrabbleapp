@@ -8,8 +8,6 @@ import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 
-import cellType from "../../components/AppContent/Board/cellType.js";
-import Cell from "../../components/AppContent/Board/Cell.js";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
@@ -34,10 +32,9 @@ import { getMoveSet, getRecentGameInfo, getGameInfo } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
-import { RecentGames } from "../../functions/modalFunctions.js";
 
 export default function Viewer({ onChange }){
-  const [gameNum, setGameNum] = useState(39600 /*- Josh*/ /*36230 Nigel*/);
+  const [gameNum, setGameNum] = useState(27775 /*- Josh*/ /*36230 Nigel*/);
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
@@ -65,6 +62,7 @@ export default function Viewer({ onChange }){
   const [unlockEloMode, setUnlockEloMode] = useState(false);
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
+  const [notes, setNote] = useState([])
 
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
@@ -117,6 +115,7 @@ export default function Viewer({ onChange }){
         const moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
         setMoveSet(moveRes[0])
         setOrigPlayerRaw(moveRes[1])
+        setNote(moveRes[2])
     };
     const loadRecentGameInfo = async () => {
         const infoRes = await getRecentGameInfo('https://www.cross-tables.com/annolistself.php');
@@ -528,22 +527,29 @@ export default function Viewer({ onChange }){
               <Box>
                 {player1points} points
               </Box>
-            <Box className={styles.playerPanel}>
-              {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
-              <Box className={styles.Rack}>
-                {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') !== origPlayerRaw ? 
-                  <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
-              </Box>
-              <Box>
-                {player2points} points
-              </Box>
-            </Box> 
+              <Box className={styles.playerPanel}>
+                {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
+                <Box className={styles.Rack}>
+                  {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') !== origPlayerRaw ? 
+                    <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
+                </Box>
+                <Box>
+                  {player2points} points
+                </Box>
+              </Box> 
             </Box> 
           </Box>
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
               <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
             </Box>
+            <Box className={styles.playerPanel}>
+              {notes.map(([note, moveNumber], index) => (
+                <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && mode === "VIEWER" ? 'block' : 'none' }}>
+                  "{note}"
+                </Box>
+              ))}
+            </Box>  
           </Box>  
         </Box>
       </Box>  
