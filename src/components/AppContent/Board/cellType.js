@@ -65,8 +65,6 @@ export default function cellType(type, flag, border, tiles){
                 result = {
                     "value": type,
                     "boxShadow": boxShadow,
-                    "borderRadius": "4px",
-                    "color": "white"
                 };
             }
             else{
