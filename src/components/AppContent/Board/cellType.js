@@ -29,28 +29,27 @@ export default function cellType(type, flag, border, tiles){
             result = {
                 "value": "",
                 "color": "#FDF5D8",
-                "image": "url('https://www.transparenttextures.com/patterns/white-carbon.png')",
                 "boxShadow": regBoxShadow
             };
             break;
         case 1:
             result = {
                 "value": "",
-                "color": "#B4D6F8",
+                "color": "#dcd2c9",
                 "boxShadow": regBoxShadow
             };
             break;
         case 2:
             result = {
                 "value": "",
-                "color": "#4C3DE0",
+                "color": "#a6c4cd",
                 "boxShadow": regBoxShadow
             };
             break;
         case 3:
             result = {
                 "value": "",
-                "color": "#F8B4F1",
+                "color": "#ffa0aa",
                 "boxShadow": regBoxShadow
             };
             break;
