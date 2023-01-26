@@ -11,6 +11,13 @@
   margin-bottom: 10px;
 }
 
+.sideNumbering{
+  font-size: 8px;
+  width: 10px;
+  height: 10px;
+  background:rgb(202, 191, 184);
+}
+
 .tableContainer table{
 	border-spacing: 0px !important;
 	border: 2px solid rgb(173, 88, 39);
@@ -209,5 +216,13 @@ td {
     align-items: center;
     width: 600px;
     height: 600px;
+  }
+}
+
+@media screen and (max-width: 676px){
+  .sideNumbering {
+    font-size: 5px;
+    width: 6px;
+    height: 6px;
   }
 }

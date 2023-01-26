@@ -1,5 +1,6 @@
 export const letterLookup = { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9, J: 10, K: 11, L: 12, M: 13, N: 14, O: 15 };
 export const origPool = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??";
+
 export const origBoard  = `[    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
                                 [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
                                 [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],

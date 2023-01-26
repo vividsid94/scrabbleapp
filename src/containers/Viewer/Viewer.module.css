@@ -1,8 +1,7 @@
-@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
 @import url('https://fonts.googleapis.com/css?family=Syne');
 *{
-	font-family: 'Josefin Sans';
+	font-family: 'Syne';
 }
 
 .questionMark{
@@ -404,6 +403,6 @@ form{
     line-height: 40px;
   }
   .topPlayerPanel{
-    height: 400px;
+    height: 338px;
   }
 }

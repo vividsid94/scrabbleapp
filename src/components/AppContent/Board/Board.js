@@ -1,6 +1,7 @@
 import Cell from './Cell';
 import styles from './Board.module.css';
 import { Box } from '@mui/system';
+import { letterLookup } from '../References/staticData';
 
 export default function Board(props) {
     let boardTheme = "Board__" + props.theme;
@@ -41,9 +42,18 @@ export default function Board(props) {
                 </Box>
                 <Box className={`${styles.tableContainer} ${styles[tableTheme]}`}>
                     <table>
+                        <thead>
+                            <tr> 
+                                <th className={styles.sideNumbering}/>
+                                {Object.keys(letterLookup).map(letter => (
+                                    <th className={styles.sideNumbering} key={letter}>{letter}</th>
+                                ))}
+                            </tr>
+                        </thead>
                         <tbody>
                             {props.board.map((row, rowIndex) =>
                                 <tr key={rowIndex}>
+                                    <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                     {row.map((col, colIndex) => <td key={colIndex}>{col}</td>)}
                                 </tr>
                             )}

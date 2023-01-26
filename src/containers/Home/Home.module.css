@@ -1,9 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
-*{
-	font-family: 'Josefin Sans';
-}
-
 .questionMark{
   font-size: 26px;
   cursor: pointer;

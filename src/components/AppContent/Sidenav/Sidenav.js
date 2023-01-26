@@ -41,7 +41,6 @@ const closedMixin = (theme) => ({
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  fontFamily: 'Josefin Sans',
   background: "#14000b",
   backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
   overflowX: 'hidden',
@@ -54,7 +53,6 @@ const closedMixin = (theme) => ({
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  fontFamily: 'Josefin Sans',
   justifyContent: 'flex-end',
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
@@ -79,7 +77,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 const MyAppBar = styled(AppBar)({
   position: 'fixed',
-  fontFamily: 'Josefin Sans',
   background: "#14000b",
   backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
   display: "flex",
