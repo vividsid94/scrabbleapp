@@ -31,7 +31,6 @@ export default (function() {
     if (bonus.value){
       classZ = "cellPositioning"
     }
-    console.log(bonus.color)
     if (bonus.color !== "#FDF5D8" && !bonus.value ){
       classN = "decal";
       classQ = "decal2";

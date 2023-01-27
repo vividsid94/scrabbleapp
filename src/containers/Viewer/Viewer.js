@@ -19,6 +19,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import HistoryIcon from '@mui/icons-material/History';
+import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -65,7 +66,8 @@ export default function Viewer({ onChange }){
   const [gibsonMode, setGibsonMode] = useState("NO");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
-  const [notes, setNote] = useState([])
+  const [notes, setNote] = useState([]);
+  const [gamesViewed, setGamesViewed] = useState([]);
 
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
@@ -155,7 +157,8 @@ export default function Viewer({ onChange }){
             randomizeGame();
           }
           else{
-            console.log("FINISHED")
+            setGamesViewed([...gamesViewed, gameNum]);
+            console.log("FINISHED");
           }
           setGameDictionary(extractedText);
         }
@@ -378,6 +381,66 @@ export default function Viewer({ onChange }){
     }
   }
 
+  function GamesHistory() {
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const [gamesPerPage, setGamesPerPage] = React.useState(10);
+  
+    const matches = useMediaQuery('(max-width:676px)');
+  
+    React.useEffect(() => {
+      if (matches) {
+        setGamesPerPage(5);
+      } else {
+        setGamesPerPage(10);
+      }
+    }, [matches]);
+  
+    const handlePageChange = (event, value) => {
+      setCurrentPage(value);
+    };
+  
+    const startIndex = (currentPage - 1) * gamesPerPage;
+    const endIndex = startIndex + gamesPerPage;
+    const currentGames = gamesViewed.slice(startIndex, endIndex).reverse();
+    return (
+      <div>
+        <Typography
+          variant="h8"
+          id="tableTitle"
+          component="div"
+        >
+          Games you viewed this session
+        </Typography>
+        <Table className={styles.recentGames}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Game</TableCell>
+              <TableCell>Number</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentGames.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(currentGames[startIndex + index], handleClose())}/>
+                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${currentGames[startIndex + index]}`, '_blank')}/>
+                </TableCell>
+                <TableCell>{currentGames[startIndex + index]}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Pagination
+          sx={{marginTop: '20px'}}
+          count={Math.ceil(currentGames.length / gamesPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color='primary'
+        />
+      </div>
+    );
+  }
+
   function RecentGames() {
     const [currentPage, setCurrentPage] = React.useState(1);
     const [gamesPerPage, setGamesPerPage] = React.useState(10);
@@ -399,6 +462,7 @@ export default function Viewer({ onChange }){
     const startIndex = (currentPage - 1) * gamesPerPage;
     const endIndex = startIndex + gamesPerPage;
     const currentGames = recentDictionaries.slice(startIndex, endIndex);
+    console.log(recentDictionaries)
     return (
       <div>
         <Typography
@@ -451,6 +515,11 @@ export default function Viewer({ onChange }){
     setModalContent("recentGames")
     setOpen(true);
   };
+
+  const handleGamesHistoryOpen = () => {
+    setModalContent("gamesHistory")
+    setOpen(true);
+  };
   
   const SettingsContent = () => (
     <>
@@ -492,6 +561,12 @@ export default function Viewer({ onChange }){
     </>
   );
 
+  const GamesHistoryContent = () => (
+    <>
+      {GamesHistory()}
+    </>
+  );
+
   const iconList = [  {icon: KeyboardDoubleArrowLeftIcon, onClick: beginningOfGame},  {icon: KeyboardArrowLeftIcon, onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
     {icon: KeyboardArrowRightIcon, onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
     {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen},
@@ -500,6 +575,7 @@ export default function Viewer({ onChange }){
   ]
 
   const revealBoxList = [
+    {icon: YoutubeSearchedForIcon, onClick: handleGamesHistoryOpen},
     {icon: GroupIcon, onClick: revealPlayers,condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
     {icon: Typography, onClick: revealElo, text: 'Elo',condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
     {icon: HistoryIcon, onClick: handleRecentGamesOpen,condition: {display: mode !== "GUESSELO" ? 'flex' : 'none'}},
@@ -517,6 +593,7 @@ export default function Viewer({ onChange }){
         <Box className={styles.modalContainer}>
           {modalContent === "dictionaryTiles" && <SettingsContent />}
           {modalContent === "recentGames" && <RecentGamesContent />}
+          {modalContent === "gamesHistory" && <GamesHistoryContent />}
         </Box>
       </Modal>  
       <Box className={styles.page}>
