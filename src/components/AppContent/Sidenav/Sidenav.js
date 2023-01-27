@@ -23,12 +23,14 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import styles from './Sidenav.module.css';
 const drawerWidth = 190;
+let texture = "maze-black";
+let background = "#110113"
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
-  background: "#14000b",
+  background: background,
   color: "white",
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
@@ -41,8 +43,8 @@ const closedMixin = (theme) => ({
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  background: "#14000b",
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
+  background: background,
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
   overflowX: 'hidden',
   width: `calc(${theme.spacing(7)} + 1px)`,
   [theme.breakpoints.up('sm')]: {
@@ -77,8 +79,8 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 const MyAppBar = styled(AppBar)({
   position: 'fixed',
-  background: "#14000b",
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/rough-cloth.png')",
+  background: background,
+  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
   display: "flex",
   justifyContent: "space-between"
 });
