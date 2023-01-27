@@ -84,14 +84,14 @@
     }
 
     .decal{
-        height: 130%;
+        height: 135%;
         position: absolute;
         background-repeat: repeat-x;
         background-position: 25% calc(100% + 2px), 25% calc(100% + 2px), 25% -2px, 25% -2px;
         background-size: 33.3333333333% 12px;
         width: 78%;
         left: 11%;
-        top: -14%;
+        top: -16.8%;
     }    
 }
 
