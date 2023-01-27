@@ -296,12 +296,17 @@ form{
   justify-content: center;
 }
 
+.commentaryContainer{
+  background: #4D3D2B;
+  background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+}
+
 .commentaryBox{
   padding: 10px;
   font-family: 'Syne';
   overflow-wrap: break-word;
   text-align: justify;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
   font-family: 'Syne';
 }

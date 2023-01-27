@@ -578,7 +578,7 @@ export default function Viewer({ onChange }){
             </Box> 
           </Box>
           <Box className={styles.playerPanel}>
-            <Box className={styles.playerPanel}>
+            <Box className={styles.commentaryContainer}>
               {notes.map(([note, moveNumber], index) => (
                 <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
                   "{note.trim()}"
