@@ -4,7 +4,7 @@ export default function cellType(type, flag, border, tiles){
     let top = border ? border.top : false;
     let left = border ? border.left : false;
     let right = border ? border.right : false;
-    let boxShadowColor = 'lightgrey';
+    let boxShadowColor = 'grey';
     let regBoxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px grey';
 
     let boxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px grey';
