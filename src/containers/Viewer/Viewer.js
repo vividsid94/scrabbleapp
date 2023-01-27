@@ -470,7 +470,7 @@ export default function Viewer({ onChange }){
         </select>}
       </Box>
       <Box className={styles.modalContainer__dictionary}>
-        Secret Mode played<br></br> w/ Commentary?
+        Commentary always on?
         {<select className={styles.styleSelection} value={ELOCommentary} onChange={handleELOCommentaryChange}>
           <option value="NO">No</option>
           <option value="YES">Yes</option>
