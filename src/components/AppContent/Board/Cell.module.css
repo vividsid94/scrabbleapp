@@ -21,33 +21,18 @@
     width: 30px;
 }
 
-.DCD2C9__NtoS{
-    background: linear-gradient(-45deg, transparent 50%, #dcd2c9 0), linear-gradient(45deg, transparent 50%, #dcd2c9 0), linear-gradient(-135deg, transparent 50%, #dcd2c9 0), linear-gradient(135deg, transparent 50%, #dcd2c9 0);
+.powderblue{
+    background: linear-gradient(-45deg, transparent 50%, powderblue 0), linear-gradient(45deg, transparent 50%, powderblue 0), linear-gradient(-135deg, transparent 50%, powderblue 0), linear-gradient(135deg, transparent 50%, powderblue 0);
 }
-.A6C4CD__NtoS{
-    background: linear-gradient(-45deg, transparent 50%, #A6C4CD 0), linear-gradient(45deg, transparent 50%, #A6C4CD 0), linear-gradient(-135deg, transparent 50%, #A6C4CD 0), linear-gradient(135deg, transparent 50%, #A6C4CD 0);
+.mediumslateblue{
+    background: linear-gradient(-45deg, transparent 50%, mediumslateblue 0), linear-gradient(45deg, transparent 50%, mediumslateblue 0), linear-gradient(-135deg, transparent 50%, mediumslateblue), linear-gradient(135deg, transparent 50%, mediumslateblue 0);
 }
-.FFA0AA__NtoS{
-    background: linear-gradient(-45deg, transparent 50%, #FFA0AA 0), linear-gradient(45deg, transparent 50%, #FFA0AA 0), linear-gradient(-135deg, transparent 50%, #FFA0AA 0), linear-gradient(135deg, transparent 50%, #FFA0AA 0);
+.lightpink{
+    background: linear-gradient(-45deg, transparent 50%, lightpink 0), linear-gradient(45deg, transparent 50%, lightpink 0), linear-gradient(-135deg, transparent 50%, lightpink 0), linear-gradient(135deg, transparent 50%, lightpink 0);
 }
-.BE3939__NtoS{
+.BE3939{
     background: linear-gradient(-45deg, transparent 50%, #BE3939 0), linear-gradient(45deg, transparent 50%, #BE3939 0), linear-gradient(-135deg, transparent 50%, #BE3939 0), linear-gradient(135deg, transparent 50%, #BE3939 0);
 }
-
-
-.DCD2C9__EtoW{
-    background: linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0);
-}
-.A6C4CD__EtoW{
-    background: linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0);
-}
-.FFA0AA__EtoW{
-    background: linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0);
-}
-.BE3939__EtoW{
-    background: linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0);
-}
-
 
 .decal{
     height: 110%;

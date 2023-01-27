@@ -31,11 +31,12 @@ export default (function() {
     if (bonus.value){
       classZ = "cellPositioning"
     }
+    console.log(bonus.color)
     if (bonus.color !== "#FDF5D8" && !bonus.value ){
       classN = "decal";
       classQ = "decal2";
-      classO = bonus.color.replace("#", "").trim() + "__NtoS"
-      classP = bonus.color.replace("#", "").trim() + "__NtoS"
+      classO = bonus.color.replace("#", "").trim()
+      classP = bonus.color.replace("#", "").trim()
     }
     switch (type) {
         case "board":

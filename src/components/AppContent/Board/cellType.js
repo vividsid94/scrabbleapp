@@ -4,8 +4,8 @@ export default function cellType(type, flag, border, tiles){
     let top = border ? border.top : false;
     let left = border ? border.left : false;
     let right = border ? border.right : false;
-    let boxShadowColor = '#C3C2C2';
-    let regBoxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
+    let boxShadowColor = 'rgb(185, 174, 166)';
+    let regBoxShadow = 'inset 0.25px 0.25px ' + 'white' + ', inset -0.25px -0.25px ' + 'white';
     let boxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
     if (left && top) {
         boxShadow = 'inset 1.5px 1.5px black';
@@ -27,28 +27,28 @@ export default function cellType(type, flag, border, tiles){
         case 0:
             result = {
                 "value": "",
-                "color": "#85A188",
+                "color": "papayawhip",
                 "boxShadow": regBoxShadow
             };
             break;
         case 1:
             result = {
                 "value": "",
-                "color": "#DCD2C9",
+                "color": "powderblue",
                 "boxShadow": regBoxShadow
             };
             break;
         case 2:
             result = {
                 "value": "",
-                "color": "#A6C4CD",
+                "color": "mediumslateblue",
                 "boxShadow": regBoxShadow
             };
             break;
         case 3:
             result = {
                 "value": "",
-                "color": "#FFA0AA",
+                "color": "lightpink",
                 "boxShadow": regBoxShadow
             };
             break;
@@ -64,6 +64,7 @@ export default function cellType(type, flag, border, tiles){
                 result = {
                     "value": type,
                     "boxShadow": boxShadow,
+                    "radius": '5px'
                 };
             }
             else{
