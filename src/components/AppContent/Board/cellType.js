@@ -4,9 +4,10 @@ export default function cellType(type, flag, border, tiles){
     let top = border ? border.top : false;
     let left = border ? border.left : false;
     let right = border ? border.right : false;
-    let regBoxShadow = 'inset 0.75px 0.75px lightgrey, inset -0.75px -0.75px lightgrey';
+    let boxShadowColor = 'lightgrey';
+    let regBoxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px grey';
 
-    let boxShadow = 'inset 0.75px 0.75px lightgrey, inset -0.75px -0.75px lightgrey';
+    let boxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px grey';
 
     if (left && top) {
         boxShadow = 'inset 1.5px 1.5px black';
