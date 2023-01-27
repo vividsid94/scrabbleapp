@@ -25,7 +25,7 @@
     background: linear-gradient(-45deg, transparent 50%, powderblue 0), linear-gradient(45deg, transparent 50%, powderblue 0), linear-gradient(-135deg, transparent 50%, powderblue 0), linear-gradient(135deg, transparent 50%, powderblue 0);
 }
 .mediumslateblue{
-    background: linear-gradient(-45deg, transparent 50%, mediumslateblue 0), linear-gradient(45deg, transparent 50%, mediumslateblue 0), linear-gradient(-135deg, transparent 50%, mediumslateblue), linear-gradient(135deg, transparent 50%, mediumslateblue 0);
+    background: linear-gradient(-45deg, transparent 50%, mediumslateblue 0), linear-gradient(45deg, transparent 50%, mediumslateblue 0), linear-gradient(-135deg, transparent 50%, mediumslateblue 0), linear-gradient(135deg, transparent 50%, mediumslateblue 0);
 }
 .lightpink{
     background: linear-gradient(-45deg, transparent 50%, lightpink 0), linear-gradient(45deg, transparent 50%, lightpink 0), linear-gradient(-135deg, transparent 50%, lightpink 0), linear-gradient(135deg, transparent 50%, lightpink 0);
@@ -108,5 +108,15 @@
         position: relative;
         height: 25px;
         width: 25px;
+    }
+    .decal{
+        height: 115%;
+        position: absolute;
+        background-repeat: repeat-x;
+        background-position: 25% calc(100% + 2px), 25% calc(100% + 2px), 25% -2px, 25% -2px;
+        background-size: 33.3333333333% 12px;
+        width: 78%;
+        left: 11%;
+        top: -8%;
     }
 }
