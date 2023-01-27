@@ -10,7 +10,7 @@ function App() {
   const [appState, setAppState] = useState('VIEWER');
   return (
     <div className="App">
-      <header className="App-header" style={{backgroundColor: appState === 'VIEWER' ? '#000003' : '#5e2700'}}>
+      <header className="App-header" style={{backgroundColor: appState === 'VIEWER' ? '#000003' : '#6E5D42'}}>
         <Router>
           <Routes>
             <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
