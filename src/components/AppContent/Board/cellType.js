@@ -5,7 +5,7 @@ export default function cellType(type, flag, border, tiles){
     let left = border ? border.left : false;
     let right = border ? border.right : false;
     let boxShadowColor = 'rgb(185, 174, 166)';
-    let regBoxShadow = 'inset 0.25px 0.25px ' + 'white' + ', inset -0.25px -0.25px ' + 'white';
+    let regBoxShadow = 'inset 0.1px 0.1px ' + 'rgb(185, 174, 166)' + ', inset -0.1px -0.1px ' + 'rgb(185, 174, 166)';
     let boxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
     if (left && top) {
         boxShadow = 'inset 1.5px 1.5px black';
@@ -27,7 +27,7 @@ export default function cellType(type, flag, border, tiles){
         case 0:
             result = {
                 "value": "",
-                "color": "papayawhip",
+                "color": "blanchedalmond",
                 "boxShadow": regBoxShadow
             };
             break;
