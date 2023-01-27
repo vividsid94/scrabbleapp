@@ -6,7 +6,7 @@ export default function cellType(type, flag, border, tiles){
     let right = border ? border.right : false;
     let boxShadowColor = 'rgb(185, 174, 166)';
     let highlightColor = '#6A2B79';
-    let regBoxShadow = 'inset 0.15px 0.15px ' + 'white' + ', inset -0.15px -0.15px ' + 'white';
+    let regBoxShadow = 'inset 0.15px 0.15px ' + boxShadowColor + ', inset -0.15px -0.15px ' + boxShadowColor;
     let boxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
     if (left && top) {
         boxShadow = 'inset 1.5px 1.5px ' + highlightColor;
