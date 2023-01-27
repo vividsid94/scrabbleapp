@@ -23,10 +23,24 @@ export default (function() {
         }
     }
 
+    let classN = "basic";
+    let classQ = "basic";
+    let classO = "";
+    let classP = "";
+    let classZ = "";
+    if (bonus.value){
+      classZ = "cellPositioning"
+    }
+    if (bonus.color !== "#FDF5D8" && !bonus.value ){
+      classN = "decal";
+      classQ = "decal2";
+      classO = bonus.color.replace("#", "").trim() + "__NtoS"
+      classP = bonus.color.replace("#", "").trim() + "__NtoS"
+    }
     switch (type) {
         case "board":
             if (tiles === "PROTILES"){
-                return (<div className={styles[cellTheme]} style={{ backgroundColor: bonus.color, boxShadow: bonus.boxShadow, backgroundImage: bonus.image}}>{cell(bonus.value)}</div>);
+                return (<div className={`${styles[classZ]}`} style={{ backgroundColor: bonus.color, boxShadow: bonus.boxShadow, backgroundImage: bonus.image}}><div className={styles.decalContainer}><div className={`${styles[classN]} ${styles[classO]}`}><div className={`${styles[classQ]} ${styles[classP]}`}>{cell(bonus.value)}</div></div></div></div>);
             }
             else{
                 return (<div className={styles[cellTheme]} style={{ backgroundColor: bonus.color, boxShadow: bonus.boxShadow, backgroundImage: bonus.image}}>{bonus.value}</div>);

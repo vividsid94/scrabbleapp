@@ -35,21 +35,21 @@ export default function cellType(type, flag, border, tiles){
         case 1:
             result = {
                 "value": "",
-                "color": "#dcd2c9",
+                "color": "#DCD2C9",
                 "boxShadow": regBoxShadow
             };
             break;
         case 2:
             result = {
                 "value": "",
-                "color": "#a6c4cd",
+                "color": "#A6C4CD",
                 "boxShadow": regBoxShadow
             };
             break;
         case 3:
             result = {
                 "value": "",
-                "color": "#ffa0aa",
+                "color": "#FFA0AA",
                 "boxShadow": regBoxShadow
             };
             break;

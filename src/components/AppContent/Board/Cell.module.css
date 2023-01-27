@@ -13,8 +13,68 @@
     font-size: 25px;
     justify-content: center;
     align-items: flex-end;
+    z-index: 1;
+}
+.decalContainer{
+    position: relative;
+    height: 30px;
+    width: 30px;
 }
 
+.DCD2C9__NtoS{
+    background: linear-gradient(-45deg, transparent 50%, #dcd2c9 0), linear-gradient(45deg, transparent 50%, #dcd2c9 0), linear-gradient(-135deg, transparent 50%, #dcd2c9 0), linear-gradient(135deg, transparent 50%, #dcd2c9 0);
+}
+.A6C4CD__NtoS{
+    background: linear-gradient(-45deg, transparent 50%, #A6C4CD 0), linear-gradient(45deg, transparent 50%, #A6C4CD 0), linear-gradient(-135deg, transparent 50%, #A6C4CD 0), linear-gradient(135deg, transparent 50%, #A6C4CD 0);
+}
+.FFA0AA__NtoS{
+    background: linear-gradient(-45deg, transparent 50%, #FFA0AA 0), linear-gradient(45deg, transparent 50%, #FFA0AA 0), linear-gradient(-135deg, transparent 50%, #FFA0AA 0), linear-gradient(135deg, transparent 50%, #FFA0AA 0);
+}
+.BE3939__NtoS{
+    background: linear-gradient(-45deg, transparent 50%, #BE3939 0), linear-gradient(45deg, transparent 50%, #BE3939 0), linear-gradient(-135deg, transparent 50%, #BE3939 0), linear-gradient(135deg, transparent 50%, #BE3939 0);
+}
+
+
+.DCD2C9__EtoW{
+    background: linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0), linear-gradient(90deg, transparent 50%, #DCD2C9 0);
+}
+.A6C4CD__EtoW{
+    background: linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0), linear-gradient(90deg, transparent 50%, #A6C4CD 0);
+}
+.FFA0AA__EtoW{
+    background: linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0), linear-gradient(90deg, transparent 50%, #FFA0AA 0);
+}
+.BE3939__EtoW{
+    background: linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0), linear-gradient(90deg, transparent 50%, #BE3939 0);
+}
+
+
+.decal{
+    height: 110%;
+    position: absolute;
+    background-repeat: repeat-x;
+    background-position: 25% calc(100% + 2px), 25% calc(100% + 2px), 25% -2px, 25% -2px;
+    background-size: 33.3333333333% 12px;
+    width: 78%;
+    left: 11%;
+    top: -5%;
+}
+.decal2{
+    height: 110%;
+    position: absolute;
+    background-repeat: repeat-x;
+    background-position: 25% calc(100% + 2px), 25% calc(100% + 2px), 25% -2px, 25% -2px;
+    background-size: 33.3333333333% 12px;
+    width: 78%;
+    left: 11%;
+    top: -5%;
+    transform: rotate(90deg);
+}
+
+.cellPositioning{
+    position: relative;
+    z-index: 999;
+}
 @media screen and (max-width: 676px) {
     .Cell__APPLE{
         width: 13px;
@@ -32,6 +92,22 @@
         justify-content: center;
         align-items: flex-end;
     }
+    .decalContainer{
+        position: relative;
+        height: 15px;
+        width: 15px;
+    }
+
+    .decal{
+        height: 130%;
+        position: absolute;
+        background-repeat: repeat-x;
+        background-position: 25% calc(100% + 2px), 25% calc(100% + 2px), 25% -2px, 25% -2px;
+        background-size: 33.3333333333% 12px;
+        width: 78%;
+        left: 11%;
+        top: -14%;
+    }    
 }
 
 @media screen and (max-height: 992px)  and (min-width: 1200px){
@@ -42,5 +118,10 @@
         font-size: 22px;
         justify-content: center;
         align-items: flex-end;
+    }
+    .decalContainer{
+        position: relative;
+        height: 25px;
+        width: 25px;
     }
 }
