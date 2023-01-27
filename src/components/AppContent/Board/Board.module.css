@@ -19,16 +19,34 @@
   background:rgb(185, 174, 166);
 }
 
+.tableContainer {
+  border-radius: 20px;
+}
+
 .tableContainer table{
 	border-spacing: 0px !important;
 	border: 2px solid rgb(173, 88, 39);
 	background-color: lightgray;
+  border-radius: 10px;
 }
 
 .Table__APPLE table{
 	border-spacing: 0px !important;
 	border: 10px solid rgb(173, 88, 39);
 	background-color: lightgray;
+}
+
+.NWcell{
+  border-radius: 8px 0px 0px 0px;
+}
+.NEcell{
+  border-radius: 0px 8px 0px 0px;
+}
+.SWcell{
+  border-radius: 0px 0px 0px 8px;
+}
+.SEcell{
+  border-radius: 0px 0px 8px 0px;
 }
 
 .Footer{

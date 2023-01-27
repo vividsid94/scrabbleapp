@@ -44,10 +44,11 @@ export default function Board(props) {
                     <table>
                         <thead>
                             <tr> 
-                                <th className={styles.sideNumbering}/>
+                                <th className={`${styles.sideNumbering} ${styles.NWcell}`}/>
                                 {Object.keys(letterLookup).map(letter => (
                                     <th className={styles.sideNumbering} key={letter}>{letter.toLowerCase()}</th>
                                 ))}
+                                <th className={`${styles.sideNumbering} ${styles.NEcell}`}/>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,8 +56,16 @@ export default function Board(props) {
                                 <tr key={rowIndex}>
                                     <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                     {row.map((col, colIndex) => <td key={colIndex}>{col}</td>)}
+                                    <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                 </tr>
                             )}
+                            <tr> 
+                                <th className={`${styles.sideNumbering} ${styles.SWcell}`}/>
+                                {Object.keys(letterLookup).map(letter => (
+                                    <th className={styles.sideNumbering} key={letter}>{letter.toLowerCase()}</th>
+                                ))}
+                                <th className={`${styles.sideNumbering} ${styles.SEcell}`}/>
+                            </tr>
                         </tbody>
                     </table>
                 </Box>
