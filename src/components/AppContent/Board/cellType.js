@@ -5,10 +5,8 @@ export default function cellType(type, flag, border, tiles){
     let left = border ? border.left : false;
     let right = border ? border.right : false;
     let boxShadowColor = '#C3C2C2';
-    let regBoxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px #C3C2C2';
-
-    let boxShadow = 'inset 0.75px 0.75px ' + boxShadowColor + ', inset -0.75px -0.75px #C3C2C2';
-
+    let regBoxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
+    let boxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
     if (left && top) {
         boxShadow = 'inset 1.5px 1.5px black';
     } else if (left) {
@@ -29,7 +27,7 @@ export default function cellType(type, flag, border, tiles){
         case 0:
             result = {
                 "value": "",
-                "color": "#90A793",
+                "color": "#85A188",
                 "boxShadow": regBoxShadow
             };
             break;
