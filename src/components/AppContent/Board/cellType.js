@@ -29,7 +29,8 @@ export default function cellType(type, flag, border, tiles){
         case 0:
             result = {
                 "value": "",
-                "color": "#FDF5D8",
+                "color": "#90A793",
+                "image" : "url('http://www.transparenttextures.com/patterns/brushed-alum.png')",
                 "boxShadow": regBoxShadow
             };
             break;
