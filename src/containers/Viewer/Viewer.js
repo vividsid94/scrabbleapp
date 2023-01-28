@@ -454,7 +454,7 @@ export default function Viewer({ onChange }){
           id="tableTitle"
           component="div"
         >
-          Recent Games
+          Recent XT Games
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
