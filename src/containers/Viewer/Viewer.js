@@ -382,26 +382,16 @@ export default function Viewer({ onChange }){
   }
 
   function GamesHistory() {
-    const [currentPage, setCurrentPage] = React.useState(1);
-    const [gamesPerPage, setGamesPerPage] = React.useState(10);
-  
+    const [gamesPerPage, setGamesPerPage] = React.useState(5);
     const matches = useMediaQuery('(max-width:676px)');
   
     React.useEffect(() => {
       if (matches) {
         setGamesPerPage(5);
-      } else {
-        setGamesPerPage(10);
       }
     }, [matches]);
   
-    const handlePageChange = (event, value) => {
-      setCurrentPage(value);
-    };
-  
-    const startIndex = (currentPage - 1) * gamesPerPage;
-    const endIndex = startIndex + gamesPerPage;
-    const currentGames = gamesViewed.slice(startIndex, endIndex).reverse();
+    const currentGames = gamesViewed.slice(-gamesPerPage).reverse();
     return (
       <div>
         <Typography
@@ -409,7 +399,7 @@ export default function Viewer({ onChange }){
           id="tableTitle"
           component="div"
         >
-          Games you viewed this session
+          Most recent games you <br></br>viewed this session
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
@@ -422,24 +412,18 @@ export default function Viewer({ onChange }){
             {currentGames.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(currentGames[startIndex + index], handleClose())}/>
-                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${currentGames[startIndex + index]}`, '_blank')}/>
+                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(currentGames[index], handleClose())}/>
+                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${currentGames[index]}`, '_blank')}/>
                 </TableCell>
-                <TableCell>{currentGames[startIndex + index]}</TableCell>
+                <TableCell>{currentGames[index]}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <Pagination
-          sx={{marginTop: '20px'}}
-          count={Math.ceil(currentGames.length / gamesPerPage)}
-          page={currentPage}
-          onChange={handlePageChange}
-          color='primary'
-        />
       </div>
     );
   }
+
 
   function RecentGames() {
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -462,7 +446,7 @@ export default function Viewer({ onChange }){
     const startIndex = (currentPage - 1) * gamesPerPage;
     const endIndex = startIndex + gamesPerPage;
     const currentGames = recentDictionaries.slice(startIndex, endIndex);
-    console.log(recentDictionaries)
+
     return (
       <div>
         <Typography
