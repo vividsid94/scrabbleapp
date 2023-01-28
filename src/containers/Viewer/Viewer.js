@@ -476,7 +476,7 @@ export default function Viewer({ onChange }){
           id="tableTitle"
           component="div"
         >
-          Recent XT Games
+          Recent XT Games {mode === "GUESSELO" ? "(names hidden in this mode!)" : ""}
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
