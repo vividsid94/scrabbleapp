@@ -62,7 +62,7 @@ form{
 
 .randomizeBtn{
   cursor: pointer;
-  font-size: 35px !important;
+  font-size: 30px !important;
 }
 
 .styleSelection{
@@ -84,11 +84,14 @@ form{
   font-family: 'Syne' !important;
 }
 .settingsBtn{
-  font-size: 35px !important;
+  font-size: 30px !important;
   cursor: pointer;
 }
 .keyBtn{
-  font-size: 35px !important;
+  font-size: 30px !important;
+  line-height: 30px !important;
+  padding: 2px 10px;
+  height: 30px;
   font-family: 'Dancing Script' !important;
   cursor: pointer;
   transform: translate(--slice-0);
@@ -273,17 +276,23 @@ form{
   padding-bottom: 24px;
 }
 
-.revealBox{
-  font-size: 10px;
-  font-family: 'Syne' !important;
-  height: 35px;
+.groupedBox{
+  padding: 0px 10px;
+  border-top-left-radius: 37px 140px;
+  border-top-right-radius: 23px 130px;
+  border-bottom-left-radius: 110px 19px;
+  border-bottom-right-radius: 120px 24px;
+  box-shadow: 3px 15px 8px -10px rgba(0, 0, 0, 0.3);
+  border: solid 2px rgb(89, 65, 118);
   display: flex;
-  align-items: center;
+  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
+  background-color: rgb(93, 106, 120, 0.5);
+  justify-content: space-between;
 }
 
 .Arrows{
   cursor: pointer;
-  font-size: 35px !important;
+  font-size: 30px !important;
 }
 
 .mainBox{
@@ -378,6 +387,8 @@ form{
   }
   .keyBtn{
     font-size: 20px !important;
+    line-height: 20px !important;
+    height: 20px !important;
   }
   .commentaryBox{
     padding: 10px;

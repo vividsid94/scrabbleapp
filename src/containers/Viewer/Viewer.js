@@ -472,7 +472,7 @@ export default function Viewer({ onChange }){
                   <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${recentGameNums[startIndex + index]}`, '_blank')}/>
                 </TableCell>
                 <TableCell>{recentDictionaries[startIndex + index]}</TableCell>
-                <TableCell>{recentNames[startIndex + index + 1]}</TableCell>
+                <TableCell style={{color: mode !== "VIEWER" ? "transparent" : "black", background: mode !== "VIEWER" ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}>{recentNames[startIndex + index + 1]}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -529,7 +529,7 @@ export default function Viewer({ onChange }){
           <option value="YES">Yes</option>
         </select>}
       </Box>
-      <Box className={styles.modalContainer__tiles} sx={{display: !unlockGibsonMode ? 'none' : "flex"}}>
+      <Box className={styles.modalContainer__tiles} sx={{display: "none"}}>
         Gibson Mode
         {<select className={styles.styleSelection} value={gibsonMode} onChange={handleGibsonMode}>
           <option value="NO">No</option>
@@ -558,13 +558,21 @@ export default function Viewer({ onChange }){
     {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
   ]
 
-  const revealBoxList = [
-    {icon: YoutubeSearchedForIcon, onClick: handleGamesHistoryOpen},
-    {icon: GroupIcon, onClick: revealPlayers,condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
-    {icon: Typography, onClick: revealElo, text: 'Elo',condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
-    {icon: HistoryIcon, onClick: handleRecentGamesOpen,condition: {display: mode !== "GUESSELO" ? 'flex' : 'none'}},
-    {icon: LaunchIcon, onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}
+  const groupedIcons = [
+    {
+      icon1: {icon: YoutubeSearchedForIcon, onClick: handleGamesHistoryOpen},
+      icon2: {icon: HistoryIcon, onClick: handleRecentGamesOpen}
+    }
   ]
+
+  const groupedIcons2 = [
+    {
+      icon1: {icon: GroupIcon, onClick: revealPlayers,condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
+      icon2: {icon: Typography, onClick: revealElo, text: 'Elo',condition: {display: mode === "GUESSELO" ? 'flex' : 'none'}},
+      icon3: {icon: LaunchIcon, onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')}
+    }
+  ]
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -604,15 +612,35 @@ export default function Viewer({ onChange }){
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                 Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
               </Box>
-              <Box className={`${styles.playerPanel} ${styles.playerToggle}`}>
-                {revealBoxList.map((box, index) => (
-                  <Box key={index} className={styles.revealBox} sx={box.condition}>
-                    <box.icon 
-                      className={styles.keyBtn} 
-                      onClick={box.onClick}
-                    >
-                      {box.text}
-                    </box.icon>
+              <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
+                {groupedIcons.map((group, index) => (
+                  <Box /*sx={{width: mode === "VIEWER" ? "66%" : "auto", border: mode === "VIEWER" ? "none" : "solid 2px #6e7491", boxShadow: mode === "VIEWER" ? "none" : "3px 15px 8px -10px rgba(0, 0, 0, 0.3)"}}*/ key={index} className={styles.groupedBox}>
+                      <group.icon1.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon1.onClick}
+                      />
+                      <group.icon2.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon2.onClick}
+                      />
+                  </Box>
+                ))}
+                {groupedIcons2.map((group, index) => (
+                  <Box /*sx={{width: mode === "VIEWER" ? "33%" : "auto", border: mode === "VIEWER" ? "none" : "solid 2px #6e7491", boxShadow: mode === "VIEWER" ? "none" : "3px 15px 8px -10px rgba(0, 0, 0, 0.3)"}}*/ key={index} className={styles.groupedBox}>
+                      <group.icon1.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon1.onClick}
+                        sx={group.icon1.condition}
+                      />
+                      <group.icon2.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon2.onClick}
+                        sx={group.icon2.condition}
+                      >{group.icon2.text}</group.icon2.icon>
+                      <group.icon3.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon3.onClick}
+                      />
                   </Box>
                 ))}
               </Box>
