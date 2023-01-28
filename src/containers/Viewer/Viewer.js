@@ -35,7 +35,7 @@ import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 
 export default function Viewer({ onChange }){
-  const [gameNum, setGameNum] = useState(38818 /*- Josh*/ /*36230 Nigel*/);
+  const [gameNum, setGameNum] = useState(27775);
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
