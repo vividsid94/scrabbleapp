@@ -426,18 +426,22 @@ export default function Viewer({ onChange }){
         <Table className={styles.recentGames}>
           <TableHead>
             <TableRow>
-              <TableCell>Game</TableCell>
-              <TableCell>Number</TableCell>
+              <TableCell sx={{padding: '8px !important'}}>Game</TableCell>
+              <TableCell sx={{padding: '8px !important'}}>Number</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {currentGames.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(currentGames[index], handleClose())}/>
-                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${currentGames[index]}`, '_blank')}/>
+                  <Box sx={{display: 'flex'}}>
+                    <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(currentGames[index], handleClose())}/>
+                    <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${currentGames[index]}`, '_blank')}/>
+                  </Box>
                 </TableCell>
-                <TableCell>{currentGames[index]}</TableCell>
+                <TableCell>
+                  {currentGames[index]}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -481,17 +485,19 @@ export default function Viewer({ onChange }){
         <Table className={styles.recentGames}>
           <TableHead>
             <TableRow>
-              <TableCell>Game</TableCell>
-              <TableCell>Dictionary</TableCell>
-              <TableCell>Players</TableCell>
+              <TableCell sx={{padding: '8px !important'}}>Game</TableCell>
+              <TableCell sx={{padding: '8px !important'}}>Dictionary</TableCell>
+              <TableCell sx={{padding: '8px !important'}}>Players</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {currentGames.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(recentGameNums[startIndex + index], handleClose())}/>
-                  <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${recentGameNums[startIndex + index]}`, '_blank')}/>
+                  <Box sx={{display: 'flex'}}>
+                    <VisibilityOutlinedIcon className={styles.keyBtnSmall} target="_blank" onClick={() => chooseGame(recentGameNums[startIndex + index], handleClose())}/>
+                    <LaunchIcon className={styles.keyBtnSmall} onClick={() => window.open(`https://www.cross-tables.com/annotated.php?u=${recentGameNums[startIndex + index]}`, '_blank')}/>
+                  </Box>
                 </TableCell>
                 <TableCell>{recentDictionaries[startIndex + index]}</TableCell>
                 <TableCell style={{color: mode !== "VIEWER" ? "transparent" : "black", background: mode !== "VIEWER" ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}>{recentNames[startIndex + index + 1]}</TableCell>
