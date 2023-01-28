@@ -420,8 +420,9 @@ export default function Viewer({ onChange }){
           variant="h8"
           id="tableTitle"
           component="div"
+          sx={{padding: '8px'}}
         >
-          Most recent games you <br></br>viewed this session
+          <b>Most recent games you <br></br>viewed this session</b>
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
@@ -479,8 +480,9 @@ export default function Viewer({ onChange }){
           variant="h8"
           id="tableTitle"
           component="div"
+          sx={{padding: '8px'}}
         >
-          Recent XT Games {mode === "GUESSELO" ? "(names hidden in this mode!)" : ""}
+          <b>Recent XT Games {mode === "GUESSELO" ? "(names hidden in this mode!)" : ""}</b>
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
