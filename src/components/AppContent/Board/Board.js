@@ -20,7 +20,7 @@ export default function Board(props) {
                 message = "Challenged off";
                 break;
             case "+":
-                message = props.move + " " + props.points + "(final)";
+                message = props.move + " " + (props.points ? props.points : "") + "(final)";
                 break;
             default:
                 if (props.move !== "N/A"){
