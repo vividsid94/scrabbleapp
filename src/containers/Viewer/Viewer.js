@@ -34,7 +34,7 @@ import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo, fi
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
-import { TextField } from "@mui/material";
+import { TextField, Tooltip } from "@mui/material";
 
 export default function Viewer({ onChange }){
   const [gameNum, setGameNum] = useState(27775);
@@ -613,9 +613,11 @@ export default function Viewer({ onChange }){
     </div>
   );
 
-  const iconList = [  {icon: KeyboardDoubleArrowLeftIcon, onClick: beginningOfGame},  {icon: KeyboardArrowLeftIcon, onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
-    {icon: KeyboardArrowRightIcon, onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
-    {icon: FiberNewIcon, onClick: randomizeGame},
+  const iconList = [  
+    {icon: KeyboardDoubleArrowLeftIcon, toolTip: "Beginning of game", onClick: beginningOfGame},  
+    {icon: KeyboardArrowLeftIcon, toolTip: "Move back", onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
+    {icon: KeyboardArrowRightIcon, toolTip: "Move forward", onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
+    {icon: FiberNewIcon, toolTip: "New game", onClick: randomizeGame},
     {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
   ]
 
@@ -665,11 +667,13 @@ export default function Viewer({ onChange }){
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
             <Box className={styles.playerToggle}>
               {iconList.map((icon, index) => (
-                <icon.icon key={index}
-                  className={styles.Arrows} 
-                  onClick={icon.onClick}
-                  sx={icon.condition}
-                />
+                <Tooltip title={icon.toolTip}>
+                  <icon.icon key={index}
+                    className={styles.Arrows} 
+                    onClick={icon.onClick}
+                    sx={icon.condition}
+                  />
+                </Tooltip>
               ))}
             </Box>
               <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
@@ -677,37 +681,50 @@ export default function Viewer({ onChange }){
               </Box>
               <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
                 {groupedIcons.map((group, index) => (
-                  <Box /*sx={{width: mode === "VIEWER" ? "66%" : "auto", border: mode === "VIEWER" ? "none" : "solid 2px #6e7491", boxShadow: mode === "VIEWER" ? "none" : "3px 15px 8px -10px rgba(0, 0, 0, 0.3)"}}*/ key={index} className={styles.groupedBox}>
-                      <group.icon1.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon1.onClick}
-                      />
-                      <group.icon2.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon2.onClick}
-                      />
-                      <group.icon3.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon3.onClick}
-                      />
+                  <Box key={index} className={styles.groupedBox}>
+                      <Tooltip title="Games you viewed">
+                        <group.icon1.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon1.onClick}
+                        />
+                      </Tooltip>
+                      <Tooltip title="Recents on XT">
+                        <group.icon2.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon2.onClick}
+                        />
+                      </Tooltip>
+                      <Tooltip title="Settings">
+                        <group.icon3.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon3.onClick}
+                        />
+                      </Tooltip>
                   </Box>
                 ))}
                 {groupedIcons2.map((group, index) => (
                   <Box /*sx={{width: mode === "VIEWER" ? "33%" : "auto", border: mode === "VIEWER" ? "none" : "solid 2px #6e7491", boxShadow: mode === "VIEWER" ? "none" : "3px 15px 8px -10px rgba(0, 0, 0, 0.3)"}}*/ key={index} className={styles.groupedBox}>
-                      <group.icon1.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon1.onClick}
-                        sx={group.icon1.condition}
-                      />
-                      <group.icon2.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon2.onClick}
-                        sx={group.icon2.condition}
-                      >{group.icon2.text}</group.icon2.icon>
-                      <group.icon3.icon 
-                        className={styles.keyBtn} 
-                        onClick={group.icon3.onClick}
-                      />
+                      <Tooltip title="Reveal players">
+                        <group.icon1.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon1.onClick}
+                          sx={group.icon1.condition}
+                        />
+                      </Tooltip>
+                      <Tooltip title="Reveal ELO">
+                        <group.icon2.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon2.onClick}
+                          sx={group.icon2.condition}
+                        >{group.icon2.text}
+                        </group.icon2.icon>
+                      </Tooltip>
+                      <Tooltip title="View on XT">
+                        <group.icon3.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon3.onClick}
+                        />
+                      </Tooltip>
                   </Box>
                 ))}
               </Box>

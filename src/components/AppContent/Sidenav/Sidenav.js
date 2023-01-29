@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom';
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import { TextField, Tooltip } from "@mui/material";
+
 
 //import { useMediaQuery } from '@material-ui/core';
 
@@ -149,7 +151,9 @@ export default function MiniDrawer() {
           <a id="homeBtn" className={styles.link} href="/">
             <ListItem className={styles.listItem}>
               <ListItemIcon>
-                <HomeOutlinedIcon className={styles.homeLogo}/>
+                <Tooltip title="Home">
+                  <HomeOutlinedIcon className={styles.homeLogo}/>
+                </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Home"} />
             </ListItem>
@@ -159,7 +163,9 @@ export default function MiniDrawer() {
           <a id="viewerBtn" className={styles.link} href="/viewer">
             <ListItem className={styles.listItem}>
               <ListItemIcon>
-                <VisibilityOutlinedIcon className={styles.homeLogo}/>
+                <Tooltip title="Game Viewer">
+                  <VisibilityOutlinedIcon className={styles.homeLogo}/>
+                </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Viewer"} />
             </ListItem>
