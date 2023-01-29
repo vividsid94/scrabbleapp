@@ -29,10 +29,11 @@ import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { getMoveSet, getRecentGameInfo, getGameInfo, getGibsonGameInfo } from "../../axios/api.js";
+import { getMoveSet, getRecentGameInfo, getGameInfo, getGibsonGameInfo, findPlayerId } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
+import { TextField } from "@mui/material";
 
 export default function Viewer({ onChange }){
   const [gameNum, setGameNum] = useState(27775);
@@ -62,8 +63,8 @@ export default function Viewer({ onChange }){
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
-  const [unlockGibsonMode, setUnlockGibsonMode] = useState(false);
-  const [gibsonMode, setGibsonMode] = useState("NO");
+
+  const gibsonMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
   const [notes, setNote] = useState([]);
@@ -74,11 +75,18 @@ export default function Viewer({ onChange }){
   const [recentGameNums, setRecentGameNums] = useState([]);
   const [gibsonGameNums, setGibsonGameNums] = useState([]);
 
-  const handleGibsonMode = event => {
-    setGibsonMode(event.target.value);
+  const flag = useRef("false");
+
+  const textFieldRef = useRef(null);
+  const swtichValue = (event) => {
+    setDictionary("ANY");
+  }
+  const handleGibsonMode = (event) => {
+    gibsonMode.current = event.target.value;
   };
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
+    gibsonMode.current = "";
   };
   const handleELOCommentaryChange = event => {
     setELOCommentary(event.target.value);
@@ -95,9 +103,6 @@ export default function Viewer({ onChange }){
 
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
-    if (boardClickCount >= 20) {
-      setUnlockGibsonMode(true);
-    }
     if (boardClickCount >= 5) {
       setUnlockEloMode(true);
     }
@@ -112,7 +117,13 @@ export default function Viewer({ onChange }){
     }
   }
 
+
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
+    setIsLoading(true);
+    setModalContent("loading")
+    setOpen(true);
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     document.title = 'Game Viewer';
     setBoardCoords(parsedOrigBoardCoords); 
@@ -138,11 +149,6 @@ export default function Viewer({ onChange }){
         setRecentDictionaries(infoRes[1])
         setRecentGameNums(infoRes[2])
     };
-    const loadGibsonGameInfo = async () => {
-      const infoRes = await getGibsonGameInfo('https://www.cross-tables.com/anno.php?p=1384');
-      setGibsonGameNums(infoRes);
-    };
-    loadGibsonGameInfo();
     const loadGameInfo = async () => {
       let text = await getGameInfo('https://www.cross-tables.com/annotated.php?u=', gameNum);
       const startIndex = text.indexOf('<p>Dictionary: <b>');
@@ -156,14 +162,22 @@ export default function Viewer({ onChange }){
           else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
             randomizeGame();
           }
+          else if (extractedText === null){
+            randomizeGame();
+          }
           else{
             setGamesViewed([...gamesViewed, gameNum]);
             console.log("FINISHED");
+            setTimeout(() => {
+              setOpen(false);
+            }, "1000")
           }
           setGameDictionary(extractedText);
         }
       }
-
+      else{
+        randomizeGame();
+      }
       const regex = /<tr><td>([^<]+)<\/td>/g;
       const matches = text.matchAll(regex);
       let i = 0;
@@ -181,6 +195,9 @@ export default function Viewer({ onChange }){
       if (matchTourney)
         tourneyNumber = matchTourney[1];
       setTourneyNum(tourneyNumber);
+
+
+      setIsLoading(false);
     };
 
     loadMoveSet();
@@ -324,17 +341,20 @@ export default function Viewer({ onChange }){
   }
 
   function randomizeGame(){
-    currentMoveRef.current = -1;
-    setResetCount(resetCount + 1);
-    let randomNumber;
-    if (gibsonMode === "NO")
-      randomNumber = getRandomNumber(10000, 40000).toString();
-    else
-      {
-        let randomIndex = Math.floor(Math.random() * gibsonGameNums.length);
-        randomNumber = gibsonGameNums[randomIndex];
+    const loadGibsonGameInfo = async () => {
+      const info = gibsonMode.current ? await getGibsonGameInfo('http://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
+      let randomNumber;
+      if (info){
+        let randomIndex = Math.floor(Math.random() * info.length);
+        randomNumber = info[randomIndex];
+      } else{
+        randomNumber = getRandomNumber(10000, 40000).toString();
       }
-    setGameNum(randomNumber);
+      currentMoveRef.current = -1;
+      setResetCount(resetCount + 1);
+      setGameNum(randomNumber);
+    };
+    loadGibsonGameInfo();
   }
 
   function chooseGame(gameNum){
@@ -451,6 +471,14 @@ export default function Viewer({ onChange }){
     );
   }
 
+  function LoadingL() {
+    return (
+      <div>
+        Loading...
+      </div>
+    );
+  }
+
 
   function RecentGames() {
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -535,7 +563,9 @@ export default function Viewer({ onChange }){
     setOpen(true);
   };
   
-  const SettingsContent = () => (
+  const SettingsContent = () => { 
+    flag.current = "false";
+    return (
     <>
       <Box className={styles.modalContainer__dictionary}>
         Dictionary
@@ -559,15 +589,14 @@ export default function Viewer({ onChange }){
           <option value="YES">Yes</option>
         </select>}
       </Box>
-      <Box className={styles.modalContainer__tiles} sx={{display: "none"}}>
-        Gibson Mode
-        {<select className={styles.styleSelection} value={gibsonMode} onChange={handleGibsonMode}>
-          <option value="NO">No</option>
-          <option value="YES">Yes</option>
-        </select>}
+      <Box className={styles.modalContainer__tiles}>
+        Favorite player? You'll <br>
+        </br>only generate their games.
+        <TextField autoComplete="off" placeholder={gibsonMode.current} onFocus={(event) => swtichValue(event)} onChange={(event) => handleGibsonMode(event)} />
       </Box>
     </>
-  );
+    )
+};
   
   const RecentGamesContent = () => (
     <>
@@ -578,6 +607,13 @@ export default function Viewer({ onChange }){
   const GamesHistoryContent = () => (
     <>
       {GamesHistory()}
+    </>
+  );
+
+
+  const Loading = () => (
+    <>
+      {LoadingL()}
     </>
   );
 
@@ -616,6 +652,7 @@ export default function Viewer({ onChange }){
           {modalContent === "dictionaryTiles" && <SettingsContent />}
           {modalContent === "recentGames" && <RecentGamesContent />}
           {modalContent === "gamesHistory" && <GamesHistoryContent />}
+          {modalContent === "loading" && <Loading />}
         </Box>
       </Modal>  
       <Box className={styles.page}>
