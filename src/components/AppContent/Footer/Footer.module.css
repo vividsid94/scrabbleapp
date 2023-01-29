@@ -10,11 +10,13 @@
 
 @media screen and (max-width: 992px) {
     .footer {
-      width: 100%;
+        width: 100%;
+    }
+    .footerText{
+        font-size: 7px;
     }
 }
 
 .footerText{
     font-size: 11px;
-    justify-content: right !important;
 }
