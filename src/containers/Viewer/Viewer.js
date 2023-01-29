@@ -117,11 +117,7 @@ export default function Viewer({ onChange }){
     }
   }
 
-
-  const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
-    setIsLoading(true);
     setModalContent("loading");
     setOpen(true);
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -195,9 +191,6 @@ export default function Viewer({ onChange }){
       if (matchTourney)
         tourneyNumber = matchTourney[1];
       setTourneyNum(tourneyNumber);
-
-
-      setIsLoading(false);
     };
 
     loadMoveSet();
@@ -341,7 +334,7 @@ export default function Viewer({ onChange }){
   }
 
   function randomizeGame(){
-    setIsLoading(true);
+    setOpen(true);
     setModalContent("loading");
     const loadGibsonGameInfo = async () => {
       const info = gibsonMode.current ? await getGibsonGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
