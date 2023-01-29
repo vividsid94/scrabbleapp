@@ -579,11 +579,11 @@ export default function Viewer({ onChange }){
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
-              For instance, if you search 'David Gibson' with a CSW filter, the app lacks the capability to know that Gibson has no CSW games, so it would keep generating TWL games without success.
+              One exception is the XT recents page, where dictionaries can be easily obtained using scraping methods. On the other hand, player profile pages present a greater challenge for scraping and maintaining high site performance, as many players have hundreds or even thousands of games, with some of these games having no listed dictionary.
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
-              However, you can keep generating a new game with a specific player in the hope of getting a game using your desired dictionary.
+              In the meantime, you can keep generating a new game with a specific player in the hope of getting a game using your desired dictionary.
             </Typography>
             <br></br>
             <Button onClick={handleWhyClick}>Back</Button>
