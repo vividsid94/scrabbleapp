@@ -74,6 +74,8 @@ export default function Viewer({ onChange }){
   const [recentDictionaries, setRecentDictionaries] = useState([]);
   const [recentGameNums, setRecentGameNums] = useState([]);
 
+  const [loadingMsg, setLoadingMsg] = useState("Loading...");
+
   const switchValue = () => {
     setDictionary("ANY");
   }
@@ -152,6 +154,7 @@ export default function Viewer({ onChange }){
           else{
             setGamesViewed([...gamesViewed, gameNum]);
             console.log("Game generated.");
+            setLoadingMsg("Loading game...")
             setTimeout(() => {
               setOpen(false);
             }, "1000")
@@ -180,10 +183,9 @@ export default function Viewer({ onChange }){
         tourneyNumber = matchTourney[1];
       setTourneyNum(tourneyNumber);
     };
-
+    loadGameInfo();
     loadMoveSet();
     loadRecentGameInfo();
-    loadGameInfo();
   }, [resetCount]);
   
   const updateBoardShortcut = (boardProperties) => {
@@ -314,6 +316,7 @@ export default function Viewer({ onChange }){
 
   function randomizeGame(){
     setOpen(true);
+    setLoadingMsg("Finding a game...");
     setModalContent("loading");
     const loadCustomPlayerGameInfo = async () => {
       const info = customPlayerMode.current ? await getCustomPlayerGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', customPlayerMode.current) : null;
@@ -444,7 +447,7 @@ export default function Viewer({ onChange }){
       </div>
     );
   }
-  
+
   function RecentGames() {
     const [currentPage, setCurrentPage] = useState(1);
     const [gamesPerPage, setGamesPerPage] = useState(10);
@@ -554,7 +557,8 @@ export default function Viewer({ onChange }){
         </select>}
       </Box>
       <Box className={styles.modalContainer__tiles}>
-        Favorite player? <br></br>Only generate their games.
+        Favorite player? <br></br>Only generate his/her games.
+        <Typography sx={{fontSize: '10px'}}>(Note: cannot also filter by dictionary)</Typography>
         <TextField autoComplete="off" placeholder={customPlayerMode.current} onFocus={(event) => switchValue(event)} onChange={(event) => handleCustomPlayerMode(event)} />
       </Box>
     </>
@@ -576,7 +580,7 @@ export default function Viewer({ onChange }){
 
   const Loading = () => (
     <div>
-      Loading...
+      {loadingMsg}
     </div>
   );
 
