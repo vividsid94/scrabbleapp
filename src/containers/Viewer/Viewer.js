@@ -342,7 +342,7 @@ export default function Viewer({ onChange }){
 
   function randomizeGame(){
     const loadGibsonGameInfo = async () => {
-      const info = gibsonMode.current ? await getGibsonGameInfo('http://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
+      const info = gibsonMode.current ? await getGibsonGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
       let randomNumber;
       if (info){
         let randomIndex = Math.floor(Math.random() * info.length);
