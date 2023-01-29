@@ -575,7 +575,7 @@ export default function Viewer({ onChange }){
         {showWhy && (
           <Box sx={{width: '350px'}}>
             <Typography sx={{fontSize: '11px'}}>
-              This is a front-end-only project and doesn't track of which games use which dictionaries. It generates a game and checks the dictionary in real-time, which means filtering by a specific player and dictionary may result in a never-ending loop. 
+              This is a front-end-only project and doesn't track which games use which dictionaries. It generates a game and checks the dictionary in real-time, which means filtering by a specific player and dictionary may result in a never-ending loop. 
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
