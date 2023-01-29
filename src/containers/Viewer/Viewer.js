@@ -13,7 +13,7 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
-import { letterLookup, origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
+import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
@@ -29,7 +29,7 @@ import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { getMoveSet, getRecentGameInfo, getGameInfo, getGibsonGameInfo, findPlayerId } from "../../axios/api.js";
+import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo, findPlayerId } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -64,7 +64,7 @@ export default function Viewer({ onChange }){
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
 
-  const gibsonMode = useRef("");
+  const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
   const [notes, setNote] = useState([]);
@@ -73,26 +73,19 @@ export default function Viewer({ onChange }){
   const [recentNames, setRecentNames] = useState([]);
   const [recentDictionaries, setRecentDictionaries] = useState([]);
   const [recentGameNums, setRecentGameNums] = useState([]);
-  const [gibsonGameNums, setGibsonGameNums] = useState([]);
 
-  const flag = useRef("false");
-
-  const textFieldRef = useRef(null);
-  const swtichValue = (event) => {
+  const switchValue = () => {
     setDictionary("ANY");
   }
-  const handleGibsonMode = (event) => {
-    gibsonMode.current = event.target.value;
+  const handleCustomPlayerMode = (event) => {
+    customPlayerMode.current = event.target.value;
   };
   const handleDictionaryChange = event => {
     setDictionary(event.target.value);
-    gibsonMode.current = "";
+    customPlayerMode.current = "";
   };
   const handleELOCommentaryChange = event => {
     setELOCommentary(event.target.value);
-  };
-  const handleThemeChange = event => {
-    setTheme(event.target.value);
   };
   const handleTileChange = event => {
     setTiles(event.target.value);
@@ -100,14 +93,12 @@ export default function Viewer({ onChange }){
   function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-
   const handleBoardClick = () => {
     setBoardClickCount(prevCount => prevCount + 1);
     if (boardClickCount >= 5) {
       setUnlockEloMode(true);
     }
   }
-
   const switchMode = () => {
     let newMode = mode === "GUESSELO" ? "VIEWER" : "GUESSELO";
     if (mode !== newMode) {
@@ -116,7 +107,6 @@ export default function Viewer({ onChange }){
       onChange(newMode);
     }
   }
-
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     document.title = 'Game Viewer';
@@ -161,7 +151,7 @@ export default function Viewer({ onChange }){
           }
           else{
             setGamesViewed([...gamesViewed, gameNum]);
-            console.log("FINISHED");
+            console.log("Game generated.");
             setTimeout(() => {
               setOpen(false);
             }, "1000")
@@ -236,16 +226,13 @@ export default function Viewer({ onChange }){
       let firstMovePlayerName = moveSet[0].split(" ")[0];
       let thisMovePlayerName = thisMove ? moves['thismove'].parts[0] : 'empty';
       if (moveName === nextMoveName && moves['thismove'].location === "--"){
-        //console.log("CONDITION 1")
         let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
         setBoardCoords(updateBoardShortcut({...props}));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else if (moves['nextmove'].location[0] === null){
-        //console.log("CONDITION 2")
       }
       else if (moves['nextmove'].location[0] !== "-"){
-        //console.log("CONDITION 3")
         let props = {location: moves['nextmove'].location, play: moves['nextmove'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
         setBoardCoords(updateBoardShortcut({...props}))
         if (moves['thismove'].move !== undefined && moves['thismove'].location[0] !== "-"){
@@ -255,23 +242,19 @@ export default function Viewer({ onChange }){
           setPool(addToPool(moves['nextmove'].play, pool));
       }
       else if (moves['nextmove'].location === "--"){
-        //console.log("CONDITION 4")
         let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
         setBoardCoords(updateBoardShortcut({...props}));
         setPool(removeFromPool(moves['thismove'].play, pool));
       }
       else {
-        //console.log("CONDITION 5")
         moves['nextmove'].points = moves['nextmove'].parts[2];
         moves['nextmove'].score = moves['nextmove'].parts[4];
       }
       if (moveName !== nextMoveName) {
         if (thisMovePlayerName === firstMovePlayerName){
-          //console.log("CONDITION A")
           setPlayer2points(lastMove ? (moves['lastmove'].score ? moves['lastmove'].score : moves['lastmove'].points) : 0)
         }
         else{
-          //console.log("CONDITION B")
           if (moveName !== lastMoveName) {
             setPlayer1points(lastMove ? (moves['lastmove'].score ? moves['lastmove'].score : moves['lastmove'].points) : 0)
           } else{
@@ -280,11 +263,9 @@ export default function Viewer({ onChange }){
         }
       } else {
         if (thisMovePlayerName === firstMovePlayerName){
-          //console.log("CONDITION C")
           setPlayer1points(moves['thismove'].score)
         }
         else{
-          //console.log("CONDITION D")
           setPlayer2points(moves['thismove'].score)
         }
       } 
@@ -334,8 +315,8 @@ export default function Viewer({ onChange }){
   function randomizeGame(){
     setOpen(true);
     setModalContent("loading");
-    const loadGibsonGameInfo = async () => {
-      const info = gibsonMode.current ? await getGibsonGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
+    const loadCustomPlayerGameInfo = async () => {
+      const info = customPlayerMode.current ? await getCustomPlayerGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', customPlayerMode.current) : null;
       let randomNumber;
       if (info){
         let randomIndex = Math.floor(Math.random() * info.length);
@@ -347,7 +328,7 @@ export default function Viewer({ onChange }){
       setResetCount(resetCount + 1);
       setGameNum(randomNumber);
     };
-    loadGibsonGameInfo();
+    loadCustomPlayerGameInfo();
   }
 
   function chooseGame(gameNum){
@@ -417,10 +398,10 @@ export default function Viewer({ onChange }){
   }
 
   function GamesHistory() {
-    const [gamesPerPage, setGamesPerPage] = React.useState(5);
+    const [gamesPerPage, setGamesPerPage] = useState(5);
     const matches = useMediaQuery('(max-width:676px)');
   
-    React.useEffect(() => {
+    useEffect(() => {
       if (matches) {
         setGamesPerPage(5);
       }
@@ -435,7 +416,7 @@ export default function Viewer({ onChange }){
           component="div"
           sx={{padding: '8px'}}
         >
-          <b>Most recent games you <br></br>viewed this session</b>
+          <b>Games you viewed this <br></br> session, sorted by most recent</b>
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
@@ -474,12 +455,12 @@ export default function Viewer({ onChange }){
 
 
   function RecentGames() {
-    const [currentPage, setCurrentPage] = React.useState(1);
-    const [gamesPerPage, setGamesPerPage] = React.useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [gamesPerPage, setGamesPerPage] = useState(10);
   
     const matches = useMediaQuery('(max-width:676px)');
   
-    React.useEffect(() => {
+    useEffect(() => {
       if (matches) {
         setGamesPerPage(5);
       } else {
@@ -503,7 +484,7 @@ export default function Viewer({ onChange }){
           component="div"
           sx={{padding: '8px'}}
         >
-          <b>Recent XT Games {mode === "GUESSELO" ? "(names hidden in this mode!)" : ""}</b>
+          <b>Recent Games Uploaded to XT <br></br> {mode === "GUESSELO" ? "(names hidden in this mode!)" : ""}</b>
         </Typography>
         <Table className={styles.recentGames}>
           <TableHead>
@@ -557,7 +538,6 @@ export default function Viewer({ onChange }){
   };
   
   const SettingsContent = () => { 
-    flag.current = "false";
     return (
     <>
       <Box className={styles.modalContainer__dictionary}>
@@ -583,9 +563,8 @@ export default function Viewer({ onChange }){
         </select>}
       </Box>
       <Box className={styles.modalContainer__tiles}>
-        Favorite player? You'll <br>
-        </br>only generate their games.
-        <TextField autoComplete="off" placeholder={gibsonMode.current} onFocus={(event) => swtichValue(event)} onChange={(event) => handleGibsonMode(event)} />
+        Favorite player? <br></br>Only generate their games.
+        <TextField autoComplete="off" placeholder={customPlayerMode.current} onFocus={(event) => switchValue(event)} onChange={(event) => handleCustomPlayerMode(event)} />
       </Box>
     </>
     )
@@ -612,7 +591,6 @@ export default function Viewer({ onChange }){
 
   const iconList = [  {icon: KeyboardDoubleArrowLeftIcon, onClick: beginningOfGame},  {icon: KeyboardArrowLeftIcon, onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
     {icon: KeyboardArrowRightIcon, onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
-    {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen},
     {icon: FiberNewIcon, onClick: randomizeGame},
     {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
   ]
@@ -620,7 +598,8 @@ export default function Viewer({ onChange }){
   const groupedIcons = [
     {
       icon1: {icon: YoutubeSearchedForIcon, onClick: handleGamesHistoryOpen},
-      icon2: {icon: HistoryIcon, onClick: handleRecentGamesOpen}
+      icon2: {icon: HistoryIcon, onClick: handleRecentGamesOpen},
+      icon3: {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen}
     }
   ]
 
@@ -682,6 +661,10 @@ export default function Viewer({ onChange }){
                       <group.icon2.icon 
                         className={styles.keyBtn} 
                         onClick={group.icon2.onClick}
+                      />
+                      <group.icon3.icon 
+                        className={styles.keyBtn} 
+                        onClick={group.icon3.onClick}
                       />
                   </Box>
                 ))}

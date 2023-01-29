@@ -99,7 +99,7 @@ export const findPlayerId = async (searchLink, p) => {
   }
 }
 
-export const getGibsonGameInfo = async (searchLink, searchLink2, p) => {
+export const getCustomPlayerGameInfo = async (searchLink, searchLink2, p) => {
   try {
     const players = new Map();
     const response = await axios.get(searchLink + p);
