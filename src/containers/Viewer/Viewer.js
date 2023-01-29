@@ -444,16 +444,7 @@ export default function Viewer({ onChange }){
       </div>
     );
   }
-
-  function LoadingL() {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  }
-
-
+  
   function RecentGames() {
     const [currentPage, setCurrentPage] = useState(1);
     const [gamesPerPage, setGamesPerPage] = useState(10);
@@ -584,9 +575,9 @@ export default function Viewer({ onChange }){
 
 
   const Loading = () => (
-    <>
-      {LoadingL()}
-    </>
+    <div>
+      Loading...
+    </div>
   );
 
   const iconList = [  {icon: KeyboardDoubleArrowLeftIcon, onClick: beginningOfGame},  {icon: KeyboardArrowLeftIcon, onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
