@@ -579,7 +579,7 @@ export default function Viewer({ onChange }){
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
-              One exception is the XT recents page, where dictionaries can be easily obtained through scraping methods and limited to the first X results. However, player profile pages pose a greater challenge for scraping and ensuring high site performance - many players have hundreds or even thousands of games, some of which do not have listed dictionaries.
+              One workaround is the XT recents page, where dictionaries can be easily obtained through scraping methods and limited to the first X results. However, player profile pages pose a greater challenge for scraping and ensuring high site performance - many players have hundreds or even thousands of games, some of which do not have listed dictionaries.
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
