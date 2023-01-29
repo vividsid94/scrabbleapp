@@ -5,6 +5,7 @@ import {
 import "./App.css";
 import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
+import Memory from "./containers/Memory/Memory";
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
             <Route path="/" element={<Home/>} />
+            <Route path="/memory" element={<Memory/>} />
           </Routes>
         </Router>
       </header>
