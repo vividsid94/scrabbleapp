@@ -18,8 +18,7 @@ export const getMoveSet = async (baseURL, gameNum) => {
               notes.push([lines[i].replace("#note ", ""), count]);
           }
       }
-      return [returnMoveSet, returnOrigPlayerRaw, notes]; 
-      
+      return [returnMoveSet, returnOrigPlayerRaw, notes];  
     } catch(err) {
       console.log(err)
     }
@@ -113,7 +112,6 @@ export const getCustomPlayerGameInfo = async (searchLink, searchLink2, p) => {
         const regex = /<td><a href='annotated\.php\?u=(\d+)'>View<\/a><\/td>/g;
         // Array to store the numbers
         const numbers = [];
-        
         // Use `match` method to find all matches
         let match;
         while ((match = regex.exec(text)) !== null) {

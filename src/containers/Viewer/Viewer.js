@@ -20,6 +20,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import HistoryIcon from '@mui/icons-material/History';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
+import Button from "@mui/material/Button";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -531,39 +532,67 @@ export default function Viewer({ onChange }){
     setOpen(true);
   };
   
-  const SettingsContent = () => { 
+  const SettingsContent = () => {
+    const [showWhy, setShowWhy] = useState(false);
+  
+    const handleWhyClick = () => {
+      setShowWhy(!showWhy);
+    }
+  
     return (
-    <>
-      <Box className={styles.modalContainer__dictionary}>
-        Dictionary
-        {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
-          <option value="ANY">Any</option>
-          <option value="TWL">TWL/NWL</option>
-          <option value="CSW">CSW</option>
-        </select>}
-      </Box>
-      <Box className={styles.modalContainer__dictionary}>
-        Tiles
-        {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
-          <option value="PROTILES">Protiles</option>
-          <option value="LETTERS">Letters</option>
-        </select>}
-      </Box>
-      <Box className={styles.modalContainer__dictionary}>
-        Commentary always on?
-        {<select className={styles.styleSelection} value={ELOCommentary} onChange={handleELOCommentaryChange}>
-          <option value="NO">No</option>
-          <option value="YES">Yes</option>
-        </select>}
-      </Box>
-      <Box className={styles.modalContainer__tiles}>
-        Favorite player? <br></br>Only generate his/her games.
-        <Typography sx={{fontSize: '10px'}}>(Note: cannot also filter by dictionary)</Typography>
-        <TextField autoComplete="off" placeholder={customPlayerMode.current} onFocus={(event) => switchValue(event)} onChange={(event) => handleCustomPlayerMode(event)} />
-      </Box>
-    </>
+      <>
+        {!showWhy && (
+          <div>
+            <Box className={styles.modalContainer__dictionary}>
+              Dictionary
+              {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
+                <option value="ANY">Any</option>
+                <option value="TWL">TWL/NWL</option>
+                <option value="CSW">CSW</option>
+              </select>}
+            </Box>
+            <Box className={styles.modalContainer__dictionary}>
+              Tiles
+              {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
+                <option value="PROTILES">Protiles</option>
+                <option value="LETTERS">Letters</option>
+              </select>}
+            </Box>
+            <Box className={styles.modalContainer__dictionary}>
+              Commentary always on?
+              {<select className={styles.styleSelection} value={ELOCommentary} onChange={handleELOCommentaryChange}>
+                <option value="NO">No</option>
+                <option value="YES">Yes</option>
+              </select>}
+            </Box>
+            <Box className={styles.modalContainer__tiles}>
+              Favorite player? <br></br>Only generate his/her games.
+              <Typography sx={{fontSize: '12px'}}>(Note: cannot also filter by dictionary. <br></br><u sx={{cursor: 'pointer'}} onClick={handleWhyClick}>Click to see why.</u>)</Typography>
+              <TextField autoComplete="off" placeholder={customPlayerMode.current} onFocus={(event) => switchValue(event)} onChange={(event) => handleCustomPlayerMode(event)} />
+            </Box>
+          </div>
+        )}
+        {showWhy && (
+          <Box sx={{width: '350px'}}>
+            <Typography sx={{fontSize: '11px'}}>
+              This is a front-end-only project and doesn't track which games use which dictionaries. It generates a game and checks the dictionary in real-time, which means filtering by a specific player and dictionary may result in a never-ending loop. 
+            </Typography>
+            <br></br>
+            <Typography sx={{fontSize: '11px'}}>
+              For instance, if you search 'David Gibson' with a CSW filter, the app lacks the capability to know that Gibson has no CSW games, so it would keep generating TWL games without success.
+            </Typography>
+            <br></br>
+            <Typography sx={{fontSize: '11px'}}>
+              However, you can keep generating a new game with a specific player in the hope of getting a game using your desired dictionary.
+            </Typography>
+            <br></br>
+            <Button onClick={handleWhyClick}>Back</Button>
+          </Box>
+        )}
+      </>
     )
-};
+  };
+  
   
   const RecentGamesContent = () => (
     <>
