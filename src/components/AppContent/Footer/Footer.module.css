@@ -8,6 +8,10 @@
     float: right;
 }
 
+.footerText{
+    font-size: 11px;
+}
+
 @media screen and (max-width: 992px) {
     .footer {
         width: 100%;
@@ -15,8 +19,4 @@
     .footerText{
         font-size: 7px;
     }
-}
-
-.footerText{
-    font-size: 11px;
 }
