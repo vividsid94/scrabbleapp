@@ -6,6 +6,7 @@ import "./App.css";
 import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
 import Memory from "./containers/Memory/Memory";
+import Footer from "./components/AppContent/Footer/Footer";
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
@@ -20,6 +21,7 @@ function App() {
           </Routes>
         </Router>
       </header>
+      <Footer></Footer>
     </div>
   )
 }

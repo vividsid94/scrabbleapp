@@ -3,6 +3,9 @@
 *{
 	font-family: 'Syne';
 }
+.underlinedText{
+  cursor: pointer;
+}
 
 .questionMark{
   font-size: 26px;

@@ -567,7 +567,7 @@ export default function Viewer({ onChange }){
             </Box>
             <Box className={styles.modalContainer__tiles}>
               Favorite player? <br></br>Only generate his/her games.
-              <Typography sx={{fontSize: '12px'}}>(Note: cannot also filter by dictionary. <br></br><u sx={{cursor: 'pointer'}} onClick={handleWhyClick}>Click to see why.</u>)</Typography>
+              <Typography sx={{fontSize: '12px'}}>(Note: cannot also filter by dictionary. <br></br><u className={styles.underlinedText} onClick={handleWhyClick}>Click to see why.</u>)</Typography>
               <TextField autoComplete="off" placeholder={customPlayerMode.current} onFocus={(event) => switchValue(event)} onChange={(event) => handleCustomPlayerMode(event)} />
             </Box>
           </div>
@@ -579,7 +579,7 @@ export default function Viewer({ onChange }){
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>
-              One workaround is the XT recents page, where dictionaries can be easily obtained through scraping methods and limited to the first X results. However, player profile pages pose a greater challenge for scraping and ensuring high site performance - many players have hundreds or even thousands of games, some of which do not have listed dictionaries.
+              One workaround is used on the XT recents page, where dictionaries can be easily obtained through scraping methods and limited to the first X results. However, player profile pages pose a greater challenge for scraping and ensuring high site performance - many players have hundreds or even thousands of games, some of which do not have listed dictionaries.
             </Typography>
             <br></br>
             <Typography sx={{fontSize: '11px'}}>

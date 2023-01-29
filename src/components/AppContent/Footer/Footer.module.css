@@ -1,0 +1,20 @@
+.footer {
+    background-color: #110113 !important;
+    color: white !important;
+    background-image: url('https://www.transparenttextures.com/patterns/maze-black.png');
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 65px);
+    float: right;
+}
+
+@media screen and (max-width: 992px) {
+    .footer {
+      width: 100%;
+    }
+}
+
+.footerText{
+    font-size: 11px;
+    justify-content: right !important;
+}
