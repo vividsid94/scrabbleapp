@@ -277,17 +277,13 @@ form{
 }
 
 .groupedBox{
-  padding: 0px 10px;
-  border-top-left-radius: 37px 140px;
-  border-top-right-radius: 23px 130px;
-  border-bottom-left-radius: 110px 19px;
-  border-bottom-right-radius: 120px 24px;
-  box-shadow: 3px 15px 8px -10px rgba(0, 0, 0, 0.3);
-  border: solid 2px rgb(89, 65, 118);
+  padding: 2px 4px;
+  cursor: pointer;
+  background: linear-gradient(45deg, transparent 5%, rgba(40, 5, 60, 0.48) 5%);
+  color: #fff;
+  box-shadow: 6px 0px 0px #00E6F6;
   display: flex;
-  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
-  background-color: rgb(93, 106, 120, 0.5);
-  justify-content: space-between;
+  justify-content: sp;
 }
 
 .Arrows{
