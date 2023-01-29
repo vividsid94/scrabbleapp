@@ -154,7 +154,7 @@ export default function Viewer({ onChange }){
           else{
             setGamesViewed([...gamesViewed, gameNum]);
             console.log("Game generated.");
-            setLoadingMsg("Loading game...")
+            setLoadingMsg("Loading the game...")
             setTimeout(() => {
               setOpen(false);
             }, "1000")
