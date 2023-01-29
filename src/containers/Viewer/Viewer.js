@@ -122,7 +122,7 @@ export default function Viewer({ onChange }){
 
   useEffect(() => {
     setIsLoading(true);
-    setModalContent("loading")
+    setModalContent("loading");
     setOpen(true);
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     document.title = 'Game Viewer';
@@ -341,6 +341,8 @@ export default function Viewer({ onChange }){
   }
 
   function randomizeGame(){
+    setIsLoading(true);
+    setModalContent("loading");
     const loadGibsonGameInfo = async () => {
       const info = gibsonMode.current ? await getGibsonGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', gibsonMode.current) : null;
       let randomNumber;
