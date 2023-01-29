@@ -118,8 +118,6 @@ export default function Viewer({ onChange }){
   }
 
   useEffect(() => {
-    setModalContent("loading");
-    setOpen(true);
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     document.title = 'Game Viewer';
     setBoardCoords(parsedOrigBoardCoords); 
