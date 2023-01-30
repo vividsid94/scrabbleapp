@@ -33,18 +33,12 @@ const openedMixin = (theme) => ({
   background: background,
   color: "white",
   backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
+  transition: '0.5s ease',
   overflowX: 'hidden',
 });
 
 const closedMixin = (theme) => ({
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
+  transition: '0.5s ease',
   background: background,
   backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
   overflowX: 'hidden',
