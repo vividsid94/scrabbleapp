@@ -3,7 +3,6 @@ import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
-import CssBaseline from '@mui/material/CssBaseline';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import AppBar from '@mui/material/AppBar';
@@ -15,37 +14,29 @@ import { Link } from 'react-router-dom';
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { TextField, Tooltip } from "@mui/material";
-
-
-//import { useMediaQuery } from '@material-ui/core';
+import { Tooltip } from "@mui/material";
 
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import styles from './Sidenav.module.css';
-const drawerWidth = 190;
 let texture = "maze-black";
-let background = "#110113"
+let background = "#110113";
 
-const openedMixin = (theme) => ({
-  width: drawerWidth,
+const openedMixin = () => ({
+  width: `180px`,
+  overflowX: 'hidden',
   background: background,
-  color: "white",
   backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
   transition: '0.5s ease',
-  overflowX: 'hidden',
 });
 
-const closedMixin = (theme) => ({
-  transition: '0.5s ease',
+const closedMixin = () => ({
+  width: `65px`,
+  overflowX: 'hidden',
   background: background,
   backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
-  overflowX: 'hidden',
-  width: `calc(${theme.spacing(7)} + 1px)`,
-  [theme.breakpoints.up('sm')]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
-  },
+  transition: '0.5s ease',
 });
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -58,10 +49,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    whiteSpace: 'nowrap',
-    boxSizing: 'border-box',
     ...(open && {
       ...openedMixin(theme),
       '& .MuiDrawer-paper': openedMixin(theme),
@@ -87,7 +74,6 @@ const MyToolbar = styled(Toolbar)({
 });
 
 export default function MiniDrawer() {
-  const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -112,13 +98,8 @@ export default function MiniDrawer() {
     <Box>
       <MyAppBar className={styles.myAppBar}>
         <MyToolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open menu"
-            edge="start"
-            onClick={handleClick}
-          >
-            <MenuIcon />
+          <IconButton color="inherit" onClick={handleClick}>
+            <MenuIcon/>
           </IconButton>
           <Menu
             id="simple-menu"
