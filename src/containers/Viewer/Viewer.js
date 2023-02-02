@@ -30,14 +30,14 @@ import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo, findPlayerId } from "../../axios/api.js";
+import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { TextField, Tooltip } from "@mui/material";
 
 export default function Viewer({ onChange }){
-  const [gameNum, setGameNum] = useState(10427);
+  const [gameNum, setGameNum] = useState(39600);
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
@@ -659,7 +659,7 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)} lastMove={currentMoveRef.current >= moveSet.length - 1}/>   
+          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
         </Box>
 
         <Box className={styles.rightPanel}>

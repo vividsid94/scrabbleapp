@@ -22,7 +22,7 @@ export default function Board(props) {
                 break;
             default:
                 if (props.move !== "N/A"){
-                    message = props.move + " " + props.points;
+                    message = props.move + " " + props.points + " from " + props.rack;
                 }
                 else{
                     message = "Start of game";
