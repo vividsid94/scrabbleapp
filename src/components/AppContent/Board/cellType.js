@@ -1,4 +1,4 @@
-export default function cellType(type, flag, border, tiles){
+export default function CellType(type, flag, border, tiles){
     let result;
     let bottom = border ? border.bottom : false;
     let top = border ? border.top : false;
