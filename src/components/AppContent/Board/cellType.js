@@ -72,7 +72,7 @@ export default function cellType(type, flag, border, tiles){
                 result = {
                     "value": (type.toLowerCase() === type) ? "" : type,
                     "boxShadow": 'inset 0.75px 0.75px lightgrey, inset -0.75px -0.75px lightgrey',
-                    "color": flag === "apple" ? "#306B73" : "#41bf9e"
+                    "color": flag === "lightColor" ? "#306B73" : "#41bf9e"
                 };
             }
     }

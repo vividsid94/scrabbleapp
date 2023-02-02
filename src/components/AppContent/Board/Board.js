@@ -1,4 +1,3 @@
-import Cell from './Cell';
 import styles from './Board.module.css';
 import { Box } from '@mui/system';
 import { letterLookup } from '../References/staticData';
@@ -6,7 +5,6 @@ import { letterLookup } from '../References/staticData';
 export default function Board(props) {
     let boardTheme = "Board__" + props.theme;
     let tableTheme = "Table__" + props.theme;
-    let pointsShown = props.theme === "APPLE";
     let message = "";
     if (/^-[^-\s]/.test(props.move)){
         message = "Exchanged: " + props.move.substring(1, props.move.indexOf(" ")); 
@@ -33,7 +31,7 @@ export default function Board(props) {
     }
     return (
         <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
-            <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Header}>
+            <Box className={styles.Header}>
                 {props.dictionary}
             </Box>
             <Box className={styles.innerBox}>
@@ -73,7 +71,7 @@ export default function Board(props) {
                     
                 </Box>
             </Box>
-            <Box sx={{visibility: pointsShown ? 'hidden' : 'visible'}} className={styles.Footer}>
+            <Box className={styles.Footer}>
                 {message}
             </Box>
         </Box>

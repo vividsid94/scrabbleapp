@@ -77,9 +77,9 @@ export const createBoard = (boardCoords, currentMoveCoords, tiles, theme) => {
                 if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
                 border.right = true;
                 }
-                return Cell(rowIndex, colIndex, cellType(col, "flagged", border, tiles), "board", theme, tiles);
+                return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles), "board", theme, tiles);
             } else {
-                return Cell(rowIndex, colIndex, cellType(col, "apple", border, tiles), "board", theme, tiles);
+                return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles), "board", theme, tiles);
             }
             })
         ))
