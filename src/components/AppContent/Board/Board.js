@@ -68,7 +68,6 @@ export default function Board(props) {
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    
                 </Box>
             </Box>
             <Box className={styles.Footer}>
