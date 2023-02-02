@@ -1,6 +1,6 @@
 import { letterLookup } from "../components/AppContent/References/staticData";
 import Cell from "../components/AppContent/Board/Cell";
-import cellType from "../components/AppContent/Board/CellType";
+import cellType from "../components/AppContent/Board/cellType";
 export const getMove = (moveString, currentMoveCoords) => {
     let play;
     if (moveString){
