@@ -37,7 +37,7 @@ import { createRack } from "../../functions/rackFunctions.js";
 import { TextField, Tooltip } from "@mui/material";
 
 export default function Viewer({ onChange }){
-  const [gameNum, setGameNum] = useState(39600);
+  const [gameNum, setGameNum] = useState(37033);
   const [boardClickCount, setBoardClickCount] = useState(0);
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
