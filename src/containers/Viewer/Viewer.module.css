@@ -284,9 +284,7 @@ form{
   cursor: pointer;
   background: linear-gradient(45deg, transparent 5%, rgba(40, 5, 60, 0.48) 5%);
   color: #fff;
-  box-shadow: 6px 0px 0px #00E6F6;
   display: flex;
-  justify-content: sp;
 }
 
 .Arrows{
