@@ -9,18 +9,9 @@ export default function Home(){
   
   return (
     <Box sx={{ display: 'flex'}}>
-      <Sidenav/>
       <Box className={styles.page}>
-        <Box className={styles.title}>
-          Tile Turnover<PsychologyAltIcon className={styles.questionMark}/>
-        </Box>
         <Box className={styles.subTitle}>
-          Hi! I am Tile Turnover, a front-end-only project. I will be rolling out a variety of games and tools relating to Scrabble®, so come on in and join the fun!
-        </Box>
-        <Box className={styles.homeButtonContainer}>
-          <Link to="/viewer">
-            <button className={styles.homeButton}>Annotated Game Viewer</button>
-          </Link>
+          This project is paused. It will be re-released anytime between 4 and 8 months. Send me a message if you have any questions. Thanks!
         </Box>
       </Box>   
     </Box>
