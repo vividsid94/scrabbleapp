@@ -11,7 +11,7 @@ export default function Home(){
     <Box sx={{ display: 'flex'}}>
       <Box className={styles.page}>
         <Box className={styles.subTitle}>
-          This project is paused. It will be re-released anytime between 4 and 8 months. Send me a message if you have any questions. Thanks!
+          This project is paused. It will be re-released anytime in the next few months. Send me a message if you have any questions. Thanks!
         </Box>
       </Box>   
     </Box>
