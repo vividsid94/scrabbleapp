@@ -15,12 +15,13 @@ function App() {
       <header className="App-header" style={{backgroundColor: appState === 'VIEWER' ? '#000003' : '#6E5D42'}}>
         <Router>
           <Routes>
-            {/* <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />*/}
+            <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
             <Route path="/" element={<Home/>} />
             <Route path="/memory" element={<Memory/>} />
           </Routes>
         </Router>
       </header>
+      <Footer></Footer>
     </div>
   )
 }
