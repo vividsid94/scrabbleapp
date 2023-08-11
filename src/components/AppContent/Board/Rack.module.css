@@ -16,7 +16,7 @@
 .Tile{
     width: 42px;
     height: 42px;
-    background-color: #521c76;
+    background-color: teal;
     display: flex;
     align-items: center;
     justify-content: center;
