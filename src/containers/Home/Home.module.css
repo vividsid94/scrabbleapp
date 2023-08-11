@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
+@import url('https://fonts.googleapis.com/css?family=Preahvihear');
 .questionMark{
   font-size: 26px;
   cursor: pointer;
@@ -13,9 +14,9 @@
 .title{
   display: flex;
   justify-content: center;
-  font-size: 50px;
+  font-size: 30px;
   margin-top: 25px;
-  font-family: 'Dancing Script' !important;
+  font-family: 'Preahvihear' !important;
 }
 
 .subTitle{

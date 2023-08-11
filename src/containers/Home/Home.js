@@ -15,7 +15,7 @@ export default function Home(){
           Tile Turnover<PsychologyAltIcon className={styles.questionMark}/>
         </Box>
         <Box className={styles.subTitle}>
-          Hi! I am Tile Turnover, a front-end-only project. I will be rolling out a variety of games and tools relating to Scrabble®, so come on in and join the fun!
+          Hi! I am Tile Turnover, a front-end-only project. I am undergoing off-and-on development. I will eventually be rolling out a variety of games and tools relating to Scrabble®. Stay tuned!
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
