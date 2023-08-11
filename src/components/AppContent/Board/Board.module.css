@@ -26,7 +26,7 @@
 
 .tableContainer table{
 	border-spacing: 0px !important;
-	border: 2px solid rgb(173, 88, 39);
+	border: 1.5px solid darkgray;
 	background-color: lightgray;
   border-radius: 10px;
 }

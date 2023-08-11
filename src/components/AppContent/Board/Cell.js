@@ -19,37 +19,47 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles) {
 
   function cell(letter) {
     if (letter) {
-      let src = ('url(' + preloadedImages[/[a-z]/.test(letter) ? '_' : letter].src + ')');
-      return (<div className={styles[cellTheme]} style={{ boxShadow: bonus.boxShadow, backgroundImage: src, backgroundSize: '100%', boxSizing: 'border-box' }}></div>);
+      const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
+      const cachedImage = preloadedImages[cacheKey];
+
+      if (cachedImage) {
+        return (
+          <div
+            className={styles[cellTheme]}
+            style={{
+              boxShadow: bonus.boxShadow,
+              backgroundImage: `url(${cachedImage.src})`,
+              backgroundSize: '100%',
+              boxSizing: 'border-box',
+            }}
+          ></div>
+        );
+      } else {
+        // Image not cached, you might want to handle this case (e.g., show a loading spinner).
+        return null;
+      }
     }
-  }
-
-  let classN = "basic";
-  let classQ = "basic";
-  let classO = "";
-  let classP = "";
-  let classZ = "";
-
-  if (bonus.value) {
-    classZ = "cellPositioning"
-  }
-
-  if (bonus.color !== "#FDF5D8" && !bonus.value) {
-    classN = "decal";
-    classQ = "decal2";
-    classO = bonus.color.replace("#", "").trim()
-    classP = bonus.color.replace("#", "").trim()
   }
 
   switch (type) {
     case "board":
       if (tiles === "PROTILES") {
-        return (<div className={`${styles[classZ]}`} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}><div className={styles.decalContainer}><div className={`${styles[classN]} ${styles[classO]}`}><div className={`${styles[classQ]} ${styles[classP]}`}>{cell(bonus.value)}</div></div></div></div>);
+        return (
+          <div style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
+            <div className={styles.decalContainer}>
+                <div>{cell(bonus.value)}</div>
+            </div>
+          </div>
+        );
       } else {
-        return (<div className={styles[cellTheme]} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>{bonus.value}</div>);
+        return (
+          <div className={styles[cellTheme]} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
+            {bonus.value}
+          </div>
+        );
       }
     case "pool":
-      return (<div className={styles.cellPool}>{bonus.value}</div>);
+      return <div className={styles.cellPool}>{bonus.value}</div>;
     case "rack":
       return bonus.value;
     default:
