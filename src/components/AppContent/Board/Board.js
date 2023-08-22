@@ -2,27 +2,35 @@ import styles from './Board.module.css';
 import { Box } from '@mui/system';
 import { letterLookup } from '../References/staticData';
 
-export default function Board(props) {
-    let boardTheme = "Board__" + props.theme;
-    let tableTheme = "Table__" + props.theme;
+export default function Board({
+    theme = "STANDARD",
+    move = "N/A",
+    points = "",
+    rack = "",
+    dictionary = "",
+    board = [],
+    onBoardChildClick
+}) {
+    let boardTheme = "Board__" + theme;
+    let tableTheme = "Table__" + theme;
     let message = "";
-    if (/^-[^-\s]/.test(props.move)){
-        message = "Exchanged: " + props.move.substring(1, props.move.indexOf(" ")); 
+    if (/^-[^-\s]/.test(move)){
+        message = "Exchanged: " + move.substring(1, move.indexOf(" ")); 
     }
-    else if (/^-[^-]/.test(props.move)){
+    else if (/^-[^-]/.test(move)){
         message = "Unsuccessfully challenged or passed"
     }
     else{
-        switch (props.move[0]) {
+        switch (move[0]) {
             case "-":
                 message = "Challenged off";
                 break;
             case "+":
-                message = props.move + " " + (props.points ? props.points : "") + "(final)";
+                message = move + " " + (points ? points : "") + "(final)";
                 break;
             default:
-                if (props.move !== "N/A"){
-                    message = props.move + " " + props.points + " from " + props.rack;
+                if (move !== "N/A"){
+                    message = move + " " + points + " from " + rack;
                 }
                 else{
                     message = "Start of game";
@@ -30,9 +38,9 @@ export default function Board(props) {
         }
     }
     return (
-        <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={props.onBoardChildClick}>
+        <Box className={`${styles.Board} ${styles[boardTheme]}`} onClick={onBoardChildClick}>
             <Box className={styles.Header}>
-                {props.dictionary}
+                {dictionary}
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
@@ -50,7 +58,7 @@ export default function Board(props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {props.board.map((row, rowIndex) =>
+                            {board.map((row, rowIndex) =>
                                 <tr key={rowIndex}>
                                     <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                     {row.map((col, colIndex) => <td key={colIndex}>{col}</td>)}
@@ -76,3 +84,4 @@ export default function Board(props) {
         </Box>
     )
 }
+

@@ -59,32 +59,32 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords, currentMoveCoords, tiles, theme) => {
-    return (
-        boardCoords.map((row, rowIndex) => (
-            row.map((col, colIndex) => {
-            let border = { top: false, bottom: false, left: false, right: false };
-            if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
-                if (!currentMoveCoords.some(coord => coord[0] === rowIndex - 1 && coord[1] === colIndex)) {
-                border.top = true;
-                }
-                if (!currentMoveCoords.some(coord => coord[0] === rowIndex + 1 && coord[1] === colIndex)) {
-                border.bottom = true;
-                }
-                if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex - 1)) {
-                border.left = true;
-                }
-                if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
-                border.right = true;
-                }
-                return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles), "board", theme, tiles);
-            } else {
-                return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles), "board", theme, tiles);
-            }
-            })
-        ))
-    ); 
-} 
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD") => {
+  return (
+      boardCoords.map((row, rowIndex) => (
+          row.map((col, colIndex) => {
+          let border = { top: false, bottom: false, left: false, right: false };
+          if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
+              if (!currentMoveCoords.some(coord => coord[0] === rowIndex - 1 && coord[1] === colIndex)) {
+              border.top = true;
+              }
+              if (!currentMoveCoords.some(coord => coord[0] === rowIndex + 1 && coord[1] === colIndex)) {
+              border.bottom = true;
+              }
+              if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex - 1)) {
+              border.left = true;
+              }
+              if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
+              border.right = true;
+              }
+              return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles), "board", theme, tiles);
+          } else {
+              return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles), "board", theme, tiles);
+          }
+          })
+      ))
+  ); 
+}
 
 export const updateBoard = ({location, play, type, boardCoords, origBoard}) => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number))
@@ -119,5 +119,6 @@ export const updateBoard = ({location, play, type, boardCoords, origBoard}) => {
         }
       }
     }
+    console.log(newBoardCoords)
     return [curMoveCoords, newBoardCoords];
 } 

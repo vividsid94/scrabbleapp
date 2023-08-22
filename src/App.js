@@ -7,6 +7,8 @@ import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
 import Memory from "./containers/Memory/Memory";
 import Footer from "./components/AppContent/Footer/Footer";
+import Bot from "./containers/Bot/Bot";
+import WordTable from "./containers/Words/Words";
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
@@ -18,6 +20,8 @@ function App() {
             <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
             <Route path="/" element={<Home/>} />
             <Route path="/memory" element={<Memory/>} />
+            <Route path="/bot" element={<Bot/>}/>
+            <Route path="/words" element={<WordTable/>}/>
           </Routes>
         </Router>
       </header>
