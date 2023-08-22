@@ -35,9 +35,9 @@
     color: white !important;
     border: 1px solid white;
 }
-  
-.rightAlign {
-    text-align: right;
+
+.flexCell{
+    display: flex;
 }
 
 .title{

@@ -3,6 +3,7 @@ import data from '../../components/AppContent/References/nwl20bings.json';
 import { useMediaQuery, Autocomplete, Box, TextField, Select, MenuItem, Modal, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button} from '@mui/material';
 import styles from './Words.module.css';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 const WordTable = () => {
   const [probabilityFilter, setProbabilityFilter] = useState('');
@@ -53,7 +54,7 @@ const WordTable = () => {
       <Sidenav />
       {/* Content area */}
       <Box sx={{ flexGrow: 1}}>
-        <Box sx={{'& .MuiSelect-outlined': {color: 'white', border: "1px solid white", borderRadius: "none"}, '& .MuiSvgIcon-root': {color: 'white'}, '& .MuiInputBase-root': {color: 'white'}}} className={styles.container}>
+        <Box sx={{'& .MuiSelect-outlined': {color: 'white', border: "1px solid white", borderRadius: "none"}, '& .MuiSvgIcon-root': {color: 'black'}, '& .MuiTableCell-root': {padding: '8px'}, '& .MuiInputBase-root': {color: 'white'}}} className={styles.container}>
           <Box className={styles.title}>
             {"Bingos"}
           </Box>
@@ -100,11 +101,13 @@ const WordTable = () => {
                       <TableCell>{item.FH}</TableCell>
                       <TableCell>{item.WORD}</TableCell>
                       <TableCell>{item.BH}</TableCell>
-                      <TableCell align="right">
+                      <TableCell>
                         {isMediaQueryMet ? (
                           item.DEF
                         ) : (
-                          <Button onClick={() => handleModalOpen(item.DEF)}>Show Definition</Button>
+                          <Box className={styles.flexCell}>
+                            <VisibilityOutlinedIcon onClick={() => handleModalOpen(item.DEF)}/>
+                          </Box>
                         )}
                       </TableCell>
                     </TableRow>
