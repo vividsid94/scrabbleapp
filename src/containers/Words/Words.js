@@ -1,14 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import data from '../../components/AppContent/References/nwl20bings.json';
-import { useMediaQuery, Autocomplete, Box, TextField, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useMediaQuery, Autocomplete, Box, TextField, Select, MenuItem, Modal, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button} from '@mui/material';
 import styles from './Words.module.css';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 
 const WordTable = () => {
   const [probabilityFilter, setProbabilityFilter] = useState('');
   const [wordLength, setWordLength] = useState(7);
-
+  const [isMediaQueryMet, setIsMediaQueryMet] = useState(false);
   const maxProbValue = useMemo(() => Math.max(...data.map(item => item.PROB)), []);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+
+  const updateMediaQueryState = () => {
+    setIsMediaQueryMet(window.innerWidth >= 500);
+  };
+
+  useEffect(() => {
+    updateMediaQueryState();
+    window.addEventListener('resize', updateMediaQueryState);
+  
+    return () => {
+      window.removeEventListener('resize', updateMediaQueryState);
+    };
+  }, []);
+
+  const handleModalOpen = (content) => {
+    setModalContent(content);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   const probabilityOptions = useMemo(() => (
     Array.from({ length: Math.ceil(maxProbValue / 100) }, (_, index) => `${index * 100 + 1}-${(index + 1) * 100}`)
@@ -63,23 +87,37 @@ const WordTable = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>{useMediaQuery('(min-width:500px)') ? "Probability" : "P"}</TableCell>
-                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Word" : "W"}</TableCell>
                     <TableCell>{useMediaQuery('(min-width:500px)') ? "Front Hook" : "FH"}</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Word" : "W"}</TableCell>
                     <TableCell>{useMediaQuery('(min-width:500px)') ? "Back Hook" : "BH"}</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{useMediaQuery('(min-width:500px)') ? "Definition" : "D"}</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Definition" : "D"}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.PROB}</TableCell>
-                      <TableCell>{item.WORD}</TableCell>
                       <TableCell>{item.FH}</TableCell>
+                      <TableCell>{item.WORD}</TableCell>
                       <TableCell>{item.BH}</TableCell>
-                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} align="right">{item.DEF}</TableCell>
+                      <TableCell align="right">
+                        {isMediaQueryMet ? (
+                          item.DEF
+                        ) : (
+                          <Button onClick={() => handleModalOpen(item.DEF)}>Show Definition</Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
+
+                {!isMediaQueryMet && (
+                  <Modal open={isModalOpen} onClose={handleModalClose}>
+                    <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', padding: 2 }}>
+                      <p>{modalContent}</p>
+                    </Box>
+                  </Modal>
+                )}
               </Table>
             </TableContainer>
           </Box>
