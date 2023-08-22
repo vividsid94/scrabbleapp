@@ -41,10 +41,15 @@ const WordTable = () => {
 
   // Memoize the filtered data to prevent unnecessary recalculations
   const filteredData = useMemo(() => {
+    if (!probabilityFilter) {
+      return [];
+    }
+  
     return data.filter(
-      item => item.PROB >= parseInt(probabilityFilter.split('-')[0]) && 
-              item.PROB <= parseInt(probabilityFilter.split('-')[1]) && 
-              item.WORD.length === wordLength
+      item =>
+        item.PROB >= parseInt(probabilityFilter.split('-')[0]) &&
+        item.PROB <= parseInt(probabilityFilter.split('-')[1]) &&
+        item.WORD.length === wordLength
     );
   }, [probabilityFilter, wordLength]);
 
