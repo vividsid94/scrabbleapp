@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Preahvihear');
+
 .container {
     display: flex;
     flex-direction: column;
@@ -11,20 +13,38 @@
 .filterBox {
     border: 1px solid #ccc;
     padding: 10px;
-    background-color: #333;
-    color: #fff;
+    color: #fff !important;
+}
+
+.whiteText{
+    color: white;
 }
 
 .tableBox {
     border: 1px solid #ccc;
     padding: 10px;
+    overflow-x: auto; /* Enable horizontal scrolling if necessary */
+    max-width: 100vw; /* Allow the table to grow up to the full screen width */
 }
 
 .autocompleteLabel {
-    color: #1976d2;
+    color: white !important;
 }
 
 .autocompleteInput {
-    border-bottom: 2px solid #1976d2;
+    color: white !important;
+    border: 1px solid white;
+}
+  
+.rightAlign {
+    text-align: right;
+}
+
+.title{
+    display: flex;
+    justify-content: center;
+    font-size: 30px;
+    margin-top: 25px;
+    font-family: 'Preahvihear' !important;
 }
   

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import data from '../../components/AppContent/References/nwl20bings.json';
-import { Autocomplete, Box, TextField, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useMediaQuery, Autocomplete, Box, TextField, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import styles from './Words.module.css';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 
@@ -27,11 +27,12 @@ const WordTable = () => {
     <Box sx={{ display: 'flex' }}>
       {/* Sidenav */}
       <Sidenav />
-
       {/* Content area */}
-      <Box sx={{ flexGrow: 1, padding: 16 }}>
-        <Box className={styles.container}>
-          {/* Rest of the WordTable component */}
+      <Box sx={{ flexGrow: 1}}>
+        <Box sx={{'& .MuiSelect-outlined': {color: 'white', border: "1px solid white", borderRadius: "none"}, '& .MuiSvgIcon-root': {color: 'white'}, '& .MuiInputBase-root': {color: 'white'}}} className={styles.container}>
+          <Box className={styles.title}>
+            {"Bingos"}
+          </Box>
           <Box className={`${styles.box} ${styles.filterBox}`}>
             <InputLabel className={styles.autocompleteLabel}>Probability Filter</InputLabel>
             <Autocomplete
@@ -44,7 +45,7 @@ const WordTable = () => {
             />
           </Box>
           <Box className={`${styles.box} ${styles.filterBox}`}>
-            <InputLabel>Word Length</InputLabel>
+            <InputLabel className={styles.autocompleteLabel}>Word Length</InputLabel>
             <Select
               id="wordLength"
               value={wordLength}
@@ -61,11 +62,11 @@ const WordTable = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Probability</TableCell>
-                    <TableCell>Word</TableCell>
-                    <TableCell>Front Hook</TableCell>
-                    <TableCell>Back Hook</TableCell>
-                    <TableCell>Definition</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Probability" : "P"}</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Word" : "W"}</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Front Hook" : "FH"}</TableCell>
+                    <TableCell>{useMediaQuery('(min-width:500px)') ? "Back Hook" : "BH"}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{useMediaQuery('(min-width:500px)') ? "Definition" : "D"}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -75,7 +76,7 @@ const WordTable = () => {
                       <TableCell>{item.WORD}</TableCell>
                       <TableCell>{item.FH}</TableCell>
                       <TableCell>{item.BH}</TableCell>
-                      <TableCell>{item.DEF}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} align="right">{item.DEF}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
