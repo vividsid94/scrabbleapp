@@ -169,7 +169,7 @@ form{
   justify-content: flex-end;
 }
 
-.playerPanel:after {
+/*.playerPanel:after {
   --slice-0: inset(50% 50% 50% 50%);
   --slice-1: inset(80% -6px 0 0);
   --slice-2: inset(50% -6px 30% 0);
@@ -212,7 +212,7 @@ form{
 .playerPanel:after {
   animation: 1s glitch;
   animation-timing-function: steps(2, end);
-}
+}*/
 
 @keyframes glitch {
   0% {
