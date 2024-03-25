@@ -33,6 +33,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from "../../axios/api.js";
 import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
+import { getComplementaryColor } from "../../functions/tileFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { TextField, Tooltip } from "@mui/material";
@@ -66,8 +67,8 @@ export default function Viewer({ onChange }){
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
-  //const [color, setColor] = useState('#60857C'); 
   const color = useRef('#60857C');
+  const complementaryColor = useRef('#9F7A83');
   const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
@@ -417,6 +418,7 @@ export default function Viewer({ onChange }){
       const newColor = colorInputRef.current.value;
       setCurrentColor(newColor);
       color.current = newColor;
+      complementaryColor.current = getComplementaryColor(newColor);
     };
   
     return (
@@ -426,15 +428,13 @@ export default function Viewer({ onChange }){
           ref={colorInputRef}
           value={currentColor}
           onChange={handleChange}
-        />
-        <Box
           style={{
-            marginTop: '20px',
             width: '50px',
             height: '50px',
-            backgroundColor: currentColor,
+            border: 'none',
+            cursor: 'pointer',
           }}
-        ></Box>
+        />
       </Box>
     );
   }
@@ -709,7 +709,7 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} moveDirection={moveDirection} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme, color.current)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
+          <Board onBoardChildClick={handleBoardClick} moveDirection={moveDirection} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme, color.current, complementaryColor.current)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
