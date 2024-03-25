@@ -18,6 +18,7 @@ export default function Board({
     let tableTheme = "Table__" + theme;
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
+    const [circledLetters, setCircledLetters] = useState([]);
     const handleClose = () => setOpen(false);
     let message = "";
     if (/^-[^-\s]/.test(move)){
@@ -44,15 +45,17 @@ export default function Board({
         }
     }
 
-    const [circledLetters, setCircledLetters] = useState([]);
     useEffect(() => {
         const lowercaseLetters = move.match(/(?<![a-z(])[a-z](?![a-z)])/g);
+        if (moveDirection === 'neutral') {
+            setCircledLetters([]);
+        }
         if (lowercaseLetters) {
             if (moveDirection === 'forward') {
                 setCircledLetters(prevLetters => [...prevLetters, ...lowercaseLetters]);
             } else if (moveDirection === 'backward') {
                 setCircledLetters(prevLetters => prevLetters.filter(letter => !lowercaseLetters.includes(letter)));
-            }
+            } 
         }
     }, [move]);
 

@@ -48,7 +48,7 @@ export default function Viewer({ onChange }){
   const [pool, setPool] = useState(origPool);
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
-  const [moveDirection, setMoveDirection] = useState("forward");
+  const [moveDirection, setMoveDirection] = useState("neutral");
   const [theme, setTheme] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
@@ -320,6 +320,7 @@ export default function Viewer({ onChange }){
     setOpen(true);
     setLoadingMsg("Finding a game...");
     setModalContent("loading");
+    setMoveDirection("neutral");
     const loadCustomPlayerGameInfo = async () => {
       const info = customPlayerMode.current ? await getCustomPlayerGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', customPlayerMode.current) : null;
       let randomNumber;
