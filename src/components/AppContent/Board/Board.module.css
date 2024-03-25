@@ -4,6 +4,32 @@
   user-select: none;
 }
 
+
+/* styles.module.css */
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+.spacing {
+  margin-bottom: 20px; /* Adjust as needed */
+}
+
+.letterBox {
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circle {
+  border: 2px solid blue; /* Example border style */
+  border-radius: 50%; /* Make it circular */
+}
+
 /* CSS */
 .Header{
   position: relative;
@@ -72,6 +98,35 @@
 td {
   padding: 0px;
 }
+
+.modalContainer{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 5px solid rgb(173, 88, 39);
+  padding: 25px;
+  width: auto;
+  outline: none;
+  background: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Syne' !important;
+}
+
+.slipBox {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.4) 100%);
+  width: auto;
+  color: black;
+  position: absolute;
+  margin-left: 10px;
+  z-index: 0;
+  padding: 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 
 .Board__STANDARD,
 .Board__STANDARD:after {
@@ -144,7 +199,7 @@ td {
 }
 
 @media screen and (max-width: 992px) {
-  .Board {
+  .BoardContainer {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -165,7 +220,7 @@ td {
 }
 
 @media screen and (min-width: 992px) and (max-width: 1200px){
-  .Board {
+  .BoardContainer {
     display: flex;
     flex-direction: column;
     justify-content: center;

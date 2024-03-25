@@ -48,6 +48,7 @@ export default function Viewer({ onChange }){
   const [pool, setPool] = useState(origPool);
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
+  const [moveDirection, setMoveDirection] = useState("forward");
   const [theme, setTheme] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
@@ -615,8 +616,8 @@ export default function Viewer({ onChange }){
 
   const iconList = [  
     {icon: KeyboardDoubleArrowLeftIcon, toolTip: "Beginning of game", onClick: beginningOfGame},  
-    {icon: KeyboardArrowLeftIcon, toolTip: "Move back", onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
-    {icon: KeyboardArrowRightIcon, toolTip: "Move forward", onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
+    {icon: KeyboardArrowLeftIcon, toolTip: "Move back", onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; setMoveDirection("backward"); handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
+    {icon: KeyboardArrowRightIcon, toolTip: "Move forward", onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; setMoveDirection("forward"); handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
     {icon: FiberNewIcon, toolTip: "New game", onClick: randomizeGame},
     {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
   ]
@@ -659,7 +660,7 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
+          <Board onBoardChildClick={handleBoardClick} moveDirection={moveDirection} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
