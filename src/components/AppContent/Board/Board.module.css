@@ -256,7 +256,7 @@ td {
     width: 6px;
     height: 6px;
   }
-  .Header, .Footer{
+  .Header, .Footer, .slipBox{
     font-size: 8px;
   }
 }
