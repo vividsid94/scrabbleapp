@@ -6,6 +6,9 @@
     justify-content: center;
     align-items: flex-end;
     z-index: 1;
+    -webkit-filter: grayscale(100%);
+    -webkit-filter: contrast(0%);
+    -webkit-filter: brightness(100%);
 }
 .decalContainer{
     position: relative;

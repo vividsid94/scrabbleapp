@@ -59,7 +59,7 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD") => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color) => {
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
@@ -77,9 +77,9 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
               if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
               border.right = true;
               }
-              return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles), "board", theme, tiles);
+              return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles), "board", theme, tiles, color);
           } else {
-              return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles), "board", theme, tiles);
+              return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles), "board", theme, tiles, color);
           }
           })
       ))

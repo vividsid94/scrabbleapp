@@ -13,6 +13,7 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
+import ColorizeIcon from '@mui/icons-material/Colorize';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import GroupIcon from '@mui/icons-material/Group';
@@ -65,7 +66,8 @@ export default function Viewer({ onChange }){
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(false);
-
+  //const [color, setColor] = useState('#60857C'); 
+  const color = useRef('#60857C');
   const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState("");
@@ -403,6 +405,40 @@ export default function Viewer({ onChange }){
     }
   }
 
+  function ColorScheme() {
+    const colorInputRef = useRef(null);
+    const [currentColor, setCurrentColor] = useState(color.current);
+  
+    useEffect(() => {
+      setCurrentColor(color.current);
+    }, [color]);
+  
+    const handleChange = () => {
+      const newColor = colorInputRef.current.value;
+      setCurrentColor(newColor);
+      color.current = newColor;
+    };
+  
+    return (
+      <Box>
+        <input
+          type="color"
+          ref={colorInputRef}
+          value={currentColor}
+          onChange={handleChange}
+        />
+        <Box
+          style={{
+            marginTop: '20px',
+            width: '50px',
+            height: '50px',
+            backgroundColor: currentColor,
+          }}
+        ></Box>
+      </Box>
+    );
+  }
+
   function GamesHistory() {
     const [gamesPerPage, setGamesPerPage] = useState(5);
     const matches = useMediaQuery('(max-width:676px)');
@@ -524,6 +560,11 @@ export default function Viewer({ onChange }){
     setOpen(true);
   };
 
+  const handleColorSchemeOpen = () => {
+    setModalContent("colorScheme")
+    setOpen(true);
+  };
+
   const handleRecentGamesOpen = () => {
     setModalContent("recentGames")
     setOpen(true);
@@ -608,6 +649,11 @@ export default function Viewer({ onChange }){
     </>
   );
 
+  const ColorSchemeContent = () => (
+    <>
+      {ColorScheme()}
+    </>
+  );
 
   const Loading = () => (
     <div>
@@ -627,7 +673,8 @@ export default function Viewer({ onChange }){
     {
       icon1: {icon: YoutubeSearchedForIcon, onClick: handleGamesHistoryOpen},
       icon2: {icon: HistoryIcon, onClick: handleRecentGamesOpen},
-      icon3: {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen}
+      icon3: {icon: SettingsOutlinedIcon, onClick: handleDictionaryTilesOpen},
+      icon4: {icon: ColorizeIcon, onClick: handleColorSchemeOpen}
     }
   ]
 
@@ -650,6 +697,7 @@ export default function Viewer({ onChange }){
       >
         <Box className={styles.modalContainer}>
           {modalContent === "dictionaryTiles" && <SettingsContent />}
+          {modalContent === "colorScheme" && <ColorSchemeContent/>}
           {modalContent === "recentGames" && <RecentGamesContent />}
           {modalContent === "gamesHistory" && <GamesHistoryContent />}
           {modalContent === "loading" && <Loading />}
@@ -661,7 +709,7 @@ export default function Viewer({ onChange }){
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board onBoardChildClick={handleBoardClick} moveDirection={moveDirection} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
+          <Board onBoardChildClick={handleBoardClick} moveDirection={moveDirection} dictionary={gameDictionary} board={createBoard(boardCoords, currentMoveCoords, tiles, theme, color.current)} points={pointsScored} theme={theme} rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}/>   
         </Box>
 
         <Box className={styles.rightPanel}>
@@ -702,6 +750,12 @@ export default function Viewer({ onChange }){
                           onClick={group.icon3.onClick}
                         />
                       </Tooltip>
+                      <Tooltip title="Colors">
+                        <group.icon4.icon 
+                          className={styles.keyBtn} 
+                          onClick={group.icon4.onClick}
+                        />
+                      </Tooltip>
                   </Box>
                 ))}
                 {groupedIcons2.map((group, index) => (
@@ -735,7 +789,7 @@ export default function Viewer({ onChange }){
               {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
               <Box className={styles.Rack}>
                 {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 
-                  <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
+                  <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles} color={color.current}/> : null}
               </Box> 
               <Box>
                 {player1points} points
@@ -744,7 +798,7 @@ export default function Viewer({ onChange }){
                 {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
                 <Box className={styles.Rack}>
                   {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') !== origPlayerRaw ? 
-                    <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles}/> : null}
+                    <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles} color={color.current}/> : null}
                 </Box>
                 <Box>
                   {player2points} points

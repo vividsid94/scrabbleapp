@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
 import styles from './Cell.module.css';
+import { modifyImageColor } from "../../../functions/tileFunctions.js";
 
 let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
 let preloadedImages = {};
 
 function preload() {
   allLetters.forEach(letter => {
-    let srcString = '/images/batch_processed_images/' + letter + '.png';
+    let srcString = '/images/compressed-clean-protiles/' + letter + '.png';
     preloadedImages[letter] = new Image();
     preloadedImages[letter].src = srcString;
   });
@@ -14,7 +14,7 @@ function preload() {
 
 preload();
 
-export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles) {
+export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, color) {
   let cellTheme = "Cell__" + theme;
 
   function cell(letter) {
@@ -23,19 +23,21 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles) {
       const cachedImage = preloadedImages[cacheKey];
 
       if (cachedImage) {
+        const modifiedImageUrl = modifyImageColor(cachedImage, color);
+
         return (
           <div
             className={styles[cellTheme]}
             style={{
               boxShadow: bonus.boxShadow,
-              backgroundImage: `url(${cachedImage.src})`,
+              backgroundImage: `url(${modifiedImageUrl})`,
               backgroundSize: '100%',
+              backgroundColor: color,
               boxSizing: 'border-box',
             }}
           ></div>
         );
       } else {
-        // Image not cached, you might want to handle this case (e.g., show a loading spinner).
         return null;
       }
     }

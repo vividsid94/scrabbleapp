@@ -240,7 +240,7 @@ td {
 }
 
 @media screen and (max-height: 992px) and (min-width: 1200px){
-  .Board {
+  .BoardContainer {
     display: flex;
     flex-direction: column;
     justify-content: center;
