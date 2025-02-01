@@ -9,6 +9,8 @@ import Memory from "./containers/Memory/Memory";
 import Footer from "./components/AppContent/Footer/Footer";
 import Bot from "./containers/Bot/Bot";
 import WordTable from "./containers/Words/Words";
+import Series from "./containers/Series/Series";
+
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
@@ -22,6 +24,7 @@ function App() {
             <Route path="/memory" element={<Memory/>} />
             <Route path="/bot" element={<Bot/>}/>
             <Route path="/words" element={<WordTable/>}/>
+            <Route path="/series" element={<Series/>}/>
           </Routes>
         </Router>
       </header>
