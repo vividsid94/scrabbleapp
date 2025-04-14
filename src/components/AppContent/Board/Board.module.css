@@ -1,4 +1,3 @@
-
 *{
 	border-spacing: 0px !important;
   user-select: none;
@@ -37,6 +36,12 @@
   padding: 10px;
   margin-bottom: 10px;
   font-size: 12px;
+}
+
+.Header.hidden {
+  background: transparent;
+  color: transparent;
+  pointer-events: none;
 }
 
 .sideNumbering{
@@ -97,6 +102,7 @@
 
 td {
   padding: 0px;
+  position: relative;
 }
 
 .modalContainer{
@@ -160,9 +166,13 @@ td {
   clip-path: var(--slice-0);
 }
 
-.Board:active {
+.Board:not(.noAnimate):active {
   animation: 1s super-cool-glitch;
   animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.Board.no-animate:active {
+  animation: none;
 }
 
 @keyframes super-cool-glitch {
@@ -259,4 +269,49 @@ td {
   .Header, .Footer, .slipBox{
     font-size: 8px;
   }
+}
+
+.arrowIndicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: #4D3D2B;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.arrowIndicator:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.directionToggle {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 10px;
+}
+
+.directionToggle:hover {
+    background-color: #45a049;
+}
+
+.directionToggle:active {
+    background-color: #3e8e41;
 }

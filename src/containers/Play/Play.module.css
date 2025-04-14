@@ -1,0 +1,199 @@
+.title {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #4D3D2B;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  z-index: 1000;
+  font-family: 'Syne';
+}
+
+.mainPanel {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-top: 60px;
+}
+
+.mainBox {
+  display: flex;
+  justify-content: center;
+}
+
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 24px;
+  max-width: 400px;
+}
+
+.topPlayerPanel {
+  padding-bottom: 24px;
+  padding-right: 24px;
+  width: 100%;
+}
+
+.playerToggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.keyBtn {
+  cursor: pointer;
+  font-size: 24px !important;
+  line-height: 24px !important;
+  height: 24px !important;
+}
+
+.playerPanel {
+  background: #4D3D2B;
+  background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  color: white;
+  width: 100%;
+  max-width: 350px;
+}
+
+.Rack {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 350px;
+}
+
+.poolBox {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.wordInput {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.modalContainer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 5px solid rgb(173, 88, 39);
+  padding: 25px;
+  width: auto;
+  outline: none;
+  background: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Syne' !important;
+}
+
+.modalContainer__dictionary {
+  margin: 10px 0;
+}
+
+.styleSelection {
+  margin-left: 10px;
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.playerInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.directionToggle {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.directionToggle:hover {
+  background-color: #45a049;
+}
+
+.directionToggle:active {
+  background-color: #3e8e41;
+}
+
+@media screen and (max-width: 992px) {
+  .rightPanel {
+    padding: 24px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+    max-width: none;
+  }
+  .mainPanel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  .topPlayerPanel {
+    padding-bottom: 0px;
+    padding-right: 24px;
+  }
+  .playerPanel {
+    width: 45vw;
+    max-width: none;
+  }
+}
+
+@media screen and (max-width: 676px) {
+  .rightPanel {
+    padding: 0px 0px 24px 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 100%;
+    max-width: none;
+  }
+  .playerToggle {
+    padding: auto;
+    height: 15px;
+  }
+  .playerToggle svg {
+    font-size: 20px !important;
+  }
+  .title {
+    margin: auto;
+    font-size: 15px;
+  }
+  .playerPanel {
+    width: 90vw;
+    font-size: 13px;
+    line-height: 27px;
+    max-width: none;
+  }
+  .mainBox {
+    padding: 16px !important;
+  }
+  .keyBtn {
+    font-size: 20px !important;
+    line-height: 20px !important;
+    height: 20px !important;
+  }
+} 

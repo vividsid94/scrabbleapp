@@ -37,6 +37,12 @@ export const modifyImageColor = (image, color) => {
         ctx = canvas.getContext('2d', { willReadFrequently: true });
     }
 
+    // Check if image is loaded
+    if (!image.complete || image.naturalWidth === 0) {
+        // If image isn't loaded, return a placeholder
+        return '';
+    }
+
     const isDark = isColorDark(color);
     canvas.width = image.width;
     canvas.height = image.height;

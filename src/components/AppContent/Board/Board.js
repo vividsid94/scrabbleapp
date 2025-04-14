@@ -3,6 +3,8 @@ import styles from './Board.module.css';
 import { Box } from '@mui/system';
 import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
+import Cell from './Cell';
+import cellType from './cellType';
 
 export default function Board({
     theme = "STANDARD",
@@ -12,7 +14,14 @@ export default function Board({
     dictionary = "",
     board = [],
     moveDirection,
-    onBoardChildClick
+    onBoardChildClick,
+    onTileDrop,
+    selectedPosition,
+    arrowDirection,
+    onArrowDirectionChange,
+    animate = true,
+    showSlip = true,
+    showDictionary = true
 }) {
     let boardTheme = "Board__" + theme;
     let tableTheme = "Table__" + theme;
@@ -109,18 +118,32 @@ export default function Board({
         </Box>
     );
     
-    
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e, row, col) => {
+        e.preventDefault();
+        const tile = e.dataTransfer.getData('tile');
+        const index = e.dataTransfer.getData('index');
+        if (onBoardChildClick) {
+            onBoardChildClick(row, col);
+        }
+        if (onTileDrop) {
+            onTileDrop(tile, index, row, col);
+        }
+    };
 
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
-            <Box className={styles.Header}>
+            <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`}>
                 {dictionary}
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
-                    
                 </Box>
-                <Box className={`${styles.Board} ${styles.tableContainer} ${styles[tableTheme]}`} onClick={onBoardChildClick}>
+                <Box className={`${styles.Board} ${styles.tableContainer} ${styles[tableTheme]} ${!animate ? styles.noAnimate : ''}`}>
                     <table>
                         <thead>
                             <tr> 
@@ -135,7 +158,21 @@ export default function Board({
                             {board.map((row, rowIndex) =>
                                 <tr key={rowIndex}>
                                     <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
-                                    {row.map((col, colIndex) => <td key={colIndex}>{col}</td>)}
+                                    {row.map((col, colIndex) => (
+                                        <td 
+                                            key={colIndex}
+                                            onDrop={(e) => handleDrop(e, rowIndex, colIndex)}
+                                            onDragOver={handleDragOver}
+                                            onClick={() => onBoardChildClick && onBoardChildClick(rowIndex, colIndex)}
+                                        >
+                                            {col}
+                                            {selectedPosition && selectedPosition.row === rowIndex && selectedPosition.col === colIndex && (
+                                                <div className={styles.arrowIndicator}>
+                                                    {arrowDirection === 'right' ? '→' : '↓'}
+                                                </div>
+                                            )}
+                                        </td>
+                                    ))}
                                     <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                 </tr>
                             )}
@@ -150,9 +187,11 @@ export default function Board({
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    <Box className={`${styles.coloredBox} ${styles.slipBox}`} onClick={handleSlipClick}>
-                        Slip
-                    </Box>
+                    {showSlip && (
+                        <Box className={`${styles.coloredBox} ${styles.slipBox}`} onClick={handleSlipClick}>
+                            Slip
+                        </Box>
+                    )}
                 </Box>
             </Box>
             <Box className={styles.Footer}>

@@ -21,6 +21,12 @@ export default (function() {
             preload();
         }
 
+        const handleDragStart = (e, tile, index) => {
+            e.dataTransfer.setData('tile', tile);
+            e.dataTransfer.setData('index', index);
+            e.dataTransfer.effectAllowed = 'move';
+        };
+
         function rackWithTiles(letter) {
             if (letter) {
                 const cacheKey = /^\s$/.test(letter) ? '_' : letter;
@@ -42,7 +48,14 @@ export default (function() {
                 return (
                     <Box className={styles.Rack}>
                         {rack.map((col, colIndex) => (
-                            <Box className={styles.Protile} style={{ backgroundColor: props.color }} key={colIndex}>
+                            <Box 
+                                className={styles.Protile} 
+                                style={{ backgroundColor: props.color }} 
+                                key={colIndex}
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, col, colIndex)}
+                                onClick={() => props.onTileClick && props.onTileClick(col, colIndex)}
+                            >
                                 {rackWithTiles(col)}
                             </Box>
                         ))}
@@ -52,7 +65,13 @@ export default (function() {
                 return (
                     <Box className={styles.Rack}>
                         {rack.map((col, colIndex) => (
-                            <Box className={styles.Tile} key={colIndex}>
+                            <Box 
+                                className={styles.Tile} 
+                                key={colIndex}
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, col, colIndex)}
+                                onClick={() => props.onTileClick && props.onTileClick(col, colIndex)}
+                            >
                                 {col}
                             </Box>
                         ))}

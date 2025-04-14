@@ -21,6 +21,9 @@ export default function Home(){
           <Link to="/viewer">
             <button className={styles.homeButton}>Annotated Game Viewer</button>
           </Link>
+          {/* <Link to="/play">
+            <button className={styles.homeButton}>Play Scrabble</button>
+          </Link> */}
         </Box>
       </Box>   
     </Box>

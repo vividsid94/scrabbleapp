@@ -10,6 +10,7 @@ import Footer from "./components/AppContent/Footer/Footer";
 import Bot from "./containers/Bot/Bot";
 import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
+import Play from "./containers/Play/Play";
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/bot" element={<Bot/>}/>
             <Route path="/words" element={<WordTable/>}/>
             <Route path="/series" element={<Series/>}/>
+            <Route path="/play" element={<Play/>}/>
           </Routes>
         </Router>
       </header>
