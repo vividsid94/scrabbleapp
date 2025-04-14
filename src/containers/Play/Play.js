@@ -41,7 +41,13 @@ export default function Play() {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     setBoardCoords(parsedOrigBoardCoords);
     setTempBoardCoords(parsedOrigBoardCoords);
-    initializeGame();
+
+    // Delay game initialization by 1 second
+    const timer = setTimeout(() => {
+      initializeGame();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const initializeGame = () => {
@@ -66,17 +72,7 @@ export default function Play() {
   };
 
   const handleTileClick = (tile, index) => {
-    if (currentPlayer === 1) {
-      const newRack = [...player1Rack];
-      newRack[index] = null;
-      setPlayer1Rack(newRack);
-      setSelectedTiles([...selectedTiles, tile]);
-    } else {
-      const newRack = [...player2Rack];
-      newRack[index] = null;
-      setPlayer2Rack(newRack);
-      setSelectedTiles([...selectedTiles, tile]);
-    }
+
   };
 
   const handleBoardClick = (row, col) => {
