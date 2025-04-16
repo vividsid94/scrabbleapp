@@ -134,6 +134,13 @@ export default function Play() {
           } else {
             setPlayer2Rack(newRack);
           }
+
+          // Update selectedTiles
+          setSelectedTiles(prevTiles => {
+            const newTiles = [...prevTiles];
+            newTiles.pop();
+            return newTiles;
+          });
         }
       }
       
@@ -175,6 +182,9 @@ export default function Play() {
     const newTempBoard = [...tempBoardCoords];
     newTempBoard[row][col] = key;
     setTempBoardCoords(newTempBoard);
+
+    // Update selectedTiles
+    setSelectedTiles(prevTiles => [...prevTiles, key]);
 
     // Move to next position based on direction
     if (arrowDirection === 'right') {
@@ -221,23 +231,134 @@ export default function Play() {
     setTempBoardCoords(newTempBoard);
   };
 
-  const handleWordSubmit = () => {
-    // Update the actual board with the temporary board state
-    setBoardCoords(tempBoardCoords);
+  const handleWordSubmit = async () => {
+    if (!selectedBoardPosition || selectedTiles.length === 0) {
+      console.log('Cannot submit: No position or tiles selected');
+      return;
+    }
+
+    console.log('Submitting move:', {
+      position: selectedBoardPosition,
+      tiles: selectedTiles,
+      direction: arrowDirection
+    });
+
+    // Validate move structure
+    const isFirstMove = boardCoords.every(row => row.every(cell => cell === 0));
+    const { row, col } = selectedBoardPosition;
+
+    // Check if first move covers center square
+    if (isFirstMove) {
+      const centerSquare = { row: 7, col: 7 };
+      let coversCenter = false;
+      let currentRow = row;
+      let currentCol = col;
+
+      for (let i = 0; i < selectedTiles.length; i++) {
+        if (currentRow === centerSquare.row && currentCol === centerSquare.col) {
+          coversCenter = true;
+          break;
+        }
+        if (arrowDirection === 'right') {
+          currentCol++;
+        } else {
+          currentRow++;
+        }
+      }
+
+      if (!coversCenter) {
+        alert('First move must cover the center square');
+        return;
+      }
+    } else {
+      // Check if move connects to existing tiles
+      let connectsToExisting = false;
+      let currentRow = row;
+      let currentCol = col;
+
+      for (let i = 0; i < selectedTiles.length; i++) {
+        // Check adjacent squares
+        const adjacentPositions = [
+          { row: currentRow - 1, col: currentCol },
+          { row: currentRow + 1, col: currentCol },
+          { row: currentRow, col: currentCol - 1 },
+          { row: currentRow, col: currentCol + 1 }
+        ];
+
+        for (const pos of adjacentPositions) {
+          if (pos.row >= 0 && pos.row < 15 && pos.col >= 0 && pos.col < 15) {
+            if (boardCoords[pos.row][pos.col] !== 0) {
+              connectsToExisting = true;
+              break;
+            }
+          }
+        }
+
+        if (connectsToExisting) break;
+
+        if (arrowDirection === 'right') {
+          currentCol++;
+        } else {
+          currentRow++;
+        }
+      }
+
+      if (!connectsToExisting) {
+        alert('Move must connect to existing tiles');
+        return;
+      }
+    }
+
+    // Update the board with the move
+    const newBoard = [...boardCoords];
+    let currentRow = selectedBoardPosition.row;
+    let currentCol = selectedBoardPosition.col;
+
+    // Copy tiles from tempBoardCoords to boardCoords
+    for (let i = 0; i < selectedTiles.length; i++) {
+      newBoard[currentRow][currentCol] = tempBoardCoords[currentRow][currentCol];
+      if (arrowDirection === 'right') {
+        currentCol++;
+      } else {
+        currentRow++;
+      }
+    }
+
+    setBoardCoords(newBoard);
+    setTempBoardCoords(newBoard); // Update tempBoardCoords to match
     
-    // Refill rack for current player
+    // Update player's score (simple scoring for now)
+    let score = 0;
+    for (const tile of selectedTiles) {
+      score += getTileValue(tile);
+    }
+    
+    if (currentPlayer === 1) {
+      setPlayer1points(player1points + score);
+    } else {
+      setPlayer2points(player2points + score);
+    }
+
+    // Refill the current player's rack
     const newPool = [...pool];
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
     const newRack = [...currentRack];
     
-    // Fill rack with new tiles from pool until it has 7 tiles
+    // Remove used tiles
+    for (const tile of selectedTiles) {
+      const index = newRack.indexOf(tile);
+      if (index !== -1) {
+        newRack.splice(index, 1);
+      }
+    }
+    
+    // Add new tiles from pool
     while (newRack.length < 7 && newPool.length > 0) {
       const randomIndex = Math.floor(Math.random() * newPool.length);
       newRack.push(newPool[randomIndex]);
       newPool.splice(randomIndex, 1);
     }
     
-    // Update the appropriate rack
     if (currentPlayer === 1) {
       setPlayer1Rack(newRack);
     } else {
@@ -246,13 +367,25 @@ export default function Play() {
     
     setPool(newPool);
     
-    // Switch player and reset selection
+    // Switch players
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
     setSelectedBoardPosition(null);
-    
-    // Reset temporary board to match the actual board
-    setTempBoardCoords(boardCoords);
+    setSelectedTiles([]);
+    setArrowDirection('right');
   };
+
+  function getTileValue(letter) {
+    const values = {
+      'A': 1, 'E': 1, 'I': 1, 'O': 1, 'U': 1, 'L': 1, 'N': 1, 'S': 1, 'T': 1, 'R': 1,
+      'D': 2, 'G': 2,
+      'B': 3, 'C': 3, 'M': 3, 'P': 3,
+      'F': 4, 'H': 4, 'V': 4, 'W': 4, 'Y': 4,
+      'K': 5,
+      'J': 8, 'X': 8,
+      'Q': 10, 'Z': 10
+    };
+    return values[letter] || 0;
+  }
 
   const handleSettingsOpen = () => {
     setModalContent("settings");
