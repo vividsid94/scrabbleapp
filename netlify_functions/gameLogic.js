@@ -10,14 +10,33 @@ const path = require('path');
 // Load dictionary into memory
 let validWords = new Set();
 try {
-    const dictionaryPath = path.join(__dirname, 'dictionary.txt');
-    const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
-    validWords = new Set(
-        dictionaryContent
-            .split('\n')
-            .map(word => word.trim().toUpperCase())
-            .filter(word => word && !word.startsWith('#'))
-    );
+    // Try local development path first
+    let dictionaryPath = path.join(__dirname, 'dictionary.txt');
+    console.log('Attempting to load dictionary from local path:', dictionaryPath);
+    
+    try {
+        const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
+        console.log('Dictionary loaded successfully from local path, word count:', dictionaryContent.split('\n').length);
+        validWords = new Set(
+            dictionaryContent
+                .split('\n')
+                .map(word => word.trim().toUpperCase())
+                .filter(word => word && !word.startsWith('#'))
+        );
+    } catch (localError) {
+        console.log('Local path failed, trying production path...');
+        // Try production path
+        dictionaryPath = path.join(process.cwd(), 'netlify/functions/dictionary.txt');
+        console.log('Attempting to load dictionary from production path:', dictionaryPath);
+        const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
+        console.log('Dictionary loaded successfully from production path, word count:', dictionaryContent.split('\n').length);
+        validWords = new Set(
+            dictionaryContent
+                .split('\n')
+                .map(word => word.trim().toUpperCase())
+                .filter(word => word && !word.startsWith('#'))
+        );
+    }
 } catch (error) {
     console.error('Error loading dictionary:', error);
     // Fallback to a small set of words if dictionary fails to load
