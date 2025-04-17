@@ -176,7 +176,6 @@ export default function Play() {
 
     // Check if there's already a submitted tile at this position
     if (!Number.isInteger(boardCoords[row][col])) {
-      // Can't place a tile over an existing submitted tile
       return;
     }
 
@@ -198,16 +197,23 @@ export default function Play() {
     setSelectedTiles(prevTiles => [...prevTiles, key]);
 
     // Move to next position based on direction
-    console.log(boardCoords);
-    console.log(tempBoardCoords);
-    console.log(origBoardCoords);
     if (arrowDirection === 'right') {
-      if (col < 14) {
-        setSelectedBoardPosition({ row, col: col + 1 });
+      let nextCol = col + 1;
+      // Skip over any submitted tiles
+      while (nextCol <= 14 && !Number.isInteger(boardCoords[row][nextCol])) {
+        nextCol++;
+      }
+      if (nextCol <= 14) {
+        setSelectedBoardPosition({ row, col: nextCol });
       }
     } else {
-      if (row < 14) {
-        setSelectedBoardPosition({ row: row + 1, col });
+      let nextRow = row + 1;
+      // Skip over any submitted tiles
+      while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][col])) {
+        nextRow++;
+      }
+      if (nextRow <= 14) {
+        setSelectedBoardPosition({ row: nextRow, col });
       }
     }
   };
