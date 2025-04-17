@@ -76,17 +76,13 @@ export default function Play() {
     const isSamePosition =
       selectedBoardPosition?.row === row &&
       selectedBoardPosition?.col === col;
-  
     setSelectedBoardPosition({ row, col });
-    console.log(selectedBoardPosition);
-  
     if (isSamePosition) {
       setArrowDirection(prev =>
         prev === 'right' ? 'down' : 'right'
       );
     }
   };
-  
 
   const handleKeyDown = (e) => {
     if (!selectedBoardPosition) return;
