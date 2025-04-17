@@ -15,6 +15,7 @@ import { TextField, Tooltip, Button } from "@mui/material";
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
   const [tempBoardCoords, setTempBoardCoords] = useState([]);
+  const [origBoardCoords, setOrigBoardCoords] = useState([]);
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
   const [pointsScored, setPointsScored] = useState(0);
@@ -36,9 +37,10 @@ export default function Play() {
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-    setBoardCoords(parsedOrigBoardCoords);
-    setTempBoardCoords(parsedOrigBoardCoords);
-
+    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    
     const timer = setTimeout(() => {
       initializeGame();
     }, 1000);
@@ -214,12 +216,10 @@ export default function Play() {
     const player2Index = player2Rack.indexOf(tile);
     
     if (player1Index !== -1) {
-      // Tile came from player 1's rack
       const newRack = [...player1Rack];
       newRack.splice(player1Index, 1);
       setPlayer1Rack(newRack);
     } else if (player2Index !== -1) {
-      // Tile came from player 2's rack
       const newRack = [...player2Rack];
       newRack.splice(player2Index, 1);
       setPlayer2Rack(newRack);
@@ -235,112 +235,11 @@ export default function Play() {
   };
 
   const handleWordSubmit = async () => {
-    if (!selectedBoardPosition || selectedTiles.length === 0) {
-      console.log('Cannot submit: No position or tiles selected');
-      return;
-    }
-
     console.log('Submitting move:', {
       position: selectedBoardPosition,
       tiles: selectedTiles,
       direction: arrowDirection
     });
-
-    // Validate move structure
-    const isFirstMove = boardCoords.every(row => row.every(cell => cell === 0));
-    const { row, col } = selectedBoardPosition;
-
-    // Check if first move covers center square
-    if (isFirstMove) {
-      const centerSquare = { row: 7, col: 7 };
-      let coversCenter = false;
-      let currentRow = row;
-      let currentCol = col;
-
-      for (let i = 0; i < selectedTiles.length; i++) {
-        if (currentRow === centerSquare.row && currentCol === centerSquare.col) {
-          coversCenter = true;
-          break;
-        }
-        if (arrowDirection === 'right') {
-          currentCol++;
-        } else {
-          currentRow++;
-        }
-      }
-
-      if (!coversCenter) {
-        alert('First move must cover the center square');
-        return;
-      }
-    } else {
-      // Check if move connects to existing tiles
-      let connectsToExisting = false;
-      let currentRow = row;
-      let currentCol = col;
-
-      for (let i = 0; i < selectedTiles.length; i++) {
-        // Check adjacent squares
-        const adjacentPositions = [
-          { row: currentRow - 1, col: currentCol },
-          { row: currentRow + 1, col: currentCol },
-          { row: currentRow, col: currentCol - 1 },
-          { row: currentRow, col: currentCol + 1 }
-        ];
-
-        for (const pos of adjacentPositions) {
-          if (pos.row >= 0 && pos.row < 15 && pos.col >= 0 && pos.col < 15) {
-            if (boardCoords[pos.row][pos.col] !== 0) {
-              connectsToExisting = true;
-              break;
-            }
-          }
-        }
-
-        if (connectsToExisting) break;
-
-        if (arrowDirection === 'right') {
-          currentCol++;
-        } else {
-          currentRow++;
-        }
-      }
-
-      if (!connectsToExisting) {
-        alert('Move must connect to existing tiles');
-        return;
-      }
-    }
-
-    // Update the board with the move
-    const newBoard = [...boardCoords];
-    let currentRow = selectedBoardPosition.row;
-    let currentCol = selectedBoardPosition.col;
-
-    // Copy tiles from tempBoardCoords to boardCoords
-    for (let i = 0; i < selectedTiles.length; i++) {
-      newBoard[currentRow][currentCol] = tempBoardCoords[currentRow][currentCol];
-      if (arrowDirection === 'right') {
-        currentCol++;
-      } else {
-        currentRow++;
-      }
-    }
-
-    setBoardCoords(newBoard);
-    setTempBoardCoords(newBoard); // Update tempBoardCoords to match
-    
-    // Update player's score (simple scoring for now)
-    let score = 0;
-    for (const tile of selectedTiles) {
-      score += getTileValue(tile);
-    }
-    
-    if (currentPlayer === 1) {
-      setPlayer1points(player1points + score);
-    } else {
-      setPlayer2points(player2points + score);
-    }
 
     // Refill the current player's rack
     const newPool = [...pool];
@@ -354,14 +253,6 @@ export default function Play() {
         newRack.splice(index, 1);
       }
     }
-    
-    // Add new tiles from pool
-    while (newRack.length < 7 && newPool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * newPool.length);
-      newRack.push(newPool[randomIndex]);
-      newPool.splice(randomIndex, 1);
-    }
-    
     if (currentPlayer === 1) {
       setPlayer1Rack(newRack);
     } else {
@@ -370,25 +261,21 @@ export default function Play() {
     
     setPool(newPool);
     
-    // Switch players
+    // Add new tiles from pool
+    while (newRack.length < 7 && newPool.length > 0) {
+      const randomIndex = Math.floor(Math.random() * newPool.length);
+      newRack.push(newPool[randomIndex]);
+      newPool.splice(randomIndex, 1);
+    }
+
+    console.log(boardCoords);
+    console.log(tempBoardCoords);
+    console.log(origBoardCoords);
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
     setSelectedBoardPosition(null);
     setSelectedTiles([]);
     setArrowDirection('right');
   };
-
-  function getTileValue(letter) {
-    const values = {
-      'A': 1, 'E': 1, 'I': 1, 'O': 1, 'U': 1, 'L': 1, 'N': 1, 'S': 1, 'T': 1, 'R': 1,
-      'D': 2, 'G': 2,
-      'B': 3, 'C': 3, 'M': 3, 'P': 3,
-      'F': 4, 'H': 4, 'V': 4, 'W': 4, 'Y': 4,
-      'K': 5,
-      'J': 8, 'X': 8,
-      'Q': 10, 'Z': 10
-    };
-    return values[letter] || 0;
-  }
 
   const handleSettingsOpen = () => {
     setModalContent("settings");

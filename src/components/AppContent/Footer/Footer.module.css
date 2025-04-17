@@ -6,6 +6,7 @@
     flex-direction: column;
     width: calc(100% - 65px);
     float: right;
+    padding: 10px 0px;
 }
 
 .footerText{
