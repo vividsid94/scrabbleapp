@@ -7,7 +7,6 @@ import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
 import Memory from "./containers/Memory/Memory";
 import Footer from "./components/AppContent/Footer/Footer";
-import Bot from "./containers/Bot/Bot";
 import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
@@ -23,7 +22,6 @@ function App() {
             <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
             <Route path="/" element={<Home/>} />
             <Route path="/memory" element={<Memory/>} />
-            <Route path="/bot" element={<Bot/>}/>
             <Route path="/words" element={<WordTable/>}/>
             <Route path="/series" element={<Series/>}/>
             <Route path="/play" element={<Play/>}/>
