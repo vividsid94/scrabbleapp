@@ -313,6 +313,7 @@ export default function Play() {
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
+      <Box className={styles.page}>
       <Box className={styles.title}>
         Play Scrabble
       </Box>
@@ -436,6 +437,7 @@ export default function Play() {
           )}
         </Box>
       </Modal>
+      </Box>
     </Box>
   );
 } 

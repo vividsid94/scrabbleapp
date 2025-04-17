@@ -1,90 +1,29 @@
-.title {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: #4D3D2B;
-  color: white;
-  padding: 10px;
-  text-align: center;
-  z-index: 1000;
-  font-family: 'Syne';
-}
-
-.mainPanel {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  margin-top: 60px;
-}
-
-.mainBox {
-  display: flex;
-  justify-content: center;
-}
-
-.rightPanel {
-  display: flex;
-  flex-direction: column;
- 
-  padding: 24px;
-  max-width: 400px;
-}
-
-.topPlayerPanel {
-  padding-bottom: 24px;
-  padding-right: 24px;
-  width: 100%;
-}
-
-.playerToggle {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 0;
-}
-
-.keyBtn {
+@import url('https://fonts.googleapis.com/css?family=Dancing+Script');
+@import url('https://fonts.googleapis.com/css?family=Preahvihear');
+.underlinedText{
   cursor: pointer;
-  font-size: 24px !important;
-  line-height: 24px !important;
-  height: 24px !important;
 }
 
-.playerPanel {
-  background: #4D3D2B;
-  background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
-  color: white;
-  width: 100%;
-  max-width: 350px;
+.questionMark{
+  font-size: 26px;
+  cursor: pointer;
 }
 
-.Rack {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  max-width: 350px;
+.poolBox{
+	padding: 10px;
 }
 
-.poolBox {
-  margin-top: 10px;
-  width: 100%;
-  max-width: 350px;
-}
-
-.wordInput {
+.page{
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
-  width: 100%;
-  max-width: 350px;
+  justify-content: center;
 }
 
-.modalContainer {
+form{
+  padding: 0px;
+}
+
+.modalContainer{
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -100,98 +39,378 @@
   font-family: 'Syne' !important;
 }
 
-.modalContainer__dictionary {
-  margin: 10px 0;
+.modalContainer option{
+  color: black;
+  padding: 25px !important;
+  font-size: 16x;
+  height: 50px !important;
+  font-family: 'Syne' !important;
 }
 
-.styleSelection {
-  margin-left: 10px;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.playerInfo {
+.modalContainer__dictionary{
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
+  font-family: 'Syne' !important;
 }
 
-.directionToggle {
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.modalContainer__tiles{
+  display: flex;
+  flex-direction: column;
+  font-family: 'Syne' !important;
+}
+
+.randomizeBtn{
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  font-size: 30px !important;
 }
 
-.directionToggle:hover {
-  background-color: #45a049;
+.styleSelection{
+  padding: 7px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 16x;
+  cursor: pointer;
+  height: auto; 
+  background: linear-gradient(45deg, transparent 5%, #14000b 5%);
+  border: 0;
+  color: #fff;
+  box-shadow: 6px 0px 0px #00E6F6;
+  outline: transparent;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  font-family: 'Syne' !important;
+}
+.settingsBtn{
+  font-size: 30px !important;
+  cursor: pointer;
+}
+.keyBtn{
+  font-size: 30px !important;
+  line-height: 30px !important;
+  padding: 2px 10px;
+  height: 30px;
+  font-family: 'Dancing Script' !important;
+  cursor: pointer;
+  transform: translate(--slice-0);
+  user-select: none;
+}
+.keyBtnSmall{
+  font-size: 18px !important;
+  cursor: pointer;
+  transform: translate(--slice-0);
+}
+.recentGames{
+  font-size: 16px !important;
+}
+.recentGames td{
+  padding: 8px;
+}
+.viewRecentGames{
+  display: flex;
+  align-items: center;
+}
+.viewRecentGames svg{
+  margin-left: 2px;
+}
+.customInputNum{
+  padding: 10px;
+  width: auto;
+  height: auto; 
+  background: linear-gradient(45deg, transparent 5%, #14000b 5%);
+  border: 0;
+  color: #fff;
+  box-shadow: 6px 0px 0px #00E6F6;
+  outline: transparent;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
-.directionToggle:active {
-  background-color: #3e8e41;
+.title{
+  display: flex;
+  justify-content: center;
+  font-size: 30px;
+  margin-top: 25px;
+  font-family: 'Preahvihear' !important;
 }
+
+.mainPanel{
+  display: flex;
+  flex-direction: row;
+}
+
+.playerPanel{
+  width: 380px;
+  height: auto;
+  font-size: 20px;
+  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
+  border: 0;
+  color: #fff;
+  position: relative;
+  line-height: 50px;
+}
+
+.playerToggle{
+  display: flex;
+  justify-content: space-evenly;
+  padding: 10px 0;
+  align-items: center;
+}
+
+.unlockText{
+  font-size: 10px;
+  font-style: italic;
+  font-family: 'Syne' !important;
+  padding: 10px;
+  justify-content: flex-end;
+}
+
+/*.playerPanel:after {
+  --slice-0: inset(50% 50% 50% 50%);
+  --slice-1: inset(80% -6px 0 0);
+  --slice-2: inset(50% -6px 30% 0);
+  --slice-3: inset(10% -6px 85% 0);
+  --slice-4: inset(40% -6px 43% 0);
+  --slice-5: inset(80% -6px 5% 0);
+  
+  content: 'ALTERNATE TEXT';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 3%, #00E6F6 3%, #00E6F6 5%, #756f66 5%);
+  text-shadow: -3px -3px 0px #F8F005, 3px 3px 0px #00E6F6;
+  clip-path: var(--slice-0);
+}
+
+.playerPanel:after {
+  --slice-0: inset(50% 50% 50% 50%);
+  --slice-1: inset(80% -6px 0 0);
+  --slice-2: inset(50% -6px 30% 0);
+  --slice-3: inset(10% -6px 85% 0);
+  --slice-4: inset(40% -6px 43% 0);
+  --slice-5: inset(80% -6px 5% 0);
+  
+  content: 'ALTERNATE TEXT';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 3%, #00E6F6 3%, #00E6F6 5%, #756f66 5%);
+  text-shadow: -3px -3px 0px #F8F005, 3px 3px 0px #00E6F6;
+  clip-path: var(--slice-0);
+}
+
+.playerPanel:after {
+  animation: 1s glitch;
+  animation-timing-function: steps(2, end);
+}*/
+
+@keyframes glitch {
+  0% {
+    clip-path: var(--slice-1);
+    transform: translate(-20px, -10px);
+  }
+  10% {
+    clip-path: var(--slice-3);
+    transform: translate(10px, 10px);
+  }
+  20% {
+    clip-path: var(--slice-1);
+    transform: translate(-10px, 10px);
+  }
+  30% {
+    clip-path: var(--slice-3);
+    transform: translate(0px, 5px);
+  }
+  40% {
+    clip-path: var(--slice-2);
+    transform: translate(-5px, 0px);
+  }
+  50% {
+    clip-path: var(--slice-3);
+    transform: translate(5px, 0px);
+  }
+  60% {
+    clip-path: var(--slice-4);
+    transform: translate(5px, 10px);
+  }
+  70% {
+    clip-path: var(--slice-2);
+    transform: translate(-10px, 10px);
+  }
+  80% {
+    clip-path: var(--slice-5);
+    transform: translate(20px, -10px);
+  }
+  90% {
+    clip-path: var(--slice-1);
+    transform: translate(-10px, 0px);
+  }
+  100% {
+    clip-path: var(--slice-1);
+    transform: translate(0);
+  }
+}
+
+.rightPanel{
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+  justify-content: flex-start;
+}
+
+.topPlayerPanel{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 380px;
+  padding-bottom: 24px;
+}
+
+.groupedBox{
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+}
+
+.Arrows{
+  cursor: pointer;
+  font-size: 30px !important;
+}
+
+.mainBox{
+  display: flex;
+  justify-content: center;
+}
+
+.Rack{
+	display: flex;
+  justify-content: center;
+}
+
+.commentaryContainer{
+  background: #4D3D2B;
+  background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+}
+
+.commentaryBox{
+  padding: 10px;
+  font-family: 'Syne';
+  overflow-wrap: break-word;
+  text-align: justify;
+  font-size: 13px;
+  line-height: 18px;
+  font-family: 'Syne';
+}
+
 
 @media screen and (max-width: 992px) {
-  .rightPanel {
+  .rightPanel{
     padding: 24px;
     display: flex;
     flex-direction: row;
-    width: 100%;
-    max-width: none;
+    justify-content: space-evenly;
   }
-  .mainPanel {
+  .mainPanel{
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
   }
-  .topPlayerPanel {
+  .topPlayerPanel{
     padding-bottom: 0px;
     padding-right: 24px;
   }
-  .playerPanel {
+  .page{
+    margin-top: 100px;
+  }
+  .playerPanel{
     width: 45vw;
-    max-width: none;
   }
 }
 
 @media screen and (max-width: 676px) {
-  .rightPanel {
+  .rightPanel{
     padding: 0px 0px 24px 0px;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: none;
+    justify-content: space-evenly;
   }
   .playerToggle {
     padding: auto;
     height: 15px;
   }
-  .playerToggle svg {
-    font-size: 20px !important;
+  .playerToggle svg{
+    font-size: 20px !important
   }
-  .title {
+  .questionMark{
+    display: none;
+  }
+  .topPlayerPanel{
+    padding-bottom: 12px;
+    padding-right: 0px;
+    height: 225px;
+  }
+  .title{
     margin: auto;
     font-size: 15px;
   }
-  .playerPanel {
+  .page{
+    margin-top: 80px;
+  }
+  body{
+    font-size: 10px;
+  }
+  .playerPanel{
     width: 90vw;
     font-size: 13px;
     line-height: 27px;
-    max-width: none;
   }
-  .mainBox {
+  .mainBox{
     padding: 16px !important;
   }
-  .keyBtn {
+  .keyBtn{
     font-size: 20px !important;
     line-height: 20px !important;
     height: 20px !important;
   }
-} 
+  .commentaryBox{
+    padding: 10px;
+    font-family: 'Syne';
+    overflow-wrap: break-word;
+    text-align: justify;
+    font-size: 9px;
+    line-height: 14px;
+    font-family: 'Syne';
+  }
+}
+
+@media screen and (max-width: 1200px) {
+
+}
+
+@media screen and (max-height: 992px) and (min-width: 1200px){
+  .Board {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+    height: 600px;
+  }
+  .playerPanel{
+    font-size: 16px;
+    line-height: 40px;
+  }
+  .topPlayerPanel{
+    height: 338px;
+  }
+}
