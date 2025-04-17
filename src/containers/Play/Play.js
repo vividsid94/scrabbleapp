@@ -10,7 +10,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
-import { TextField, Tooltip, Button } from "@mui/material";
+import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -32,6 +32,9 @@ export default function Play() {
   const [selectedBoardPosition, setSelectedBoardPosition] = useState(null);
   const [wordInput, setWordInput] = useState("");
   const [arrowDirection, setArrowDirection] = useState('right');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const color = useRef('#60857C');
   const complementaryColor = useRef('#9F7A83');
 
@@ -245,7 +248,31 @@ export default function Play() {
 
     const validationResult = await response.json();
     if (!validationResult.isValid) {
-      console.log('Invalid move');
+      console.log('Invalid word submission:', {
+        reason: validationResult.reason || 'Word not found in dictionary',
+        word: validationResult.word || 'Unknown',
+        position: selectedBoardPosition,
+        direction: arrowDirection
+      });
+
+      // Show toast notification
+      setSnackbarMessage(validationResult.reason);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+
+      // Return tiles to the player's rack
+      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      const newRack = [...currentRack, ...selectedTiles];
+      if (currentPlayer === 1) {
+        setPlayer1Rack(newRack);
+      } else {
+        setPlayer2Rack(newRack);
+      }
+
+      // Reset the board state
+      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
       return;
     }
 
@@ -454,6 +481,20 @@ export default function Play() {
         </Box>
       </Modal>
       </Box>
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={3000} 
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 } 

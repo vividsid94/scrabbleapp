@@ -4,6 +4,29 @@ const letterScores = {
     'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10
 };
 
+const fs = require('fs');
+const path = require('path');
+
+// Load dictionary into memory
+let validWords = new Set();
+try {
+    const dictionaryPath = path.join(__dirname, 'dictionary.txt');
+    const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
+    validWords = new Set(
+        dictionaryContent
+            .split('\n')
+            .map(word => word.trim().toUpperCase())
+            .filter(word => word && !word.startsWith('#'))
+    );
+} catch (error) {
+    console.error('Error loading dictionary:', error);
+    // Fallback to a small set of words if dictionary fails to load
+    validWords = new Set([
+        'HELLO', 'WORLD', 'SCRABBLE', 'GAME', 'PLAY', 'WORD', 'TILE', 'RACK', 'BOARD',
+        'SCORE', 'POINTS', 'LETTER', 'ALPHABET', 'DICTIONARY', 'VALID', 'MOVE', 'CHECK'
+    ]);
+}
+
 const boardMultipliers = [
     [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
     [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
@@ -83,7 +106,7 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
     const numPlaced = placedTiles.length;
 
     if (numPlaced === 0) {
-        return { isValid: false, words: [] };
+        return { isValid: false, reason: 'No tiles placed', words: [] };
     }
 
     if (numPlaced === 1) {
@@ -95,7 +118,7 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
         const allSameCol = placedTiles.every(tile => tile.col === firstCol);
 
         if (!allSameRow && !allSameCol) {
-            return { isValid: false, words: [] };
+            return { isValid: false, reason: 'Tiles must be placed in a straight line', words: [] };
         }
 
         if (allSameRow) {
@@ -104,7 +127,7 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
                 if (cols[i + 1] - cols[i] > 1) {
                     for (let c = cols[i] + 1; c < cols[i + 1]; c++) {
                         if (typeof beforeBoard[firstRow][c] !== 'string' || !beforeBoard[firstRow][c].match(/[A-Z]/)) {
-                            return { isValid: false, words: [] };
+                            return { isValid: false, reason: 'Gaps between tiles are not allowed', words: [] };
                         }
                     }
                 }
@@ -115,7 +138,7 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
                 if (rows[i + 1] - rows[i] > 1) {
                     for (let r = rows[i] + 1; r < rows[i + 1]; r++) {
                         if (typeof beforeBoard[r][firstCol] !== 'string' || !beforeBoard[r][firstCol].match(/[A-Z]/)) {
-                            return { isValid: false, words: [] };
+                            return { isValid: false, reason: 'Gaps between tiles are not allowed', words: [] };
                         }
                     }
                 }
@@ -156,23 +179,34 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
         if (!isOnStar && numPlaced > 0) {
             const placedOnStar = placedTiles.some(tile => tile.row === 7 && tile.col === 7);
             if (!placedOnStar) {
-                return { isValid: false, words: [] };
+                return { isValid: false, reason: 'First word must cover the center star', words: [] };
             }
         } else if (isFirstMove && numPlaced === 0) {
-            return { isValid: false, words: [] };
+            return { isValid: false, reason: 'No tiles placed', words: [] };
         }
     } else {
         if (!isAdjacent) {
-            return { isValid: false, words: [] };
+            return { isValid: false, reason: 'New tiles must be adjacent to existing tiles', words: [] };
         }
     }
 
     if ((isFirstMove && isOnStar && numPlaced > 0) || (!isFirstMove && isAdjacent)) {
         const words = findNewWords(beforeBoard, afterBoard, placedTiles);
+        // Check if all words are valid
+        for (const word of words) {
+            if (!validWords.has(word)) {
+                return { 
+                    isValid: false, 
+                    reason: `Invalid word: ${word}`, 
+                    word: word,
+                    words: [] 
+                };
+            }
+        }
         return { isValid: true, words: words };
     }
 
-    return { isValid: false, words: [] };
+    return { isValid: false, reason: 'Invalid placement', words: [] };
 }
 
 function scorePlay(beforeBoard, afterBoard) {
@@ -289,7 +323,7 @@ function scorePlay(beforeBoard, afterBoard) {
         const horizontalWord = findWord(afterBoard, r, c, 'horizontal');
         if (horizontalWord.length > 0) {
             const wordString = horizontalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString)) {
+            if (!formedWords.has(wordString) && validWords.has(wordString)) {
                 totalScore += getWordScore(horizontalWord);
                 formedWords.add(wordString);
             }
@@ -299,7 +333,7 @@ function scorePlay(beforeBoard, afterBoard) {
         const verticalWord = findWord(afterBoard, r, c, 'vertical');
         if (verticalWord.length > 0) {
             const wordString = verticalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString)) {
+            if (!formedWords.has(wordString) && validWords.has(wordString)) {
                 totalScore += getWordScore(verticalWord);
                 formedWords.add(wordString);
             }
@@ -310,7 +344,7 @@ function scorePlay(beforeBoard, afterBoard) {
     if (placedTiles.length === 7) {
         totalScore += 50;
     }
-
+    console.log(formedWords);
     return totalScore;
 }
 
