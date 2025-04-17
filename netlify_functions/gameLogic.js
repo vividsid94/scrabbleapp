@@ -10,14 +10,25 @@ const path = require('path');
 // Load dictionary into memory
 let validWords = new Set();
 try {
-    // Load dictionary using a relative path that works both locally and in production
-    const dictionaryPath = path.resolve(__dirname, './dictionary.txt');
-    console.log('Current directory:', __dirname);
-    console.log('Dictionary path:', dictionaryPath);
-    console.log('File exists:', fs.existsSync(dictionaryPath));
-    
-    if (!fs.existsSync(dictionaryPath)) {
-        throw new Error(`Dictionary file not found at ${dictionaryPath}`);
+    // Try different possible paths for the dictionary
+    const possiblePaths = [
+        path.join(__dirname, 'dictionary.txt'),                    // Local development
+        path.join(process.cwd(), 'netlify_functions', 'dictionary.txt'),  // Netlify production
+        path.join(process.cwd(), 'public', 'dictionary.txt')      // Alternative path
+    ];
+
+    let dictionaryPath = null;
+    for (const possiblePath of possiblePaths) {
+        console.log('Checking path:', possiblePath);
+        if (fs.existsSync(possiblePath)) {
+            dictionaryPath = possiblePath;
+            console.log('Found dictionary at:', dictionaryPath);
+            break;
+        }
+    }
+
+    if (!dictionaryPath) {
+        throw new Error('Could not find dictionary file in any of the expected locations');
     }
 
     const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
