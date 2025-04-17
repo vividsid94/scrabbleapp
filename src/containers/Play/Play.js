@@ -120,8 +120,8 @@ export default function Play() {
       const lastRow = arrowDirection === 'right' ? row : row - 1;
       const lastCol = arrowDirection === 'right' ? col - 1 : col;
       
-      // Only proceed if we're not at the edge of the board
-      if (lastRow >= 0 && lastCol >= 0) {
+      // Only proceed if we're not at the edge of the board and there's no submitted tile
+      if (lastRow >= 0 && lastCol >= 0 && Number.isInteger(boardCoords[lastRow][lastCol])) {
         const tileToRemove = newTempBoard[lastRow][lastCol];
         
         // Check if there's a letter tile in the last position
