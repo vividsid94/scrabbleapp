@@ -74,6 +74,10 @@ export default function Play() {
   };
 
   const handleBoardClick = (row, col) => {
+    if (!boardCoords || !boardCoords[row] || typeof boardCoords[row][col] !== 'number') {
+      console.log('Invalid board position:', { row, col });
+      return;
+    }
     console.log('Board clicked at:', { row, col });
     const isSamePosition =
       selectedBoardPosition?.row === row &&
@@ -92,13 +96,11 @@ export default function Play() {
     const { row, col } = selectedBoardPosition;
     const key = e.key.toUpperCase();
 
-    // Prevent Alt and Shift keys from affecting the board
     if (e.altKey || e.shiftKey) {
       e.preventDefault();
       return;
     }
 
-    // Handle arrow keys to change direction
     if (e.key === 'ArrowRight') {
       setArrowDirection('right');
       return;
@@ -107,13 +109,11 @@ export default function Play() {
       return;
     }
 
-    // Handle Enter key to submit move
     if (e.key === 'Enter') {
       handleWordSubmit();
       return;
     }
 
-    // Handle backspace
     if (e.key === 'Backspace') {
       const newTempBoard = [...tempBoardCoords];
       // Get the position where the last tile was placed (one position back from current)
@@ -192,6 +192,9 @@ export default function Play() {
     setSelectedTiles(prevTiles => [...prevTiles, key]);
 
     // Move to next position based on direction
+    console.log(boardCoords);
+    console.log(tempBoardCoords);
+    console.log(origBoardCoords);
     if (arrowDirection === 'right') {
       if (col < 14) {
         setSelectedBoardPosition({ row, col: col + 1 });
@@ -268,13 +271,11 @@ export default function Play() {
       newPool.splice(randomIndex, 1);
     }
 
-    console.log(boardCoords);
-    console.log(tempBoardCoords);
-    console.log(origBoardCoords);
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
     setSelectedBoardPosition(null);
     setSelectedTiles([]);
     setArrowDirection('right');
+    setBoardCoords(JSON.parse(JSON.stringify(tempBoardCoords)));
   };
 
   const handleSettingsOpen = () => {
