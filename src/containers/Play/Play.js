@@ -342,6 +342,7 @@ export default function Play() {
 
         <Box className={styles.rightPanel}>
           <Box className={styles.topPlayerPanel}>
+            <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
             <Box className={styles.playerToggle}>
               <Tooltip title="Settings">
                 <SettingsOutlinedIcon className={styles.keyBtn} onClick={handleSettingsOpen}/>
@@ -350,7 +351,16 @@ export default function Play() {
                 <ColorizeIcon className={styles.keyBtn} onClick={handleColorSchemeOpen}/>
               </Tooltip>
             </Box>
-            
+              <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
+              <Button 
+                variant="contained" 
+                onClick={handleWordSubmit}
+                disabled={!selectedBoardPosition || selectedTiles.length === 0}
+              >
+                Submit
+              </Button>
+              </Box>
+            </Box> 
             {currentPlayer === 1 && (
               <Box className={styles.playerPanel}>
                 Player 1
@@ -393,15 +403,6 @@ export default function Play() {
           </Box>
 
           <Box className={styles.playerPanel}>
-            <Box className={styles.wordInput}>
-              <Button 
-                variant="contained" 
-                onClick={handleWordSubmit}
-                disabled={!selectedBoardPosition || selectedTiles.length === 0}
-              >
-                Submit
-              </Button>
-            </Box>
             <Box className={styles.poolBox}>
               <Pool board={pool} rack={currentPlayer === 1 ? player1Rack : player2Rack}/>  
             </Box>
