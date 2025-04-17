@@ -5,21 +5,21 @@ const letterScores = {
 };
 
 const boardMultipliers = [
-    [4, 0, 0, 1, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 4],
-    [0, 3, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 3, 0],
-    [0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 3, 0, 0],
-    [1, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1],
-    [0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
-    [0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0],
-    [0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0],
-    [4, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 4],
-    [0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0],
-    [0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0],
-    [0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
-    [1, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1],
-    [0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 3, 0, 0],
-    [0, 3, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 3, 0],
-    [4, 0, 0, 1, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 4]
+    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
+    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
+    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
+    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
+    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
+    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
+    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
+    [4,0,0,1,0,0,0,3,0,0,0,1,0,0,4],
+    [0,0,1,0,0,0,1,0,1,0,0,0,1,0,0],
+    [0,2,0,0,0,2,0,0,0,2,0,0,0,2,0],
+    [0,0,0,0,3,0,0,0,0,0,3,0,0,0,0],
+    [1,0,0,3,0,0,0,1,0,0,0,3,0,0,1],
+    [0,0,3,0,0,0,1,0,1,0,0,0,3,0,0],
+    [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
+    [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4]
 ];
 
 function getWordAt(board, row, col, direction) {
@@ -180,6 +180,7 @@ function scorePlay(beforeBoard, afterBoard) {
     const formedWords = new Set();
     const placedTiles = [];
 
+    // Find all newly placed tiles
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
             if (typeof afterBoard[r][c] === 'string' && afterBoard[r][c].match(/[A-Z]/) &&
@@ -193,117 +194,121 @@ function scorePlay(beforeBoard, afterBoard) {
         return 0;
     }
 
-    function getWordScore(word, newTilesOnWord) {
+    // Helper function to get word score
+    function getWordScore(wordTiles) {
         let wordScore = 0;
         let wordMultiplier = 1;
         const usedPremiumSquares = new Set();
 
-        for (let i = 0; i < word.length; i++) {
-            const letter = word[i].letter;
-            const row = word[i].row;
-            const col = word[i].col;
+        for (const tile of wordTiles) {
+            const letter = tile.letter;
+            const row = tile.row;
+            const col = tile.col;
             const letterScore = letterScores[letter];
-            let multiplier = 1;
-            const isNewTile = newTilesOnWord.some(tile => tile.row === row && tile.col === col);
+            let letterMultiplier = 1;
 
-            if (isNewTile && boardMultipliers[row][col] > 0) {
+            // Check if this is a newly placed tile
+            const isNewTile = placedTiles.some(pt => pt.row === row && pt.col === col);
+
+            if (isNewTile) {
                 const premiumType = boardMultipliers[row][col];
-                if (premiumType === 2) multiplier = 2;
-                else if (premiumType === 3) multiplier = 3;
-                else if (premiumType === 4 && !usedPremiumSquares.has(`DW-${row}-${col}`)) { 
-                    wordMultiplier *= 2; 
-                    usedPremiumSquares.add(`DW-${row}-${col}`); 
-                }
-                else if (premiumType === 1 && !usedPremiumSquares.has(`TW-${row}-${col}`)) { 
-                    wordMultiplier *= 3; 
-                    usedPremiumSquares.add(`TW-${row}-${col}`); 
+                if (premiumType === 3) { // Double word
+                    if (!usedPremiumSquares.has(`DW-${row}-${col}`)) {
+                        wordMultiplier *= 2;
+                        usedPremiumSquares.add(`DW-${row}-${col}`);
+                    }
+                } else if (premiumType === 1) { // Double letter
+                    letterMultiplier = 2;
+                } else if (premiumType === 2) { // Triple letter
+                    letterMultiplier = 3;
+                } else if (premiumType === 4) { // Triple word
+                    if (!usedPremiumSquares.has(`TW-${row}-${col}`)) {
+                        wordMultiplier *= 3;
+                        usedPremiumSquares.add(`TW-${row}-${col}`);
+                    }
                 }
             }
-            wordScore += letterScore * multiplier;
+
+            wordScore += letterScore * letterMultiplier;
         }
+
         return wordScore * wordMultiplier;
     }
 
-    function findWord(board, r, c, directionToCheck) {
-        let word = [];
-        let currentRow = r;
-        let currentCol = c;
+    // Helper function to find complete word
+    function findWord(board, startRow, startCol, direction) {
+        let wordTiles = [];
+        let currentRow = startRow;
+        let currentCol = startCol;
 
-        if (directionToCheck === 'horizontal') {
+        if (direction === 'horizontal') {
+            // Move left to find start of word
             while (currentCol >= 0 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 currentCol--;
             }
             currentCol++;
+            // Collect word tiles
             while (currentCol < 15 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
-                word.push({ letter: board[currentRow][currentCol], row: currentRow, col: currentCol });
+                wordTiles.push({
+                    letter: board[currentRow][currentCol],
+                    row: currentRow,
+                    col: currentCol
+                });
                 currentCol++;
             }
-        } else if (directionToCheck === 'vertical') {
+        } else if (direction === 'vertical') {
+            // Move up to find start of word
             while (currentRow >= 0 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 currentRow--;
             }
             currentRow++;
+            // Collect word tiles
             while (currentRow < 15 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
-                word.push({ letter: board[currentRow][currentCol], row: currentRow, col: currentCol });
+                wordTiles.push({
+                    letter: board[currentRow][currentCol],
+                    row: currentRow,
+                    col: currentCol
+                });
                 currentRow++;
             }
         }
-        return word.length > 1 ? word : [];
+
+        return wordTiles.length > 1 ? wordTiles : [];
     }
 
+    // Score all words formed by the placed tiles
     for (const placedTile of placedTiles) {
         const r = placedTile.row;
         const c = placedTile.col;
 
+        // Check horizontal word
         const horizontalWord = findWord(afterBoard, r, c, 'horizontal');
         if (horizontalWord.length > 0) {
-            const newTilesOnWord = horizontalWord.filter(wt => 
-                wt.row === r && placedTiles.some(pt => pt.col === wt.col && pt.row === r)
-            );
-            if (newTilesOnWord.length > 0) {
-                const wordString = horizontalWord.map(lt => lt.letter).join('');
-                if (!formedWords.has(wordString)) {
-                    totalScore += getWordScore(horizontalWord, newTilesOnWord);
-                    formedWords.add(wordString);
-                }
+            const wordString = horizontalWord.map(t => t.letter).join('');
+            if (!formedWords.has(wordString)) {
+                totalScore += getWordScore(horizontalWord);
+                formedWords.add(wordString);
             }
         }
 
+        // Check vertical word
         const verticalWord = findWord(afterBoard, r, c, 'vertical');
         if (verticalWord.length > 0) {
-            const newTilesOnWord = verticalWord.filter(wt => 
-                wt.col === c && placedTiles.some(pt => pt.row === wt.row && pt.col === c)
-            );
-            if (newTilesOnWord.length > 0) {
-                const wordString = verticalWord.map(lt => lt.letter).join('');
-                if (!formedWords.has(wordString)) {
-                    totalScore += getWordScore(verticalWord, newTilesOnWord);
-                    formedWords.add(wordString);
-                }
+            const wordString = verticalWord.map(t => t.letter).join('');
+            if (!formedWords.has(wordString)) {
+                totalScore += getWordScore(verticalWord);
+                formedWords.add(wordString);
             }
         }
     }
 
-    if (placedTiles.length === 7 && beforeBoard.every(row => 
-        row.every(cell => typeof cell !== 'string' || !cell.match(/[A-Z]/))
-    )) {
+    // Add 50-point bonus for using all 7 tiles
+    if (placedTiles.length === 7) {
         totalScore += 50;
-    } else if (placedTiles.length === 7) {
-        let tilesBefore = 0;
-        for (let r = 0; r < 15; r++) {
-            for (let c = 0; c < 15; c++) {
-                if (typeof beforeBoard[r][c] === 'string' && beforeBoard[r][c].match(/[A-Z]/)) {
-                    tilesBefore++;
-                }
-            }
-        }
-        if (tilesBefore > 0) {
-            totalScore += 50;
-        }
     }
 
     return totalScore;

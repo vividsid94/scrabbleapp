@@ -376,9 +376,9 @@ export default function Play() {
               </Button>
               </Box>
             </Box> 
-            {currentPlayer === 1 && (
-              <Box className={styles.playerPanel}>
-                Player 1
+            <Box className={styles.playerPanel}>
+              Player 1
+              {currentPlayer === 1 && (
                 <Box className={styles.Rack}>
                   <Rack 
                     board={player1Rack} 
@@ -390,15 +390,15 @@ export default function Play() {
                     }}
                   />
                 </Box>
-                <Box>
-                  {player1points} points
-                </Box>
+              )}
+              <Box>
+                {player1points} points
               </Box>
-            )}
+            </Box>
 
-            {currentPlayer === 2 && (
-              <Box className={styles.playerPanel}>
-                Player 2
+            <Box className={styles.playerPanel}>
+              Player 2
+              {currentPlayer === 2 && (
                 <Box className={styles.Rack}>
                   <Rack 
                     board={player2Rack} 
@@ -410,11 +410,11 @@ export default function Play() {
                     }}
                   />
                 </Box>
-                <Box>
-                  {player2points} points
-                </Box>
+              )}
+              <Box>
+                {player2points} points
               </Box>
-            )}
+            </Box>
           </Box>
 
           <Box className={styles.playerPanel}>
