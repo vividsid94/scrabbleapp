@@ -194,7 +194,7 @@ export default function Board({
                     )}
                 </Box>
             </Box>
-            <Box className={styles.Footer}>
+            <Box className={`${styles.Footer} ${!showSlip ? styles.hidden : ''}`}>
                 {message}
             </Box>
             <Modal open={open} onClose={handleClose}>
