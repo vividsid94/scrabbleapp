@@ -10,9 +10,6 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
-import { createRack } from "../../functions/rackFunctions.js";
-import { getComplementaryColor } from "../../functions/tileFunctions.js";
-import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { TextField, Tooltip, Button } from "@mui/material";
 
 export default function Play() {
@@ -42,7 +39,6 @@ export default function Play() {
     setBoardCoords(parsedOrigBoardCoords);
     setTempBoardCoords(parsedOrigBoardCoords);
 
-    // Delay game initialization by 1 second
     const timer = setTimeout(() => {
       initializeGame();
     }, 1000);
@@ -77,9 +73,20 @@ export default function Play() {
 
   const handleBoardClick = (row, col) => {
     console.log('Board clicked at:', { row, col });
+    const isSamePosition =
+      selectedBoardPosition?.row === row &&
+      selectedBoardPosition?.col === col;
+  
     setSelectedBoardPosition({ row, col });
-    setArrowDirection('right');
+    console.log(selectedBoardPosition);
+  
+    if (isSamePosition) {
+      setArrowDirection(prev =>
+        prev === 'right' ? 'down' : 'right'
+      );
+    }
   };
+  
 
   const handleKeyDown = (e) => {
     if (!selectedBoardPosition) return;
@@ -502,21 +509,6 @@ export default function Play() {
               <Pool board={pool} rack={currentPlayer === 1 ? player1Rack : player2Rack}/>  
             </Box>
           </Box>
-
-          <div className={styles.playerInfo}>
-            <h3>Player {currentPlayer}</h3>
-            <button 
-              className={styles.directionToggle}
-              onClick={() => {
-                console.log('Direction toggle clicked');
-                const newDirection = arrowDirection === 'right' ? 'down' : 'right';
-                console.log('Changing direction to:', newDirection);
-                setArrowDirection(newDirection);
-              }}
-            >
-              Toggle Direction ({arrowDirection === 'right' ? '→' : '↓'})
-            </button>
-          </div>
         </Box>
       </Box>
 
