@@ -10,35 +10,27 @@ const path = require('path');
 // Load dictionary into memory
 let validWords = new Set();
 try {
-    // Try local development path first
-    let dictionaryPath = path.join(__dirname, 'dictionary.txt');
-    console.log('Attempting to load dictionary from local path:', dictionaryPath);
+    // Load dictionary using a relative path that works both locally and in production
+    const dictionaryPath = path.resolve(__dirname, './dictionary.txt');
+    console.log('Current directory:', __dirname);
+    console.log('Dictionary path:', dictionaryPath);
+    console.log('File exists:', fs.existsSync(dictionaryPath));
     
-    try {
-        const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
-        console.log('Dictionary loaded successfully from local path, word count:', dictionaryContent.split('\n').length);
-        validWords = new Set(
-            dictionaryContent
-                .split('\n')
-                .map(word => word.trim().toUpperCase())
-                .filter(word => word && !word.startsWith('#'))
-        );
-    } catch (localError) {
-        console.log('Local path failed, trying production path...');
-        // Try production path
-        dictionaryPath = path.join(process.cwd(), 'netlify/functions/dictionary.txt');
-        console.log('Attempting to load dictionary from production path:', dictionaryPath);
-        const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
-        console.log('Dictionary loaded successfully from production path, word count:', dictionaryContent.split('\n').length);
-        validWords = new Set(
-            dictionaryContent
-                .split('\n')
-                .map(word => word.trim().toUpperCase())
-                .filter(word => word && !word.startsWith('#'))
-        );
+    if (!fs.existsSync(dictionaryPath)) {
+        throw new Error(`Dictionary file not found at ${dictionaryPath}`);
     }
+
+    const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
+    const words = dictionaryContent
+        .split('\n')
+        .map(word => word.trim().toUpperCase())
+        .filter(word => word && !word.startsWith('#'));
+    
+    console.log('Dictionary loaded successfully, word count:', words.length);
+    validWords = new Set(words);
 } catch (error) {
     console.error('Error loading dictionary:', error);
+    console.error('Error stack:', error.stack);
     // Fallback to a small set of words if dictionary fails to load
     validWords = new Set([
         'HELLO', 'WORLD', 'SCRABBLE', 'GAME', 'PLAY', 'WORD', 'TILE', 'RACK', 'BOARD',
