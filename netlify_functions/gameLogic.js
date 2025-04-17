@@ -4,6 +4,29 @@ const letterScores = {
     'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10
 };
 
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client with anon key
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Function to check if a word is valid using Supabase
+async function isValidWord(word) {
+    const { data, error } = await supabase
+        .from('dictionary')
+        .select('word')
+        .eq('word', word.toUpperCase())
+        .single();
+
+    if (error) {
+        console.error('Error checking word:', error);
+        return false;
+    }
+
+    return !!data;
+}
+
 const fs = require('fs');
 const path = require('path');
 
@@ -114,7 +137,7 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
     return Array.from(newWords);
 }
 
-function isValidScrabblePlacement(beforeBoard, afterBoard) {
+async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     const placedTiles = [];
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
@@ -216,7 +239,8 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
         const words = findNewWords(beforeBoard, afterBoard, placedTiles);
         // Check if all words are valid
         for (const word of words) {
-            if (!validWords.has(word)) {
+            const isValid = await isValidWord(word);
+            if (!isValid) {
                 return { 
                     isValid: false, 
                     reason: `Invalid word: ${word}`, 
@@ -383,7 +407,7 @@ exports.handler = async function(event, context) {
         
         let result;
         if (action === 'validate') {
-            result = isValidScrabblePlacement(beforeBoard, afterBoard);
+            result = await isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
             result = scorePlay(beforeBoard, afterBoard);
         } else {
