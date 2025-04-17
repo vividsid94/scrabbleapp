@@ -174,6 +174,12 @@ export default function Play() {
       return;
     }
 
+    // Check if there's already a submitted tile at this position
+    if (!Number.isInteger(boardCoords[row][col])) {
+      // Can't place a tile over an existing submitted tile
+      return;
+    }
+
     // Remove the tile from the rack
     const newRack = [...currentRack];
     newRack.splice(tileIndex, 1);
