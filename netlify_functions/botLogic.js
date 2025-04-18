@@ -1,393 +1,347 @@
+// scrabbleBot.js - Refactored and optimized Scrabble bot
+
 const { createClient } = require('@supabase/supabase-js');
 const letterScores = require('./gameLogic').letterScores;
 const boardMultipliers = require('./gameLogic').boardMultipliers;
 
 // Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
-// Function to check if a word is valid using Supabase
-async function isValidWord(word) {
-    try {
-        const { data, error } = await supabase
-            .from('dictionary')
-            .select('word')
-            .eq('word', word.toUpperCase())
-            .single();
+// Fetch entire dictionary once for local validation
+let dictionarySet = null;
+async function loadDictionary() {
+  if (dictionarySet) return dictionarySet;
+  try {
+    // First get the total count
+    const { count, error: countError } = await supabase
+      .from('dictionary')
+      .select('*', { count: 'exact', head: true });
+    
+    if (countError) throw countError;
+    console.log('Total words in dictionary:', count);
 
-        if (error) {
-            console.error('Error checking word:', error);
-            return false;
-        }
+    // Fetch all words in batches
+    const batchSize = 1000;
+    const batches = Math.ceil(count / batchSize);
+    let allWords = [];
 
-        return !!data;
-    } catch (error) {
-        console.error('Exception in isValidWord:', error);
-        return false;
+    for (let i = 0; i < batches; i++) {
+      const { data, error } = await supabase
+        .from('dictionary')
+        .select('word')
+        .range(i * batchSize, (i + 1) * batchSize - 1);
+
+      if (error) throw error;
+      allWords = allWords.concat(data.map(d => d.word.toUpperCase()));
     }
+
+    dictionarySet = new Set(allWords);
+    console.log('Loaded dictionary with', dictionarySet.size, 'words');
+    return dictionarySet;
+  } catch (err) {
+    console.error('Error loading dictionary:', err);
+    throw err;
+  }
 }
 
-async function getPossibleWords(letters) {
-    console.log('Getting possible words for letters:', letters);
-    
-    if (!letters || letters.length === 0) {
-        console.log('No letters provided');
-        return [];
-    }
-
-    // Convert letters to uppercase and handle blank tiles
-    const normalizedLetters = letters.map(letter => letter.toUpperCase());
-    const hasBlank = normalizedLetters.includes('?');
-    const nonBlankLetters = normalizedLetters.filter(letter => letter !== '?');
+// Generate all possible words from given letters (with blanks)
+const getPossibleWords = async (letters) => {
+  try {
+    // Normalize letters to uppercase and check for blank tiles
+    const normalizedLetters = letters.map(l => l.toUpperCase());
+    const blanks = normalizedLetters.filter(l => l === '?').length;
+    const nonBlankLetters = normalizedLetters.filter(l => l !== '?');
     
     // Count occurrences of each letter
     const letterCounts = {};
     nonBlankLetters.forEach(letter => {
-        letterCounts[letter] = (letterCounts[letter] || 0) + 1;
+      letterCounts[letter] = (letterCounts[letter] || 0) + 1;
     });
+
+    // Get words from database that contain any of our letters
+    const { data: words, error } = await supabase
+      .from('dictionary')
+      .select('word')
+      .or(nonBlankLetters.map(letter => `word.ilike.%${letter}%`).join(','))
+      .limit(2000);
+
+    if (error) throw error;
+
+    // Filter words that can be formed with our letters
+    const possibleWords = words.filter(word => {
+      const wordLetters = word.word.toUpperCase().split('');
+      const tempLetterCounts = { ...letterCounts };
+      let blanksNeeded = 0;
+
+      for (const letter of wordLetters) {
+        if (tempLetterCounts[letter] > 0) {
+          tempLetterCounts[letter]--;
+        } else {
+          blanksNeeded++;
+        }
+      }
+
+      return blanksNeeded <= blanks;
+    });
+
+    // Sort by length and score
+    return possibleWords
+      .map(w => w.word)
+      .sort((a, b) => {
+        if (a.length !== b.length) return b.length - a.length;
+        const scoreA = a.split('').reduce((sum, l) => sum + (letterScores[l] || 0), 0);
+        const scoreB = b.split('').reduce((sum, l) => sum + (letterScores[l] || 0), 0);
+        return scoreB - scoreA;
+      });
+  } catch (error) {
+    console.error('Error in getPossibleWords:', error);
+    return [];
+  }
+};
+
+// Calculate score of a word placement
+function calculateScore(tiles, boardMultipliers) {
+  let score = 0;
+  let wordMultiplier = 1;
+  const usedPremiumSquares = new Set();
+
+  for (const { row, col, letter, isNew } of tiles) {
+    const letterScore = letterScores[letter] || 0;
+    const premium = boardMultipliers[row][col];
     
-    console.log('Normalized letters:', normalizedLetters);
-    console.log('Has blank tile:', hasBlank);
-    console.log('Non-blank letters:', nonBlankLetters);
-    console.log('Letter counts:', letterCounts);
-
-    try {
-        // Get words from database that contain our letters
-        const { data: words, error } = await supabase
-            .from('dictionary')
-            .select('word')
-            .or(nonBlankLetters.map(letter => `word.ilike.%${letter}%`).join(','))
-            .limit(1000);
-
-        if (error) {
-            console.error('Error fetching words:', error);
-            return [];
+    if (!isNew) {
+      score += letterScore;
+    } else {
+      let mult = 1;
+      if (premium === 1) mult = 2; // Double letter
+      else if (premium === 2) mult = 3; // Triple letter
+      else if (premium === 3) { // Double word
+        if (!usedPremiumSquares.has(`DW-${row}-${col}`)) {
+          wordMultiplier *= 2;
+          usedPremiumSquares.add(`DW-${row}-${col}`);
         }
-
-        if (!words || words.length === 0) {
-            console.log('No words found in database');
-            return [];
+      }
+      else if (premium === 4) { // Triple word
+        if (!usedPremiumSquares.has(`TW-${row}-${col}`)) {
+          wordMultiplier *= 3;
+          usedPremiumSquares.add(`TW-${row}-${col}`);
         }
-
-        console.log('Total words from database:', words.length);
-
-        // Filter words that can be formed with our letters
-        const possibleWords = words
-            .filter(({ word }) => {
-                // First check if word length is valid
-                if (word.length > normalizedLetters.length) {
-                    return false;
-                }
-
-                const wordLetters = word.split('');
-                const availableLetters = { ...letterCounts };
-                let blanksNeeded = 0;
-
-                // Check if we can form the word with our letters
-                for (const letter of wordLetters) {
-                    if (availableLetters[letter] > 0) {
-                        availableLetters[letter]--;
-                    } else {
-                        blanksNeeded++;
-                    }
-                }
-
-                // If we have enough blank tiles to cover missing letters
-                return blanksNeeded <= (hasBlank ? 1 : 0);
-            })
-            .map(({ word }) => word)
-            .sort((a, b) => {
-                // Sort by length first
-                if (b.length !== a.length) {
-                    return b.length - a.length;
-                }
-                // Then by score
-                const scoreA = a.split('').reduce((sum, letter) => sum + letterScores[letter], 0);
-                const scoreB = b.split('').reduce((sum, letter) => sum + letterScores[letter], 0);
-                return scoreB - scoreA;
-            });
-
-        console.log('Found possible words:', possibleWords);
-        console.log('Number of possible words found:', possibleWords.length);
-
-        return possibleWords;
-    } catch (error) {
-        console.error('Exception in getPossibleWords:', error);
-        return [];
+      }
+      score += letterScore * mult;
     }
+  }
+  return score * wordMultiplier + (tiles.filter(t => t.isNew).length === 7 ? 50 : 0);
 }
 
-// Function to find valid placements for a word
-function findValidPlacements(board, letters) {
-    console.log('Finding valid placements for letters:', letters);
-    const placements = [];
-    const isFirstMove = board.every(row => 
-        row.every(cell => typeof cell !== 'string' || !cell.match(/[A-Z]/))
-    );
-
-    // Check horizontal placements
-    for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
-            // Skip if cell is occupied
-            if (typeof board[row][col] === 'string' && board[row][col].match(/[A-Z]/)) {
-                continue;
-            }
-
-            // Check if this is a valid starting position
-            let canPlace = false;
-            let isAdjacent = false;
-            let coversCenter = false;
-
-            // For first move, must cover center
-            if (isFirstMove) {
-                if (row === 7 && col === 7) {
-                    canPlace = true;
-                    coversCenter = true;
-                }
-            } else {
-                // Check adjacent cells
-                const adjacentCells = [
-                    { r: row - 1, c: col }, { r: row + 1, c: col },
-                    { r: row, c: col - 1 }, { r: row, c: col + 1 }
-                ];
-                for (const { r, c } of adjacentCells) {
-                    if (r >= 0 && r < 15 && c >= 0 && c < 15 &&
-                        typeof board[r][c] === 'string' && board[r][c].match(/[A-Z]/)) {
-                        canPlace = true;
-                        isAdjacent = true;
-                        break;
-                    }
-                }
-            }
-
-            if (canPlace) {
-                // Try placing letters horizontally
-                let horizontalWord = '';
-                let tilesToPlace = [];
-                let currentCol = col;
-                let score = 0;
-                let wordMultiplier = 1;
-                const usedPremiumSquares = new Set();
-                let availableLetters = [...letters];
-
-                // First, check if there are any letters to the left
-                let startCol = col;
-                while (startCol > 0 && typeof board[row][startCol - 1] === 'string' && 
-                       board[row][startCol - 1].match(/[A-Z]/)) {
-                    startCol--;
-                }
-
-                // Now build the word from left to right
-                currentCol = startCol;
-                while (currentCol < 15 && (horizontalWord.length < letters.length || 
-                       (typeof board[row][currentCol] === 'string' && board[row][currentCol].match(/[A-Z]/)))) {
-                    const currentCell = board[row][currentCol];
-                    
-                    if (typeof currentCell === 'string' && currentCell.match(/[A-Z]/)) {
-                        // Cell is already occupied
-                        horizontalWord += currentCell;
-                        score += letterScores[currentCell];
-                    } else {
-                        // Try to place a letter
-                        if (availableLetters.length > 0) {
-                            const letter = availableLetters.shift();
-                            horizontalWord += letter;
-                            tilesToPlace.push({ row, col: currentCol, letter });
-
-                            // Calculate score with premium squares
-                            const premiumType = boardMultipliers[row][currentCol];
-                            let letterMultiplier = 1;
-
-                            if (premiumType === 3) { // Double word
-                                if (!usedPremiumSquares.has(`DW-${row}-${currentCol}`)) {
-                                    wordMultiplier *= 2;
-                                    usedPremiumSquares.add(`DW-${row}-${currentCol}`);
-                                }
-                            } else if (premiumType === 1) { // Double letter
-                                letterMultiplier = 2;
-                            } else if (premiumType === 2) { // Triple letter
-                                letterMultiplier = 3;
-                            } else if (premiumType === 4) { // Triple word
-                                if (!usedPremiumSquares.has(`TW-${row}-${currentCol}`)) {
-                                    wordMultiplier *= 3;
-                                    usedPremiumSquares.add(`TW-${row}-${currentCol}`);
-                                }
-                            }
-
-                            score += letterScores[letter] * letterMultiplier;
-                        } else {
-                            break;
-                        }
-                    }
-                    currentCol++;
-                }
-
-                if (horizontalWord.length >= 2) {
-                    score *= wordMultiplier;
-                    if (tilesToPlace.length === 7) {
-                        score += 50; // Bingo bonus
-                    }
-                    placements.push({
-                        word: horizontalWord,
-                        tiles: tilesToPlace,
-                        direction: 'horizontal',
-                        startRow: row,
-                        startCol: startCol,
-                        score
-                    });
-                }
-
-                // Try placing letters vertically (similar to horizontal but with row/col swapped)
-                let verticalWord = '';
-                tilesToPlace = [];
-                let currentRow = row;
-                score = 0;
-                wordMultiplier = 1;
-                usedPremiumSquares.clear();
-                availableLetters = [...letters];
-
-                // First, check if there are any letters above
-                let startRow = row;
-                while (startRow > 0 && typeof board[startRow - 1][col] === 'string' && 
-                       board[startRow - 1][col].match(/[A-Z]/)) {
-                    startRow--;
-                }
-
-                // Now build the word from top to bottom
-                currentRow = startRow;
-                while (currentRow < 15 && (verticalWord.length < letters.length || 
-                       (typeof board[currentRow][col] === 'string' && board[currentRow][col].match(/[A-Z]/)))) {
-                    const currentCell = board[currentRow][col];
-                    
-                    if (typeof currentCell === 'string' && currentCell.match(/[A-Z]/)) {
-                        verticalWord += currentCell;
-                        score += letterScores[currentCell];
-                    } else {
-                        if (availableLetters.length > 0) {
-                            const letter = availableLetters.shift();
-                            verticalWord += letter;
-                            tilesToPlace.push({ row: currentRow, col, letter });
-
-                            const premiumType = boardMultipliers[currentRow][col];
-                            let letterMultiplier = 1;
-
-                            if (premiumType === 3) {
-                                if (!usedPremiumSquares.has(`DW-${currentRow}-${col}`)) {
-                                    wordMultiplier *= 2;
-                                    usedPremiumSquares.add(`DW-${currentRow}-${col}`);
-                                }
-                            } else if (premiumType === 1) {
-                                letterMultiplier = 2;
-                            } else if (premiumType === 2) {
-                                letterMultiplier = 3;
-                            } else if (premiumType === 4) {
-                                if (!usedPremiumSquares.has(`TW-${currentRow}-${col}`)) {
-                                    wordMultiplier *= 3;
-                                    usedPremiumSquares.add(`TW-${currentRow}-${col}`);
-                                }
-                            }
-
-                            score += letterScores[letter] * letterMultiplier;
-                        } else {
-                            break;
-                        }
-                    }
-                    currentRow++;
-                }
-
-                if (verticalWord.length >= 2) {
-                    score *= wordMultiplier;
-                    if (tilesToPlace.length === 7) {
-                        score += 50;
-                    }
-                    placements.push({
-                        word: verticalWord,
-                        tiles: tilesToPlace,
-                        direction: 'vertical',
-                        startRow: startRow,
-                        startCol: col,
-                        score
-                    });
-                }
-            }
-        }
+// Try all positions on board for horizontal/vertical placements
+const findValidPlacements = (board, word) => {
+  const placements = [];
+  const wordLength = word.length;
+  
+  // If board is empty, only allow placement through center
+  const isFirstMove = board.every(row => row.every(cell => cell === ''));
+  if (isFirstMove) {
+    const center = 7;
+    // Try horizontal placement
+    if (center + wordLength <= 15) {
+      placements.push({
+        row: center,
+        col: center,
+        direction: 'right',
+        tiles: word.split('').map((letter, i) => ({
+          row: center,
+          col: center + i,
+          letter,
+          isNew: true
+        }))
+      });
     }
-
-    console.log('Found valid placements:', placements);
+    // Try vertical placement
+    if (center + wordLength <= 15) {
+      placements.push({
+        row: center,
+        col: center,
+        direction: 'down',
+        tiles: word.split('').map((letter, i) => ({
+          row: center + i,
+          col: center,
+          letter,
+          isNew: true
+        }))
+      });
+    }
     return placements;
-}
+  }
 
-// Main function to generate a bot move
-async function generateBotMove(board, letters) {
-    console.log('Generating bot move with board:', board, 'and letters:', letters);
-    if (!letters || letters.length === 0) {
-        console.log('No letters available for bot move');
-        return null;
-    }
+  // For subsequent moves, only check positions adjacent to existing tiles
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      // Skip if no adjacent tiles
+      if (!hasAdjacentTile(board, row, col)) continue;
 
-    try {
-        // First find all possible placements
-        const placements = findValidPlacements(board, letters);
-        console.log('Number of placements found:', placements.length);
-        
-        if (placements.length === 0) {
-            console.log('No valid placements found');
-            return null;
-        }
+      // Try horizontal placement
+      if (col + wordLength <= 15) {
+        const tiles = [];
+        let isValid = true;
+        let hasExistingTile = false;
 
-        // Sort placements by score
-        placements.sort((a, b) => b.score - a.score);
-
-        // Check each placement until we find a valid word
-        for (const placement of placements) {
-            console.log('Checking placement:', placement);
-            const isValid = await isValidWord(placement.word);
-            if (isValid) {
-                console.log('Found valid move:', placement);
-                return placement;
+        for (let i = 0; i < wordLength; i++) {
+          const currentRow = row;
+          const currentCol = col + i;
+          const currentCell = board[currentRow][currentCol];
+          
+          if (currentCell !== '') {
+            if (currentCell !== word[i]) {
+              isValid = false;
+              break;
             }
+            hasExistingTile = true;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: currentCell,
+              isNew: false
+            });
+          } else {
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: word[i],
+              isNew: true
+            });
+          }
         }
 
-        console.log('No valid moves found');
-        return null;
-    } catch (error) {
-        console.error('Error in generateBotMove:', error);
-        return null;
+        if (isValid && hasExistingTile) {
+          placements.push({
+            row,
+            col,
+            direction: 'right',
+            tiles
+          });
+        }
+      }
+
+      // Try vertical placement
+      if (row + wordLength <= 15) {
+        const tiles = [];
+        let isValid = true;
+        let hasExistingTile = false;
+
+        for (let i = 0; i < wordLength; i++) {
+          const currentRow = row + i;
+          const currentCol = col;
+          const currentCell = board[currentRow][currentCol];
+          
+          if (currentCell !== '') {
+            if (currentCell !== word[i]) {
+              isValid = false;
+              break;
+            }
+            hasExistingTile = true;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: currentCell,
+              isNew: false
+            });
+          } else {
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: word[i],
+              isNew: true
+            });
+          }
+        }
+
+        if (isValid && hasExistingTile) {
+          placements.push({
+            row,
+            col,
+            direction: 'down',
+            tiles
+          });
+        }
+      }
     }
+  }
+
+  return placements;
+};
+
+// Helper function to check if a position has adjacent tiles
+const hasAdjacentTile = (board, row, col) => {
+  const directions = [
+    [-1, 0], [1, 0], [0, -1], [0, 1] // up, down, left, right
+  ];
+  
+  return directions.some(([dr, dc]) => {
+    const newRow = row + dr;
+    const newCol = col + dc;
+    return newRow >= 0 && newRow < 15 && 
+           newCol >= 0 && newCol < 15 && 
+           board[newRow][newCol] !== '';
+  });
+};
+
+// Choose best bot move
+async function generateBotMove(board, letters) {
+  try {
+    console.log('Generating bot move with letters:', letters);
+    const words = await getPossibleWords(letters);
+    console.log('Found', words.length, 'possible words');
+    
+    if (words.length === 0) {
+      console.log('No valid words found');
+      return null;
+    }
+
+    // Try each word until we find a valid placement
+    for (const word of words) {
+      const placements = findValidPlacements(board, word);
+      console.log('Found', placements.length, 'possible placements for word:', word);
+      
+      if (placements.length > 0) {
+        // Choose the highest scoring placement
+        const bestPlacement = placements.reduce((best, current) => {
+          const currentScore = calculateScore(current.tiles, boardMultipliers);
+          const bestScore = calculateScore(best.tiles, boardMultipliers);
+          return currentScore > bestScore ? current : best;
+        });
+        
+        console.log('Found legal move:', word);
+        return bestPlacement;
+      }
+    }
+    
+    console.log('No legal moves found');
+    return null;
+  } catch (err) {
+    console.error('Error in generateBotMove:', err);
+    return null;
+  }
 }
 
-exports.handler = async function(event, context) {
-    console.log('Bot handler called');
-    if (event.httpMethod !== 'POST') {
-        console.error('Invalid HTTP method:', event.httpMethod);
-        return {
-            statusCode: 405,
-            body: JSON.stringify({ error: 'Method Not Allowed' })
-        };
-    }
+exports.handler = async function(event) {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+  }
 
-    try {
-        const { board, letters } = JSON.parse(event.body);
-        console.log('Processing bot move request with board:', board, 'and letters:', letters);
-        const move = await generateBotMove(board, letters);
-
-        if (!move) {
-            console.log('No move was generated');
-        }
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(move)
-        };
-    } catch (error) {
-        console.error('Handler error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ 
-                error: 'Internal Server Error',
-                message: error.message 
-            })
-        };
-    }
-}; 
+  try {
+    const { board, letters } = JSON.parse(event.body);
+    const move = await generateBotMove(board, letters);
+    return {
+      statusCode: 200,
+      body: JSON.stringify(move || { message: 'No valid move found' })
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message || 'Internal Error' })
+    };
+  }
+};

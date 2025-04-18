@@ -42,6 +42,10 @@ export default function Play() {
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
+  const [player1Time, setPlayer1Time] = useState(20 * 60); // 20 minutes in seconds
+  const [player2Time, setPlayer2Time] = useState(20 * 60); // 20 minutes in seconds
+  const [timerActive, setTimerActive] = useState(false);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -389,93 +393,96 @@ export default function Play() {
       const botMove = await response.json();
       console.log('Bot move response:', botMove);
       
-      if (botMove && botMove.tiles && botMove.tiles.length > 0) {
-        // Create a copy of the board with the bot's move
-        const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
-        const newRack = [...player2Rack];
-        
-        for (const tile of botMove.tiles) {
+      if (!botMove || !botMove.tiles || botMove.tiles.length === 0) {
+        console.log('No valid bot move found');
+        setSnackbarMessage('Bot could not find a valid move');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
+        setCurrentPlayer(1); // Switch back to player 1 if bot can't move
+        return;
+      }
+
+      // Create a copy of the board with the bot's move
+      const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
+      const newRack = [...player2Rack];
+      
+      for (const tile of botMove.tiles) {
+        if (tile.isNew) {
           newTempBoard[tile.row][tile.col] = tile.letter;
           const letterIndex = newRack.indexOf(tile.letter);
           if (letterIndex !== -1) {
             newRack.splice(letterIndex, 1);
           }
         }
-        
-        // Validate the move
-        console.log('Validating bot move');
-        const validationResponse = await fetch('/.netlify/functions/gameLogic', {
+      }
+      
+      // Validate the move
+      console.log('Validating bot move');
+      const validationResponse = await fetch('/.netlify/functions/gameLogic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'validate',
+          beforeBoard: boardCoords,
+          afterBoard: newTempBoard
+        })
+      });
+
+      if (!validationResponse.ok) {
+        throw new Error(`HTTP error! status: ${validationResponse.status}`);
+      }
+
+      const validationResult = await validationResponse.json();
+      console.log('Validation result:', validationResult);
+      
+      if (validationResult.isValid) {
+        // Score the move
+        console.log('Scoring bot move');
+        const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'validate',
+            action: 'score',
             beforeBoard: boardCoords,
             afterBoard: newTempBoard
           })
         });
 
-        if (!validationResponse.ok) {
-          throw new Error(`HTTP error! status: ${validationResponse.status}`);
+        if (!scoreResponse.ok) {
+          throw new Error(`HTTP error! status: ${scoreResponse.status}`);
         }
 
-        const validationResult = await validationResponse.json();
-        console.log('Validation result:', validationResult);
+        const score = await scoreResponse.json();
+        console.log('Score result:', score);
         
-        if (validationResult.isValid) {
-          // Score the move
-          console.log('Scoring bot move');
-          const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'score',
-              beforeBoard: boardCoords,
-              afterBoard: newTempBoard
-            })
-          });
-
-          if (!scoreResponse.ok) {
-            throw new Error(`HTTP error! status: ${scoreResponse.status}`);
-          }
-
-          const score = await scoreResponse.json();
-          console.log('Score result:', score);
-          
-          // Update the game state
-          setPlayer2points(prev => prev + score);
-          setBoardCoords(newTempBoard);
-          setTempBoardCoords(newTempBoard);
-          setPlayer2Rack(newRack);
-          
-          // Draw new tiles for bot
-          const newPool = [...pool];
-          while (newRack.length < 7 && newPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * newPool.length);
-            newRack.push(newPool[randomIndex]);
-            newPool.splice(randomIndex, 1);
-          }
-          setPlayer2Rack(newRack);
-          setPool(newPool);
-          
-          // Switch back to player 1
-          setCurrentPlayer(1);
-        } else {
-          console.error('Invalid bot move:', validationResult.reason);
-          setSnackbarMessage('Bot made an invalid move: ' + validationResult.reason);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          setCurrentPlayer(1); // Switch back to player 1 on invalid move
+        // Update the game state
+        setPlayer2points(prev => prev + score);
+        setBoardCoords(newTempBoard);
+        setTempBoardCoords(newTempBoard);
+        setPlayer2Rack(newRack);
+        
+        // Draw new tiles for bot
+        const newPool = [...pool];
+        while (newRack.length < 7 && newPool.length > 0) {
+          const randomIndex = Math.floor(Math.random() * newPool.length);
+          newRack.push(newPool[randomIndex]);
+          newPool.splice(randomIndex, 1);
         }
+        setPlayer2Rack(newRack);
+        setPool(newPool);
+        
+        // Switch back to player 1
+        setCurrentPlayer(1);
       } else {
-        console.log('No valid bot move found');
-        setSnackbarMessage('Bot could not find a valid move');
-        setSnackbarSeverity('info');
+        console.error('Invalid bot move:', validationResult.reason);
+        setSnackbarMessage('Bot made an invalid move: ' + validationResult.reason);
+        setSnackbarSeverity('error');
         setSnackbarOpen(true);
-        setCurrentPlayer(1); // Switch back to player 1 if bot can't move
+        setCurrentPlayer(1); // Switch back to player 1 on invalid move
       }
     } catch (error) {
       console.error('Error making bot move:', error);
@@ -512,6 +519,49 @@ export default function Play() {
     setPlayer1Name(isBotMode ? 'You' : 'Player 1');
     setPlayer2Name(isBotMode ? 'SidBot' : 'Player 2');
   }, [isBotMode]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Start timer when it's a player's turn
+  useEffect(() => {
+    if (timerActive) {
+      timerRef.current = setInterval(() => {
+        if (currentPlayer === 1) {
+          setPlayer1Time(prev => {
+            if (prev <= 0) {
+              clearInterval(timerRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        } else {
+          setPlayer2Time(prev => {
+            if (prev <= 0) {
+              clearInterval(timerRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [timerActive, currentPlayer]);
+
+  // Start timer when game starts or player changes
+  useEffect(() => {
+    setTimerActive(true);
+  }, [currentPlayer]);
 
   return (
     <Box sx={{ display: 'flex'}}>
@@ -578,6 +628,12 @@ export default function Play() {
             </Box> 
             <Box className={styles.playerPanel}>
               {player1Name}
+              <Box className={styles.timer} style={{ 
+                color: currentPlayer === 1 ? '#4CAF50' : '#666',
+                fontWeight: currentPlayer === 1 ? 'bold' : 'normal'
+              }}>
+                {formatTime(player1Time)}
+              </Box>
               {currentPlayer === 1 && (
                 <Box className={styles.Rack}>
                   <Rack 
@@ -598,6 +654,12 @@ export default function Play() {
 
             <Box className={styles.playerPanel}>
               {player2Name}
+              <Box className={styles.timer} style={{ 
+                color: currentPlayer === 2 ? '#4CAF50' : '#666',
+                fontWeight: currentPlayer === 2 ? 'bold' : 'normal'
+              }}>
+                {formatTime(player2Time)}
+              </Box>
               {currentPlayer === 2 && (
                 <Box className={styles.Rack}>
                   <Rack 
