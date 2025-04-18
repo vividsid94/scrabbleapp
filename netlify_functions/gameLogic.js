@@ -255,7 +255,7 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     return { isValid: false, reason: 'Invalid placement', words: [] };
 }
 
-function scorePlay(beforeBoard, afterBoard) {
+async function scorePlay(beforeBoard, afterBoard) {
     let totalScore = 0;
     const formedWords = new Set();
     const placedTiles = [];
@@ -369,9 +369,12 @@ function scorePlay(beforeBoard, afterBoard) {
         const horizontalWord = findWord(afterBoard, r, c, 'horizontal');
         if (horizontalWord.length > 0) {
             const wordString = horizontalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString) && validWords.has(wordString)) {
-                totalScore += getWordScore(horizontalWord);
-                formedWords.add(wordString);
+            if (!formedWords.has(wordString)) {
+                const isValid = await isValidWord(wordString);
+                if (isValid) {
+                    totalScore += getWordScore(horizontalWord);
+                    formedWords.add(wordString);
+                }
             }
         }
 
@@ -379,9 +382,12 @@ function scorePlay(beforeBoard, afterBoard) {
         const verticalWord = findWord(afterBoard, r, c, 'vertical');
         if (verticalWord.length > 0) {
             const wordString = verticalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString) && validWords.has(wordString)) {
-                totalScore += getWordScore(verticalWord);
-                formedWords.add(wordString);
+            if (!formedWords.has(wordString)) {
+                const isValid = await isValidWord(wordString);
+                if (isValid) {
+                    totalScore += getWordScore(verticalWord);
+                    formedWords.add(wordString);
+                }
             }
         }
     }
@@ -390,7 +396,7 @@ function scorePlay(beforeBoard, afterBoard) {
     if (placedTiles.length === 7) {
         totalScore += 50;
     }
-    console.log(formedWords);
+
     return totalScore;
 }
 
@@ -409,7 +415,7 @@ exports.handler = async function(event, context) {
         if (action === 'validate') {
             result = await isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
-            result = scorePlay(beforeBoard, afterBoard);
+            result = await scorePlay(beforeBoard, afterBoard);
         } else {
             return {
                 statusCode: 400,
