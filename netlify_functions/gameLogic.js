@@ -90,6 +90,10 @@ const boardMultipliers = [
     [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4]
 ];
 
+// Export the constants for the bot to use
+exports.letterScores = letterScores;
+exports.boardMultipliers = boardMultipliers;
+
 function getWordAt(board, row, col, direction) {
     let word = "";
     let r = row;

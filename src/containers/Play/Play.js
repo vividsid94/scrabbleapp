@@ -37,6 +37,8 @@ export default function Play() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const color = useRef('#60857C');
   const complementaryColor = useRef('#9F7A83');
+  const [isBotMode, setIsBotMode] = useState(false);
+  const [isBotThinking, setIsBotThinking] = useState(false);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -352,6 +354,138 @@ export default function Play() {
     setTiles(event.target.value);
   };
 
+  const makeBotMove = async () => {
+    console.log('makeBotMove called', { isBotMode, currentPlayer });
+    if (!isBotMode || currentPlayer !== 2) {
+      console.log('Bot move conditions not met', { isBotMode, currentPlayer });
+      return;
+    }
+
+    setIsBotThinking(true);
+    try {
+      console.log('Sending bot move request', { board: boardCoords, letters: player2Rack });
+      const response = await fetch('/.netlify/functions/botLogic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: player2Rack
+        })
+      });
+
+      const botMove = await response.json();
+      console.log('Bot move response:', botMove);
+      
+      if (botMove && botMove.tiles) {
+        // Create a copy of the board with the bot's move
+        const newTempBoard = [...tempBoardCoords];
+        const newRack = [...player2Rack];
+        
+        for (const tile of botMove.tiles) {
+          newTempBoard[tile.row][tile.col] = tile.letter;
+          const letterIndex = newRack.indexOf(tile.letter);
+          if (letterIndex !== -1) {
+            newRack.splice(letterIndex, 1);
+          }
+        }
+        
+        // Validate the move
+        console.log('Validating bot move');
+        const validationResponse = await fetch('/.netlify/functions/gameLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'validate',
+            beforeBoard: boardCoords,
+            afterBoard: newTempBoard
+          })
+        });
+
+        const validationResult = await validationResponse.json();
+        console.log('Validation result:', validationResult);
+        
+        if (validationResult.isValid) {
+          // Score the move
+          console.log('Scoring bot move');
+          const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'score',
+              beforeBoard: boardCoords,
+              afterBoard: newTempBoard
+            })
+          });
+
+          const score = await scoreResponse.json();
+          console.log('Score result:', score);
+          
+          // Update the game state
+          setPlayer2points(prev => prev + score);
+          setBoardCoords(newTempBoard);
+          setTempBoardCoords(newTempBoard);
+          setPlayer2Rack(newRack);
+          
+          // Draw new tiles for bot
+          const newPool = [...pool];
+          while (newRack.length < 7 && newPool.length > 0) {
+            const randomIndex = Math.floor(Math.random() * newPool.length);
+            newRack.push(newPool[randomIndex]);
+            newPool.splice(randomIndex, 1);
+          }
+          setPlayer2Rack(newRack);
+          setPool(newPool);
+          
+          // Switch back to player 1
+          setCurrentPlayer(1);
+        } else {
+          console.error('Invalid bot move:', validationResult.reason);
+          setSnackbarMessage('Bot made an invalid move: ' + validationResult.reason);
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
+      } else {
+        console.log('No valid bot move found');
+        setSnackbarMessage('Bot could not find a valid move');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
+        setCurrentPlayer(1); // Switch back to player 1 if bot can't move
+      }
+    } catch (error) {
+      console.error('Error making bot move:', error);
+      setSnackbarMessage('Error making bot move');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setIsBotThinking(false);
+    }
+  };
+
+  // Update useEffect to handle bot turns
+  useEffect(() => {
+    console.log('Bot turn effect', { isBotMode, currentPlayer, isBotThinking });
+    if (isBotMode && currentPlayer === 2 && !isBotThinking) {
+      makeBotMove();
+    }
+  }, [currentPlayer, isBotMode]);
+
+  const handleSettingsChange = (setting, value) => {
+    console.log('Settings change', { setting, value });
+    if (setting === 'botMode') {
+      setIsBotMode(value);
+      if (value && currentPlayer === 2) {
+        makeBotMove();
+      }
+    }
+    // ... handle other settings ...
+  };
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -476,6 +610,19 @@ export default function Play() {
                   <option value="LETTERS">Letters</option>
                 </select>
               </Box>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                  <input
+                    type="checkbox"
+                    checked={isBotMode}
+                    onChange={(e) => {
+                      console.log('Bot mode checkbox changed:', e.target.checked);
+                      handleSettingsChange('botMode', e.target.checked);
+                    }}
+                  />
+                  <span style={{ fontSize: '16px', fontFamily: 'Syne' }}>Play against bot</span>
+                </label>
+              </div>
             </Box>
           )}
         </Box>
@@ -495,6 +642,11 @@ export default function Play() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+      {isBotThinking && (
+        <div className={styles.botThinking}>
+          Bot is thinking...
+        </div>
+      )}
     </Box>
   );
 } 
