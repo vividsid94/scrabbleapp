@@ -83,7 +83,7 @@ async function loadDictionary() {
     console.log('Total words in dictionary:', count);
 
     // Fetch all words in batches
-    const batchSize = 1000;
+    const batchSize = 5000;
     const batches = Math.ceil(count / batchSize);
     let allWords = [];
 
@@ -120,8 +120,29 @@ const getPossibleWords = async (letters) => {
     console.log('Blanks:', blanks);
     
     // Get all possible words from DAWG
-    const possibleWords = Array.from(dawg.findWords(nonBlankLetters));
-    console.log('Found', possibleWords.length, 'words without blanks');
+    const possibleWords = new Set();
+    
+    // Function to generate all permutations of letters
+    const generatePermutations = (currentLetters, remainingLetters) => {
+      if (currentLetters.length > 0) {
+        const word = currentLetters.join('');
+        if (dawg.contains(word)) {
+          possibleWords.add(word);
+        }
+      }
+      
+      if (remainingLetters.length === 0) return;
+      
+      for (let i = 0; i < remainingLetters.length; i++) {
+        const newCurrent = [...currentLetters, remainingLetters[i]];
+        const newRemaining = [...remainingLetters.slice(0, i), ...remainingLetters.slice(i + 1)];
+        generatePermutations(newCurrent, newRemaining);
+      }
+    };
+    
+    // Generate all possible words
+    generatePermutations([], nonBlankLetters);
+    console.log('Found', possibleWords.size, 'words without blanks');
     
     // If we have blanks, we need to try all possible combinations
     if (blanks > 0) {
@@ -147,12 +168,12 @@ const getPossibleWords = async (letters) => {
       // Try all combinations with blanks
       for (const combination of blankCombinations) {
         const words = Array.from(dawg.findWords(combination.split('')));
-        possibleWords.push(...words);
+        words.forEach(word => possibleWords.add(word));
       }
     }
     
-    // Remove duplicates and sort
-    const uniqueWords = [...new Set(possibleWords)];
+    // Convert to array and sort
+    const uniqueWords = Array.from(possibleWords);
     console.log('Total unique words found:', uniqueWords.length);
     
     return uniqueWords
@@ -265,12 +286,6 @@ const findValidPlacements = (board, word) => {
         let hasExistingTile = false;
         let hasAdjacent = false;
 
-        // Check if this position has any adjacent tiles
-        if (hasAdjacentTile(board, row, col)) {
-          hasAdjacent = true;
-          console.log(`Found adjacent tile at ${row},${col}`);
-        }
-
         // Check if word connects to existing tiles
         for (let i = 0; i < wordLength; i++) {
           const currentRow = row;
@@ -323,7 +338,7 @@ const findValidPlacements = (board, word) => {
             }
           }
 
-          if (connectsHorizontally || connectsVertically) {
+          if (connectsHorizontally || connectsVertically || hasAdjacent) {
             placements.push({
               row,
               col,
@@ -341,12 +356,6 @@ const findValidPlacements = (board, word) => {
         let isValid = true;
         let hasExistingTile = false;
         let hasAdjacent = false;
-
-        // Check if this position has any adjacent tiles
-        if (hasAdjacentTile(board, row, col)) {
-          hasAdjacent = true;
-          console.log(`Found adjacent tile at ${row},${col}`);
-        }
 
         // Check if word connects to existing tiles
         for (let i = 0; i < wordLength; i++) {
@@ -400,7 +409,7 @@ const findValidPlacements = (board, word) => {
             }
           }
 
-          if (connectsVertically || connectsHorizontally) {
+          if (connectsVertically || connectsHorizontally || hasAdjacent) {
             placements.push({
               row,
               col,
@@ -482,6 +491,305 @@ exports.handler = async function(event) {
   }
 };
 
+// Helper function to check if a cell is empty
+const isCellEmpty = (cell) => {
+  return cell === '' || typeof cell === 'number';
+};
+
+// Find all possible anchor squares (squares adjacent to existing tiles)
+const findAnchorSquares = (board) => {
+  const anchors = [];
+  
+  // Check if board is empty (first move)
+  const isFirstMove = board.every(row => row.every(cell => isCellEmpty(cell)));
+  if (isFirstMove) {
+    // For first move, only consider the center square
+    anchors.push({ row: 7, col: 7 });
+    return anchors;
+  }
+  
+  // For subsequent moves, find all squares adjacent to existing tiles
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      if (isCellEmpty(board[row][col])) {
+        // Check if this square is adjacent to any existing tile
+        const directions = [
+          [-1, -1], [-1, 0], [-1, 1],  // top left, top, top right
+          [0, -1],           [0, 1],   // left, right
+          [1, -1],  [1, 0],  [1, 1]    // bottom left, bottom, bottom right
+        ];
+        
+        const hasAdjacent = directions.some(([dr, dc]) => {
+          const newRow = row + dr;
+          const newCol = col + dc;
+          return newRow >= 0 && newRow < 15 && 
+                 newCol >= 0 && newCol < 15 && 
+                 !isCellEmpty(board[newRow][newCol]);
+        });
+        
+        if (hasAdjacent) {
+          anchors.push({ row, col });
+        }
+      }
+    }
+  }
+  
+  return anchors;
+};
+
+// Find possible word lengths for a given anchor square
+const findPossibleLengths = (board, anchor, direction) => {
+  const { row, col } = anchor;
+  const lengths = [];
+  
+  // Check if board is empty (first move)
+  const isFirstMove = board.every(row => row.every(cell => isCellEmpty(cell)));
+  if (isFirstMove) {
+    // For first move, try all lengths from 2 to 7
+    for (let len = 2; len <= 7; len++) {
+      lengths.push(len);
+    }
+    return lengths;
+  }
+  
+  if (direction === 'right') {
+    // Check left
+    let left = col;
+    while (left > 0 && !isCellEmpty(board[row][left - 1])) {
+      left--;
+    }
+    
+    // Check right
+    let right = col;
+    while (right < 14 && !isCellEmpty(board[row][right + 1])) {
+      right++;
+    }
+    
+    // Add all possible lengths
+    for (let len = 2; len <= 7; len++) {
+      if (col - left + len <= 15 && col >= left) {
+        lengths.push(len);
+      }
+    }
+  } else {
+    // Check up
+    let up = row;
+    while (up > 0 && !isCellEmpty(board[up - 1][col])) {
+      up--;
+    }
+    
+    // Check down
+    let down = row;
+    while (down < 14 && !isCellEmpty(board[down + 1][col])) {
+      down++;
+    }
+    
+    // Add all possible lengths
+    for (let len = 2; len <= 7; len++) {
+      if (row - up + len <= 15 && row >= up) {
+        lengths.push(len);
+      }
+    }
+  }
+  
+  return [...new Set(lengths)]; // Remove duplicates
+};
+
+// Find all possible plays for a given anchor, length, and direction
+const findPossiblePlays = (board, anchor, length, direction, letters) => {
+  const { row, col } = anchor;
+  const plays = [];
+  
+  // Generate all possible letter combinations of the given length
+  const generateCombinations = (current, remaining, maxLength) => {
+    if (current.length === maxLength) {
+      return [current];
+    }
+    
+    if (remaining.length === 0) {
+      return [];
+    }
+    
+    const combinations = [];
+    for (let i = 0; i < remaining.length; i++) {
+      const newCurrent = [...current, remaining[i]];
+      const newRemaining = [...remaining.slice(0, i), ...remaining.slice(i + 1)];
+      combinations.push(...generateCombinations(newCurrent, newRemaining, maxLength));
+    }
+    return combinations;
+  };
+  
+  // Get all possible letter combinations
+  const letterCombinations = generateCombinations([], letters, length);
+  console.log(`Generated ${letterCombinations.length} letter combinations of length ${length}`);
+  
+  if (direction === 'right') {
+    // Try all possible starting positions
+    for (let startCol = Math.max(0, col - length + 1); startCol <= col; startCol++) {
+      if (startCol + length > 15) continue;
+      
+      // Try each letter combination
+      for (const combination of letterCombinations) {
+        const tiles = [];
+        let isValid = true;
+        let hasExistingTile = false;
+        let hasAdjacent = false;
+        let word = '';
+        let newTilesCount = 0;
+        
+        // Check each position
+        for (let i = 0; i < length; i++) {
+          const currentRow = row;
+          const currentCol = startCol + i;
+          const currentCell = board[currentRow][currentCol];
+          
+          if (!isCellEmpty(currentCell)) {
+            if (currentCell !== combination[i]) {
+              isValid = false;
+              break;
+            }
+            hasExistingTile = true;
+            word += currentCell;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: currentCell,
+              isNew: false
+            });
+          } else {
+            // Check if this empty cell has any adjacent tiles
+            if (hasAdjacentTile(board, currentRow, currentCol)) {
+              hasAdjacent = true;
+            }
+            word += combination[i];
+            newTilesCount++;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: combination[i],
+              isNew: true
+            });
+          }
+        }
+        
+        // Check if word forms valid connections
+        if (isValid && newTilesCount > 0) {
+          // Check if word connects to existing tiles horizontally
+          const connectsHorizontally = hasExistingTile || 
+            (startCol > 0 && !isCellEmpty(board[row][startCol - 1])) || 
+            (startCol + length < 15 && !isCellEmpty(board[row][startCol + length]));
+
+          // Check if word connects to existing tiles vertically
+          let connectsVertically = false;
+          for (let i = 0; i < length; i++) {
+            const currentRow = row;
+            const currentCol = startCol + i;
+            if ((currentRow > 0 && !isCellEmpty(board[currentRow - 1][currentCol])) ||
+                (currentRow < 14 && !isCellEmpty(board[currentRow + 1][currentCol]))) {
+              connectsVertically = true;
+              break;
+            }
+          }
+
+          // Check if the word is valid in the dictionary and has at least one new tile
+          if (dawg.contains(word) && (connectsHorizontally || connectsVertically || hasAdjacent)) {
+            plays.push({
+              row,
+              col: startCol,
+              direction: 'right',
+              tiles,
+              word
+            });
+          }
+        }
+      }
+    }
+  } else {
+    // Try all possible starting positions
+    for (let startRow = Math.max(0, row - length + 1); startRow <= row; startRow++) {
+      if (startRow + length > 15) continue;
+      
+      // Try each letter combination
+      for (const combination of letterCombinations) {
+        const tiles = [];
+        let isValid = true;
+        let hasExistingTile = false;
+        let hasAdjacent = false;
+        let word = '';
+        let newTilesCount = 0;
+        
+        // Check each position
+        for (let i = 0; i < length; i++) {
+          const currentRow = startRow + i;
+          const currentCol = col;
+          const currentCell = board[currentRow][currentCol];
+          
+          if (!isCellEmpty(currentCell)) {
+            if (currentCell !== combination[i]) {
+              isValid = false;
+              break;
+            }
+            hasExistingTile = true;
+            word += currentCell;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: currentCell,
+              isNew: false
+            });
+          } else {
+            // Check if this empty cell has any adjacent tiles
+            if (hasAdjacentTile(board, currentRow, currentCol)) {
+              hasAdjacent = true;
+            }
+            word += combination[i];
+            newTilesCount++;
+            tiles.push({
+              row: currentRow,
+              col: currentCol,
+              letter: combination[i],
+              isNew: true
+            });
+          }
+        }
+        
+        // Check if word forms valid connections
+        if (isValid && newTilesCount > 0) {
+          // Check if word connects to existing tiles vertically
+          const connectsVertically = hasExistingTile || 
+            (startRow > 0 && !isCellEmpty(board[startRow - 1][col])) || 
+            (startRow + length < 15 && !isCellEmpty(board[startRow + length][col]));
+
+          // Check if word connects to existing tiles horizontally
+          let connectsHorizontally = false;
+          for (let i = 0; i < length; i++) {
+            const currentRow = startRow + i;
+            const currentCol = col;
+            if ((currentCol > 0 && !isCellEmpty(board[currentRow][currentCol - 1])) ||
+                (currentCol < 14 && !isCellEmpty(board[currentRow][currentCol + 1]))) {
+              connectsHorizontally = true;
+              break;
+            }
+          }
+
+          // Check if the word is valid in the dictionary and has at least one new tile
+          if (dawg.contains(word) && (connectsVertically || connectsHorizontally || hasAdjacent)) {
+            plays.push({
+              row: startRow,
+              col,
+              direction: 'down',
+              tiles,
+              word
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  return plays;
+};
+
 // Optimized bot move generation
 async function generateBotMove(board, letters) {
   try {
@@ -489,43 +797,82 @@ async function generateBotMove(board, letters) {
     console.log(JSON.stringify(board, null, 2));
     console.log('With letters:', letters);
     
-    const possibleWords = await getPossibleWords(letters);
-    console.log('Found', possibleWords.length, 'possible words');
+    // Load dictionary first
+    console.log('Loading dictionary...');
+    const dawg = await loadDictionary();
+    console.log('Dictionary loaded successfully');
+    
+    // Find all anchor squares
+    const anchors = findAnchorSquares(board);
+    console.log('Found', anchors.length, 'anchor squares');
     
     let bestMove = null;
     let bestScore = 0;
-
-    for (const word of possibleWords) {
-      console.log(`\nTrying word: "${word}"`);
-      const placements = findValidPlacements(board, word);
+    
+    // Try each anchor square
+    for (const anchor of anchors) {
+      console.log(`\nTrying anchor at ${anchor.row},${anchor.col}`);
       
-      for (const placement of placements) {
-        const score = calculateScore(placement.tiles, boardMultipliers);
-        console.log(`Placement score: ${score}`);
+      // Try both directions
+      for (const direction of ['right', 'down']) {
+        // Find possible word lengths
+        const lengths = findPossibleLengths(board, anchor, direction);
+        console.log(`Possible lengths for ${direction}:`, lengths);
         
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = {
-            word,
-            placement,
-            score
-          };
-          console.log(`Found better move: ${word} with score ${score}`);
+        // Try each length
+        for (const length of lengths) {
+          // Find possible plays
+          const plays = findPossiblePlays(board, anchor, length, direction, letters);
+          console.log(`Found ${plays.length} possible plays for length ${length}`);
+          
+          // Check each play
+          for (const play of plays) {
+            const word = play.tiles.map(t => t.letter).join('');
+            if (dawg.contains(word)) {
+              const score = calculateScore(play.tiles, boardMultipliers);
+              console.log(`Valid word: "${word}" with score ${score}`);
+              
+              if (score > bestScore) {
+                bestScore = score;
+                bestMove = {
+                  word,
+                  placement: play,
+                  score,
+                  tiles: play.tiles.map(tile => ({
+                    row: tile.row,
+                    col: tile.col,
+                    letter: tile.letter,
+                    isNew: tile.isNew
+                  }))
+                };
+                console.log(`Found better move: ${word} with score ${score}`);
+                
+                // If we found a high-scoring move, return early
+                if (score >= 20) {
+                  console.log('\nFound high-scoring move, returning early');
+                  return bestMove;
+                }
+              }
+            }
+          }
         }
       }
     }
-
+    
     if (bestMove) {
       console.log('\nBest move found:', bestMove);
-      // Add a small delay to ensure the response is complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return bestMove;
+      return {
+        word: bestMove.word,
+        score: bestMove.score,
+        tiles: bestMove.tiles
+      };
     } else {
       console.log('\nNo valid moves found');
       return null;
     }
   } catch (error) {
     console.error('Error generating bot move:', error);
-    throw error; // Propagate the error to be handled by the handler
+    console.error('Error stack:', error.stack);
+    throw error;
   }
 }

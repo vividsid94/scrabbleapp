@@ -46,6 +46,7 @@ export default function Play() {
   const [player2Time, setPlayer2Time] = useState(20 * 60); // 20 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
+  const [consecutivePasses, setConsecutivePasses] = useState(0);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -563,6 +564,38 @@ export default function Play() {
     setTimerActive(true);
   }, [currentPlayer]);
 
+  const handlePass = () => {
+    // Show confirmation dialog
+    if (window.confirm('Are you sure you want to pass your turn?')) {
+      setConsecutivePasses(prev => prev + 1);
+      
+      // Check if game should end (two consecutive passes)
+      if (consecutivePasses >= 1) {
+        setSnackbarMessage('Game ended due to two consecutive passes');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
+        // TODO: Add game end logic here
+        return;
+      }
+
+      // Switch to next player
+      setCurrentPlayer(prev => prev === 1 ? 2 : 1);
+      setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
+      setSnackbarSeverity('info');
+      setSnackbarOpen(true);
+      
+      // Reset the board state
+      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
+      
+      // If next player is bot, make bot move
+      if (isBotMode && currentPlayer === 2) {
+        makeBotMove();
+      }
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -621,8 +654,16 @@ export default function Play() {
                 variant="contained" 
                 onClick={handleWordSubmit}
                 disabled={!selectedBoardPosition || selectedTiles.length === 0}
+                sx={{ marginRight: '8px' }}
               >
                 Submit
+              </Button>
+              <Button 
+                variant="outlined" 
+                onClick={handlePass}
+                color="secondary"
+              >
+                Pass Turn
               </Button>
               </Box>
             </Box> 
