@@ -96,6 +96,10 @@ form{
   cursor: pointer;
   transform: translate(--slice-0);
   user-select: none;
+  transition: all 0.2s ease-in-out;
+}
+.keyBtn:hover {
+  transform: scale(1.1);
 }
 .keyBtnSmall{
   font-size: 18px !important;
@@ -437,4 +441,10 @@ form{
   .topPlayerPanel{
     height: 338px;
   }
+}
+
+.activeBot {
+  color: #4CAF50;
+  transform: scale(1.1);
+  transition: all 0.2s ease-in-out;
 }

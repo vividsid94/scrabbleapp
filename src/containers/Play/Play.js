@@ -8,6 +8,7 @@ import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ColorizeIcon from '@mui/icons-material/Colorize';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
@@ -363,24 +364,32 @@ export default function Play() {
 
     setIsBotThinking(true);
     try {
-      console.log('Sending bot move request', { board: boardCoords, letters: player2Rack });
+      // Create a deep copy of the board and rack
+      const boardCopy = JSON.parse(JSON.stringify(boardCoords));
+      const rackCopy = [...player2Rack];
+      
+      console.log('Sending bot move request', { board: boardCopy, letters: rackCopy });
       const response = await fetch('/.netlify/functions/botLogic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          board: boardCoords,
-          letters: player2Rack
+          board: boardCopy,
+          letters: rackCopy
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const botMove = await response.json();
       console.log('Bot move response:', botMove);
       
-      if (botMove && botMove.tiles) {
+      if (botMove && botMove.tiles && botMove.tiles.length > 0) {
         // Create a copy of the board with the bot's move
-        const newTempBoard = [...tempBoardCoords];
+        const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
         const newRack = [...player2Rack];
         
         for (const tile of botMove.tiles) {
@@ -405,6 +414,10 @@ export default function Play() {
           })
         });
 
+        if (!validationResponse.ok) {
+          throw new Error(`HTTP error! status: ${validationResponse.status}`);
+        }
+
         const validationResult = await validationResponse.json();
         console.log('Validation result:', validationResult);
         
@@ -422,6 +435,10 @@ export default function Play() {
               afterBoard: newTempBoard
             })
           });
+
+          if (!scoreResponse.ok) {
+            throw new Error(`HTTP error! status: ${scoreResponse.status}`);
+          }
 
           const score = await scoreResponse.json();
           console.log('Score result:', score);
@@ -449,6 +466,7 @@ export default function Play() {
           setSnackbarMessage('Bot made an invalid move: ' + validationResult.reason);
           setSnackbarSeverity('error');
           setSnackbarOpen(true);
+          setCurrentPlayer(1); // Switch back to player 1 on invalid move
         }
       } else {
         console.log('No valid bot move found');
@@ -459,9 +477,10 @@ export default function Play() {
       }
     } catch (error) {
       console.error('Error making bot move:', error);
-      setSnackbarMessage('Error making bot move');
+      setSnackbarMessage('Error making bot move: ' + error.message);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+      setCurrentPlayer(1); // Switch back to player 1 on error
     } finally {
       setIsBotThinking(false);
     }
@@ -473,7 +492,7 @@ export default function Play() {
     if (isBotMode && currentPlayer === 2 && !isBotThinking) {
       makeBotMove();
     }
-  }, [currentPlayer, isBotMode]);
+  }, [currentPlayer, isBotMode, isBotThinking]);
 
   const handleSettingsChange = (setting, value) => {
     console.log('Settings change', { setting, value });
@@ -525,6 +544,18 @@ export default function Play() {
               </Tooltip>
               <Tooltip title="Color Scheme">
                 <ColorizeIcon className={styles.keyBtn} onClick={handleColorSchemeOpen}/>
+              </Tooltip>
+              <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
+                <SmartToyIcon 
+                  className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
+                  onClick={() => handleSettingsChange('botMode', !isBotMode)}
+                  sx={{ 
+                    color: isBotMode ? '#4CAF50' : 'inherit',
+                    '&:hover': {
+                      color: isBotMode ? '#45a049' : '#666'
+                    }
+                  }}
+                />
               </Tooltip>
             </Box>
               <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
@@ -610,19 +641,6 @@ export default function Play() {
                   <option value="LETTERS">Letters</option>
                 </select>
               </Box>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={isBotMode}
-                    onChange={(e) => {
-                      console.log('Bot mode checkbox changed:', e.target.checked);
-                      handleSettingsChange('botMode', e.target.checked);
-                    }}
-                  />
-                  <span style={{ fontSize: '16px', fontFamily: 'Syne' }}>Play against bot</span>
-                </label>
-              </div>
             </Box>
           )}
         </Box>
