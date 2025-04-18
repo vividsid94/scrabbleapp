@@ -40,6 +40,8 @@ export default function Play() {
   const complementaryColor = useRef('#9F7A83');
   const [isBotMode, setIsBotMode] = useState(false);
   const [isBotThinking, setIsBotThinking] = useState(false);
+  const [player1Name, setPlayer1Name] = useState('Player 1');
+  const [player2Name, setPlayer2Name] = useState('Player 2');
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -505,6 +507,12 @@ export default function Play() {
     // ... handle other settings ...
   };
 
+  // Update player2Name when isBotMode changes
+  useEffect(() => {
+    setPlayer1Name(isBotMode ? 'You' : 'Player 1');
+    setPlayer2Name(isBotMode ? 'SidBot' : 'Player 2');
+  }, [isBotMode]);
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -569,7 +577,7 @@ export default function Play() {
               </Box>
             </Box> 
             <Box className={styles.playerPanel}>
-              Player 1
+              {player1Name}
               {currentPlayer === 1 && (
                 <Box className={styles.Rack}>
                   <Rack 
@@ -589,7 +597,7 @@ export default function Play() {
             </Box>
 
             <Box className={styles.playerPanel}>
-              Player 2
+              {player2Name}
               {currentPlayer === 2 && (
                 <Box className={styles.Rack}>
                   <Rack 

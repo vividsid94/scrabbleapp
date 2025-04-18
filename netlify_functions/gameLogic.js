@@ -6,70 +6,30 @@ const letterScores = {
 
 const { createClient } = require('@supabase/supabase-js');
 
-// Initialize Supabase client with anon key
+// Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Function to check if a word is valid using Supabase
 async function isValidWord(word) {
-    const { data, error } = await supabase
-        .from('dictionary')
-        .select('word')
-        .eq('word', word.toUpperCase())
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('dictionary')
+            .select('word')
+            .eq('word', word.toUpperCase())
+            .single();
 
-    if (error) {
-        console.error('Error checking word:', error);
+        if (error) {
+            console.error('Error checking word:', error);
+            return false;
+        }
+
+        return !!data;
+    } catch (error) {
+        console.error('Exception in isValidWord:', error);
         return false;
     }
-
-    return !!data;
-}
-
-const fs = require('fs');
-const path = require('path');
-
-// Load dictionary into memory
-let validWords = new Set();
-try {
-    // Try different possible paths for the dictionary
-    const possiblePaths = [
-        path.join(__dirname, 'dictionary.txt'),                    // Local development
-        path.join(process.cwd(), 'netlify_functions', 'dictionary.txt'),  // Netlify production
-        path.join(process.cwd(), 'public', 'dictionary.txt')      // Alternative path
-    ];
-
-    let dictionaryPath = null;
-    for (const possiblePath of possiblePaths) {
-        console.log('Checking path:', possiblePath);
-        if (fs.existsSync(possiblePath)) {
-            dictionaryPath = possiblePath;
-            console.log('Found dictionary at:', dictionaryPath);
-            break;
-        }
-    }
-
-    if (!dictionaryPath) {
-        throw new Error('Could not find dictionary file in any of the expected locations');
-    }
-
-    const dictionaryContent = fs.readFileSync(dictionaryPath, 'utf8');
-    const words = dictionaryContent
-        .split('\n')
-        .map(word => word.trim().toUpperCase())
-        .filter(word => word && !word.startsWith('#'));
-    
-    console.log('Dictionary loaded successfully, word count:', words.length);
-    validWords = new Set(words);
-} catch (error) {
-    console.error('Error loading dictionary:', error);
-    console.error('Error stack:', error.stack);
-    // Fallback to a small set of words if dictionary fails to load
-    validWords = new Set([
-        'HELLO', 'WORLD', 'SCRABBLE', 'GAME', 'PLAY', 'WORD', 'TILE', 'RACK', 'BOARD',
-        'SCORE', 'POINTS', 'LETTER', 'ALPHABET', 'DICTIONARY', 'VALID', 'MOVE', 'CHECK'
-    ]);
 }
 
 const boardMultipliers = [
