@@ -404,12 +404,12 @@ export default function Play() {
       }
 
       // Create a copy of the board with the bot's move
-      const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
+      const newBoard = JSON.parse(JSON.stringify(boardCoords));
       const newRack = [...player2Rack];
       
       for (const tile of botMove.tiles) {
         if (tile.isNew) {
-          newTempBoard[tile.row][tile.col] = tile.letter;
+          newBoard[tile.row][tile.col] = tile.letter;
           const letterIndex = newRack.indexOf(tile.letter);
           if (letterIndex !== -1) {
             newRack.splice(letterIndex, 1);
@@ -417,74 +417,30 @@ export default function Play() {
         }
       }
       
-      // Validate the move
-      console.log('Validating bot move');
-      const validationResponse = await fetch('/.netlify/functions/gameLogic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'validate',
-          beforeBoard: boardCoords,
-          afterBoard: newTempBoard
-        })
-      });
-
-      if (!validationResponse.ok) {
-        throw new Error(`HTTP error! status: ${validationResponse.status}`);
-      }
-
-      const validationResult = await validationResponse.json();
-      console.log('Validation result:', validationResult);
+      // Update the board state
+      setBoardCoords(newBoard);
+      setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
+      setPlayer2Rack(newRack);
       
-      if (validationResult.isValid) {
-        // Score the move
-        console.log('Scoring bot move');
-        const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'score',
-            beforeBoard: boardCoords,
-            afterBoard: newTempBoard
-          })
-        });
-
-        if (!scoreResponse.ok) {
-          throw new Error(`HTTP error! status: ${scoreResponse.status}`);
-        }
-
-        const score = await scoreResponse.json();
-        console.log('Score result:', score);
-        
-        // Update the game state
-        setPlayer2points(prev => prev + score);
-        setBoardCoords(newTempBoard);
-        setTempBoardCoords(newTempBoard);
-        setPlayer2Rack(newRack);
-        
-        // Draw new tiles for bot
-        const newPool = [...pool];
-        while (newRack.length < 7 && newPool.length > 0) {
-          const randomIndex = Math.floor(Math.random() * newPool.length);
-          newRack.push(newPool[randomIndex]);
-          newPool.splice(randomIndex, 1);
-        }
-        setPlayer2Rack(newRack);
-        setPool(newPool);
-        
-        // Switch back to player 1
-        setCurrentPlayer(1);
-      } else {
-        console.error('Invalid bot move:', validationResult.reason);
-        setSnackbarMessage('Bot made an invalid move: ' + validationResult.reason);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        setCurrentPlayer(1); // Switch back to player 1 on invalid move
+      // Draw new tiles for bot
+      const newPool = [...pool];
+      while (newRack.length < 7 && newPool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * newPool.length);
+        newRack.push(newPool[randomIndex]);
+        newPool.splice(randomIndex, 1);
       }
+      setPlayer2Rack(newRack);
+      setPool(newPool);
+      
+      // Update player 2's score
+      setPlayer2points(prev => prev + botMove.score);
+      
+      // Switch back to player 1
+      setCurrentPlayer(1);
+      setSelectedBoardPosition(null);
+      setSelectedTiles([]);
+      setArrowDirection('right');
+      
     } catch (error) {
       console.error('Error making bot move:', error);
       setSnackbarMessage('Error making bot move: ' + error.message);
@@ -659,7 +615,7 @@ export default function Play() {
                 Submit
               </Button>
               <Button 
-                variant="outlined" 
+                variant="contained" 
                 onClick={handlePass}
                 color="secondary"
               >
