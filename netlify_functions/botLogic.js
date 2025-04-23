@@ -28,7 +28,7 @@ exports.handler = async function (event) {
       if (result.valid) {
         validMoves.push(move);
       } else {
-        console.log(`❌ Rejected move '${move.word}' — ${result.reason}`);
+        //console.log(`❌ Rejected move '${move.word}' — ${result.reason}`);
       }
     }
 
