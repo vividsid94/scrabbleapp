@@ -9,10 +9,18 @@ function findAnchors(board) {
         if (board[row][col] !== null) continue; // not empty
   
         // Check adjacent squares
-        if (
+        const hasAdjacent =
           isFilled(row - 1, col) || isFilled(row + 1, col) ||
-          isFilled(row, col - 1) || isFilled(row, col + 1)
-        ) {
+          isFilled(row, col - 1) || isFilled(row, col + 1);
+  
+        // Check if this square is part of a word
+        const isPartOfWord =
+          (col > 0 && board[row][col - 1] !== null) || // left
+          (col < 14 && board[row][col + 1] !== null) || // right
+          (row > 0 && board[row - 1][col] !== null) || // up
+          (row < 14 && board[row + 1][col] !== null); // down
+  
+        if (hasAdjacent || isPartOfWord) {
           anchors.push({ row, col });
         }
       }
