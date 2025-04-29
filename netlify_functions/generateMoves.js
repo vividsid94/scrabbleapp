@@ -81,231 +81,159 @@ function generateFirstMove(board, rack, trie, moves) {
 
 function generateMovesForAnchor(board, rack, anchor, direction, trie, moves) {
   const { row, col } = anchor;
-  
-  // Try placing tiles before the anchor
-  for (let offset = 0; offset <= 7; offset++) {
-    const startRow = direction === 'right' ? row : row - offset;
-    const startCol = direction === 'right' ? col - offset : col;
-    
-    if (startRow < 0 || startCol < 0) continue;
-    
-    // Build prefix from existing tiles
-    const prefix = buildPrefix(board, startRow, startCol, direction);
-    
-    // Generate moves starting at this position
-    generateMovesFromPosition(
-      board,
-      rack,
-      trie.root,
-      prefix,
-      startRow,
-      startCol,
-      direction,
-      moves,
-      trie
-    );
-  }
+
+  // Build the maximum left (or upward) prefix from board tiles
+  const maxPrefixInfo = buildPrefixAndNode(board, row, col, direction, trie);
+
+  const { prefix, node, startRow, startCol } = maxPrefixInfo;
+
+  if (!node) return; // Cannot extend from here (prefix doesn't exist in trie)
+
+  // Now generate moves from the prefix
+  generateMovesFromPosition(
+    board,
+    rack,
+    node,
+    prefix,
+    startRow,
+    startCol,
+    direction,
+    moves,
+    trie,
+    [],
+    anchor
+  );
 }
 
-function generateMovesFromPosition(board, rack, node, prefix, row, col, direction, moves, trie) {
-  // Check if we've reached the end of the board
+function buildPrefixAndNode(board, anchorRow, anchorCol, direction, trie) {
+  let prefix = '';
+  let row = anchorRow;
+  let col = anchorCol;
+
+  if (direction === 'right') {
+    // Move left
+    while (col > 0 && board[row][col - 1] !== null) {
+      col--;
+    }
+  } else {
+    // Move up
+    while (row > 0 && board[row - 1][col] !== null) {
+      row--;
+    }
+  }
+
+  const startRow = row;
+  const startCol = col;
+
+  // Now build prefix string
+  let currRow = startRow;
+  let currCol = startCol;
+  let node = trie.root;
+
+  while (currRow <= anchorRow && currCol <= anchorCol && currRow < 15 && currCol < 15) {
+    const letter = board[currRow][currCol];
+    if (letter === null) break;
+
+    if (!node.children.has(letter)) {
+      return { prefix: '', node: null, startRow, startCol };
+    }
+
+    node = node.children.get(letter);
+    prefix += letter;
+
+    if (direction === 'right') currCol++;
+    else currRow++;
+  }
+
+  return { prefix, node, startRow, startCol };
+}
+
+function generateMovesFromPosition(board, rack, node, prefix, row, col, direction, moves, trie, placedTiles = []) {
   if (row >= 15 || col >= 15) return;
-  
+
   const cell = board[row][col];
-  
+
   if (cell !== null) {
-    // Existing letter on board
+    // Forced letter: must match board
     const nextNode = node.children.get(cell);
     if (!nextNode) return;
-    
+
     const newWord = prefix + cell;
-    
+
+    // Only validate if newly formed word is terminal
     if (nextNode.isTerminal && newWord.length > 1) {
-      const tiles = getTilesForWord(board, row, col, direction, newWord);
+      const tiles = [...placedTiles];
       if (validateMove(board, tiles, trie)) {
         moves.push({
           word: newWord,
           tiles,
-          score: calculateScore(tiles, boardMultipliers)
+          score: calculateScore(board, tiles, boardMultipliers, trie)
         });
       }
     }
-    
-    // Continue extending the word
+
     const nextRow = direction === 'right' ? row : row + 1;
     const nextCol = direction === 'right' ? col + 1 : col;
-    generateMovesFromPosition(
-      board,
-      rack,
-      nextNode,
-      newWord,
-      nextRow,
-      nextCol,
-      direction,
-      moves,
-      trie
-    );
+    generateMovesFromPosition(board, rack, nextNode, newWord, nextRow, nextCol, direction, moves, trie, placedTiles);
     return;
   }
-  
-  // Try placing each letter from the rack
+
+  // If empty, try placing letters from rack
   const used = new Set();
   for (let i = 0; i < rack.length; i++) {
     const letter = rack[i];
     if (used.has(letter)) continue;
     used.add(letter);
-    
+
     const nextNode = node.children.get(letter);
-    if (!nextNode) {
-      continue;
-    }
-    
+    if (!nextNode) continue;
+
     const newWord = prefix + letter;
-    
-    // Check if this is a valid word
+    const newTile = {
+      row,
+      col,
+      letter,
+      isNew: true
+    };
+
+    const tilesNow = [...placedTiles, newTile];
+
     if (nextNode.isTerminal && newWord.length > 1) {
-      const tiles = getTilesForWord(board, row, col, direction, newWord);
-      if (validateMove(board, tiles, trie)) {
+      if (validateMove(board, tilesNow, trie)) {
         moves.push({
           word: newWord,
-          tiles,
-          score: calculateScore(tiles, boardMultipliers)
+          tiles: tilesNow,
+          score: calculateScore(board, tilesNow, boardMultipliers, trie)
         });
       }
     }
-    
-    // Try extending the word with remaining letters
+
     const remainingRack = [...rack.slice(0, i), ...rack.slice(i + 1)];
-    for (let j = 0; j < remainingRack.length; j++) {
-      const nextLetter = remainingRack[j];
-      const nextNextNode = nextNode.children.get(nextLetter);
-      if (!nextNextNode) continue;
-      
-      const extendedWord = newWord + nextLetter;
-      
-      if (nextNextNode.isTerminal && extendedWord.length > 1) {
-        const tiles = getTilesForWord(board, row, col, direction, extendedWord);
-        if (validateMove(board, tiles, trie)) {
-          moves.push({
-            word: extendedWord,
-            tiles,
-            score: calculateScore(tiles, boardMultipliers)
-          });
-        }
-      }
-    }
-    
-    // Continue extending the word
+
     const nextRow = direction === 'right' ? row : row + 1;
     const nextCol = direction === 'right' ? col + 1 : col;
-    const newRack = [...rack.slice(0, i), ...rack.slice(i + 1)];
-    generateMovesFromPosition(
-      board,
-      newRack,
-      nextNode,
-      newWord,
-      nextRow,
-      nextCol,
-      direction,
-      moves,
-      trie
-    );
+    generateMovesFromPosition(board, remainingRack, nextNode, newWord, nextRow, nextCol, direction, moves, trie, tilesNow);
   }
 }
 
-function buildPrefix(board, startRow, startCol, direction) {
-  let prefix = '';
-  let row = startRow;
-  let col = startCol;
-  
-  while (row >= 0 && col >= 0 && board[row][col] !== null) {
-    prefix = board[row][col] + prefix;
-    if (direction === 'right') col--;
-    else row--;
-  }
-  
-  return prefix;
-}
-
-function getTilesForWord(board, startRow, startCol, direction, word) {
-  const tiles = [];
-  
-  // For first move, we need to include the center tile
-  if (isBoardEmpty(board)) {
-    // Place first letter at center
-    tiles.push({
-      row: 7,
-      col: 7,
-      letter: word[0],
-      isNew: true
-    });
-    
-    // Place subsequent letters consecutively
-    let row = 7;
-    let col = 7;
-    for (let i = 1; i < word.length; i++) {
-      if (direction === 'right') col++;
-      else row++;
-      
-      if (row >= 15 || col >= 15) break;
-      
-      tiles.push({
-        row,
-        col,
-        letter: word[i],
-        isNew: true
-      });
-    }
-    return tiles;
-  }
-  
-  // For non-first moves
-  let row = startRow;
-  let col = startCol;
-  
-  // Check if starting position is valid
-  if (row < 0 || row >= 15 || col < 0 || col >= 15) {
-    return tiles;
-  }
-  
-  for (const letter of word) {
-    // Check if current position is valid
-    if (row >= 15 || col >= 15) {
-      return tiles;
-    }
-    
-    if (!board[row][col]) {
-      tiles.push({
-        row,
-        col,
-        letter,
-        isNew: true
-      });
-    }
-    
-    if (direction === 'right') col++;
-    else row++;
-  }
-  
-  return tiles;
-}
-
-function validateMove(board, tiles, trie) {
-  // Check if tiles are connected to existing tiles
+function validateMove(board, tiles, trie, anchor) {
   if (!isConnected(board, tiles)) return false;
-  
-  // Get all words formed by the move
+
+  // If anchor is provided (i.e. not first move), check that move covers it
+  if (anchor && !coversAnchor(tiles, anchor.row, anchor.col)) {
+    return false;
+  }
+
   const words = getAllWords(board, tiles);
-  
-  // Check if all words are valid
   for (const word of words) {
     if (!trie.contains(word)) {
       return false;
     }
   }
-  
+
   return true;
 }
+
 
 function getAllWords(board, tiles) {
   const words = new Set();
@@ -433,6 +361,10 @@ function isConnected(board, tiles) {
   });
 }
 
+function coversAnchor(tiles, anchorRow, anchorCol) {
+  return tiles.some(tile => tile.row === anchorRow && tile.col === anchorCol);
+}
+
 function isBoardEmpty(board) {
   for (let row = 0; row < 15; row++) {
     for (let col = 0; col < 15; col++) {
@@ -444,38 +376,82 @@ function isBoardEmpty(board) {
   return true;
 }
 
-function calculateScore(tiles, boardMultipliers) {
-  let score = 0;
+function calculateScore(board, tiles, boardMultipliers, trie) {
+  let totalScore = 0;
   let wordMultiplier = 1;
   
+  const mainWord = getMainWord(board, tiles);
+  if (!mainWord) return 0;
+
+  // Score main word
   for (const tile of tiles) {
     const letterScore = letterScores[tile.letter] || 0;
-    const multiplier = boardMultipliers[tile.row][tile.col];
-    
-    if (multiplier === 1) { // Double letter
-      score += letterScore * 2;
-    } else if (multiplier === 2) { // Triple letter
-      score += letterScore * 3;
-    } else if (multiplier === 3) { // Double word
-      score += letterScore;
-      wordMultiplier *= 2;
-    } else if (multiplier === 4) { // Triple word
-      score += letterScore;
-      wordMultiplier *= 3;
+    const premium = boardMultipliers[tile.row][tile.col];
+
+    if (premium === 1) {
+      totalScore += letterScore * 2;
+    } else if (premium === 2) {
+      totalScore += letterScore * 3;
     } else {
-      score += letterScore;
+      totalScore += letterScore;
+    }
+
+    if (premium === 3) {
+      wordMultiplier *= 2;
+    } else if (premium === 4) {
+      wordMultiplier *= 3;
     }
   }
-  
-  // Apply word multipliers
-  score *= wordMultiplier;
-  
-  // Add bingo bonus
-  if (tiles.length === 7) {
-    score += 50;
+  totalScore *= wordMultiplier;
+
+  // Add score for each cross word
+  for (const tile of tiles) {
+    const crossDir = mainWord.direction === 'right' ? 'down' : 'right';
+    const crossWord = getCrossWord(board, tile.row, tile.col, crossDir, tiles);
+
+    if (crossWord && crossWord.length > 1 && trie.contains(crossWord)) {
+      // Now score this cross word
+      let crossScore = 0;
+      let r = tile.row;
+      let c = tile.col;
+
+      if (crossDir === 'right') {
+        while (c > 0 && (board[r][c - 1] || tiles.some(t => t.row === r && t.col === c - 1))) c--;
+      } else {
+        while (r > 0 && (board[r - 1][c] || tiles.some(t => t.row === r - 1 && t.col === c))) r--;
+      }
+
+      for (let i = 0; i < crossWord.length; i++) {
+        const letter = board[r][c] || tiles.find(t => t.row === r && t.col === c).letter;
+        const letterScore = letterScores[letter] || 0;
+
+        // Only apply premiums on the *placed* tile
+        if (r === tile.row && c === tile.col) {
+          const premium = boardMultipliers[r][c];
+          if (premium === 1) {
+            crossScore += letterScore * 2;
+          } else if (premium === 2) {
+            crossScore += letterScore * 3;
+          } else {
+            crossScore += letterScore;
+          }
+        } else {
+          crossScore += letterScore;
+        }
+
+        if (crossDir === 'right') c++;
+        else r++;
+      }
+      totalScore += crossScore;
+    }
   }
-  
-  return score;
+
+  // Add bingo bonus
+  if (tiles.filter(t => t.isNew).length === 7) {
+    totalScore += 50;
+  }
+
+  return totalScore;
 }
 
 module.exports = { 
