@@ -3,14 +3,9 @@ const { letterScores, boardMultipliers } = require('./gameLogic');
 function generateMoves(board, rack, anchors, trie) {
   const moves = [];
   
-  console.log('Board empty check:', isBoardEmpty(board));
-  console.log('Board:', JSON.stringify(board));
-  
   // First move must use center square
   if (isBoardEmpty(board)) {
-    console.log('Generating first move');
     generateFirstMove(board, rack, trie, moves);
-    console.log('First move moves:', moves);
     return moves;
   }
   
@@ -30,16 +25,12 @@ function generateFirstMove(board, rack, trie, moves) {
   const centerRow = 7;
   const centerCol = 7;
   
-  console.log('Generating first move with rack:', rack);
-  
   // Try placing each letter from the rack at the center
   for (let i = 0; i < rack.length; i++) {
     const letter = rack[i];
-    console.log('Trying letter:', letter);
     
     const node = trie.root.children.get(letter);
     if (!node) {
-      console.log('No node for letter:', letter);
       continue;
     }
     
@@ -53,7 +44,6 @@ function generateFirstMove(board, rack, trie, moves) {
     
     // Check if this single letter is a valid word
     if (node.isTerminal) {
-      console.log('Found single-letter word:', letter);
       moves.push({
         word: letter,
         tiles,
@@ -62,7 +52,6 @@ function generateFirstMove(board, rack, trie, moves) {
     }
     
     // Try extending right
-    console.log('Trying to extend right from:', letter);
     generateMovesFromPosition(
       board,
       [...rack.slice(0, i), ...rack.slice(i + 1)],
@@ -76,7 +65,6 @@ function generateFirstMove(board, rack, trie, moves) {
     );
     
     // Try extending down
-    console.log('Trying to extend down from:', letter);
     generateMovesFromPosition(
       board,
       [...rack.slice(0, i), ...rack.slice(i + 1)],
@@ -89,8 +77,6 @@ function generateFirstMove(board, rack, trie, moves) {
       trie
     );
   }
-  
-  console.log('Generated moves:', moves.length);
 }
 
 function generateMovesForAnchor(board, rack, anchor, direction, trie, moves) {
@@ -105,7 +91,6 @@ function generateMovesForAnchor(board, rack, anchor, direction, trie, moves) {
     
     // Build prefix from existing tiles
     const prefix = buildPrefix(board, startRow, startCol, direction);
-    console.log('Trying prefix:', prefix, 'at', startRow, startCol);
     
     // Generate moves starting at this position
     generateMovesFromPosition(
@@ -134,10 +119,8 @@ function generateMovesFromPosition(board, rack, node, prefix, row, col, directio
     if (!nextNode) return;
     
     const newWord = prefix + cell;
-    console.log('Found existing letter:', cell, 'New word:', newWord);
     
     if (nextNode.isTerminal && newWord.length > 1) {
-      console.log('Found valid word:', newWord);
       const tiles = getTilesForWord(board, row, col, direction, newWord);
       if (validateMove(board, tiles, trie)) {
         moves.push({
@@ -174,16 +157,13 @@ function generateMovesFromPosition(board, rack, node, prefix, row, col, directio
     
     const nextNode = node.children.get(letter);
     if (!nextNode) {
-      console.log('No valid continuation for letter:', letter);
       continue;
     }
     
     const newWord = prefix + letter;
-    console.log('Trying new word:', newWord);
     
     // Check if this is a valid word
     if (nextNode.isTerminal && newWord.length > 1) {
-      console.log('Found valid word:', newWord);
       const tiles = getTilesForWord(board, row, col, direction, newWord);
       if (validateMove(board, tiles, trie)) {
         moves.push({
@@ -202,10 +182,8 @@ function generateMovesFromPosition(board, rack, node, prefix, row, col, directio
       if (!nextNextNode) continue;
       
       const extendedWord = newWord + nextLetter;
-      console.log('Trying extended word:', extendedWord);
       
       if (nextNextNode.isTerminal && extendedWord.length > 1) {
-        console.log('Found valid extended word:', extendedWord);
         const tiles = getTilesForWord(board, row, col, direction, extendedWord);
         if (validateMove(board, tiles, trie)) {
           moves.push({
@@ -323,7 +301,6 @@ function validateMove(board, tiles, trie) {
   // Check if all words are valid
   for (const word of words) {
     if (!trie.contains(word)) {
-      console.log('Invalid word:', word);
       return false;
     }
   }
@@ -337,7 +314,6 @@ function getAllWords(board, tiles) {
   // Get the main word
   const mainWord = getMainWord(board, tiles);
   if (mainWord && mainWord.word) {
-    console.log('Main word:', mainWord.word);
     words.add(mainWord.word);
   }
   
@@ -347,7 +323,6 @@ function getAllWords(board, tiles) {
     const crossDirection = mainWord.direction === 'right' ? 'down' : 'right';
     const crossWord = getCrossWord(board, tile.row, tile.col, crossDirection, tiles);
     if (crossWord) {
-      console.log('Cross word:', crossWord);
       words.add(crossWord);
     }
   }
