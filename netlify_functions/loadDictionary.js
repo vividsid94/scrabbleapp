@@ -17,7 +17,7 @@ async function loadDictionary() {
       .from('dictionary')
       .select('*', { count: 'exact', head: true });
 
-    const batchSize = 5000;
+    const batchSize = 1000;
     const batches = Math.ceil(count / batchSize);
 
     for (let i = 0; i < batches; i++) {
