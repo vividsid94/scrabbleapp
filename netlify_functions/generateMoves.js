@@ -296,7 +296,6 @@ function validateMove(board, tiles, trie) {
   
   // Get all words formed by the move
   const words = getAllWords(board, tiles);
-  console.log('Words to validate:', words);
   
   // Check if all words are valid
   for (const word of words) {

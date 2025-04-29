@@ -435,6 +435,11 @@ export default function Play() {
       // Update player 2's score
       setPlayer2points(prev => prev + botMove.score);
       
+      // Show toast notification for bot's move
+      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points from rack of ${[...player2Rack].sort().join('')}`);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      
       // Switch back to player 1
       setCurrentPlayer(1);
       setSelectedBoardPosition(null);

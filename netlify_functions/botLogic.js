@@ -35,10 +35,10 @@ exports.handler = async function (event) {
     }
 
     console.log('🧠 Bot received letters:', letters);
-    console.log('🧠 Bot received board:', JSON.stringify(rawBoard));
+    //console.log('🧠 Bot received board:', JSON.stringify(rawBoard));
 
     const board = normalizeBoard(rawBoard);
-    console.log('🧠 Normalized board:', JSON.stringify(board));
+    //console.log('🧠 Normalized board:', JSON.stringify(board));
 
     const trie = await loadDictionary();
     console.log('🧠 Dictionary loaded');
@@ -68,8 +68,8 @@ exports.handler = async function (event) {
     }
 
     // 🔍 Show top 10 moves
-    console.log(`\n🏆 TOP 100 MOVES:`);
-    sortedMoves.slice(0, 100).forEach((move, i) => {
+    console.log(`\n🏆 TOP 10 MOVES:`);
+    sortedMoves.slice(0, 10).forEach((move, i) => {
       if (!move || !move.word || !move.score || !move.tiles) {
         console.warn('Invalid move in top 10:', move);
         return;
