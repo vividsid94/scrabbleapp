@@ -56,6 +56,10 @@ export default function Play() {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [showBotSettings, setShowBotSettings] = useState(false);
   const [botGoesFirst, setBotGoesFirst] = useState(false);
+  
+  // Add audio refs
+  const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
+  const botMoveSound = useRef(new Audio('/sounds/bot-move.mp3'));
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -310,6 +314,9 @@ export default function Play() {
     const score = await scoreResponse.json();
     console.log("Score:", score);
 
+    // Play player move sound
+    playerMoveSound.current.play();
+
     // Update player points
     if (currentPlayer === 1) {
       setPlayer1points(prev => prev + score);
@@ -443,6 +450,9 @@ export default function Play() {
       
       // Update player 2's score
       setPlayer2points(prev => prev + botMove.score);
+      
+      // Play bot move sound
+      botMoveSound.current.play();
       
       // Show toast notification for bot's move
       setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points from rack of ${[...player2Rack].sort().join('')}`);
