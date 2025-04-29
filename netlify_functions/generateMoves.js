@@ -82,70 +82,58 @@ function generateFirstMove(board, rack, trie, moves) {
 function generateMovesForAnchor(board, rack, anchor, direction, trie, moves) {
   const { row, col } = anchor;
 
-  // Build the maximum left (or upward) prefix from board tiles
-  const maxPrefixInfo = buildPrefixAndNode(board, row, col, direction, trie);
+  // Try backing up 0-7 squares
+  for (let offset = 0; offset <= 7; offset++) {
+    const startRow = direction === 'right' ? row : row - offset;
+    const startCol = direction === 'right' ? col - offset : col;
 
-  const { prefix, node, startRow, startCol } = maxPrefixInfo;
+    if (startRow < 0 || startCol < 0) continue;
 
-  if (!node) return; // Cannot extend from here (prefix doesn't exist in trie)
+    const prefix = buildPrefix(board, startRow, startCol, direction);
+    let node = trie.root;
 
-  // Now generate moves from the prefix
-  generateMovesFromPosition(
-    board,
-    rack,
-    node,
-    prefix,
-    startRow,
-    startCol,
-    direction,
-    moves,
-    trie,
-    [],
-    anchor
-  );
+    // Follow prefix through trie
+    let validPrefix = true;
+    for (const letter of prefix) {
+      if (!node.children.has(letter)) {
+        validPrefix = false;
+        break;
+      }
+      node = node.children.get(letter);
+    }
+
+    if (!validPrefix) continue;
+
+    // Try extending the word starting from here
+    generateMovesFromPosition(
+      board,
+      rack,
+      node,
+      prefix,
+      startRow,
+      startCol,
+      direction,
+      moves,
+      trie,
+      [],
+      anchor
+    );
+  }
 }
 
-function buildPrefixAndNode(board, anchorRow, anchorCol, direction, trie) {
+function buildPrefix(board, startRow, startCol, direction) {
   let prefix = '';
-  let row = anchorRow;
-  let col = anchorCol;
+  let row = startRow;
+  let col = startCol;
 
-  if (direction === 'right') {
-    // Move left
-    while (col > 0 && board[row][col - 1] !== null) {
-      col--;
-    }
-  } else {
-    // Move up
-    while (row > 0 && board[row - 1][col] !== null) {
-      row--;
-    }
+  while (row >= 0 && col >= 0 && board[row][col] !== null) {
+    prefix += board[row][col];
+    if (direction === 'right') col++;
+    else row++;
+    if (row >= 15 || col >= 15) break;
   }
 
-  const startRow = row;
-  const startCol = col;
-
-  // Now build prefix string
-  let currRow = startRow;
-  let currCol = startCol;
-  let node = trie.root;
-
-  while (currRow <= anchorRow && currCol <= anchorCol && currRow < 15 && currCol < 15) {
-    const letter = board[currRow][currCol];
-    if (letter === null) break;
-
-    if (!node.children.has(letter)) {
-      return { prefix: '', node: null, startRow, startCol };
-    }
-
-    node = node.children.get(letter);
-    prefix += letter;
-
-    if (direction === 'right') currCol++;
-    else currRow++;
-  }
-
-  return { prefix, node, startRow, startCol };
+  return prefix;
 }
 
 function generateMovesFromPosition(board, rack, node, prefix, row, col, direction, moves, trie, placedTiles = []) {
