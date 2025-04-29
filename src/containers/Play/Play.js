@@ -10,6 +10,9 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import CheckIcon from '@mui/icons-material/Check';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
@@ -56,10 +59,15 @@ export default function Play() {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [showBotSettings, setShowBotSettings] = useState(false);
   const [botGoesFirst, setBotGoesFirst] = useState(false);
+  const [tilesToExchange, setTilesToExchange] = useState([]);
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
   const botMoveSound = useRef(new Audio('/sounds/bot-move.mp3'));
+
+  const alphabetizeRack = (rack) => {
+    return [...rack].sort((a, b) => a.localeCompare(b));
+  };
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -90,13 +98,36 @@ export default function Play() {
       newPool.splice(randomIndex2, 1);
     }
     
-    setPlayer1Rack(rack1);
-    setPlayer2Rack(rack2);
+    setPlayer1Rack(alphabetizeRack(rack1));
+    setPlayer2Rack(alphabetizeRack(rack2));
     setPool(newPool);
   };
 
   const handleTileClick = (tile, index) => {
-    // Handle tile click logic
+    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+    
+    // If we're in exchange mode, handle tile selection for exchange
+    if (tilesToExchange.length > 0 || selectedTiles.length === 0) {
+      const tileIndex = tilesToExchange.findIndex(t => t.tile === tile && t.index === index);
+      if (tileIndex === -1) {
+        setTilesToExchange([...tilesToExchange, { tile, index }]);
+      } else {
+        const newTiles = [...tilesToExchange];
+        newTiles.splice(tileIndex, 1);
+        setTilesToExchange(newTiles);
+      }
+      return;
+    }
+    
+    // Otherwise handle normal tile selection for play
+    const tileIndex = selectedTiles.indexOf(tile);
+    if (tileIndex === -1) {
+      setSelectedTiles([...selectedTiles, tile]);
+    } else {
+      const newTiles = [...selectedTiles];
+      newTiles.splice(tileIndex, 1);
+      setSelectedTiles(newTiles);
+    }
   };
 
   const handleBoardClick = (row, col) => {
@@ -156,9 +187,9 @@ export default function Play() {
           const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
           const newRack = [...currentRack, tileToRemove];
           if (currentPlayer === 1) {
-            setPlayer1Rack(newRack);
+            setPlayer1Rack(alphabetizeRack(newRack));
           } else {
-            setPlayer2Rack(newRack);
+            setPlayer2Rack(alphabetizeRack(newRack));
           }
 
           setSelectedTiles(prevTiles => {
@@ -197,9 +228,9 @@ export default function Play() {
     const newRack = [...currentRack];
     newRack.splice(tileIndex, 1);
     if (currentPlayer === 1) {
-      setPlayer1Rack(newRack);
+      setPlayer1Rack(alphabetizeRack(newRack));
     } else {
-      setPlayer2Rack(newRack);
+      setPlayer2Rack(alphabetizeRack(newRack));
     }
 
     const newTempBoard = [...tempBoardCoords];
@@ -241,11 +272,11 @@ export default function Play() {
     if (player1Index !== -1) {
       const newRack = [...player1Rack];
       newRack.splice(player1Index, 1);
-      setPlayer1Rack(newRack);
+      setPlayer1Rack(alphabetizeRack(newRack));
     } else if (player2Index !== -1) {
       const newRack = [...player2Rack];
       newRack.splice(player2Index, 1);
-      setPlayer2Rack(newRack);
+      setPlayer2Rack(alphabetizeRack(newRack));
     }
     
     setSelectedTiles([...selectedTiles, tile]);
@@ -287,9 +318,9 @@ export default function Play() {
       const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
       const newRack = [...currentRack, ...selectedTiles];
       if (currentPlayer === 1) {
-        setPlayer1Rack(newRack);
+        setPlayer1Rack(alphabetizeRack(newRack));
       } else {
-        setPlayer2Rack(newRack);
+        setPlayer2Rack(alphabetizeRack(newRack));
       }
 
       // Reset the board state
@@ -337,9 +368,9 @@ export default function Play() {
       }
     }
     if (currentPlayer === 1) {
-      setPlayer1Rack(newRack);
+      setPlayer1Rack(alphabetizeRack(newRack));
     } else {
-      setPlayer2Rack(newRack);
+      setPlayer2Rack(alphabetizeRack(newRack));
     }
     
     setPool(newPool);
@@ -349,6 +380,12 @@ export default function Play() {
       const randomIndex = Math.floor(Math.random() * newPool.length);
       newRack.push(newPool[randomIndex]);
       newPool.splice(randomIndex, 1);
+    }
+
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
     }
 
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
@@ -436,7 +473,7 @@ export default function Play() {
       // Update the board state
       setBoardCoords(newBoard);
       setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
-      setPlayer2Rack(newRack);
+      setPlayer2Rack(alphabetizeRack(newRack));
       
       // Draw new tiles for bot
       const newPool = [...pool];
@@ -445,7 +482,7 @@ export default function Play() {
         newRack.push(newPool[randomIndex]);
         newPool.splice(randomIndex, 1);
       }
-      setPlayer2Rack(newRack);
+      setPlayer2Rack(alphabetizeRack(newRack));
       setPool(newPool);
       
       // Update player 2's score
@@ -545,34 +582,31 @@ export default function Play() {
   }, [currentPlayer]);
 
   const handlePass = () => {
-    // Show confirmation dialog
-    if (window.confirm('Are you sure you want to pass your turn?')) {
-      setConsecutivePasses(prev => prev + 1);
-      
-      // Check if game should end (two consecutive passes)
-      if (consecutivePasses >= 1) {
-        setSnackbarMessage('Game ended due to two consecutive passes');
-        setSnackbarSeverity('info');
-        setSnackbarOpen(true);
-        // TODO: Add game end logic here
-        return;
-      }
-
-      // Switch to next player
-      setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-      setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
+    setConsecutivePasses(prev => prev + 1);
+    
+    // Check if game should end (six consecutive passes)
+    if (consecutivePasses >= 5) {
+      setSnackbarMessage('Game ended due to six consecutive passes');
       setSnackbarSeverity('info');
       setSnackbarOpen(true);
-      
-      // Reset the board state
-      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-      setSelectedTiles([]);
-      setSelectedBoardPosition(null);
-      
-      // If next player is bot, make bot move
-      if (isBotMode && currentPlayer === 2) {
-        makeBotMove();
-      }
+      // TODO: Add game end logic here
+      return;
+    }
+
+    // Switch to next player
+    setCurrentPlayer(prev => prev === 1 ? 2 : 1);
+    setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
+    setSnackbarSeverity('info');
+    setSnackbarOpen(true);
+    
+    // Reset the board state
+    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+    setSelectedTiles([]);
+    setSelectedBoardPosition(null);
+    
+    // If next player is bot, make bot move
+    if (isBotMode && currentPlayer === 2) {
+      makeBotMove();
     }
   };
 
@@ -653,8 +687,8 @@ export default function Play() {
       newPool.splice(randomIndex2, 1);
     }
     
-    setPlayer1Rack(rack1);
-    setPlayer2Rack(rack2);
+    setPlayer1Rack(alphabetizeRack(rack1));
+    setPlayer2Rack(alphabetizeRack(rack2));
     setPool(newPool);
     
     // Set bot mode and names
@@ -667,6 +701,72 @@ export default function Play() {
     
     // If bot goes first, make its move
     if (botGoesFirst) {
+      makeBotMove();
+    }
+  };
+
+  const handleExchange = () => {
+    if (tilesToExchange.length === 0) {
+      setSnackbarMessage('Please select tiles to exchange');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (pool.length < tilesToExchange.length) {
+      setSnackbarMessage('Not enough tiles in pool to exchange');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Check if tiles have been placed on the board for this turn
+    const hasTilesPlaced = JSON.stringify(tempBoardCoords) !== JSON.stringify(boardCoords);
+    if (hasTilesPlaced) {
+      setSnackbarMessage('Remove tiles from the board before exchanging');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+    const newRack = [...currentRack];
+    const newPool = [...pool];
+
+    // Sort tiles by index in descending order to avoid index shifting issues
+    const sortedTiles = [...tilesToExchange].sort((a, b) => b.index - a.index);
+    
+    // Remove selected tiles from rack
+    sortedTiles.forEach(({ index }) => {
+      if (index < newRack.length) {
+        newRack.splice(index, 1);
+      }
+    });
+
+    // Add new tiles from pool
+    for (let i = 0; i < tilesToExchange.length; i++) {
+      const randomIndex = Math.floor(Math.random() * newPool.length);
+      newRack.push(newPool[randomIndex]);
+      newPool.splice(randomIndex, 1);
+    }
+
+    // Update state with alphabetized rack
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
+    }
+    setPool(newPool);
+    setTilesToExchange([]);
+
+    // Switch to next player
+    setCurrentPlayer(prev => prev === 1 ? 2 : 1);
+    setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
+    setSnackbarSeverity('info');
+    setSnackbarOpen(true);
+
+    // If next player is bot, make bot move
+    if (isBotMode && currentPlayer === 2) {
       makeBotMove();
     }
   };
@@ -737,21 +837,93 @@ export default function Play() {
               </Tooltip>
             </Box>
               <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <Button 
-                variant="contained" 
-                onClick={handleWordSubmit}
-                disabled={!selectedBoardPosition || selectedTiles.length === 0}
-                sx={{ marginRight: '8px' }}
-              >
-                Submit
-              </Button>
-              <Button 
-                variant="contained" 
-                onClick={handlePass}
-                color="secondary"
-              >
-                Pass Turn
-              </Button>
+              <Tooltip title="Submit" placement="top">
+                <Button 
+                  variant="contained" 
+                  onClick={handleWordSubmit}
+                  disabled={!selectedBoardPosition || selectedTiles.length === 0}
+                  sx={{ 
+                    marginRight: '8px',
+                    backgroundColor: '#4CAF50',
+                    '&:hover': {
+                      backgroundColor: '#45a049',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#cccccc',
+                      color: '#666666'
+                    },
+                    borderRadius: '50%',
+                    minWidth: '40px',
+                    width: '40px',
+                    height: '40px',
+                    padding: 0,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <CheckIcon />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Pass" placement="top">
+                <Button 
+                  variant="contained" 
+                  onClick={handlePass}
+                  sx={{ 
+                    marginRight: '8px',
+                    backgroundColor: '#f44336',
+                    '&:hover': {
+                      backgroundColor: '#d32f2f',
+                    },
+                    borderRadius: '50%',
+                    minWidth: '40px',
+                    width: '40px',
+                    height: '40px',
+                    padding: 0,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <SkipNextIcon />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Exchange" placement="top">
+                <Button 
+                  variant="contained" 
+                  onClick={handleExchange}
+                  disabled={tilesToExchange.length === 0}
+                  sx={{ 
+                    backgroundColor: '#2196F3',
+                    '&:hover': {
+                      backgroundColor: '#1976D2',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#cccccc',
+                      color: '#666666'
+                    },
+                    borderRadius: '50%',
+                    minWidth: '40px',
+                    width: '40px',
+                    height: '40px',
+                    padding: 0,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <SwapHorizIcon />
+                </Button>
+              </Tooltip>
               </Box>
             </Box> 
             <Box className={styles.playerPanel}>
@@ -768,6 +940,7 @@ export default function Play() {
                     board={player1Rack} 
                     tiles={tiles} 
                     color={color.current}
+                    selectedTiles={tilesToExchange}
                     onTileClick={(tile, index) => {
                       console.log('Tile clicked:', { tile, index });
                       handleTileClick(tile, index);
@@ -794,6 +967,7 @@ export default function Play() {
                     board={player2Rack} 
                     tiles={tiles} 
                     color={color.current}
+                    selectedTiles={tilesToExchange}
                     onTileClick={(tile, index) => {
                       console.log('Tile clicked:', { tile, index });
                       handleTileClick(tile, index);

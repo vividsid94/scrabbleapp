@@ -49,7 +49,7 @@ export default (function() {
                     <Box className={styles.Rack}>
                         {rack.map((col, colIndex) => (
                             <Box 
-                                className={styles.Protile} 
+                                className={`${styles.Protile} ${props.selectedTiles?.some(t => t.tile === col && t.index === colIndex) ? styles.selected : ''}`} 
                                 style={{ backgroundColor: props.color }} 
                                 key={colIndex}
                                 draggable={true}
@@ -66,7 +66,7 @@ export default (function() {
                     <Box className={styles.Rack}>
                         {rack.map((col, colIndex) => (
                             <Box 
-                                className={styles.Tile} 
+                                className={`${styles.Tile} ${props.selectedTiles?.some(t => t.tile === col && t.index === colIndex) ? styles.selected : ''}`} 
                                 key={colIndex}
                                 draggable={true}
                                 onDragStart={(e) => handleDragStart(e, col, colIndex)}
