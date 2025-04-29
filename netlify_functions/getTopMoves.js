@@ -3,6 +3,9 @@ const { findAnchors } = require('./findAnchors');
 const { loadDictionary } = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
+// Cache the dictionary in memory
+let cachedTrie = null;
+
 // Helper function to convert row/col to scrabble coordinates
 function getScrabbleCoordinates(row, col) {
   const letters = 'ABCDEFGHIJKLMNO';
@@ -41,9 +44,16 @@ exports.handler = async function (event) {
     }
 
     const board = normalizeBoard(rawBoard);
-    const trie = await loadDictionary();
+    
+    // Load dictionary if not already cached
+    if (!cachedTrie) {
+      console.log('Loading dictionary...');
+      cachedTrie = await loadDictionary();
+      console.log('Dictionary loaded and cached');
+    }
+
     const anchors = findAnchors(board);
-    const allMoves = generateMoves(board, letters, anchors, trie);
+    const allMoves = generateMoves(board, letters, anchors, cachedTrie);
 
     if (!Array.isArray(allMoves)) {
       throw new Error('generateMoves did not return an array');
@@ -58,7 +68,7 @@ exports.handler = async function (event) {
         console.warn('Invalid move object:', move);
         continue;
       }
-      if (validateMove(board, move.tiles, trie)) {
+      if (validateMove(board, move.tiles, cachedTrie)) {
         validMoves.push(move);
       }
     }

@@ -3,6 +3,9 @@ const { findAnchors } = require('./findAnchors');
 const { loadDictionary } = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
+// Cache the dictionary in memory
+let cachedTrie = null;
+
 exports.handler = async function (event) {
   try {
     if (event.httpMethod !== 'POST') {
@@ -40,13 +43,17 @@ exports.handler = async function (event) {
     const board = normalizeBoard(rawBoard);
     //console.log('🧠 Normalized board:', JSON.stringify(board));
 
-    const trie = await loadDictionary();
-    console.log('🧠 Dictionary loaded');
+    // Load dictionary if not already cached
+    if (!cachedTrie) {
+      console.log('🧠 Loading dictionary...');
+      cachedTrie = await loadDictionary();
+      console.log('🧠 Dictionary loaded and cached');
+    }
 
     const anchors = findAnchors(board);
     console.log('🧠 Found anchors:', anchors);
 
-    const allMoves = generateMoves(board, letters, anchors, trie);
+    const allMoves = generateMoves(board, letters, anchors, cachedTrie);
     console.log('🧠 Generated moves:', allMoves.length);
 
     if (!Array.isArray(allMoves)) {
@@ -62,7 +69,7 @@ exports.handler = async function (event) {
         console.warn('Invalid move object:', move);
         continue;
       }
-      if (validateMove(board, move.tiles, trie)) {
+      if (validateMove(board, move.tiles, cachedTrie)) {
         validMoves.push(move);
       }
     }

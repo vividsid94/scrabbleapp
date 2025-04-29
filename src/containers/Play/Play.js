@@ -51,6 +51,7 @@ export default function Play() {
   const [showTopMoves, setShowTopMoves] = useState(false);
   const [topMoves, setTopMoves] = useState([]);
   const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
+  const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -581,6 +582,18 @@ export default function Play() {
       }
 
       const data = await response.json();
+      
+      // Check if this is the first load (dictionary loading)
+      if (data.message && data.message.includes('Loading dictionary')) {
+        setIsDictionaryLoading(true);
+        // Retry after a short delay
+        setTimeout(() => {
+          handleGetTopMoves();
+        }, 1000);
+        return;
+      }
+      
+      setIsDictionaryLoading(false);
       setTopMoves(data.moves);
       setShowTopMoves(true);
     } catch (error) {
@@ -794,7 +807,16 @@ export default function Play() {
         <Box className={styles.modalContainer}>
           <Box className={styles.modalTitle}>Top Moves</Box>
           {isLoadingTopMoves ? (
-            <Box className={styles.loading}>Loading top moves...</Box>
+            <Box className={styles.loading}>
+              {isDictionaryLoading ? (
+                <>
+                  <Box>Loading dictionary...</Box>
+                  <Box className={styles.loadingSubtext}>This only happens once per session</Box>
+                </>
+              ) : (
+                <Box>Finding best moves...</Box>
+              )}
+            </Box>
           ) : (
             <Box className={styles.topMovesList}>
               {topMoves.map((move, index) => (
