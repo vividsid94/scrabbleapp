@@ -25,18 +25,75 @@ form{
 
 .modalContainer{
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border: 5px solid rgb(173, 88, 39);
-  padding: 25px;
-  width: auto;
-  outline: none;
-  background: white;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Syne' !important;
+  width: 400px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modalTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.topMovesList {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.topMoveItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.topMoveItem:last-child {
+  border-bottom: none;
+}
+
+.movePosition {
+  color: #666;
+  font-size: 14px;
+  width: 40px;
+  text-align: center;
+  margin-right: 8px;
+}
+
+.moveWord {
+  font-size: 18px;
+  font-weight: bold;
+  flex: 1;
+}
+
+.moveScore {
+  color: #4CAF50;
+  font-weight: bold;
+  margin: 0 16px;
+}
+
+.moveDirection {
+  color: #666;
+  font-size: 20px;
+}
+
+.noMoves {
+  text-align: center;
+  padding: 20px;
+  color: #666;
 }
 
 .modalContainer option{

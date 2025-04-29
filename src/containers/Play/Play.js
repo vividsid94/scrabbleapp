@@ -9,6 +9,7 @@ import Modal from '@mui/material/Modal';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
@@ -47,6 +48,9 @@ export default function Play() {
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
   const [consecutivePasses, setConsecutivePasses] = useState(0);
+  const [showTopMoves, setShowTopMoves] = useState(false);
+  const [topMoves, setTopMoves] = useState([]);
+  const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -557,6 +561,38 @@ export default function Play() {
     }
   };
 
+  const handleGetTopMoves = async () => {
+    setIsLoadingTopMoves(true);
+    try {
+      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      const response = await fetch('/.netlify/functions/getTopMoves', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: currentRack
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setTopMoves(data.moves);
+      setShowTopMoves(true);
+    } catch (error) {
+      console.error('Error getting top moves:', error);
+      setSnackbarMessage('Error getting top moves: ' + error.message);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoadingTopMoves(false);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -605,6 +641,18 @@ export default function Play() {
                     color: isBotMode ? '#4CAF50' : 'inherit',
                     '&:hover': {
                       color: isBotMode ? '#45a049' : '#666'
+                    }
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title="Get Top Moves">
+                <LightbulbIcon 
+                  className={styles.keyBtn}
+                  onClick={handleGetTopMoves}
+                  sx={{ 
+                    color: isLoadingTopMoves ? '#FFD700' : 'inherit',
+                    '&:hover': {
+                      color: '#FFD700'
                     }
                   }}
                 />
@@ -737,6 +785,35 @@ export default function Play() {
           Bot is thinking...
         </div>
       )}
+
+      <Modal
+        open={showTopMoves}
+        onClose={() => setShowTopMoves(false)}
+        aria-labelledby="top-moves-modal"
+      >
+        <Box className={styles.modalContainer}>
+          <Box className={styles.modalTitle}>Top Moves</Box>
+          {isLoadingTopMoves ? (
+            <Box className={styles.loading}>Loading top moves...</Box>
+          ) : (
+            <Box className={styles.topMovesList}>
+              {topMoves.map((move, index) => (
+                <Box key={index} className={styles.topMoveItem}>
+                  <Box className={styles.movePosition}>{move.startPosition}</Box>
+                  <Box className={styles.moveWord}>{move.word}</Box>
+                  <Box className={styles.moveScore}>{move.score} pts</Box>
+                  <Box className={styles.moveDirection}>
+                    {move.direction === 'right' ? '→' : '↓'}
+                  </Box>
+                </Box>
+              ))}
+              {topMoves.length === 0 && (
+                <Box className={styles.noMoves}>No valid moves found</Box>
+              )}
+            </Box>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 } 
