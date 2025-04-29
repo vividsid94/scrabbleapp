@@ -25,180 +25,206 @@ function generateFirstMove(board, rack, trie, moves) {
   const centerRow = 7;
   const centerCol = 7;
   
+  // For first move, we need to find all words that can be played through the center square
+  
   // Try placing words horizontally through the center
   for (let startCol = Math.max(0, centerCol - 6); startCol <= centerCol; startCol++) {
-    const prefix = '';
-    const placedTiles = [];
-    
-    // Make sure we're covering the center square
-    if (centerCol >= startCol && centerCol < startCol + Math.min(7, rack.length)) {
-      generateWordsFromPosition(
+    // Make sure we're covering the center square and not going off the board
+    const maxWordLength = Math.min(15 - startCol, 7);
+    if (centerCol >= startCol && centerCol < startCol + maxWordLength) {
+      // Creating cross-check map (empty for first move)
+      const crossChecks = new Map();
+      
+      // Try generating words starting from this position
+      generateAllWords(
         board,
-        rack,
+        [...rack], // Make a copy of the rack
         trie.root,
-        prefix,
+        '',
         centerRow,
         startCol,
         'right',
         moves,
         trie,
-        placedTiles,
+        [],
         true,
-        centerCol
+        centerCol,
+        null,
+        crossChecks
       );
     }
   }
   
   // Try placing words vertically through the center
   for (let startRow = Math.max(0, centerRow - 6); startRow <= centerRow; startRow++) {
-    const prefix = '';
-    const placedTiles = [];
-    
-    // Make sure we're covering the center square
-    if (centerRow >= startRow && centerRow < startRow + Math.min(7, rack.length)) {
-      generateWordsFromPosition(
+    // Make sure we're covering the center square and not going off the board
+    const maxWordLength = Math.min(15 - startRow, 7);
+    if (centerRow >= startRow && centerRow < startRow + maxWordLength) {
+      // Creating cross-check map (empty for first move)
+      const crossChecks = new Map();
+      
+      // Try generating words starting from this position
+      generateAllWords(
         board,
-        rack,
+        [...rack], // Make a copy of the rack
         trie.root,
-        prefix,
+        '',
         startRow,
         centerCol,
         'down',
         moves,
         trie,
-        placedTiles,
+        [],
         true,
-        centerRow
+        centerRow,
+        null,
+        crossChecks
       );
+    }
+  }
+  
+  // Also try single letter placements in the center (if they are valid words)
+  for (const letter of new Set(rack)) {
+    const node = trie.root.children.get(letter);
+    if (node && node.isTerminal) {
+      const tile = {
+        row: centerRow,
+        col: centerCol,
+        letter,
+        isNew: true
+      };
+      
+      const score = calculateScore(board, [tile], boardMultipliers, trie);
+      moves.push({
+        word: letter,
+        tiles: [tile],
+        score,
+        direction: 'right' // Direction doesn't matter for single letter
+      });
     }
   }
 }
 
 function generateMovesInDirection(board, rack, anchor, direction, trie, moves) {
   const { row, col } = anchor;
+
+  // Precompute cross-checks for the whole board
+  const horizontalCrossChecks = new Map();
+  const verticalCrossChecks = new Map();
   
-  // Find the start of the potential word area
-  let startRow, startCol;
-  let maxBackup = Math.min(7, direction === 'right' ? col : row);
-  
-  // Check for existing prefix
-  let prefix = '';
-  let prefixStartRow, prefixStartCol;
-  
-  if (direction === 'right') {
-    // Check for letters to the left of anchor
-    prefixStartCol = col;
-    while (prefixStartCol > 0 && board[row][prefixStartCol - 1] !== null) {
-      prefixStartCol--;
-    }
-    
-    // Build prefix if it exists
-    for (let c = prefixStartCol; c < col; c++) {
-      if (board[row][c] !== null) {
-        prefix += board[row][c];
+  for (let r = 0; r < 15; r++) {
+    for (let c = 0; c < 15; c++) {
+      if (board[r][c] === null) {
+        const hChecks = getValidLetters(board, r, c, 'down', trie);
+        const vChecks = getValidLetters(board, r, c, 'right', trie);
+        
+        const key = `${r},${c}`;
+        horizontalCrossChecks.set(key, hChecks);
+        verticalCrossChecks.set(key, vChecks);
       }
     }
-    
-    // Calculate how many positions we can back up (max 7 - prefix length)
-    maxBackup = Math.min(maxBackup, 7 - prefix.length);
-    startRow = row;
-    startCol = prefixStartCol;
-  } else {
-    // Check for letters above the anchor
-    prefixStartRow = row;
-    while (prefixStartRow > 0 && board[prefixStartRow - 1][col] !== null) {
-      prefixStartRow--;
-    }
-    
-    // Build prefix if it exists
-    for (let r = prefixStartRow; r < row; r++) {
-      if (board[r][col] !== null) {
-        prefix += board[r][col];
-      }
-    }
-    
-    // Calculate how many positions we can back up (max 7 - prefix length)
-    maxBackup = Math.min(maxBackup, 7 - prefix.length);
-    startRow = prefixStartRow;
-    startCol = col;
   }
   
-  // If we have a prefix, we can't back up further
-  if (prefix.length > 0) {
-    maxBackup = 0;
-  }
-  
-  // Try backing up 0 to maxBackup squares to find valid starting positions
+  const crossChecks = direction === 'right' ? horizontalCrossChecks : verticalCrossChecks;
+
+  const maxBackup = Math.min(7, direction === 'right' ? col : row);
+
+  // Always try backing up up to 7 tiles before anchor
   for (let offset = 0; offset <= maxBackup; offset++) {
-    const posStartRow = direction === 'right' ? startRow : startRow - offset;
-    const posStartCol = direction === 'right' ? startCol - offset : startCol;
-    
-    // Only proceed if starting position is valid
-    if (posStartRow < 0 || posStartCol < 0) continue;
-    
-    // Check if the position immediately before our start is empty (or edge of board)
-    const beforeRow = direction === 'right' ? posStartRow : posStartRow - 1;
-    const beforeCol = direction === 'right' ? posStartCol - 1 : posStartCol;
-    
+    const startRow = direction === 'right' ? row : row - offset;
+    const startCol = direction === 'right' ? col - offset : col;
+
+    if (startRow < 0 || startCol < 0) continue;
+
+    // Only proceed if not starting in the middle of a word improperly
+    const beforeRow = direction === 'right' ? startRow : startRow - 1;
+    const beforeCol = direction === 'right' ? startCol - 1 : startCol;
     if ((beforeRow >= 0 && beforeCol >= 0 && board[beforeRow][beforeCol] !== null)) {
-      // Can't start here as we'd be connecting to an existing word
       continue;
     }
-    
-    // Try extending from this position
-    generateWordsFromPosition(
+
+    // Now, follow any forced letters (already on board) starting at (startRow, startCol)
+    let currentNode = trie.root;
+    let valid = true;
+    let r = startRow;
+    let c = startCol;
+    let prefix = '';
+
+    while (r < 15 && c < 15) {
+      const cell = board[r][c];
+      if (cell === null) break; // Empty cell, we can place tiles here
+
+      // Forced existing tile
+      if (!currentNode.children.has(cell)) {
+        valid = false;
+        break;
+      }
+
+      currentNode = currentNode.children.get(cell);
+      prefix += cell;
+
+      if (direction === 'right') c++;
+      else r++;
+    }
+
+    if (!valid) continue; // Can't start from here
+
+    // Start building moves from this position
+    generateAllWords(
       board,
-      rack,
-      trie.root,
-      '',
-      posStartRow,
-      posStartCol,
+      [...rack],
+      currentNode,
+      prefix,
+      r,
+      c,
       direction,
       moves,
       trie,
       [],
       false,
       null,
-      anchor
+      anchor,
+      crossChecks
     );
-  }
-  
-  // Handle the case with an existing prefix
-  if (prefix.length > 0) {
-    // Navigate the trie to the prefix node
-    let node = trie.root;
-    let validPrefix = true;
-    
-    for (const letter of prefix) {
-      if (!node.children.has(letter)) {
-        validPrefix = false;
-        break;
-      }
-      node = node.children.get(letter);
-    }
-    
-    if (validPrefix) {
-      // Try extending from the anchor with the existing prefix
-      generateWordsFromPosition(
-        board,
-        rack,
-        node,
-        prefix,
-        row,
-        col,
-        direction,
-        moves,
-        trie,
-        [],
-        false,
-        null,
-        anchor
-      );
-    }
   }
 }
 
-function generateWordsFromPosition(
+// Get valid letters that can be placed at a position based on cross-check constraints
+function getValidLetters(board, row, col, direction, trie) {
+  // If there's already a letter here, return empty set (can't place)
+  if (board[row][col] !== null) {
+    return new Set();
+  }
+  
+  // If no adjacent tiles in perpendicular direction, all letters are valid
+  let hasPerpendicularTile = false;
+  if (direction === 'right') {
+    hasPerpendicularTile = (row > 0 && board[row-1][col] !== null) || 
+                          (row < 14 && board[row+1][col] !== null);
+  } else {
+    hasPerpendicularTile = (col > 0 && board[row][col-1] !== null) || 
+                          (col < 14 && board[row][col+1] !== null);
+  }
+  
+  if (!hasPerpendicularTile) {
+    // All letters are valid if no cross-word constraints
+    return null; // null means all letters are allowed
+  }
+  
+  // Find all letters that form valid cross-words
+  const validLetters = new Set();
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.toLowerCase();
+  
+  for (const letter of alphabet) {
+    if (isValidCrossWord(board, row, col, letter, direction === 'right' ? 'down' : 'right', trie)) {
+      validLetters.add(letter);
+    }
+  }
+  
+  return validLetters;
+}
+
+function generateAllWords(
   board, 
   rack, 
   node, 
@@ -211,7 +237,8 @@ function generateWordsFromPosition(
   placedTiles = [], 
   isFirstMove = false,
   centerToCheck = null,
-  anchor = null
+  anchor = null,
+  crossChecks = null
 ) {
   // Stop if we've gone off the board
   if (row < 0 || row >= 15 || col < 0 || col >= 15) return;
@@ -231,7 +258,7 @@ function generateWordsFromPosition(
     const newWordSoFar = wordSoFar + existingLetter;
     
     // Continue extending the word
-    generateWordsFromPosition(
+    generateAllWords(
       board,
       rack,
       nextNode,
@@ -244,7 +271,8 @@ function generateWordsFromPosition(
       placedTiles,
       isFirstMove,
       centerToCheck,
-      anchor
+      anchor,
+      crossChecks
     );
     
   } else {
@@ -253,29 +281,43 @@ function generateWordsFromPosition(
     // First, check if we have a valid word so far and can stop here
     if (node.isTerminal && wordSoFar.length > 1) {
       // Check if this move meets requirements
-      const isValid = isFirstMove ? 
-        isCoveringCenter(placedTiles, centerToCheck) : 
-        (anchor ? coversTile(placedTiles, anchor.row, anchor.col) : true);
+      let isValid = true;
+      
+      if (isFirstMove) {
+        isValid = isCoveringCenter(placedTiles, centerToCheck);
+      } else if (anchor) {
+        isValid = (placedTiles.length > 0 && 
+                 (coversTile(placedTiles, anchor.row, anchor.col) || 
+                  isConnected(board, placedTiles)));
+      }
       
       if (isValid && validateMove(board, placedTiles, trie)) {
         const score = calculateScore(board, placedTiles, boardMultipliers, trie);
-        moves.push({
-          word: wordSoFar,
-          tiles: [...placedTiles],
-          score,
-          direction
-        });
+        
+        // Only add this move if it's unique
+        if (!moveExists(moves, placedTiles)) {
+          moves.push({
+            word: wordSoFar,
+            tiles: [...placedTiles],
+            score,
+            direction
+          });
+        }
       }
     }
     
+    // Check cross-word constraints
+    const key = `${row},${col}`;
+    const validLetters = crossChecks ? crossChecks.get(key) : null;
+    
     // Try placing each available letter from the rack
-    const usedLetters = new Set();
-    for (let i = 0; i < rack.length; i++) {
-      const letter = rack[i];
-      
-      // Skip if we've already tried this letter (avoid duplicates)
-      if (usedLetters.has(letter)) continue;
-      usedLetters.add(letter);
+    const uniqueLetters = getUniqueLetters(rack);
+    
+    for (const [letter, count] of uniqueLetters) {
+      // Skip if letter doesn't satisfy cross-check
+      if (validLetters && validLetters.size > 0 && !validLetters.has(letter)) {
+        continue;
+      }      
       
       // Check if this letter is valid in the trie
       const nextNode = node.children.get(letter);
@@ -288,15 +330,16 @@ function generateWordsFromPosition(
       
       // Create updated rack without the used letter
       const newRack = [...rack];
-      newRack.splice(i, 1);
-      
-      // Check if placing this letter forms a valid cross-word
-      if (!isValidCrossWord(board, row, col, letter, direction, trie)) {
+      const letterIndex = newRack.indexOf(letter);
+      if (letterIndex >= 0) {
+        newRack.splice(letterIndex, 1);
+      } else {
+        // Handle blank tiles (implement if needed)
         continue;
       }
       
       // Continue extending the word
-      generateWordsFromPosition(
+      generateAllWords(
         board,
         newRack,
         nextNode,
@@ -309,10 +352,79 @@ function generateWordsFromPosition(
         newPlacedTiles,
         isFirstMove,
         centerToCheck,
-        anchor
+        anchor,
+        crossChecks
       );
     }
+    
+    // Try stopping here as well (no letter placed at this position)
+    // This allows for "gaps" in our word placement
+    // But only if we already have placed at least one tile
+    if (placedTiles.length > 0) {
+      // Check if this is a valid anchor-covering move
+      let isValid = true;
+      
+      if (isFirstMove) {
+        isValid = isCoveringCenter(placedTiles, centerToCheck);
+      } else if (anchor) {
+        isValid = (coversTile(placedTiles, anchor.row, anchor.col) || 
+                   isConnected(board, placedTiles));
+      }
+      
+      if (isValid && validateMove(board, placedTiles, trie)) {
+        // Find all words formed by the current placement
+        const words = getAllWords(board, placedTiles);
+        const allWordsValid = words.length > 0 && words.every(word => trie.contains(word));
+        
+        if (allWordsValid && wordSoFar.length > 1 && node.isTerminal) {
+          const score = calculateScore(board, placedTiles, boardMultipliers, trie);
+          
+          // Only add this move if it's unique
+          if (!moveExists(moves, placedTiles)) {
+            moves.push({
+              word: wordSoFar,
+              tiles: [...placedTiles],
+              score,
+              direction
+            });
+          }
+        }
+      }
+    }
   }
+}
+
+// Helper function to get unique letters and their counts from rack
+function getUniqueLetters(rack) {
+  const letterCounts = new Map();
+  
+  for (const letter of rack) {
+    const count = letterCounts.get(letter) || 0;
+    letterCounts.set(letter, count + 1);
+  }
+  
+  return letterCounts;
+}
+
+// Check if a move already exists in the moves list
+function moveExists(moves, tiles) {
+  // Sort tiles to normalize the representation
+  const sortedTiles = [...tiles].sort((a, b) => {
+    if (a.row !== b.row) return a.row - b.row;
+    return a.col - b.col;
+  });
+  
+  const tileKey = sortedTiles.map(t => `${t.row},${t.col},${t.letter}`).join('|');
+  
+  return moves.some(move => {
+    const moveTiles = [...move.tiles].sort((a, b) => {
+      if (a.row !== b.row) return a.row - b.row;
+      return a.col - b.col;
+    });
+    
+    const moveKey = moveTiles.map(t => `${t.row},${t.col},${t.letter}`).join('|');
+    return moveKey === tileKey;
+  });
 }
 
 function isCoveringCenter(tiles, centerPos) {
@@ -326,15 +438,17 @@ function coversTile(tiles, row, col) {
   return tiles.some(tile => tile.row === row && tile.col === col);
 }
 
-function isValidCrossWord(board, row, col, letter, mainDirection, trie) {
-  const crossDirection = mainDirection === 'right' ? 'down' : 'right';
+function isValidCrossWord(board, row, col, letter, crossDirection, trie) {
+  // Cross direction is the opposite of the main word direction
+  // If we're building a word going right, cross direction is down
+  // If we're building a word going down, cross direction is right
   
   // Check if there are any adjacent tiles in the cross direction
   let hasCrossAdjacent = false;
   if (crossDirection === 'down') {
     hasCrossAdjacent = (row > 0 && board[row - 1][col] !== null) || 
                        (row < 14 && board[row + 1][col] !== null);
-  } else {
+  } else { // right
     hasCrossAdjacent = (col > 0 && board[row][col - 1] !== null) || 
                        (col < 14 && board[row][col + 1] !== null);
   }
@@ -350,7 +464,7 @@ function isValidCrossWord(board, row, col, letter, mainDirection, trie) {
     while (startRow > 0 && board[startRow - 1][col] !== null) {
       startRow--;
     }
-  } else {
+  } else { // right
     while (startCol > 0 && board[row][startCol - 1] !== null) {
       startCol--;
     }
