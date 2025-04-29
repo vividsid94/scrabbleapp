@@ -531,3 +531,16 @@ form{
   transform: scale(1.05);
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
+.botSettingsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.botSettingsButtons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}

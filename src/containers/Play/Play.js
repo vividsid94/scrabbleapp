@@ -13,6 +13,8 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
+import BotSettingsModal from '../../components/Modals/BotSettingsModal';
+import TopMovesModal from '../../components/Modals/TopMovesModal';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -52,6 +54,8 @@ export default function Play() {
   const [topMoves, setTopMoves] = useState([]);
   const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
+  const [showBotSettings, setShowBotSettings] = useState(false);
+  const [botGoesFirst, setBotGoesFirst] = useState(false);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -607,6 +611,56 @@ export default function Play() {
     }
   };
 
+  const handleBotModeToggle = () => {
+    setShowBotSettings(true);
+  };
+
+  const startBotGame = () => {
+    // Reset game state
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setPlayer1points(0);
+    setPlayer2points(0);
+    setPointsScored(0);
+    setPool(origPool);
+    setCurrentPlayer(botGoesFirst ? 2 : 1);
+    setConsecutivePasses(0);
+    
+    // Initialize player racks
+    const newPool = [...origPool];
+    const rack1 = [];
+    const rack2 = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const randomIndex1 = Math.floor(Math.random() * newPool.length);
+      rack1.push(newPool[randomIndex1]);
+      newPool.splice(randomIndex1, 1);
+      
+      const randomIndex2 = Math.floor(Math.random() * newPool.length);
+      rack2.push(newPool[randomIndex2]);
+      newPool.splice(randomIndex2, 1);
+    }
+    
+    setPlayer1Rack(rack1);
+    setPlayer2Rack(rack2);
+    setPool(newPool);
+    
+    // Set bot mode and names
+    setIsBotMode(true);
+    setPlayer1Name('You');
+    setPlayer2Name('SidBot');
+    
+    // Close settings modal
+    setShowBotSettings(false);
+    
+    // If bot goes first, make its move
+    if (botGoesFirst) {
+      makeBotMove();
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -650,7 +704,7 @@ export default function Play() {
               <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
                 <SmartToyIcon 
                   className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
-                  onClick={() => handleSettingsChange('botMode', !isBotMode)}
+                  onClick={handleBotModeToggle}
                   sx={{ 
                     color: isBotMode ? '#4CAF50' : 'inherit',
                     '&:hover': {
@@ -800,47 +854,25 @@ export default function Play() {
         </div>
       )}
 
-      <Modal
+      <BotSettingsModal
+        open={showBotSettings}
+        onClose={() => setShowBotSettings(false)}
+        botGoesFirst={botGoesFirst}
+        onBotGoesFirstChange={(e) => setBotGoesFirst(e.target.value === 'bot')}
+        onStartGame={startBotGame}
+      />
+
+      <TopMovesModal
         open={showTopMoves}
         onClose={() => {
           setShowTopMoves(false);
-          setIsDictionaryLoading(false);
           setIsLoadingTopMoves(false);
+          setIsDictionaryLoading(false);
         }}
-        aria-labelledby="top-moves-modal"
-      >
-        <Box className={styles.modalContainer}>
-          <Box className={styles.modalTitle}>Top Moves</Box>
-          {isLoadingTopMoves ? (
-            <Box className={styles.loading}>
-              {isDictionaryLoading ? (
-                <>
-                  <Box>Loading dictionary...</Box>
-                  <Box className={styles.loadingSubtext}>This only happens once per session</Box>
-                </>
-              ) : (
-                <Box>Finding best moves...</Box>
-              )}
-            </Box>
-          ) : (
-            <Box className={styles.topMovesList}>
-              {topMoves.map((move, index) => (
-                <Box key={index} className={styles.topMoveItem}>
-                  <Box className={styles.movePosition}>{move.startPosition}</Box>
-                  <Box className={styles.moveWord}>{move.word}</Box>
-                  <Box className={styles.moveScore}>{move.score} pts</Box>
-                  <Box className={styles.moveDirection}>
-                    {move.direction === 'right' ? '→' : '↓'}
-                  </Box>
-                </Box>
-              ))}
-              {topMoves.length === 0 && (
-                <Box className={styles.noMoves}>No valid moves found</Box>
-              )}
-            </Box>
-          )}
-        </Box>
-      </Modal>
+        isTopMovesLoading={isLoadingTopMoves}
+        isDictionaryLoading={isDictionaryLoading}
+        topMoves={topMoves}
+      />
     </Box>
   );
 } 
