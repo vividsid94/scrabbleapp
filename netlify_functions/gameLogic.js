@@ -4,28 +4,19 @@ const letterScores = {
     'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10
 };
 
-const { createClient } = require('@supabase/supabase-js');
+const { loadDictionary } = require('./loadDictionary');
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Cache the dictionary in memory
+let cachedTrie = null;
 
-// Function to check if a word is valid using Supabase
+// Function to check if a word is valid using the trie
 async function isValidWord(word) {
     try {
-        const { data, error } = await supabase
-            .from('dictionary')
-            .select('word')
-            .eq('word', word.toUpperCase())
-            .single();
-
-        if (error) {
-            console.error('Error checking word:', error);
-            return false;
+        // Load dictionary if not already cached
+        if (!cachedTrie) {
+            cachedTrie = await loadDictionary();
         }
-
-        return !!data;
+        return cachedTrie.contains(word.toUpperCase());
     } catch (error) {
         console.error('Exception in isValidWord:', error);
         return false;
