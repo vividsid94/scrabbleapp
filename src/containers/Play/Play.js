@@ -564,6 +564,7 @@ export default function Play() {
 
   const handleGetTopMoves = async () => {
     setIsLoadingTopMoves(true);
+    setShowTopMoves(true); // Show modal immediately when lightbulb is clicked
     try {
       const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
       const response = await fetch('/.netlify/functions/getTopMoves', {
@@ -595,12 +596,12 @@ export default function Play() {
       
       setIsDictionaryLoading(false);
       setTopMoves(data.moves);
-      setShowTopMoves(true);
     } catch (error) {
       console.error('Error getting top moves:', error);
       setSnackbarMessage('Error getting top moves: ' + error.message);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+      setShowTopMoves(false); // Close modal on error
     } finally {
       setIsLoadingTopMoves(false);
     }
@@ -801,7 +802,11 @@ export default function Play() {
 
       <Modal
         open={showTopMoves}
-        onClose={() => setShowTopMoves(false)}
+        onClose={() => {
+          setShowTopMoves(false);
+          setIsDictionaryLoading(false);
+          setIsLoadingTopMoves(false);
+        }}
         aria-labelledby="top-moves-modal"
       >
         <Box className={styles.modalContainer}>
