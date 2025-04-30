@@ -14,6 +14,7 @@ import { getComplementaryColor } from "../../functions/tileFunctions.js";
 import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { TextField } from "@mui/material";
+import { handleMove } from './utils/moveHandlers';
 
 // Import icons
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -251,125 +252,21 @@ export default function Viewer({ onChange }){
     return board[1];
   };
   
-  function handleMove(superLastMove, lastMove, thisMove, nextMove, type) {
-    superLastMove = superLastMove ? superLastMove.replace(/\s+/g, ' ') : superLastMove;
-    lastMove = lastMove ? lastMove.replace(/\s+/g, ' ') : lastMove;
-    thisMove = thisMove ? thisMove.replace(/\s+/g, ' ') : thisMove;
-    nextMove = nextMove ? nextMove.replace(/\s+/g, ' ') : nextMove;
-    console.log("MOVE", currentMoveRef.current);
-    console.log("MOVE superlastmove", superLastMove);
-    console.log("MOVE lastmove", lastMove);
-    console.log("MOVE thismove", thisMove);
-    console.log("MOVE nextmove", nextMove);
-    console.log("------------------------------------------")
-  
-    const moves = {
-      superlastmove: { move: superLastMove, parts: superLastMove ? superLastMove.split(" ") : null, location: null, play: null, points: null, score: null },
-      lastmove: { move: lastMove, parts: lastMove ? lastMove.split(" ") : null, location: null, play: null, points: null, score: null },
-      thismove: { move: thisMove, parts: thisMove ? thisMove.split(" ") : null, location: null, play: null, points: null, score: null },
-      nextmove: { move: nextMove, parts: nextMove ? nextMove.split(" ") : null, location: null, play: null, points: null, score: null }
+  const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
+    const state = {
+      setBoardCoords,
+      setPool,
+      setCurrentMoveCoords,
+      setPlayer1points,
+      setPlayer2points,
+      setPointsScored,
+      boardCoords,
+      pool,
+      moveSet,
+      origBoard
     };
-
-    for (const id in moves) {
-      const move = moves[id];
-      move.location = move.parts ? move.parts[2] : null;
-      move.play = move.parts ? move.parts[3] : null;
-      move.points = move.parts ? move.parts[4] : null;
-      move.score = move.parts ? move.parts[5] : null;
-    }    
-
-    if (type === "previous"){
-      let moveName = thisMove ? moves['thismove'].parts[0] : 'empty';
-      let lastMoveName = lastMove ? moves['lastmove'].parts[0] : 'empty';
-      let nextMoveName = nextMove ? moves['nextmove'].parts[0] : 'empty';
-      let firstMovePlayerName = moveSet[0].split(" ")[0];
-      let thisMovePlayerName = thisMove ? moves['thismove'].parts[0] : 'empty';
-      if (moveName === nextMoveName && moves['thismove'].location === "--"){
-        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
-        setBoardCoords(updateBoardShortcut({...props}));
-        setPool(removeFromPool(moves['thismove'].play, pool));
-      }
-      else if (moves['nextmove'].location[0] === null){
-      }
-      else if (moves['nextmove'].location[0] !== "-"){
-        let props = {location: moves['nextmove'].location, play: moves['nextmove'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
-        setBoardCoords(updateBoardShortcut({...props}))
-        if (moves['thismove'].move !== undefined && moves['thismove'].location[0] !== "-"){
-          setCurrentMoveCoords(highlightPreviousMove(moves['thismove'].location, moves['thismove'].play, boardCoords));
-        }
-        if (moveName !== nextMoveName)
-          setPool(addToPool(moves['nextmove'].play, pool));
-      }
-      else if (moves['nextmove'].location === "--"){
-        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
-        setBoardCoords(updateBoardShortcut({...props}));
-        setPool(removeFromPool(moves['thismove'].play, pool));
-      }
-      else {
-        moves['nextmove'].points = moves['nextmove'].parts[2];
-        moves['nextmove'].score = moves['nextmove'].parts[4];
-      }
-      if (moveName !== nextMoveName) {
-        if (thisMovePlayerName === firstMovePlayerName){
-          setPlayer2points(lastMove ? (moves['lastmove'].score ? moves['lastmove'].score : moves['lastmove'].points) : 0)
-        }
-        else{
-          if (moveName !== lastMoveName) {
-            setPlayer1points(lastMove ? (moves['lastmove'].score ? moves['lastmove'].score : moves['lastmove'].points) : 0)
-          } else{
-            setPlayer1points(superLastMove ? moves['superlastmove'].score : 0)
-          }
-        }
-      } else {
-        if (thisMovePlayerName === firstMovePlayerName){
-          setPlayer1points(moves['thismove'].score)
-        }
-        else{
-          setPlayer2points(moves['thismove'].score)
-        }
-      } 
-
-    } else {
-      let moveName = thisMove ? moves['thismove'].parts[0] : 'empty';
-      let lastMoveName = lastMove ? moves['lastmove'].parts[0] : 'empty';
-      let firstMovePlayerName = moveSet[0].split(" ")[0];
-      let thisMovePlayerName = moves['thismove'].parts[0];
-      if (moveName === lastMoveName && moves['thismove'].location === "--"){
-        let props = {location: moves['lastmove'].location, play: moves['lastmove'].play, type: "remove", boardCoords: boardCoords, origBoard: origBoard};
-        setBoardCoords(updateBoardShortcut({...props}));
-        setPool(addToPool(moves['lastmove'].play, pool));
-      }
-      else if (moveName === lastMoveName && moves['thismove'].location !== "--"){
-        moves['thismove'].score = moves['thismove'].play;
-      }
-      else if (moves['thismove'].location[0] === null){
-
-      }
-      else if (moves['thismove'].location[0] !== "-"){
-        let props = {location: moves['thismove'].location, play: moves['thismove'].play, type: "add", boardCoords: boardCoords, origBoard: origBoard};
-        setBoardCoords(updateBoardShortcut({...props}));
-        setPool(removeFromPool(moves['thismove'].play, pool));
-      }
-      else {
-        moves['thismove'].points = moves['thismove'].parts[2];
-        moves['thismove'].score = moves['thismove'].parts[4];
-      }
-      if (moveName !== lastMoveName) {
-        if (thisMovePlayerName === firstMovePlayerName)
-          setPlayer1points(moves['thismove'].score)
-        else
-          setPlayer2points(moves['thismove'].score)
-      } else {
-        if (thisMovePlayerName === firstMovePlayerName)
-          setPlayer1points(moves['thismove'].score ? moves['thismove'].score : moves['thismove'].points)
-        else
-        {
-          setPlayer2points(moves['thismove'].points ? moves['thismove'].points : moves['thismove'].score);
-        }
-      } 
-    }
-    setPointsScored(moves['thismove'].points);
-  }
+    handleMove(superLastMove, lastMove, thisMove, nextMove, type, state);
+  };
 
   function chooseGame(gameNum){
     currentMoveRef.current = -1;
@@ -437,39 +334,6 @@ export default function Viewer({ onChange }){
     }
   }
 
-  function ColorScheme() {
-    const colorInputRef = useRef(null);
-    const [currentColor, setCurrentColor] = useState(color.current);
-  
-    useEffect(() => {
-      setCurrentColor(color.current);
-    }, []);
-  
-    const handleChange = () => {
-      const newColor = colorInputRef.current.value;
-      setCurrentColor(newColor);
-      color.current = newColor;
-      complementaryColor.current = getComplementaryColor(newColor);
-    };
-  
-    return (
-      <Box>
-        <input
-          type="color"
-          ref={colorInputRef}
-          value={currentColor}
-          onChange={handleChange}
-          style={{
-            width: '50px',
-            height: '50px',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        />
-      </Box>
-    );
-  }
-
   const handleDictionaryTilesOpen = () => {
     setModalContent("dictionaryTiles")
     setOpen(true);
@@ -492,8 +356,20 @@ export default function Viewer({ onChange }){
   
   const iconList = [  
     {icon: KeyboardDoubleArrowLeftIcon, toolTip: "Beginning of game", onClick: beginningOfGame},  
-    {icon: KeyboardArrowLeftIcon, toolTip: "Move back", onClick: () => {if (currentMoveRef.current > -1) {currentMoveRef.current -= 1; setMoveDirection("backward"); handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");}}},
-    {icon: KeyboardArrowRightIcon, toolTip: "Move forward", onClick: () => {if (currentMoveRef.current + 1 < moveSet.length) currentMoveRef.current += 1; setMoveDirection("forward"); handleMove(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");}},
+    {icon: KeyboardArrowLeftIcon, toolTip: "Move back", onClick: () => {
+      if (currentMoveRef.current > -1) {
+        currentMoveRef.current -= 1;
+        setMoveDirection("backward");
+        handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");
+      }
+    }},
+    {icon: KeyboardArrowRightIcon, toolTip: "Move forward", onClick: () => {
+      if (currentMoveRef.current + 1 < moveSet.length) {
+        currentMoveRef.current += 1;
+        setMoveDirection("forward");
+        handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");
+      }
+    }},
     {icon: FiberNewIcon, toolTip: "New game", onClick: randomizeGame},
     {icon: SwapHorizIcon, onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode()),condition: {color: !unlockEloMode ? 'transparent' : 'white', background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'}}
   ]

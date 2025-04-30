@@ -119,6 +119,5 @@ export const updateBoard = ({location, play, type, boardCoords, origBoard}) => {
         }
       }
     }
-    console.log(newBoardCoords)
     return [curMoveCoords, newBoardCoords];
 } 
