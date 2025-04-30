@@ -312,6 +312,31 @@ form{
   font-family: 'Syne';
 }
 
+.turnNumbers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 4px;
+}
+
+.turnNumber {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.turnNumber:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
 
 @media screen and (max-width: 992px) {
   .rightPanel{
@@ -390,6 +415,11 @@ form{
     font-size: 9px;
     line-height: 14px;
     font-family: 'Syne';
+  }
+  .turnNumber {
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
   }
 }
 

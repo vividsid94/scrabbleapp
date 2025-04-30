@@ -237,7 +237,6 @@ export default function Viewer({ onChange }){
               move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}
             />   
           </Box>
-
           <Box className={styles.rightPanel}>
             <Box className={styles.topPlayerPanel}>
               <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
@@ -314,6 +313,40 @@ export default function Viewer({ onChange }){
                   origPlayerRaw={origPlayerRaw}
                   tiles={tiles}
                   color={color}
+                  onTurnClick={(turn) => {
+                    if (turn >= 0 && turn < moveSet.length) {
+                      // Reset board to initial state
+                      setBoardCoords(JSON.parse(origBoard));
+                      setPool(origPool);
+                      setPlayer1points(0);
+                      setPlayer2points(0);
+                      setPointsScored(0);
+                      
+                      // First remove all moves after the selected turn
+                      for (let i = moveSet.length - 1; i > turn; i--) {
+                        handleMoveWrapper(
+                          moveSet[i - 3],
+                          moveSet[i - 2],
+                          moveSet[i - 1],
+                          moveSet[i],
+                          "previous"
+                        );
+                      }
+                      
+                      // Then apply all moves up to the selected turn
+                      for (let i = 0; i <= turn; i++) {
+                        handleMoveWrapper(
+                          moveSet[i - 2],
+                          moveSet[i - 1],
+                          moveSet[i],
+                          moveSet[i + 1],
+                          "next"
+                        );
+                      }
+                      
+                      currentMoveRef.current = turn;
+                    }
+                  }}
                 />
               </Box> 
             </Box>

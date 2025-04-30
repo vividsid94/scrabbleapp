@@ -18,10 +18,26 @@ const PlayerInfo = ({
   currentMoveRef,
   origPlayerRaw,
   tiles,
-  color
+  color,
+  onTurnClick
 }) => {
+  const totalTurns = moveSet ? moveSet.length : 0;
+
   return (
     <Box className={styles.playerPanel}>
+      {totalTurns > 0 && (
+        <Box className={styles.turnNumbers}>
+          {Array.from({ length: totalTurns }, (_, i) => (
+            <Box 
+              key={i + 1}
+              className={styles.turnNumber}
+              onClick={() => onTurnClick && onTurnClick(i)}
+            >
+              {i + 1}
+            </Box>
+          ))}
+        </Box>
+      )}
       {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
       <Box className={styles.Rack}>
         {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 
