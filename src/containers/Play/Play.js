@@ -11,8 +11,9 @@ import ColorizeIcon from '@mui/icons-material/Colorize';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import CheckIcon from '@mui/icons-material/Check';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ForwardIcon from '@mui/icons-material/Forward';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
@@ -51,6 +52,7 @@ export default function Play() {
   const [player1Time, setPlayer1Time] = useState(20 * 60); // 20 minutes in seconds
   const [player2Time, setPlayer2Time] = useState(20 * 60); // 20 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
   const timerRef = useRef(null);
   const [consecutivePasses, setConsecutivePasses] = useState(0);
   const [showTopMoves, setShowTopMoves] = useState(false);
@@ -69,20 +71,7 @@ export default function Play() {
     return [...rack].sort((a, b) => a.localeCompare(b));
   };
 
-  useEffect(() => {
-    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    
-    const timer = setTimeout(() => {
-      initializeGame();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const initializeGame = () => {
+  const startGame = () => {
     // Initialize player racks with 7 tiles each
     const newPool = [...origPool];
     const rack1 = [];
@@ -101,7 +90,22 @@ export default function Play() {
     setPlayer1Rack(alphabetizeRack(rack1));
     setPlayer2Rack(alphabetizeRack(rack2));
     setPool(newPool);
+    setGameStarted(true);
+    setTimerActive(true);
   };
+
+  useEffect(() => {
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    
+    const timer = setTimeout(() => {
+      // Don't initialize game automatically anymore
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleTileClick = (tile, index) => {
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -545,9 +549,16 @@ export default function Play() {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Start timer when game starts or player changes
+  useEffect(() => {
+    if (gameStarted) {
+      setTimerActive(true);
+    }
+  }, [currentPlayer, gameStarted]);
+
   // Start timer when it's a player's turn
   useEffect(() => {
-    if (timerActive) {
+    if (timerActive && gameStarted) {
       timerRef.current = setInterval(() => {
         if (currentPlayer === 1) {
           setPlayer1Time(prev => {
@@ -574,12 +585,7 @@ export default function Play() {
         clearInterval(timerRef.current);
       }
     };
-  }, [timerActive, currentPlayer]);
-
-  // Start timer when game starts or player changes
-  useEffect(() => {
-    setTimerActive(true);
-  }, [currentPlayer]);
+  }, [timerActive, currentPlayer, gameStarted]);
 
   const handlePass = () => {
     setConsecutivePasses(prev => prev + 1);
@@ -837,6 +843,37 @@ export default function Play() {
               </Tooltip>
             </Box>
               <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
+              <Tooltip title="Start Game" placement="top">
+                <Button 
+                  variant="contained" 
+                  onClick={startGame}
+                  disabled={gameStarted}
+                  sx={{ 
+                    marginRight: '8px',
+                    backgroundColor: '#4CAF50',
+                    '&:hover': {
+                      backgroundColor: '#45a049',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#cccccc',
+                      color: '#666666'
+                    },
+                    borderRadius: '50%',
+                    minWidth: '40px',
+                    width: '40px',
+                    height: '40px',
+                    padding: 0,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <PlayArrowIcon />
+                </Button>
+              </Tooltip>
               <Tooltip title="Submit" placement="top">
                 <Button 
                   variant="contained" 
@@ -872,11 +909,16 @@ export default function Play() {
                 <Button 
                   variant="contained" 
                   onClick={handlePass}
+                  disabled={!gameStarted}
                   sx={{ 
                     marginRight: '8px',
                     backgroundColor: '#f44336',
                     '&:hover': {
                       backgroundColor: '#d32f2f',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#cccccc',
+                      color: '#666666'
                     },
                     borderRadius: '50%',
                     minWidth: '40px',
@@ -891,7 +933,16 @@ export default function Play() {
                     }
                   }}
                 >
-                  <SkipNextIcon />
+                  <Box sx={{ 
+                    fontSize: '1.2rem', 
+                    fontWeight: 'bold',
+                    color: 'white',
+                    '&:disabled': {
+                      color: '#666666'
+                    }
+                  }}>
+                    P
+                  </Box>
                 </Button>
               </Tooltip>
               <Tooltip title="Exchange" placement="top">
