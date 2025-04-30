@@ -1,4 +1,4 @@
-.Cell__STANDARD{
+.Cell{
     width: 30px;
     height: 30px;
     display: flex;  
@@ -6,9 +6,6 @@
     justify-content: center;
     align-items: flex-end;
     z-index: 1;
-    -webkit-filter: grayscale(100%);
-    -webkit-filter: contrast(0%);
-    -webkit-filter: brightness(100%);
 }
 .decalContainer{
     position: relative;
@@ -34,7 +31,7 @@
     z-index: 999;
 }
 @media screen and (max-width: 676px) {
-    .Cell__STANDARD{
+    .Cell{
         width: 15px;
         height: 15px;
         display: flex;  
@@ -50,7 +47,7 @@
 }
 
 @media screen and (max-height: 992px)  and (min-width: 1200px){
-    .Cell__STANDARD{
+    .Cell{
         width: 25px;
         height: 25px;
         display: flex;  

@@ -14,7 +14,9 @@ const SettingsModal = ({
   handleELOCommentaryChange,
   customPlayerMode,
   handleCustomPlayerMode,
-  switchValue
+  switchValue,
+  theme,
+  handleThemeChange
 }) => {
   const [showWhy, setShowWhy] = useState(false);
 
@@ -26,6 +28,13 @@ const SettingsModal = ({
     <>
       {!showWhy && (
         <div>
+          <Box className={styles.modalContainer__dictionary}>
+            Theme
+            {<select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
+              <option value="STANDARD">Standard</option>
+              <option value="FULLBOARD">Full Board</option>
+            </select>}
+          </Box>
           <Box className={styles.modalContainer__dictionary}>
             Dictionary
             {<select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>

@@ -52,7 +52,7 @@ export default function Viewer({ onChange }){
     mode, setMode,
     resetCount, setResetCount,
     moveDirection, setMoveDirection,
-    theme,
+    theme, setTheme,
     tiles, setTiles,
     dictionary, setDictionary,
     ELOCommentary, setELOCommentary,
@@ -169,6 +169,7 @@ export default function Viewer({ onChange }){
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
+      {console.log(theme, mode, tiles)}
       <Modal
         open={open}
         onClose={handleClose}
@@ -187,6 +188,8 @@ export default function Viewer({ onChange }){
               customPlayerMode={customPlayerMode}
               handleCustomPlayerMode={handleCustomPlayerMode}
               switchValue={switchValue}
+              theme={theme}
+              handleThemeChange={(e) => setTheme(e.target.value)}
             />
           )}
           {modalContent === "colorScheme" && (

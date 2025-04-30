@@ -15,8 +15,6 @@ function preload() {
 preload();
 
 export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, color) {
-  let cellTheme = "Cell__" + theme;
-
   function cell(letter) {
     if (letter) {
       const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
@@ -27,7 +25,7 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
 
         return (
           <div
-            className={styles[cellTheme]}
+            className={styles.Cell}
             style={{
               boxShadow: bonus.boxShadow,
               backgroundImage: `url(${modifiedImageUrl})`,
@@ -55,7 +53,7 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
         );
       } else {
         return (
-          <div className={styles[cellTheme]} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
+          <div className={styles.Cell} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
             {bonus.value}
           </div>
         );

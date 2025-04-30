@@ -138,7 +138,29 @@ export default function Board({
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`}>
-                {dictionary}
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '100%',
+                    position: 'relative'
+                }}>
+                    {dictionary}
+                    {theme === "STANDARD" && showSlip && (
+                        <Box 
+                            className={`${styles.coloredBox} ${styles.slipBox}`} 
+                            onClick={handleSlipClick}
+                            sx={{ 
+                                display: 'inline-block',
+                                whiteSpace: 'nowrap',
+                                position: 'absolute',
+                                right: '20px'
+                            }}
+                        >
+                            Slip
+                        </Box>
+                    )}
+                </Box>
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
@@ -187,7 +209,7 @@ export default function Board({
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    {showSlip && (
+                    {showSlip && theme !== "STANDARD" && (
                         <Box className={`${styles.coloredBox} ${styles.slipBox}`} onClick={handleSlipClick}>
                             Slip
                         </Box>
