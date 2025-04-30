@@ -29,7 +29,6 @@ export default function Play() {
   const [pointsScored, setPointsScored] = useState(0);
   const [pool, setPool] = useState(origPool);
   const [theme] = useState("STANDARD");
-  const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
   const [modalContent, setModalContent] = useState("settings");
@@ -414,10 +413,6 @@ export default function Play() {
     setDictionary(event.target.value);
   };
 
-  const handleTileChange = event => {
-    setTiles(event.target.value);
-  };
-
   const makeBotMove = async () => {
     console.log('makeBotMove called', { isBotMode, currentPlayer });
     if (!isBotMode || currentPlayer !== 2) {
@@ -786,7 +781,7 @@ export default function Play() {
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Board 
-            board={createBoard(tempBoardCoords, [], tiles, theme, color.current, complementaryColor.current)} 
+            board={createBoard(tempBoardCoords, [], "PROTILES", theme, color.current, complementaryColor.current)} 
             theme={theme} 
             onBoardChildClick={(row, col) => {
               console.log('Board component received click:', { row, col });
@@ -988,7 +983,7 @@ export default function Play() {
                 <Box className={styles.Rack}>
                   <Rack 
                     board={player1Rack} 
-                    tiles={tiles} 
+                    tiles="PROTILES" 
                     color={color.current}
                     selectedTiles={tilesToExchange}
                     onTileClick={(tile, index) => {
@@ -1015,7 +1010,7 @@ export default function Play() {
                 <Box className={styles.Rack}>
                   <Rack 
                     board={player2Rack} 
-                    tiles={tiles} 
+                    tiles="PROTILES" 
                     color={color.current}
                     selectedTiles={tilesToExchange}
                     onTileClick={(tile, index) => {
@@ -1054,13 +1049,6 @@ export default function Play() {
                   <option value="ANY">Any</option>
                   <option value="TWL">TWL/NWL</option>
                   <option value="CSW">CSW</option>
-                </select>
-              </Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Tiles
-                <select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
-                  <option value="PROTILES">Protiles</option>
-                  <option value="LETTERS">Letters</option>
                 </select>
               </Box>
             </Box>

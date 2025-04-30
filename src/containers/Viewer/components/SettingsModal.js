@@ -7,10 +7,8 @@ import styles from '../Viewer.module.css';
 
 const SettingsModal = ({
   dictionary,
-  tiles,
   ELOCommentary,
   handleDictionaryChange,
-  handleTileChange,
   handleELOCommentaryChange,
   customPlayerMode,
   handleCustomPlayerMode,
@@ -41,13 +39,6 @@ const SettingsModal = ({
               <option value="ANY">Any</option>
               <option value="TWL">TWL/NWL</option>
               <option value="CSW">CSW</option>
-            </select>}
-          </Box>
-          <Box className={styles.modalContainer__dictionary}>
-            Tiles
-            {<select className={styles.styleSelection} value={tiles} onChange={handleTileChange}>
-              <option value="PROTILES">Protiles</option>
-              <option value="LETTERS">Letters</option>
             </select>}
           </Box>
           <Box className={styles.modalContainer__dictionary}>

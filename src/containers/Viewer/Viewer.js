@@ -254,49 +254,7 @@ export default function Viewer({ onChange }){
                 <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                   Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
                 </Box>
-                <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
-                  {groupedIcons.map((group, index) => (
-                    <Box key={`group-${index}`} className={styles.groupedBox}>
-                      {group.icon1 && (
-                        <Tooltip key={`tooltip-1-${index}`} title="Games you viewed">
-                          <group.icon1.icon 
-                            className={styles.keyBtn} 
-                            onClick={group.icon1.onClick}
-                            sx={group.icon1.condition}
-                          />
-                        </Tooltip>
-                      )}
-                      {group.icon2 && (
-                        <Tooltip key={`tooltip-2-${index}`} title="Recents on XT">
-                          <group.icon2.icon 
-                            className={styles.keyBtn} 
-                            onClick={group.icon2.onClick}
-                            sx={group.icon2.condition}
-                          >
-                            {group.icon2.text}
-                          </group.icon2.icon>
-                        </Tooltip>
-                      )}
-                      {group.icon3 && (
-                        <Tooltip key={`tooltip-3-${index}`} title="Settings">
-                          <group.icon3.icon 
-                            className={styles.keyBtn} 
-                            onClick={group.icon3.onClick}
-                          />
-                        </Tooltip>
-                      )}
-                      {group.icon4 && (
-                        <Tooltip key={`tooltip-4-${index}`} title="Colors">
-                          <group.icon4.icon 
-                            className={styles.keyBtn} 
-                            onClick={group.icon4.onClick}
-                          />
-                        </Tooltip>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              </Box> 
+              </Box>
               <Box className={styles.playerPanel}>
                 <PlayerInfo
                   mode={mode}
@@ -348,20 +306,18 @@ export default function Viewer({ onChange }){
                     }
                   }}
                 />
+                <Box className={styles.poolBox}>
+                  <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
+                </Box>
+                <Box className={styles.commentaryContainer}>
+                  {notes.map(([note, moveNumber], index) => (
+                    <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
+                      "{note.trim()}"
+                    </Box>
+                  ))}
+                </Box>
               </Box> 
             </Box>
-            <Box className={styles.playerPanel}>
-              <Box className={styles.commentaryContainer}>
-                {notes.map(([note, moveNumber], index) => (
-                  <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
-                    "{note.trim()}"
-                  </Box>
-                ))}
-              </Box>  
-              <Box className={styles.poolBox}>
-                <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
-              </Box>
-            </Box>  
           </Box>
         </Box>  
       </Box>   

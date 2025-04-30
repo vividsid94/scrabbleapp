@@ -11,6 +11,8 @@
 
 .poolBox{
 	padding: 10px;
+  margin-top: 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .page{
@@ -152,6 +154,9 @@ form{
   color: #fff;
   position: relative;
   line-height: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .playerToggle{
@@ -300,6 +305,8 @@ form{
 .commentaryContainer{
   background: #4D3D2B;
   background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+  margin-top: 15px;
+  border-top: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .commentaryBox{
@@ -342,23 +349,24 @@ form{
   .rightPanel{
     padding: 24px;
     display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
+    flex-direction: column;
+    justify-content: flex-start;
   }
   .mainPanel{
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: center;
+    align-items: center;
   }
   .topPlayerPanel{
-    padding-bottom: 0px;
-    padding-right: 24px;
+    padding-bottom: 24px;
+    height: auto;
   }
   .page{
     margin-top: 100px;
   }
   .playerPanel{
-    width: 45vw;
+    width: 90vw;
   }
 }
 
@@ -367,7 +375,7 @@ form{
     padding: 0px 0px 24px 0px;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: flex-start;
   }
   .playerToggle {
     padding: auto;
@@ -381,8 +389,7 @@ form{
   }
   .topPlayerPanel{
     padding-bottom: 12px;
-    padding-right: 0px;
-    height: 225px;
+    height: auto;
   }
   .title{
     margin: auto;
