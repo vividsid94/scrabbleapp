@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
-import { getComplementaryColor } from '../../../functions/tileFunctions.js';
+import { getComplementaryColor } from '../../functions/tileFunctions.js';
 
 const ColorScheme = ({ color, complementaryColor }) => {
   const colorInputRef = useRef(null);
