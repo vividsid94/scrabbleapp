@@ -9,11 +9,8 @@ import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from "../../axios/api.js";
-import { getMove, highlightPreviousMove, updateBoard, createBoard } from "../../functions/boardFunctions.js";
-import { getComplementaryColor } from "../../functions/tileFunctions.js";
-import { addToPool, removeFromPool } from "../../functions/poolFunctions.js";
+import { getMove, createBoard } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
-import { TextField } from "@mui/material";
 import { handleMove } from './utils/moveHandlers';
 
 // Import icons
@@ -26,30 +23,20 @@ import ColorizeIcon from '@mui/icons-material/Colorize';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import GroupIcon from '@mui/icons-material/Group';
 import LaunchIcon from '@mui/icons-material/Launch';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import HistoryIcon from '@mui/icons-material/History';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
-import Button from "@mui/material/Button";
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Import components
-import GameControls from './components/GameControls';
 import PlayerInfo from './components/PlayerInfo';
 import SettingsModal from './components/SettingsModal';
 import RecentGamesList from './components/RecentGamesList';
 import ColorScheme from './components/ColorScheme';
 import ViewedGamesList from './components/ViewedGamesList';
 
-export default function Viewer({ onChange }){
+export default function Viewer({ onChange }){ 
   const [gameNum, setGameNum] = useState(37033);
-  const [boardClickCount, setBoardClickCount] = useState(0);
+  const [boardClickCount, setBoardClickCount] = useState(0); 
   const [moveSet, setMoveSet] = useState("");
   const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
   const [boardCoords, setBoardCoords] = useState([]); 
@@ -60,14 +47,14 @@ export default function Viewer({ onChange }){
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [moveDirection, setMoveDirection] = useState("neutral");
-  const [theme] = useState("STANDARD");
+  const [theme] = useState("STANDARD"); 
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [ELOCommentary, setELOCommentary] = useState("NO");
   const [open, setOpen] = useState(false);
   const [gameDictionary, setGameDictionary] = useState("Loading...")
   const currentMoveRef = useRef(-1);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => setOpen(false); 
   const [name1, setName1] = useState('');
   const [name2, setName2] = useState('');
   const [revealedName1, setRevealedName1] = useState('Player 1'); 
@@ -246,12 +233,6 @@ export default function Viewer({ onChange }){
     loadGameData();
   }, [loadGameData]);
   
-  const updateBoardShortcut = (boardProperties) => {
-    const board = updateBoard(boardProperties);
-    setCurrentMoveCoords(board[0]);
-    return board[1];
-  };
-  
   const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
     const state = {
       setBoardCoords,
@@ -262,7 +243,7 @@ export default function Viewer({ onChange }){
       setPointsScored,
       boardCoords,
       pool,
-      moveSet,
+      moveSet, 
       origBoard
     };
     handleMove(superLastMove, lastMove, thisMove, nextMove, type, state);
