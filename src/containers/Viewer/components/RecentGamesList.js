@@ -12,8 +12,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import styles from '../Viewer.module.css';
 
-const GameHistory = ({
-  gamesViewed,
+const RecentGamesList = ({
   recentNames,
   recentDictionaries,
   recentGameNums,
@@ -87,4 +86,4 @@ const GameHistory = ({
   );
 };
 
-export default GameHistory; 
+export default RecentGamesList; 
