@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
-import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from "../../axios/api.js";
+import { getRandomNumber } from '../../../utils/gameUtils';
+import { origPool, origBoard } from '../../../components/AppContent/References/staticData';
+import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from '../../../axios/api';
 
 export const useGameState = (onChange) => {
   // Game state
@@ -35,7 +36,7 @@ export const useGameState = (onChange) => {
   const complementaryColor = useRef('#9F7A83');
   const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
-  const [origPlayerRaw, setOrigPlayerRaw] = useState("");
+  const [origPlayerRaw, setOrigPlayerRaw] = useState(""); 
   const [notes, setNote] = useState([]);
   const [gamesViewed, setGamesViewed] = useState([]);
   const [recentNames, setRecentNames] = useState([]);
@@ -65,10 +66,6 @@ export const useGameState = (onChange) => {
 
   const handleTileChange = event => {
     setTiles(event.target.value);
-  };
-
-  const getRandomNumber = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
   const handleBoardClick = () => {
@@ -252,7 +249,6 @@ export const useGameState = (onChange) => {
     handleDictionaryChange,
     handleELOCommentaryChange,
     handleTileChange,
-    getRandomNumber,
     handleBoardClick,
     switchMode,
     randomizeGame,

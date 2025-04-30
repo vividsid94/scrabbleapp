@@ -1,5 +1,5 @@
-import { highlightPreviousMove, updateBoard } from "../../../functions/boardFunctions.js";
-import { addToPool, removeFromPool } from "../../../functions/poolFunctions.js";
+import { highlightPreviousMove, updateBoard } from "./boardFunctions";
+import { addToPool, removeFromPool } from "./poolFunctions";
 
 export const handleMove = (superLastMove, lastMove, thisMove, nextMove, type, state) => {
   // Clean up move strings
