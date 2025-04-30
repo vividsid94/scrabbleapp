@@ -138,29 +138,17 @@ export default function Board({
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`}>
-                <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    width: '100%',
-                    position: 'relative'
-                }}>
+                <Box className={styles.headerContent}>
                     {dictionary}
-                    {theme === "STANDARD" && showSlip && (
-                        <Box 
-                            className={`${styles.coloredBox} ${styles.slipBox}`} 
-                            onClick={handleSlipClick}
-                            sx={{ 
-                                display: 'inline-block',
-                                whiteSpace: 'nowrap',
-                                position: 'absolute',
-                                right: '20px'
-                            }}
-                        >
-                            Slip
-                        </Box>
-                    )}
                 </Box>
+                {theme === "STANDARD" && showSlip && (
+                    <Box 
+                        className={`${styles.coloredBox} ${styles.slipBox} ${styles[`slipBox__${theme}`]}`} 
+                        onClick={handleSlipClick}
+                    >
+                        Slip
+                    </Box>
+                )}
             </Box>
             <Box className={styles.innerBox}>
                 <Box className={styles.Left}>
