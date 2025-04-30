@@ -28,7 +28,7 @@ export default function Play() {
   const [player2points, setPlayer2points] = useState(0);
   const [pointsScored, setPointsScored] = useState(0);
   const [pool, setPool] = useState(origPool);
-  const [theme, setTheme] = useState("STANDARD");
+  const [theme] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [open, setOpen] = useState(false);
@@ -36,9 +36,8 @@ export default function Play() {
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [player1Rack, setPlayer1Rack] = useState([]);
   const [player2Rack, setPlayer2Rack] = useState([]);
-  const [selectedTiles, setSelectedTiles] = useState([]);
+  const [selectedTiles, setSelectedTiles] = useState([]); 
   const [selectedBoardPosition, setSelectedBoardPosition] = useState(null);
-  const [wordInput, setWordInput] = useState("");
   const [arrowDirection, setArrowDirection] = useState('right');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");

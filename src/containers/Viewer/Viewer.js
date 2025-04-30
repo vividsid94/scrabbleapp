@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Viewer.module.css';
@@ -51,7 +51,7 @@ export default function Viewer({ onChange }){
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [moveDirection, setMoveDirection] = useState("neutral");
-  const [theme, setTheme] = useState("STANDARD");
+  const [theme] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [ELOCommentary, setELOCommentary] = useState("NO");
@@ -114,34 +114,67 @@ export default function Viewer({ onChange }){
       onChange(newMode);
     }
   }
-  useEffect(() => {
-    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-    document.title = 'Game Viewer';
-    setBoardCoords(parsedOrigBoardCoords); 
-    setPlayer1points(0);
-    setPlayer2points(0);
-    setPointsScored(0);
-    setRevealedName1("Player 1");
-    setRevealedName2("Player 2");
-    setRevealedElo("");
-    setRevealedElo2("");
-    setPool(origPool);
-    setRecentNames([]);
-    setRecentDictionaries([]);
-    const loadMoveSet = async () => {
-        const moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
-        setMoveSet(moveRes[0])
-        setOrigPlayerRaw(moveRes[1])
-        setNote(moveRes[2])
+  const randomizeGame = useCallback(() => {
+    setOpen(true);
+    setLoadingMsg("Finding a game...");
+    setModalContent("loading");
+    setMoveDirection("neutral");
+    const loadCustomPlayerGameInfo = async () => {
+      const info = customPlayerMode.current ? await getCustomPlayerGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', customPlayerMode.current) : null;
+      let randomNumber;
+      if (info){
+        let randomIndex = Math.floor(Math.random() * info.length);
+        randomNumber = info[randomIndex];
+      } else{
+        randomNumber = getRandomNumber(10000, 40000).toString();
+      }
+      currentMoveRef.current = -1;
+      setGameNum(randomNumber);
     };
-    const loadRecentGameInfo = async () => {
-        const infoRes = await getRecentGameInfo('https://www.cross-tables.com/annolistself.php');
-        setRecentNames(infoRes[0])
-        setRecentDictionaries(infoRes[1])
-        setRecentGameNums(infoRes[2])
-    };
-    const loadGameInfo = async () => {
+    loadCustomPlayerGameInfo();
+  }, [customPlayerMode]);
+
+  const loadGameData = useCallback(async () => {
+    try {
+      let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+      document.title = 'Game Viewer';
+      setBoardCoords(parsedOrigBoardCoords); 
+      setPlayer1points(0);
+      setPlayer2points(0);
+      setPointsScored(0);
+      setRevealedName1("Player 1");
+      setRevealedName2("Player 2");
+      setRevealedElo("");
+      setRevealedElo2("");
+      setPool(origPool);
+      setRecentNames([]);
+      setRecentDictionaries([]);
+
+      const moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
+      if (!moveRes || !moveRes[0]) {
+        console.error('Failed to load move set');
+        randomizeGame();
+        return;
+      }
+      setMoveSet(moveRes[0])
+      setOrigPlayerRaw(moveRes[1])
+      setNote(moveRes[2])
+
+      const infoRes = await getRecentGameInfo('https://www.cross-tables.com/annolistself.php');
+      if (!infoRes) {
+        console.error('Failed to load recent game info');
+        return;
+      }
+      setRecentNames(infoRes[0])
+      setRecentDictionaries(infoRes[1])
+      setRecentGameNums(infoRes[2])
+
       let text = await getGameInfo('https://www.cross-tables.com/annotated.php?u=', gameNum);
+      if (!text) {
+        console.error('Failed to load game info');
+        randomizeGame();
+        return;
+      }
       const startIndex = text.indexOf('<p>Dictionary: <b>');
       if (startIndex !== -1) {
         const endIndex = text.indexOf('</b>', startIndex);
@@ -149,15 +182,18 @@ export default function Viewer({ onChange }){
           const extractedText = text.substring(startIndex + 18, endIndex);
           if (dictionary === "TWL" && !(extractedText.startsWith("TWL") || extractedText.startsWith("NWL"))){
             randomizeGame();
+            return;
           }
           else if (dictionary === "CSW" && !extractedText.startsWith("CSW")){
             randomizeGame();
+            return;
           }
           else if (extractedText === null){
             randomizeGame();
+            return;
           }
           else{
-            setGamesViewed([...gamesViewed, gameNum]);
+            setGamesViewed(prevGames => [...prevGames, gameNum]);
             console.log("Game generated.");
             setLoadingMsg("Loading the game...")
             setTimeout(() => {
@@ -169,7 +205,9 @@ export default function Viewer({ onChange }){
       }
       else{
         randomizeGame();
+        return;
       }
+
       const regex = /<tr><td>([^<]+)<\/td>/g;
       const matches = text.matchAll(regex);
       let i = 0;
@@ -187,11 +225,15 @@ export default function Viewer({ onChange }){
       if (matchTourney)
         tourneyNumber = matchTourney[1];
       setTourneyNum(tourneyNumber);
-    };
-    loadGameInfo();
-    loadMoveSet();
-    loadRecentGameInfo();
-  }, [resetCount]);
+    } catch (error) {
+      console.error('Error loading game data:', error);
+      randomizeGame();
+    }
+  }, [gameNum, dictionary, randomizeGame]);
+
+  useEffect(() => {
+    loadGameData();
+  }, [loadGameData]);
   
   const updateBoardShortcut = (boardProperties) => {
     const board = updateBoard(boardProperties);
@@ -319,27 +361,6 @@ export default function Viewer({ onChange }){
     setPointsScored(moves['thismove'].points);
   }
 
-  function randomizeGame(){
-    setOpen(true);
-    setLoadingMsg("Finding a game...");
-    setModalContent("loading");
-    setMoveDirection("neutral");
-    const loadCustomPlayerGameInfo = async () => {
-      const info = customPlayerMode.current ? await getCustomPlayerGameInfo('https://cross-tables.com/rest/players.php?search=', 'https://www.cross-tables.com/anno.php?p=', customPlayerMode.current) : null;
-      let randomNumber;
-      if (info){
-        let randomIndex = Math.floor(Math.random() * info.length);
-        randomNumber = info[randomIndex];
-      } else{
-        randomNumber = getRandomNumber(10000, 40000).toString();
-      }
-      currentMoveRef.current = -1;
-      setResetCount(resetCount + 1);
-      setGameNum(randomNumber);
-    };
-    loadCustomPlayerGameInfo();
-  }
-
   function chooseGame(gameNum){
     currentMoveRef.current = -1;
     setResetCount(resetCount + 1);
@@ -360,7 +381,7 @@ export default function Viewer({ onChange }){
 
   function revealElo(){
     console.log(tourneyNum);
-    if (tourneyNum != 0){
+    if (tourneyNum !== 0){
       axios.get('https://cross-tables.com/rest/tourney.php?tourney=' + tourneyNum + '&results=1')
       .then((posRes)=>{
           let sampleData = posRes.data;
@@ -412,7 +433,7 @@ export default function Viewer({ onChange }){
   
     useEffect(() => {
       setCurrentColor(color.current);
-    }, [color]);
+    }, []);
   
     const handleChange = () => {
       const newColor = colorInputRef.current.value;
@@ -717,8 +738,8 @@ export default function Viewer({ onChange }){
             <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
             <Box className={styles.playerToggle}>
               {iconList.map((icon, index) => (
-                <Tooltip title={icon.toolTip}>
-                  <icon.icon key={index}
+                <Tooltip key={`icon-${index}`} title={icon.toolTip}>
+                  <icon.icon
                     className={styles.Arrows} 
                     onClick={icon.onClick}
                     sx={icon.condition}
@@ -731,26 +752,26 @@ export default function Viewer({ onChange }){
               </Box>
               <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
                 {groupedIcons.map((group, index) => (
-                  <Box key={index} className={styles.groupedBox}>
-                      <Tooltip title="Games you viewed">
+                  <Box key={`group-${index}`} className={styles.groupedBox}>
+                      <Tooltip key={`tooltip-1-${index}`} title="Games you viewed">
                         <group.icon1.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon1.onClick}
                         />
                       </Tooltip>
-                      <Tooltip title="Recents on XT">
+                      <Tooltip key={`tooltip-2-${index}`} title="Recents on XT">
                         <group.icon2.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon2.onClick}
                         />
                       </Tooltip>
-                      <Tooltip title="Settings">
+                      <Tooltip key={`tooltip-3-${index}`} title="Settings">
                         <group.icon3.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon3.onClick}
                         />
                       </Tooltip>
-                      <Tooltip title="Colors">
+                      <Tooltip key={`tooltip-4-${index}`} title="Colors">
                         <group.icon4.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon4.onClick}
@@ -759,15 +780,15 @@ export default function Viewer({ onChange }){
                   </Box>
                 ))}
                 {groupedIcons2.map((group, index) => (
-                  <Box /*sx={{width: mode === "VIEWER" ? "33%" : "auto", border: mode === "VIEWER" ? "none" : "solid 2px #6e7491", boxShadow: mode === "VIEWER" ? "none" : "3px 15px 8px -10px rgba(0, 0, 0, 0.3)"}}*/ key={index} className={styles.groupedBox}>
-                      <Tooltip title="Reveal players">
+                  <Box key={`group2-${index}`} className={styles.groupedBox}>
+                      <Tooltip key={`tooltip2-1-${index}`} title="Reveal players">
                         <group.icon1.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon1.onClick}
                           sx={group.icon1.condition}
                         />
                       </Tooltip>
-                      <Tooltip title="Reveal ELO">
+                      <Tooltip key={`tooltip2-2-${index}`} title="Reveal ELO">
                         <group.icon2.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon2.onClick}
@@ -775,7 +796,7 @@ export default function Viewer({ onChange }){
                         >{group.icon2.text}
                         </group.icon2.icon>
                       </Tooltip>
-                      <Tooltip title="View on XT">
+                      <Tooltip key={`tooltip2-3-${index}`} title="View on XT">
                         <group.icon3.icon 
                           className={styles.keyBtn} 
                           onClick={group.icon3.onClick}
