@@ -75,41 +75,17 @@ export default function Play() {
     setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     
-    // Check dictionary loading state on mount
-    const checkDictionary = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/gameLogic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'validate',
-            beforeBoard: parsedOrigBoardCoords,
-            afterBoard: parsedOrigBoardCoords
-          })
-        });
-        
+    // Load dictionary
+    fetch('/.netlify/functions/loadDictionaryHandler')
+      .then(response => {
         if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
+          throw new Error('Failed to load dictionary');
         }
-        
-        const data = await response.json();
-        // Set loading to false if we get any response
-        setIsDictionaryLoading(false);
-        setSnackbarOpen(false);
-      } catch (error) {
-        console.error('Error checking dictionary:', error);
-        // Retry after a short delay
-        setTimeout(checkDictionary, 1000);
-      }
-    };
-    
-    setIsDictionaryLoading(true);
-    setSnackbarMessage('Loading dictionary.. (up to 30s)');
-    setSnackbarSeverity('info');
-    setSnackbarOpen(true);
-    checkDictionary();
+        console.log('Dictionary loading initiated');
+      })
+      .catch(error => {
+        console.error('Error loading dictionary:', error);
+      });
   }, []);
 
   const startGame = async () => {

@@ -1,15 +1,31 @@
-import React from "react";
+import React from 'react';
+import Box from '@mui/material/Box';
+import styles from './Memory.module.css';
+import Typography from '@mui/material/Typography';
 
-const Card = props => {
-  const { imgSource, imgDesc, className, onClick } = props;
+const Card = ({ className, onClick, imgSource, imgDesc }) => {
   return (
-    <div className={`grid-card ${className}`} onClick={onClick}>
-      <img
-        className={`img-thumbnail img-fluid grid-img`}
-        src={imgSource}
-        alt={imgDesc}
-      />
-    </div>
+    <Box
+      className={`${styles.card} ${className}`}
+      onClick={onClick}
+    >
+      <Box className={styles.cardInner}>
+        <Box className={styles.cardFront}>
+          <Box className={styles.cardContent}>
+            <Typography variant="h6">?</Typography>
+          </Box>
+        </Box>
+        <Box className={styles.cardBack}>
+          <Box className={styles.cardContent}>
+            <img 
+              src={imgSource} 
+              alt={imgDesc} 
+              className={styles.cardImage}
+            />
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
