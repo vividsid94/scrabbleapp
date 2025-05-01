@@ -18,20 +18,6 @@ import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen
 import ColorScheme from '../../components/common/ColorScheme';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 
-// Import icons
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import FiberNewIcon from '@mui/icons-material/FiberNew';
-import ColorizeIcon from '@mui/icons-material/Colorize';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import GroupIcon from '@mui/icons-material/Group';
-import LaunchIcon from '@mui/icons-material/Launch';
-import HistoryIcon from '@mui/icons-material/History';
-import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
-import Typography from '@mui/material/Typography';
-
 // Import components
 import PlayerInfo from './components/PlayerInfo';
 import SettingsModal from './components/SettingsModal';

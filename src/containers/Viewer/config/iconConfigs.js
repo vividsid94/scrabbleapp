@@ -105,7 +105,7 @@ export const createGroupedIcons = (
     },
     icon3: {
       icon: SettingsOutlinedIcon,
-      toolTip: "Dictionary & Tiles",
+      toolTip: "Settings",
       onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen)
     },
     icon4: {
@@ -123,14 +123,14 @@ export const createGroupedIcons = (
     },
     icon2: {
       icon: Typography,
-      toolTip: "Reveal Elo Ratings",
+      toolTip: "Reveal ELO",
       onClick: () => revealElo(tourneyNum, name1, name2, setRevealedElo, setRevealedElo2),
       text: 'Elo',
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
     },
     icon3: {
       icon: LaunchIcon,
-      toolTip: "View on Cross-Tables",
+      toolTip: "View on XT",
       onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')
     }
   }
