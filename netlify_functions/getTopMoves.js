@@ -1,5 +1,4 @@
 const { normalizeBoard } = require('./normalizeBoard');
-const { findAnchors } = require('./findAnchors');
 const { loadDictionary } = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
@@ -52,8 +51,7 @@ exports.handler = async function (event) {
       console.log('Dictionary loaded and cached');
     }
 
-    const anchors = findAnchors(board);
-    const allMoves = generateMoves(board, letters, anchors, cachedTrie);
+    const allMoves = generateMoves(board, letters, [], cachedTrie);
 
     if (!Array.isArray(allMoves)) {
       throw new Error('generateMoves did not return an array');
