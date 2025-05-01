@@ -161,7 +161,6 @@ export default function Viewer({ onChange }){
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
-      {console.log(lightMode, mode, tiles)}
       <Modal
         open={open}
         onClose={handleClose}
