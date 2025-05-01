@@ -4,6 +4,11 @@
 
    const { letterScores, boardMultipliers } = require('./gameLogic');
 
+   // ── module-level constants ───────────────────────────────────
+   const ALPHA     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+   const alphaArr  = ALPHA.split('');
+   const memo      = new Set();
+
    /**
     * Return every empty square that touches at least one tile already on the board.
     * If the board is empty, the centre (7,7) is the single anchor.
@@ -32,6 +37,9 @@
       Main entry
       ------------------------------------------------------------- */
    function generateMoves(board, rack, anchors = [], trie) {
+     // all runs start fresh
+     memo.clear();
+
      const anchorList = anchors.length ? anchors : getAnchors(board);
      const moves = [];
    
@@ -131,7 +139,7 @@
        const startCol = direction === 'right' ? col - offset : col;
        if (startRow < 0 || startCol < 0) continue;
    
-       // Don’t begin inside an existing word
+       // Don't begin inside an existing word
        const beforeRow = direction === 'right' ? startRow : startRow - 1;
        const beforeCol = direction === 'right' ? startCol - 1 : startCol;
        if (beforeRow >= 0 && beforeCol >= 0 && board[beforeRow][beforeCol] !== null) continue;
@@ -171,6 +179,14 @@
      // off‑board
      if (row >= 15 || col >= 15 || row < 0 || col < 0) return;
    
+     const rackKey = rack.length === 7
+         ? rack.join('')                               // already unique for 7-tile rack
+         : [...rack].sort().join('');                  // copy → safe
+
+     const key = `${row},${col},${wordSoFar}:${rackKey}`;
+     if (memo.has(key)) return;
+     memo.add(key);
+   
      const existingLetter = board[row][col];
      const nextRow = direction === 'right' ? row : row + 1;
      const nextCol = direction === 'right' ? col + 1 : col;
@@ -199,7 +215,6 @@
      }
    
      // cross‑check letters allowed here
-     const key = `${row},${col}`;
      const allowed = crossChecks ? crossChecks.get(key) : null; // null ⇒ all allowed
      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
    
