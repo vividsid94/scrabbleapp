@@ -153,7 +153,16 @@ form{
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.player2Panel{
+  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
+  color: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   padding-bottom: 10px;
+  gap: 5px;
 }
 
 .playerToggle{

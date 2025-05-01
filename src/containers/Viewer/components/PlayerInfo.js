@@ -52,7 +52,7 @@ const PlayerInfo = ({
       <Box style={{color: textColor}}>
         {player1points} points
       </Box>
-      <Box className={styles.playerPanel} style={{color: textColor}}>
+      <Box className={styles.player2Panel} style={{color: textColor}}>
         <Box style={{color: textColor}}>
           {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
         </Box>
