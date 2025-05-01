@@ -2,7 +2,7 @@
     functions = "netlify_functions"
 
 [functions]
-    loadDictionaryHandler = { schedule = "*/5 * * * *" }  # Run every 5 minutes
+    loadDictionaryHandler = { schedule = "every 5 minutes" }
 
 [[redirects]]
   from = "/api/*"

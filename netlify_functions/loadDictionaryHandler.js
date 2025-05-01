@@ -4,27 +4,35 @@ const { loadDictionary } = require('./loadDictionary');
 let cachedTrie = null;
 
 exports.handler = async function(event, context) {
-  // This will run both on schedule and when called directly
+  console.log('🔍 loadDictionaryHandler triggered at:', new Date().toISOString());
+  console.log('Event:', JSON.stringify(event, null, 2));
+  
   try {
     // Load dictionary if not already cached
     if (!cachedTrie) {
-      console.log('Loading dictionary...');
+      console.log('📚 Loading dictionary...');
       cachedTrie = await loadDictionary();
-      console.log('Dictionary loaded successfully');
+      console.log('✅ Dictionary loaded successfully');
+    } else {
+      console.log('📚 Dictionary already cached');
     }
 
     return {
       statusCode: 200,
       body: JSON.stringify({ 
         success: true,
-        message: 'Dictionary loaded and cached'
+        message: 'Dictionary loaded and cached',
+        timestamp: new Date().toISOString()
       })
     };
   } catch (error) {
-    console.error('Error loading dictionary:', error);
+    console.error('❌ Error loading dictionary:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      })
     };
   }
 }; 

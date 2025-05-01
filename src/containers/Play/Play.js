@@ -75,17 +75,19 @@ export default function Play() {
     setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     
-    // Load dictionary
-    fetch('/.netlify/functions/loadDictionaryHandler')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to load dictionary');
-        }
-        console.log('Dictionary loading initiated');
-      })
-      .catch(error => {
-        console.error('Error loading dictionary:', error);
-      });
+    // Test dictionary loading
+    const testDictionaryLoading = async () => {
+      try {
+        console.log('🔄 Testing dictionary loading...');
+        const response = await fetch('/.netlify/functions/loadDictionaryHandler');
+        const data = await response.json();
+        console.log('📝 Dictionary loading test result:', data);
+      } catch (error) {
+        console.error('❌ Error testing dictionary loading:', error);
+      }
+    };
+    
+    testDictionaryLoading();
   }, []);
 
   const startGame = async () => {
