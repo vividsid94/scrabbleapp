@@ -1,9 +1,6 @@
 [build]
     functions = "netlify_functions"
 
-[functions]
-    loadDictionaryHandler = { schedule = "every 5 minutes" }
-
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
