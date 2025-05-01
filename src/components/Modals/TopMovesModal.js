@@ -51,7 +51,7 @@ export default function TopMovesModal({
                 </Box>
               </Box>
             ))}
-            {topMoves.length === 0 && (
+            {!isLoadingTopMoves && topMoves.length === 0 && (
               <Box className={styles.noMoves}>No valid moves found</Box>
             )}
           </Box>

@@ -59,13 +59,32 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor) => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = []) => {
+  if (blankTiles.length > 0) {
+    console.log('createBoard called with blankTiles:', blankTiles);
+  }
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
           const isCurrentMove = currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex);
           const lightenedCell = isCurrentMove;
-          return Cell(rowIndex, colIndex, cellType(col, lightenedCell), "board", theme, tiles, color);
+          const isBlank = blankTiles.some(tile => {
+            const matches = tile.row === rowIndex && tile.col === colIndex;
+            if (matches) {
+              console.log('Found blank tile at position:', { rowIndex, colIndex, letter: col });
+            }
+            return matches;
+          });
+          return Cell({
+            rowIndex,
+            colIndex,
+            bonus: cellType(col, lightenedCell),
+            type: "board",
+            theme,
+            tiles,
+            color,
+            isBlank
+          });
           })
       ))
   ); 

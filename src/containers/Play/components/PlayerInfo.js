@@ -15,21 +15,49 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles }) => (
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer }) => (
   <Box className={styles.playerPanel}>
     <Box className={styles.playerInfo}>
       <Box className={styles.playerName}>{name}</Box>
       <Box className={styles.timer}>{time}</Box>
     </Box>
     <Box className={styles.points}>{points}</Box>
-    {rack && (
+    {rack && (!isBot || (isBot && currentPlayer === 2)) && (
       <Box className={styles.Rack}>
-        <Rack 
-          rack={rack} 
-          color={color.current} 
-          onTileClick={onTileClick}
-          selectedTiles={selectedTiles}
-        />
+        {rack[0] === '🤖' ? (
+          <Box sx={{ 
+            display: 'flex', 
+            gap: '4px', 
+            justifyContent: 'center',
+            padding: '8px',
+            fontSize: '20px'
+          }}>
+            {rack.map((emoji, index) => (
+              <Box key={index} sx={{ 
+                width: '24px', 
+                height: '24px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                backgroundColor: color.current,
+                borderRadius: '4px',
+                border: '1px solid rgba(0,0,0,0.2)',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                fontSize: '16px',
+                color: 'white'
+              }}>
+                {emoji}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Rack 
+            rack={rack} 
+            color={color.current} 
+            onTileClick={onTileClick}
+            selectedTiles={selectedTiles}
+          />
+        )}
       </Box>
     )}
   </Box>
@@ -122,7 +150,7 @@ export default function PlayerInfo({
             <SendIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
-        <Tooltip title={gameStarted ? "Pass" : "Start game to enable pass"} placement="top">
+        <Tooltip title={gameStarted ? "Pass (1)" : "Start game to enable pass"} placement="top">
           <Box 
             className={styles.keyBtn}
             onClick={onPass}
@@ -130,13 +158,29 @@ export default function PlayerInfo({
               ...actionButtonStyle,
               opacity: !gameStarted ? 0.3 : 1,
               cursor: !gameStarted ? 'not-allowed' : 'pointer',
-              pointerEvents: !gameStarted ? 'none' : 'auto'
+              pointerEvents: !gameStarted ? 'none' : 'auto',
+              position: 'relative'
             }}
           >
             <CancelIcon sx={{ fontSize: 20 }} />
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -5, 
+              right: -5, 
+              fontSize: '10px',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '50%',
+              width: '14px',
+              height: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              1
+            </Box>
           </Box>
         </Tooltip>
-        <Tooltip title={gameStarted ? "Exchange" : "Start game to enable exchange"} placement="top">
+        <Tooltip title={gameStarted ? "Exchange (2)" : "Start game to enable exchange"} placement="top">
           <Box 
             className={styles.keyBtn}
             onClick={onExchange}
@@ -144,10 +188,26 @@ export default function PlayerInfo({
               ...actionButtonStyle,
               opacity: !gameStarted ? 0.3 : (isExchangeDisabled ? 0.5 : 1),
               cursor: !gameStarted ? 'not-allowed' : (isExchangeDisabled ? 'not-allowed' : 'pointer'),
-              pointerEvents: !gameStarted ? 'none' : 'auto'
+              pointerEvents: !gameStarted ? 'none' : 'auto',
+              position: 'relative'
             }}
           >
             <SwapHorizIcon sx={{ fontSize: 20 }} />
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -5, 
+              right: -5, 
+              fontSize: '10px',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '50%',
+              width: '14px',
+              height: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              2
+            </Box>
           </Box>
         </Tooltip>
       </Box>
@@ -158,15 +218,18 @@ export default function PlayerInfo({
             name={player2Name}
             time={player2Time}
             points={player2Points}
-            rack={player2Rack}
+            rack={isBotMode ? ['🤖', '🤔', '🤫', '🤐', '🤖', '🤔', '🤫'] : player2Rack}
             color={color}
             onTileClick={onTileClick}
             selectedTiles={selectedTiles}
+            isBot={isBotMode}
+            currentPlayer={currentPlayer}
           />
           <PlayerInfoSection
             name={player1Name}
             time={player1Time}
             points={player1Points}
+            color={color}
           />
         </>
       ) : (
@@ -184,6 +247,10 @@ export default function PlayerInfo({
             name={player2Name}
             time={player2Time}
             points={player2Points}
+            rack={isBotMode ? ['🤖', '🤔', '🤫', '🤐', '🤖', '🤔', '🤫'] : player2Rack}
+            color={color}
+            isBot={isBotMode}
+            currentPlayer={currentPlayer}
           />
         </>
       )}

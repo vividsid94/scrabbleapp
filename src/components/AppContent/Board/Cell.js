@@ -20,7 +20,7 @@ function lightenColor(color) {
  
 preload();  
 
-export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, color) {
+export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank }) {
   function cell(letter) {
     if (letter) {
       const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
@@ -28,7 +28,7 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
 
       if (cachedImage) {
         const modifiedImageUrl = modifyImageColor(cachedImage, color);
-
+        
         return (
           <div
             className={styles.Cell}
@@ -36,7 +36,7 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
               boxShadow: bonus.boxShadow,
               backgroundImage: `url(${modifiedImageUrl})`,
               backgroundSize: '100%',
-              backgroundColor: bonus.hasBorder ? lightenColor(color) : color,
+              backgroundColor: isBlank ? lightenColor(color) : (bonus.hasBorder ? lightenColor(color) : color),
               boxSizing: 'border-box',
             }}
           ></div>

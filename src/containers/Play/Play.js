@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
-import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
@@ -57,6 +56,7 @@ export default function Play() {
   const [showBotSettings, setShowBotSettings] = useState(false);
   const [botGoesFirst, setBotGoesFirst] = useState(false);
   const [tilesToExchange, setTilesToExchange] = useState([]);
+  const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -442,14 +442,8 @@ export default function Play() {
 
   const handleClose = () => setOpen(false);
 
-  const handleDictionaryChange = event => {
-    // Dictionary selection is not used in Play mode
-  };
-
   const makeBotMove = async () => {
-    console.log('makeBotMove called', { isBotMode, currentPlayer });
     if (!isBotMode || currentPlayer !== 2) {
-      console.log('Bot move conditions not met', { isBotMode, currentPlayer });
       return;
     }
 
@@ -493,14 +487,35 @@ export default function Play() {
       // Create a copy of the board with the bot's move
       const newBoard = JSON.parse(JSON.stringify(boardCoords));
       const newRack = [...player2Rack];
+      const newBlankTiles = [...blankTiles];
+      
+      console.log('Processing bot move tiles:', botMove.tiles);
+      console.log('Current rack before processing:', newRack);
       
       for (const tile of botMove.tiles) {
         if (tile.isNew) {
           newBoard[tile.row][tile.col] = tile.letter;
+          
           // For blank tiles, we need to find the blank in the rack
-          const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
-          if (tileIndex !== -1) {
-            newRack.splice(tileIndex, 1);
+          if (tile.isBlank) {
+            newBlankTiles.push({ row: tile.row, col: tile.col });
+            
+            // Remove the blank tile from the rack - look for both '?' and '*'
+            const blankIndex = newRack.indexOf('?');
+            if (blankIndex !== -1) {
+              newRack.splice(blankIndex, 1);
+            } else {
+              const starIndex = newRack.indexOf('*');
+              if (starIndex !== -1) {
+                newRack.splice(starIndex, 1);
+              }
+            }
+          } else {
+            // For non-blank tiles, find and remove the letter
+            const tileIndex = newRack.indexOf(tile.letter);
+            if (tileIndex !== -1) {
+              newRack.splice(tileIndex, 1);
+            }
           }
         }
       }
@@ -509,6 +524,7 @@ export default function Play() {
       setBoardCoords(newBoard);
       setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
       setPlayer2Rack(alphabetizeRack(newRack));
+      setBlankTiles(newBlankTiles);
       
       // Draw new tiles for bot
       const newPool = [...pool];
@@ -527,9 +543,12 @@ export default function Play() {
       botMoveSound.current.play();
       
       // Show toast notification for bot's move
-      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points from rack of ${[...player2Rack].sort().join('')}`);
+      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+      
+      // Reset consecutive passes since bot made a move
+      setConsecutivePasses(0);
       
       // Switch back to player 1
       setCurrentPlayer(1);
@@ -935,6 +954,44 @@ export default function Play() {
     }
   };
 
+  const board = useMemo(() => {
+    return createBoard(
+      tempBoardCoords.map((row, rowIndex) => 
+        row.map((col, colIndex) => {
+          // If there's a temporary move, use that
+          if (typeof col === 'string') {
+            return col;
+          }
+          // Otherwise use the committed board state
+          return boardCoords[rowIndex][colIndex];
+        })
+      ),
+      [], 
+      "PROTILES", 
+      theme, 
+      color.current, 
+      complementaryColor.current, 
+      blankTiles
+    );
+  }, [tempBoardCoords, boardCoords, theme, blankTiles]);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (!gameStarted) return;
+      
+      if (event.key === '1') {
+        handlePass();
+      } else if (event.key === '2') {
+        handleExchange();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [gameStarted, handlePass, handleExchange]);
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -945,7 +1002,7 @@ export default function Play() {
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Board 
-            board={createBoard(tempBoardCoords, [], "PROTILES", theme, color.current, complementaryColor.current)} 
+            board={board}
             boardMode={theme}
             onBoardChildClick={(row, col) => {
               console.log('Board component received click:', { row, col });
