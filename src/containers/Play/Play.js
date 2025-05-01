@@ -810,7 +810,7 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        Play Scrabble
+        Play!
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
