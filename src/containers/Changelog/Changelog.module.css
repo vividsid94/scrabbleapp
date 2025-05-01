@@ -1,0 +1,91 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  font-size: 30px;
+  margin-top: 25px;
+  font-family: 'Preahvihear' !important;
+}
+
+.content {
+  width: 75%;
+  margin: 25px auto;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.version {
+  font-size: 1.2em;
+  color: #3D5A80;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.content h2 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: #3D5A80;
+  font-size: 1.5em;
+  border-bottom: 2px solid rgba(61, 90, 128, 0.3);
+  padding-bottom: 8px;
+}
+
+.content ul {
+  margin-left: 20px;
+  padding-left: 0;
+}
+
+.content li {
+  margin-bottom: 12px;
+  list-style-type: none;
+  position: relative;
+  padding-left: 25px;
+  line-height: 1.5;
+}
+
+.content li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #3D5A80;
+  font-size: 1.2em;
+}
+
+.betaSection {
+  background-color: rgba(61, 90, 128, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.betaSection p {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.link {
+  color: #3D5A80;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  margin-top: 40px;
+  text-align: center;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+} 

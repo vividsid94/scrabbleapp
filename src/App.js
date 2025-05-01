@@ -10,6 +10,7 @@ import Footer from "./components/AppContent/Footer/Footer";
 import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
+import Changelog from "./containers/Changelog/Changelog";
 
 export const ThemeContext = React.createContext();
 
@@ -39,6 +40,7 @@ function App() {
               <Route path="/words" element={<WordTable/>}/>
               <Route path="/series" element={<Series/>}/>
               <Route path="/play" element={<Play/>}/>
+              <Route path="/changelog" element={<Changelog/>}/>
             </Routes>
           </Router>
         </header>

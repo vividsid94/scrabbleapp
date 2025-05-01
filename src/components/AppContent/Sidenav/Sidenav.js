@@ -19,6 +19,7 @@ import { Tooltip } from "@mui/material";
 
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import ArticleIcon from '@mui/icons-material/Article';
 
 import styles from './Sidenav.module.css';
 
@@ -122,6 +123,9 @@ export default function MiniDrawer() {
             <MenuItem onClick={handleClose} component={Link} to="/viewer">
               Annotated Game Viewer
             </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/changelog">
+              Changelog
+            </MenuItem>
           </Menu>
           <img src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </MyToolbar>
@@ -151,6 +155,18 @@ export default function MiniDrawer() {
                 </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Viewer"} sx={{ color: getTextColor() }}/>
+            </ListItem>
+          </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <a id="changelogBtn" className={styles.link} href="/changelog">
+            <ListItem className={styles.listItem}>
+              <ListItemIcon>
+                <Tooltip title="Changelog">
+                  <ArticleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                </Tooltip>
+              </ListItemIcon>
+              <ListItemText className={styles.listItemText} primary={"Changelog"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
