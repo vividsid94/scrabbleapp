@@ -3,7 +3,6 @@
   user-select: none;
 }
 
-
 /* styles.module.css */
 
 .row {
@@ -29,7 +28,6 @@
   border-radius: 50%; /* Make it circular */
 }
 
-/* CSS */
 .Header{
   position: relative;
   background: rgb(12, 12, 59);
@@ -101,12 +99,6 @@
   display: flex;
 }
 
-.Left {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-}
-
 .Right {
   display: flex;
   justify-content: center;
@@ -176,33 +168,9 @@ td {
   aspect-ratio: 1;
 }
 
-.Board:after {
-  --slice-0: inset(50% 50% 50% 50%);
-  --slice-1: inset(80% -6px 0 0);
-  --slice-2: inset(50% -6px 30% 0);
-  --slice-3: inset(10% -6px 85% 0);
-  --slice-4: inset(40% -6px 43% 0);
-  --slice-5: inset(80% -6px 5% 0);
-  
-  content: 'ALTERNATE TEXT';
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 3%, #00E6F6 3%, #00E6F6 5%, #FF013C 5%);
-  text-shadow: -3px -3px 0px #F8F005, 3px 3px 0px #00E6F6;
-  clip-path: var(--slice-0);
-}
-
 .Board:not(.noAnimate):active {
   animation: 1s super-cool-glitch;
   animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.Board.no-animate:active {
-  animation: none;
 }
 
 @keyframes super-cool-glitch {
@@ -251,14 +219,7 @@ td {
   }
 }
 
-@media screen and (max-height: 992px){
-  .Board__FULLBOARD,
-  .Board__FULLBOARD:after {
-    width: 600px;
-  }
-}
-
-@media screen and (max-width: 1200px){
+@media screen and (max-height: 992px), screen and (max-width: 1200px) {
   .Board__FULLBOARD,
   .Board__FULLBOARD:after {
     width: 600px;
@@ -289,23 +250,4 @@ td {
 .arrowIndicator:hover {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
-
-.directionToggle {
-    padding: 8px 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin: 10px;
-}
-
-.directionToggle:hover {
-    background-color: #45a049;
-}
-
-.directionToggle:active {
-    background-color: #3e8e41;
 }

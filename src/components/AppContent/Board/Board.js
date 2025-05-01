@@ -163,8 +163,6 @@ export default function Board({
                 )}
             </Box>
             <Box className={styles.innerBox}>
-                <Box className={styles.Left}>
-                </Box>
                 <Box className={`${styles.Board} ${styles.tableContainer} ${styles[tableTheme]} ${!animate ? styles.noAnimate : ''}`}>
                     <table>
                         <thead>
