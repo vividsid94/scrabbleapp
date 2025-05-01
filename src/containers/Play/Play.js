@@ -456,7 +456,9 @@ export default function Play() {
       // Convert any '?' in the rack to '*' for the API
       const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
       
-      console.log('Sending bot move request', { board: boardCopy, letters: apiRack });
+      console.log('🤖 Bot Move Request:', {
+        rack: apiRack.join('')
+      });
       const response = await fetch('/.netlify/functions/botLogic', {
         method: 'POST',
         headers: {
@@ -488,8 +490,8 @@ export default function Play() {
       const newRack = [...player2Rack];
       const newBlankTiles = [...blankTiles];
       
-      console.log('Processing bot move tiles:', botMove.tiles);
-      console.log('Current rack before processing:', newRack);
+      //console.log('Processing bot move tiles:', botMove.tiles);
+      //console.log('Current rack before processing:', newRack);
       
       for (const tile of botMove.tiles) {
         if (tile.isNew) {

@@ -61,7 +61,7 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
 
 export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = []) => {
   if (blankTiles.length > 0) {
-    console.log('createBoard called with blankTiles:', blankTiles);
+    //console.log('createBoard called with blankTiles:', blankTiles);
   }
   return (
       boardCoords.map((row, rowIndex) => (
@@ -71,7 +71,7 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
           const isBlank = blankTiles.some(tile => {
             const matches = tile.row === rowIndex && tile.col === colIndex;
             if (matches) {
-              console.log('Found blank tile at position:', { rowIndex, colIndex, letter: col });
+              //console.log('Found blank tile at position:', { rowIndex, colIndex, letter: col });
             }
             return matches;
           });
