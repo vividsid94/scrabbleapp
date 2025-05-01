@@ -1,9 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Dancing+Script');
 @import url('https://fonts.googleapis.com/css2?family=Preahvihear');
-.questionMark{
-  font-size: 26px;
-  cursor: pointer;
-}
 
 .page{
   display: flex;
@@ -51,11 +47,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.subTitle{
-  width: 75%;
-  margin: 25px auto;
 }
 
 .developmentMessage {
