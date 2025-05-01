@@ -78,29 +78,4 @@ export const modifyImageColor = (image, color) => {
     return modifiedUrl;
 }
 
-export const getComplementaryColor = (hexColor) => {
-    // Remove '#' if present
-    hexColor = hexColor.replace('#', '');
-
-    // Convert hex to RGB
-    var r = parseInt(hexColor.substring(0,2), 16);
-    var g = parseInt(hexColor.substring(2,4), 16);
-    var b = parseInt(hexColor.substring(4,6), 16);
-
-    // Get the inverted color
-    var complementaryR = (255 - r).toString(16);
-    var complementaryG = (255 - g).toString(16);
-    var complementaryB = (255 - b).toString(16);
-
-    // Ensure that the hexadecimal values have two digits
-    complementaryR = ('0' + complementaryR).slice(-2);
-    complementaryG = ('0' + complementaryG).slice(-2);
-    complementaryB = ('0' + complementaryB).slice(-2);
-
-    // Compose the complementary color
-    var complementaryHexColor = '#' + complementaryR + complementaryG + complementaryB;
-
-    return complementaryHexColor;
-}
-
 

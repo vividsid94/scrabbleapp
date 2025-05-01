@@ -7,20 +7,24 @@ export default function CellType(type, flag, border, tiles, highlightColor){
     let boxShadowColor = 'rgb(185, 174, 166)';
     let regBoxShadow = 'inset 0.15px 0.15px ' + boxShadowColor + ', inset -0.15px -0.15px ' + boxShadowColor;
     let boxShadow = 'inset 0.25px 0.25px ' + boxShadowColor + ', inset -0.25px -0.25px ' + boxShadowColor;
+    
+    // Always use olive-y light color for borders
+    let borderColor = 'rgb(185, 174, 166)';
+    
     if (left && top) {
-        boxShadow = 'inset 2.0px 2.0px ' + highlightColor;
+        boxShadow = 'inset 2.0px 2.0px ' + borderColor;
     } else if (left) {
-        boxShadow = 'inset 2.0px 0px ' + highlightColor;
+        boxShadow = 'inset 2.0px 0px ' + borderColor;
     } else if (top) {
-        boxShadow = 'inset 0px 2.0px ' + highlightColor;
+        boxShadow = 'inset 0px 2.0px ' + borderColor;
     }
     
     if (right && bottom) {
-        boxShadow += ', inset -2.0px -2.0px ' + highlightColor;
+        boxShadow += ', inset -2.0px -2.0px ' + borderColor;
     } else if (right) {
-        boxShadow += ', inset -2.0px 0px ' + highlightColor;
+        boxShadow += ', inset -2.0px 0px ' + borderColor;
     } else if (bottom) {
-        boxShadow += ', inset 0px -2.0px ' + highlightColor;
+        boxShadow += ', inset 0px -2.0px ' + borderColor;
     }
 
     switch (type) {

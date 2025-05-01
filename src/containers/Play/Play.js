@@ -41,7 +41,7 @@ export default function Play() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
-  const color = useRef('#60857C');
+  const color = useRef('#6D84A2');
   const complementaryColor = useRef('#9F7A83');
   const [isBotMode, setIsBotMode] = useState(false);
   const [isBotThinking, setIsBotThinking] = useState(false);
