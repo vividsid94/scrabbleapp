@@ -1,16 +1,63 @@
+/**
+ * Scrabble Top Moves Generator
+ * 
+ * This module implements a Netlify serverless function that finds the top scoring
+ * valid moves for a given board state and available letters.
+ * 
+ * @module getTopMoves
+ */
+
 const { normalizeBoard } = require('./normalizeBoard');
 const { loadDictionary } = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
-// Cache the dictionary in memory
+/** @type {import('./trie').Trie} */
 let cachedTrie = null;
 
-// Helper function to convert row/col to scrabble coordinates
+/**
+ * Converts row/column coordinates to Scrabble-style coordinates (e.g., "8H").
+ * 
+ * @param {number} row - Row index (0-14)
+ * @param {number} col - Column index (0-14)
+ * @returns {string} Scrabble coordinate (e.g., "8H")
+ */
 function getScrabbleCoordinates(row, col) {
   const letters = 'ABCDEFGHIJKLMNO';
   return `${row + 1}${letters[col]}`;
 }
 
+/**
+ * Netlify serverless function handler for getting top scoring moves.
+ * 
+ * @param {Object} event - The Netlify function event object
+ * @param {string} event.httpMethod - The HTTP method of the request
+ * @param {string} event.body - The request body as a JSON string
+ * @returns {Object} Response object with status code and body
+ * 
+ * @example
+ * // Example request body:
+ * {
+ *   "board": [["A", "B", null, ...], ...], // 15x15 array
+ *   "letters": ["A", "B", "C", "D", "E", "F", "G"] // Up to 7 letters
+ * }
+ * 
+ * // Example response:
+ * {
+ *   "statusCode": 200,
+ *   "body": {
+ *     "moves": [
+ *       {
+ *         "word": "HELLO",
+ *         "score": 8,
+ *         "tiles": [{row: 7, col: 7, letter: "H", isNew: true}, ...],
+ *         "direction": "right",
+ *         "startPosition": "8H"
+ *       },
+ *       // ... up to 10 moves
+ *     ]
+ *   }
+ * }
+ */
 exports.handler = async function (event) {
   try {
     if (event.httpMethod !== 'POST') {
