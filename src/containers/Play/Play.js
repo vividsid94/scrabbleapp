@@ -218,7 +218,9 @@ export default function Play() {
           setTempBoardCoords(newTempBoard);
           
           const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-          const newRack = [...currentRack, tileToRemove];
+          // If the tile was a blank, return '*' to the rack
+          const tileToAdd = selectedTiles[selectedTiles.length - 1] === '*' ? '*' : tileToRemove;
+          const newRack = [...currentRack, tileToAdd];
           if (currentPlayer === 1) {
             setPlayer1Rack(alphabetizeRack(newRack));
           } else {
@@ -457,7 +459,10 @@ export default function Play() {
       const boardCopy = JSON.parse(JSON.stringify(boardCoords));
       const rackCopy = [...player2Rack];
       
-      console.log('Sending bot move request', { board: boardCopy, letters: rackCopy });
+      // Convert any '?' in the rack to '*' for the API
+      const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
+      
+      console.log('Sending bot move request', { board: boardCopy, letters: apiRack });
       const response = await fetch('/.netlify/functions/botLogic', {
         method: 'POST',
         headers: {
@@ -465,7 +470,7 @@ export default function Play() {
         },
         body: JSON.stringify({
           board: boardCopy,
-          letters: rackCopy
+          letters: apiRack
         })
       });
 
@@ -492,9 +497,10 @@ export default function Play() {
       for (const tile of botMove.tiles) {
         if (tile.isNew) {
           newBoard[tile.row][tile.col] = tile.letter;
-          const letterIndex = newRack.indexOf(tile.letter);
-          if (letterIndex !== -1) {
-            newRack.splice(letterIndex, 1);
+          // For blank tiles, we need to find the blank in the rack
+          const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
+          if (tileIndex !== -1) {
+            newRack.splice(tileIndex, 1);
           }
         }
       }
@@ -641,7 +647,13 @@ export default function Play() {
       for (let row = 0; row < 15; row++) {
         for (let col = 0; col < 15; col++) {
           if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-            uncommittedTiles.push(tempBoardCoords[row][col]);
+            // If the tile was a blank, we need to get the original blank tile back
+            const tileIndex = selectedTiles.findIndex(t => t === '*');
+            if (tileIndex !== -1) {
+              uncommittedTiles.push('*');
+            } else {
+              uncommittedTiles.push(tempBoardCoords[row][col]);
+            }
           }
         }
       }
@@ -659,7 +671,10 @@ export default function Play() {
       setSelectedTiles([]);
       setSelectedBoardPosition(null);
       
-      console.log('Getting top moves for rack:', newRack);
+      // Convert any '?' in the rack to '*' for the API
+      const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
+      
+      console.log('Getting top moves for rack:', apiRack);
       const response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
@@ -667,7 +682,7 @@ export default function Play() {
         },
         body: JSON.stringify({
           board: boardCoords,
-          letters: newRack
+          letters: apiRack
         })
       });
 
@@ -865,10 +880,6 @@ export default function Play() {
     // Set the direction
     setArrowDirection(move.direction);
     
-    // Set the position to the end of the word
-    const lastTile = move.tiles[move.tiles.length - 1];
-    setSelectedBoardPosition({ row: lastTile.row, col: lastTile.col });
-    
     // Place the tiles on the board
     const newTempBoard = [...tempBoardCoords];
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -877,17 +888,20 @@ export default function Play() {
     
     // Place each tile using the exact positions from the tiles array
     for (const tile of move.tiles) {
-      if (tile.isNew) {  
+      if (tile.isNew) {
+        
         // Check if the tile is already on the board in the committed state
         if (typeof boardCoords[tile.row][tile.col] === 'string') {
           continue;
         }
         
-        const tileIndex = newRack.indexOf(tile.letter)
+        // For blank tiles, we need to find the blank in the rack
+        const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
         if (tileIndex !== -1) {
+          // For blank tiles, we need to show the letter it represents
           newTempBoard[tile.row][tile.col] = tile.letter;
           newRack.splice(tileIndex, 1);
-          newSelectedTiles.push(tile.letter);
+          newSelectedTiles.push(tile.isBlank ? '*' : tile.letter);
         }
       }
     }
@@ -898,6 +912,26 @@ export default function Play() {
       setPlayer1Rack(alphabetizeRack(newRack));
     } else {
       setPlayer2Rack(alphabetizeRack(newRack));
+    }
+
+    // Set the position to the square after the last tile
+    const lastTile = move.tiles[move.tiles.length - 1];
+    if (move.direction === 'right') {
+      let nextCol = lastTile.col + 1;
+      while (nextCol <= 14 && !Number.isInteger(boardCoords[lastTile.row][nextCol])) {
+        nextCol++;
+      }
+      if (nextCol <= 14) {
+        setSelectedBoardPosition({ row: lastTile.row, col: nextCol });
+      }
+    } else {
+      let nextRow = lastTile.row + 1;
+      while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][lastTile.col])) {
+        nextRow++;
+      }
+      if (nextRow <= 14) {
+        setSelectedBoardPosition({ row: nextRow, col: lastTile.col });
+      }
     }
   };
 
