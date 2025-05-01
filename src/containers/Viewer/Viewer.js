@@ -250,6 +250,46 @@ export default function Viewer({ onChange }){
                       />
                     </Tooltip>
                   ))}
+                  {groupedIcons.map((group, index) => (
+                    <Box key={`group-${index}`} className={styles.groupedBox}>
+                      {group.icon1 && (
+                        <Tooltip key={`tooltip-1-${index}`} title={group.icon1.toolTip}>
+                          <group.icon1.icon 
+                            className={styles.keyBtn} 
+                            onClick={group.icon1.onClick}
+                            sx={group.icon1.condition}
+                          />
+                        </Tooltip>
+                      )}
+                      {group.icon2 && (
+                        <Tooltip key={`tooltip-2-${index}`} title={group.icon2.toolTip}>
+                          <group.icon2.icon 
+                            className={styles.keyBtn} 
+                            onClick={group.icon2.onClick}
+                            sx={group.icon2.condition}
+                          >
+                            {group.icon2.text}
+                          </group.icon2.icon>
+                        </Tooltip>
+                      )}
+                      {group.icon3 && (
+                        <Tooltip key={`tooltip-3-${index}`} title={group.icon3.toolTip}>
+                          <group.icon3.icon 
+                            className={styles.keyBtn} 
+                            onClick={group.icon3.onClick}
+                          />
+                        </Tooltip>
+                      )}
+                      {group.icon4 && (
+                        <Tooltip key={`tooltip-4-${index}`} title={group.icon4.toolTip}>
+                          <group.icon4.icon 
+                            className={styles.keyBtn} 
+                            onClick={group.icon4.onClick}
+                          />
+                        </Tooltip>
+                      )}
+                    </Box>
+                  ))}
                 </Box>
                 <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
                   Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!

@@ -64,6 +64,7 @@ export const createIconList = (
   },
   {
     icon: SwapHorizIcon,
+    toolTip: "Switch mode",
     onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode(mode, setMode, onChange, randomizeGame)),
     condition: {
       color: !unlockEloMode ? 'transparent' : 'white',
@@ -94,35 +95,42 @@ export const createGroupedIcons = (
   {
     icon1: {
       icon: YoutubeSearchedForIcon,
+      toolTip: "Games History",
       onClick: () => handleGamesHistoryOpen(setModalContent, setOpen)
     },
     icon2: {
       icon: HistoryIcon,
+      toolTip: "Recent Games",
       onClick: () => handleRecentGamesOpen(setModalContent, setOpen)
     },
     icon3: {
       icon: SettingsOutlinedIcon,
+      toolTip: "Dictionary & Tiles",
       onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen)
     },
     icon4: {
       icon: ColorizeIcon,
+      toolTip: "Color Scheme",
       onClick: () => handleColorSchemeOpen(setModalContent, setOpen)
     }
   },
   {
     icon1: {
       icon: GroupIcon,
+      toolTip: "Reveal Players",
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
     },
     icon2: {
       icon: Typography,
+      toolTip: "Reveal Elo Ratings",
       onClick: () => revealElo(tourneyNum, name1, name2, setRevealedElo, setRevealedElo2),
       text: 'Elo',
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
     },
     icon3: {
       icon: LaunchIcon,
+      toolTip: "View on Cross-Tables",
       onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')
     }
   }

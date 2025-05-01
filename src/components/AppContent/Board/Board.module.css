@@ -156,6 +156,10 @@ td {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .Board__FULLBOARD,
@@ -166,8 +170,10 @@ td {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  width: 680px;
-  height: 680px;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .Board:after {
@@ -238,13 +244,23 @@ td {
     border: none;
     background: none;
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 
   .Board__STANDARD,
   .Board__STANDARD:after {
     width: 100%;
-    height: 100%;
+    max-width: 90vw;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .Board__FULLBOARD,
+  .Board__FULLBOARD:after {
+    width: 100%;
+    max-width: 90vw;
+    height: auto;
+    aspect-ratio: 1;
   }
 
   .headerContent {
@@ -253,7 +269,6 @@ td {
   .Footer{
     min-width: 220px;
   }
-
 }
 
 @media screen and (min-width: 992px) and (max-width: 1200px){
@@ -265,12 +280,30 @@ td {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 570px;
-    height: 570px;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    aspect-ratio: 1;
   }
 }
 
 @media screen and (max-width: 676px){
+  .Board__STANDARD,
+  .Board__STANDARD:after {
+    width: 100%;
+    max-width: 90vw;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .Board__FULLBOARD,
+  .Board__FULLBOARD:after {
+    width: 100%;
+    max-width: 90vw;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
   .sideNumbering {
     font-size: 5px;
     width: 6px;
