@@ -63,24 +63,9 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
-          let border = { top: false, bottom: false, left: false, right: false };
-          if (currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex)) {  
-              if (!currentMoveCoords.some(coord => coord[0] === rowIndex - 1 && coord[1] === colIndex)) {
-              border.top = true;
-              }
-              if (!currentMoveCoords.some(coord => coord[0] === rowIndex + 1 && coord[1] === colIndex)) {
-              border.bottom = true;
-              }
-              if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex - 1)) {
-              border.left = true;
-              }
-              if (!currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex + 1)) {
-              border.right = true;
-              }
-              return Cell(rowIndex, colIndex, cellType(col, "standardColor", border, tiles, complementaryColor), "board", theme, tiles, color);
-          } else {
-              return Cell(rowIndex, colIndex, cellType(col, "lightColor", border, tiles, complementaryColor), "board", theme, tiles, color);
-          }
+          const isCurrentMove = currentMoveCoords.some(coord => coord[0] === rowIndex && coord[1] === colIndex);
+          const lightenedCell = isCurrentMove;
+          return Cell(rowIndex, colIndex, cellType(col, lightenedCell), "board", theme, tiles, color);
           })
       ))
   ); 

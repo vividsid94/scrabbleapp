@@ -12,7 +12,13 @@ function preload() {
   });
 }
 
-preload();
+function lightenColor(color) {
+  if (!color) return 'rgb(240, 240, 240)';
+  const baseColor = color.includes('rgba') ? color.split(',')[0] + ')' : color;
+  return `color-mix(in srgb, ${baseColor} 60%, white)`;
+}
+ 
+preload();  
 
 export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, color) {
   function cell(letter) {
@@ -30,7 +36,7 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
               boxShadow: bonus.boxShadow,
               backgroundImage: `url(${modifiedImageUrl})`,
               backgroundSize: '100%',
-              backgroundColor: color,
+              backgroundColor: bonus.hasBorder ? lightenColor(color) : color,
               boxSizing: 'border-box',
             }}
           ></div>
@@ -43,21 +49,16 @@ export default function Cell(rowIndex, colIndex, bonus, type, theme, tiles, colo
 
   switch (type) {
     case "board":
-      if (tiles === "PROTILES") {
-        return (
-          <div style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
-            <div className={styles.decalContainer}>
-                <div>{cell(bonus.value)}</div>
-            </div>
+      return (
+        <div style={{ 
+          background: bonus.hasBorder ? lightenColor(bonus.color) : bonus.color, 
+          boxShadow: bonus.boxShadow 
+        }}>
+          <div className={styles.decalContainer}>
+              <div>{cell(bonus.value)}</div>
           </div>
-        );
-      } else {
-        return (
-          <div className={styles.Cell} style={{ background: bonus.color, boxShadow: bonus.boxShadow }}>
-            {bonus.value}
-          </div>
-        );
-      }
+        </div>
+      );
     case "pool":
       return <div className={styles.cellPool}>{bonus.value}</div>;
     case "rack":

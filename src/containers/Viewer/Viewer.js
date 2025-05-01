@@ -7,7 +7,6 @@ import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
-import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from "../../axios/api.js";
 import { getMove, createBoard } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
