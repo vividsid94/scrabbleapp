@@ -549,17 +549,6 @@ export default function Play() {
     }
   }, [currentPlayer, isBotMode, isBotThinking]);
 
-  const handleSettingsChange = (setting, value) => {
-    console.log('Settings change', { setting, value });
-    if (setting === 'botMode') {
-      setIsBotMode(value);
-      if (value && currentPlayer === 2) {
-        makeBotMove();
-      }
-    }
-    // ... handle other settings ...
-  };
-
   // Update player2Name when isBotMode changes
   useEffect(() => {
     setPlayer1Name(isBotMode ? 'You' : 'Player 1');
@@ -870,8 +859,6 @@ export default function Play() {
   };
 
   const handleMoveSelect = (move) => {
-    console.log('Selected move full object:', JSON.stringify(move, null, 2));
-    
     // Reset the board to its current state
     setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
     
@@ -888,22 +875,15 @@ export default function Play() {
     const newRack = [...currentRack];
     const newSelectedTiles = [];
     
-    console.log('Current rack:', currentRack);
-    console.log('Word to place:', move.word);
-    
     // Place each tile using the exact positions from the tiles array
     for (const tile of move.tiles) {
-      if (tile.isNew) {
-        console.log('Placing tile at:', { row: tile.row, col: tile.col, letter: tile.letter });
-        
+      if (tile.isNew) {  
         // Check if the tile is already on the board in the committed state
         if (typeof boardCoords[tile.row][tile.col] === 'string') {
-          console.log('Tile already on board at this position, skipping');
           continue;
         }
         
-        const tileIndex = newRack.indexOf(tile.letter);
-        console.log('Tile index in rack:', tileIndex);
+        const tileIndex = newRack.indexOf(tile.letter)
         if (tileIndex !== -1) {
           newTempBoard[tile.row][tile.col] = tile.letter;
           newRack.splice(tileIndex, 1);
@@ -911,9 +891,6 @@ export default function Play() {
         }
       }
     }
-    
-    console.log('New rack:', newRack);
-    console.log('New board:', newTempBoard);
     
     setTempBoardCoords(newTempBoard);
     setSelectedTiles(newSelectedTiles);
