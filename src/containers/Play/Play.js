@@ -19,6 +19,7 @@ import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
 import BotSettingsModal from '../../components/Modals/BotSettingsModal';
 import TopMovesModal from '../../components/Modals/TopMovesModal';
+import PlayerInfo from './components/PlayerInfo';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -836,229 +837,34 @@ export default function Play() {
         </Box>
 
         <Box className={styles.rightPanel}>
-          <Box className={styles.topPlayerPanel}>
-            <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
-            <Box className={styles.playerToggle}>
-              <Tooltip title="Settings">
-                <SettingsOutlinedIcon className={styles.keyBtn} onClick={handleSettingsOpen}/>
-              </Tooltip>
-              <Tooltip title="Color Scheme">
-                <ColorizeIcon className={styles.keyBtn} onClick={handleColorSchemeOpen}/>
-              </Tooltip>
-              <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
-                <SmartToyIcon 
-                  className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
-                  onClick={handleBotModeToggle}
-                  sx={{ 
-                    color: isBotMode ? '#4CAF50' : 'inherit',
-                    '&:hover': {
-                      color: isBotMode ? '#45a049' : '#666'
-                    }
-                  }}
-                />
-              </Tooltip>
-              <Tooltip title="Get Top Moves">
-                <LightbulbIcon 
-                  className={styles.keyBtn}
-                  onClick={handleGetTopMoves}
-                  sx={{ 
-                    color: isLoadingTopMoves ? '#FFD700' : 'inherit',
-                    '&:hover': {
-                      color: '#FFD700'
-                    }
-                  }}
-                />
-              </Tooltip>
-            </Box>
-              <Box sx={{padding: '8px 0px'}} className={`${styles.playerPanel} ${styles.playerToggle}`}>
-              <Tooltip title="Start Game" placement="top">
-                <Button 
-                  variant="contained" 
-                  onClick={startGame}
-                  disabled={gameStarted || isDictionaryLoading}
-                  sx={{ 
-                    marginRight: '8px',
-                    backgroundColor: '#4CAF50',
-                    '&:hover': {
-                      backgroundColor: '#45a049',
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#cccccc',
-                      color: '#666666'
-                    },
-                    borderRadius: '50%',
-                    minWidth: '40px',
-                    width: '40px',
-                    height: '40px',
-                    padding: 0,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                    }
-                  }}
-                >
-                  <PlayArrowIcon />
-                </Button>
-              </Tooltip>
-              <Tooltip title="Submit" placement="top">
-                <Button 
-                  variant="contained" 
-                  onClick={handleWordSubmit}
-                  disabled={!selectedBoardPosition || selectedTiles.length === 0}
-                  sx={{ 
-                    marginRight: '8px',
-                    backgroundColor: '#4CAF50',
-                    '&:hover': {
-                      backgroundColor: '#45a049',
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#cccccc',
-                      color: '#666666'
-                    },
-                    borderRadius: '50%',
-                    minWidth: '40px',
-                    width: '40px',
-                    height: '40px',
-                    padding: 0,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                    }
-                  }}
-                >
-                  <CheckIcon />
-                </Button>
-              </Tooltip>
-              <Tooltip title="Pass" placement="top">
-                <Button 
-                  variant="contained" 
-                  onClick={handlePass}
-                  disabled={!gameStarted}
-                  sx={{ 
-                    marginRight: '8px',
-                    backgroundColor: '#f44336',
-                    '&:hover': {
-                      backgroundColor: '#d32f2f',
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#cccccc',
-                      color: '#666666'
-                    },
-                    borderRadius: '50%',
-                    minWidth: '40px',
-                    width: '40px',
-                    height: '40px',
-                    padding: 0,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                    }
-                  }}
-                >
-                  <Box sx={{ 
-                    fontSize: '1.2rem', 
-                    fontWeight: 'bold',
-                    color: 'white',
-                    '&:disabled': {
-                      color: '#666666'
-                    }
-                  }}>
-                    P
-                  </Box>
-                </Button>
-              </Tooltip>
-              <Tooltip title="Exchange" placement="top">
-                <Button 
-                  variant="contained" 
-                  onClick={handleExchange}
-                  disabled={tilesToExchange.length === 0}
-                  sx={{ 
-                    backgroundColor: '#2196F3',
-                    '&:hover': {
-                      backgroundColor: '#1976D2',
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#cccccc',
-                      color: '#666666'
-                    },
-                    borderRadius: '50%',
-                    minWidth: '40px',
-                    width: '40px',
-                    height: '40px',
-                    padding: 0,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                    }
-                  }}
-                >
-                  <SwapHorizIcon />
-                </Button>
-              </Tooltip>
-              </Box>
-            </Box> 
-            <Box className={styles.playerPanel}>
-              {player1Name}
-              <Box className={styles.timer} style={{ 
-                color: currentPlayer === 1 ? '#4CAF50' : '#666',
-                fontWeight: currentPlayer === 1 ? 'bold' : 'normal'
-              }}>
-                {formatTime(player1Time)}
-              </Box>
-              {currentPlayer === 1 && (
-                <Box className={styles.Rack}>
-                  <Rack 
-                    board={player1Rack} 
-                    tiles="PROTILES" 
-                    color={color.current}
-                    selectedTiles={tilesToExchange}
-                    onTileClick={(tile, index) => {
-                      console.log('Tile clicked:', { tile, index });
-                      handleTileClick(tile, index);
-                    }}
-                  />
-                </Box>
-              )}
-              <Box>
-                {player1points} points
-              </Box>
-            </Box>
-
-            <Box className={styles.playerPanel}>
-              {player2Name}
-              <Box className={styles.timer} style={{ 
-                color: currentPlayer === 2 ? '#4CAF50' : '#666',
-                fontWeight: currentPlayer === 2 ? 'bold' : 'normal'
-              }}>
-                {formatTime(player2Time)}
-              </Box>
-              {currentPlayer === 2 && (
-                <Box className={styles.Rack}>
-                  <Rack 
-                    board={player2Rack} 
-                    tiles="PROTILES" 
-                    color={color.current}
-                    selectedTiles={tilesToExchange}
-                    onTileClick={(tile, index) => {
-                      console.log('Tile clicked:', { tile, index });
-                      handleTileClick(tile, index);
-                    }}
-                  />
-                </Box>
-              )}
-              <Box>
-                {player2points} points
-              </Box>
-            </Box>
-          </Box>
+          <PlayerInfo
+            player1Name={player1Name}
+            player2Name={player2Name}
+            player1Points={player1points}
+            player2Points={player2points}
+            player1Time={formatTime(player1Time)}
+            player2Time={formatTime(player2Time)}
+            currentPlayer={currentPlayer}
+            player1Rack={player1Rack}
+            player2Rack={player2Rack}
+            color={color}
+            onTileClick={handleTileClick}
+            selectedTiles={tilesToExchange}
+            isBotMode={isBotMode}
+            gameStarted={gameStarted}
+            isDictionaryLoading={isDictionaryLoading}
+            isLoadingTopMoves={isLoadingTopMoves}
+            onSettingsOpen={handleSettingsOpen}
+            onColorSchemeOpen={handleColorSchemeOpen}
+            onBotModeToggle={handleBotModeToggle}
+            onGetTopMoves={handleGetTopMoves}
+            onStartGame={startGame}
+            onWordSubmit={handleWordSubmit}
+            onPass={handlePass}
+            onExchange={handleExchange}
+            selectedBoardPosition={selectedBoardPosition}
+            tilesToExchange={tilesToExchange}
+          />
 
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>

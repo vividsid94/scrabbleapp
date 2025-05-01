@@ -42,9 +42,9 @@ export default (function() {
                 }
             }
         }
-        let rack = props.board;
+        let rack = props.rack || props.board;
         switch (props.tiles) {
-            case 'PROTILES':
+            default:
                 return (
                     <Box className={styles.Rack}>
                         {rack.map((col, colIndex) => (
@@ -57,22 +57,6 @@ export default (function() {
                                 onClick={() => props.onTileClick && props.onTileClick(col, colIndex)}
                             >
                                 {rackWithTiles(col)}
-                            </Box>
-                        ))}
-                    </Box>
-                );
-            default:
-                return (
-                    <Box className={styles.Rack}>
-                        {rack.map((col, colIndex) => (
-                            <Box 
-                                className={`${styles.Tile} ${props.selectedTiles?.some(t => t.tile === col && t.index === colIndex) ? styles.selected : ''}`} 
-                                key={colIndex}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, col, colIndex)}
-                                onClick={() => props.onTileClick && props.onTileClick(col, colIndex)}
-                            >
-                                {col}
                             </Box>
                         ))}
                     </Box>
