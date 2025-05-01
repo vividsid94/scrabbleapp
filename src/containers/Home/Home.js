@@ -8,9 +8,13 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 
 export default function Home(){
   const [isSpinning, setIsSpinning] = useState(false);
+  const [showLinks, setShowLinks] = useState(false);
+
+  const devMessage = "Hi! I'm Tile Turnover, a front-end focused project. Development has restarted! Check out the changelog for updates! 🚀";
 
   const handleIconClick = () => {
     setIsSpinning(true);
+    setShowLinks(prev => !prev);
     setTimeout(() => setIsSpinning(false), 500);
   };
 
@@ -27,7 +31,19 @@ export default function Home(){
           />
         </Box>
         <Box className={styles.developmentMessage}>
-          Hi! I'm Tile Turnover, a front-end focused project. Development has restarted! Check out the <Link to="/changelog" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>changelog</Link> for updates! 🚀
+          {showLinks ? (
+            <div className={styles.scrabbleLinks}>
+              <a href="https://www.cross-tables.com/" target="_blank" rel="noopener noreferrer" className={styles.link}>Cross-Tables 🏆</a>
+              <a href="https://www.youtube.com/@MackMeller" target="_blank" rel="noopener noreferrer" className={styles.link}>Mack Meller's Channel 🎥</a>
+              <a href="https://randomracer.com/" target="_blank" rel="noopener noreferrer" className={styles.link}>Random Racer 🎮</a>
+            </div>
+          ) : (
+            <>
+              {devMessage.split("changelog")[0]}
+              <Link to="/changelog" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>changelog</Link>
+              {devMessage.split("changelog")[1]}
+            </>
+          )}
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
