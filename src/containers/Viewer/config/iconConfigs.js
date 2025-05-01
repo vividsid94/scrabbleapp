@@ -1,14 +1,14 @@
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import HistoryIcon from '@mui/icons-material/History';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import ColorizeIcon from '@mui/icons-material/Colorize';
-import GroupIcon from '@mui/icons-material/Group';
-import LaunchIcon from '@mui/icons-material/Launch';
+import TuneIcon from '@mui/icons-material/Tune';
+import PaletteIcon from '@mui/icons-material/Palette';
+import PeopleIcon from '@mui/icons-material/People';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Typography from '@mui/material/Typography';
 
 export const createIconList = (
@@ -31,7 +31,7 @@ export const createIconList = (
   setMode
 ) => [
   {
-    icon: KeyboardDoubleArrowLeftIcon,
+    icon: SkipPreviousIcon,
     toolTip: "Beginning of game",
     onClick: () => beginningOfGame(setBoardCoords, currentMoveRef, setPool, origBoard, origPool)
   },
@@ -94,7 +94,7 @@ export const createGroupedIcons = (
 ) => [
   {
     icon1: {
-      icon: YoutubeSearchedForIcon,
+      icon: TimelineIcon,
       toolTip: "Games History",
       onClick: () => handleGamesHistoryOpen(setModalContent, setOpen)
     },
@@ -104,19 +104,19 @@ export const createGroupedIcons = (
       onClick: () => handleRecentGamesOpen(setModalContent, setOpen)
     },
     icon3: {
-      icon: SettingsOutlinedIcon,
+      icon: TuneIcon,
       toolTip: "Settings",
       onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen)
     },
     icon4: {
-      icon: ColorizeIcon,
+      icon: PaletteIcon,
       toolTip: "Color Scheme",
       onClick: () => handleColorSchemeOpen(setModalContent, setOpen)
     }
   },
   {
     icon1: {
-      icon: GroupIcon,
+      icon: PeopleIcon,
       toolTip: "Reveal Players",
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
@@ -129,7 +129,7 @@ export const createGroupedIcons = (
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
     },
     icon3: {
-      icon: LaunchIcon,
+      icon: OpenInNewIcon,
       toolTip: "View on XT",
       onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')
     }
