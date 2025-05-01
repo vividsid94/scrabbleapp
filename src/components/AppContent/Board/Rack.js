@@ -2,6 +2,7 @@ import styles from './Rack.module.css';
 import { Box } from '@mui/system';
 import React from "react";
 import {modifyImageColor} from "../../../functions/tileFunctions.js"; // Importing tile functions
+import Cell from './Cell';
 
 let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
 
@@ -27,40 +28,25 @@ export default (function() {
             e.dataTransfer.effectAllowed = 'move';
         };
 
-        function rackWithTiles(letter) {
-            if (letter) {
-                const cacheKey = /^\s$/.test(letter) ? '_' : letter;
-                const cachedImage = preloadedImages[cacheKey];
-                if (cachedImage) {
-                    const color = props.color;
-                    const modifiedImageUrl = modifyImageColor(cachedImage, color);
-                    return (
-                        <div className={styles.Rack_protiles} style={{ backgroundImage: `url(${modifiedImageUrl})`, backgroundSize: '100%', boxSizing: 'border-box' }}></div>
-                    );
-                } else {
-                    return null;
-                }
-            }
-        }
         let rack = props.rack || props.board;
-        switch (props.tiles) {
-            default:
-                return (
-                    <Box className={styles.Rack}>
-                        {rack.map((col, colIndex) => (
-                            <Box 
-                                className={`${styles.Protile} ${props.selectedTiles?.some(t => t.tile === col && t.index === colIndex) ? styles.selected : ''}`} 
-                                style={{ backgroundColor: props.color }} 
-                                key={colIndex}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, col, colIndex)}
-                                onClick={() => props.onTileClick && props.onTileClick(col, colIndex)}
-                            >
-                                {rackWithTiles(col)}
-                            </Box>
-                        ))}
+        return (
+            <Box className={styles.Rack}>
+                {rack.map((letter, index) => (
+                    <Box 
+                        key={index}
+                        className={`${styles.Protile} ${props.selectedTiles?.some(t => t.tile === letter && t.index === index) ? styles.selected : ''}`}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, letter, index)}
+                        onClick={() => props.onTileClick && props.onTileClick(letter, index)}
+                    >
+                        <Cell 
+                            type="rack"
+                            bonus={{ value: letter }}
+                            color={props.color}
+                        />
                     </Box>
-                );
-        }
+                ))}
+            </Box>
+        );
     };
 })();

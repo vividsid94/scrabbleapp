@@ -33,11 +33,13 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
           <div
             className={styles.Cell}
             style={{
-              boxShadow: bonus.boxShadow,
+              boxShadow: bonus?.boxShadow,
               backgroundImage: `url(${modifiedImageUrl})`,
               backgroundSize: '100%',
-              backgroundColor: isBlank ? lightenColor(color) : (bonus.hasBorder ? lightenColor(color) : color),
+              backgroundColor: isBlank ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color),
               boxSizing: 'border-box',
+              width: type === 'rack' ? '42px' : undefined,
+              height: type === 'rack' ? '42px' : undefined,
             }}
           ></div>
         );
@@ -51,19 +53,34 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
     case "board":
       return (
         <div style={{ 
-          background: bonus.hasBorder ? lightenColor(bonus.color) : bonus.color, 
-          boxShadow: bonus.boxShadow 
+          background: bonus?.hasBorder ? lightenColor(bonus.color) : bonus.color, 
+          boxShadow: bonus?.boxShadow 
         }}>
           <div className={styles.decalContainer}>
-              <div>{cell(bonus.value)}</div>
+              <div>{cell(bonus?.value)}</div>
           </div>
         </div>
       );
     case "pool":
-      return <div className={styles.cellPool}>{bonus.value}</div>;
+      return <div className={styles.cellPool}>{bonus?.value}</div>;
     case "rack":
-      return bonus.value;
+      return (
+        <div style={{ 
+          backgroundColor: color,
+          borderRadius: '4px',
+          margin: '2.5px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '42px',
+          height: '42px',
+          filter: 'brightness(0.85)',
+          transition: 'all 0.2s ease'
+        }}>
+          {cell(bonus?.value)}
+        </div>
+      );
     default:
-      return bonus.value;
+      return bonus?.value;
   }
 }
