@@ -57,6 +57,7 @@ export default function Play() {
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
   const botMoveSound = useRef(new Audio('/sounds/bot-move.mp3'));
+  const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
 
   const alphabetizeRack = (rack) => {
     return [...rack].sort((a, b) => a.localeCompare(b));
@@ -698,6 +699,9 @@ export default function Play() {
   };
 
   const startBotGame = () => {
+    // Play game start sound
+    gameStartSound.current.play();
+
     // Reset game state
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
