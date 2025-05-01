@@ -3,8 +3,6 @@ import styles from './Board.module.css';
 import { Box } from '@mui/system';
 import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
-import Cell from './Cell';
-import cellType from './cellType';
 import { ThemeContext } from '../../../App';
 
 export default function Board({
@@ -19,7 +17,6 @@ export default function Board({
     onTileDrop,
     selectedPosition,
     arrowDirection,
-    onArrowDirectionChange,
     animate = true,
     showSlip = true,
     showDictionary = true
@@ -108,7 +105,6 @@ export default function Board({
         });
         return letterIndices.includes(index);
     };
-    
     
     const SlipContent = () => (
         <Box>
