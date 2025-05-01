@@ -240,61 +240,28 @@ td {
 
 @media screen and (max-width: 992px) {
   .BoardContainer {
-    display: flex;
     border: none;
     background: none;
     width: 100%;
     height: auto;
   }
-
-  .Board__STANDARD,
-  .Board__STANDARD:after {
-    width: 100%;
-    max-width: 90vw;
-    height: auto;
-    aspect-ratio: 1;
-  }
-
-  .Board__FULLBOARD,
-  .Board__FULLBOARD:after {
-    width: 100%;
-    max-width: 90vw;
-    height: auto;
-    aspect-ratio: 1;
-  }
-
-  .headerContent {
-    min-width: 150px;
-  }
-  .Footer{
-    min-width: 220px;
+  .innerBox{
+    display: flex;
+    justify-content: center;
   }
 }
 
-@media screen and (max-width: 676px){
-  .Board__STANDARD,
-  .Board__STANDARD:after {
-    width: 100%;
-    max-width: 90vw;
-    height: auto;
-    aspect-ratio: 1;
-  }
-
+@media screen and (max-height: 992px){
   .Board__FULLBOARD,
   .Board__FULLBOARD:after {
-    width: 100%;
-    max-width: 90vw;
-    height: auto;
-    aspect-ratio: 1;
+    width: 600px;
   }
+}
 
-  .sideNumbering {
-    font-size: 5px;
-    width: 6px;
-    height: 6px;
-  }
-  .Header, .Footer, .slipBox{
-    font-size: 8px;
+@media screen and (max-width: 1200px){
+  .Board__FULLBOARD,
+  .Board__FULLBOARD:after {
+    width: 600px;
   }
 }
 

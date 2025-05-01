@@ -177,11 +177,6 @@ form{
   font-size: 30px !important;
 }
 
-.mainBox{
-  display: flex;
-  justify-content: center;
-}
-
 .Rack{
 	display: flex;
   justify-content: center;
@@ -243,11 +238,6 @@ form{
     justify-content: center;
     align-items: center;
   }
-  .mainBox {
-    width: 100%;
-    max-width: 90vw;
-    padding: 16px !important;
-  }
   .topPlayerPanel{
     padding-bottom: 24px;
     height: auto;
@@ -266,11 +256,6 @@ form{
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-  }
-  .mainBox {
-    width: 100%;
-    max-width: 90vw;
-    padding: 8px !important;
   }
   .questionMark{
     display: none;
@@ -315,11 +300,3 @@ form{
   }
 }
 
-@media screen and (max-height: 992px) and (min-width: 1200px){
-  .playerPanel{
-    height: auto;
-  }
-  .topPlayerPanel{
-    height: auto;
-  }
-}
