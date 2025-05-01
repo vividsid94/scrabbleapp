@@ -7,6 +7,13 @@
 .questionMark{
   font-size: 26px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.questionMark:hover {
+  opacity: 1;
+  transform: scale(1.1) rotate(10deg);
 }
 
 .poolBox{
@@ -86,6 +93,12 @@ form{
 .settingsBtn{
   font-size: 30px !important;
   cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+.settingsBtn:hover {
+  opacity: 1;
+  transform: rotate(15deg);
 }
 .keyBtn{
   font-size: 30px !important;
@@ -114,6 +127,7 @@ form{
 .mainPanel{
   display: flex;
   flex-direction: row;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .playerPanel{
@@ -180,6 +194,13 @@ form{
 .Arrows{
   cursor: pointer;
   font-size: 30px !important;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.Arrows:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .Rack{
@@ -303,5 +324,60 @@ form{
     height: 16px;
     font-size: 8px;
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 8px;
+}
+
+/* Modern Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
