@@ -10,6 +10,7 @@ import { origPool, origBoard } from "../../components/AppContent/References/stat
 import { getMove, createBoard } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
+import { removeFromPool } from '../../functions/poolFunctions';
 import { useGameState } from './hooks/useGameState';
 import { handleBoardClick, switchMode, beginningOfGame, chooseGame } from '../../functions/gameControls';
 import { revealPlayers, revealElo } from '../../functions/playerFunctions';
@@ -324,11 +325,22 @@ export default function Viewer({ onChange }){
                     if (turn >= 0 && turn < moveSet.length) {
                       // Reset board to initial state
                       setBoardCoords(JSON.parse(origBoard));
-                      setPool(origPool);
                       setPlayer1points(0);
                       setPlayer2points(0);
                       setPointsScored(0);
                       
+                      // Calculate pool state by applying all moves up to the selected turn
+                      let currentPool = origPool;
+                      for (let i = 0; i <= turn; i++) {
+                        const move = moveSet[i];
+                        if (move) {
+                          const parts = move.split(" ");
+                          const play = parts[3];
+                          if (play && play !== "--") {
+                            currentPool = removeFromPool(play, currentPool);
+                          }
+                        }
+                      }                
                       // First remove all moves after the selected turn
                       for (let i = moveSet.length - 1; i > turn; i--) {
                         handleMoveWrapper(
@@ -350,6 +362,9 @@ export default function Viewer({ onChange }){
                           "next"
                         );
                       }
+                      
+                      // Set the pool state after all moves are processed
+                      setPool(currentPool);
                       
                       currentMoveRef.current = turn;
                     }
