@@ -1,3 +1,13 @@
+/**
+ * Scrabble Game Logic
+ * 
+ * This module implements the core game rules and scoring for Scrabble.
+ * It provides functions for validating moves, scoring plays, and checking word validity.
+ * 
+ * @module gameLogic
+ */
+
+/** @type {Object.<string, number>} */
 const letterScores = {
     'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1,
     'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1,
@@ -6,23 +16,37 @@ const letterScores = {
 
 const { loadDictionary } = require('./loadDictionary');
 
-// Cache the dictionary in memory
+/** @type {import('./trie').Trie} */
 let cachedTrie = null;
 
-// Function to check if a word is valid using the trie
+/**
+ * Checks if a word exists in the Scrabble dictionary.
+ * 
+ * @param {string} word - The word to check
+ * @returns {Promise<boolean>} True if the word is valid
+ */
 async function isValidWord(word) {
     try {
-        // Load dictionary if not already cached
         if (!cachedTrie) {
             cachedTrie = await loadDictionary();
         }
         return cachedTrie.contains(word.toUpperCase());
     } catch (error) {
-        console.error('Exception in isValidWord:', error);
+        console.error('❌ Dictionary error:', error);
         return false;
     }
 }
 
+/**
+ * Board multiplier values for premium squares.
+ * 0: Normal square
+ * 1: Double Letter Score
+ * 2: Triple Letter Score
+ * 3: Double Word Score
+ * 4: Triple Word Score
+ * 
+ * @type {number[][]}
+ */
 const boardMultipliers = [
     [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4],
     [0,3,0,0,0,2,0,0,0,2,0,0,0,3,0],
@@ -41,10 +65,15 @@ const boardMultipliers = [
     [4,0,0,1,0,0,0,4,0,0,0,1,0,0,4]
 ];
 
-// Export the constants for the bot to use
-exports.letterScores = letterScores;
-exports.boardMultipliers = boardMultipliers;
-
+/**
+ * Gets the word at a specific position on the board.
+ * 
+ * @param {Array<Array<string|null>>} board - The game board
+ * @param {number} row - Row index
+ * @param {number} col - Column index
+ * @param {string} direction - 'horizontal' or 'vertical'
+ * @returns {string|null} The word found, or null if no valid word
+ */
 function getWordAt(board, row, col, direction) {
     let word = "";
     let r = row;
@@ -72,6 +101,14 @@ function getWordAt(board, row, col, direction) {
     return word.length > 1 ? word : null;
 }
 
+/**
+ * Finds all new words formed by the placed tiles.
+ * 
+ * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
+ * @param {Array<Array<string|null>>} afterBoard - Board state after the move
+ * @param {Array<{row: number, col: number, letter: string}>} placedTiles - Tiles that were placed
+ * @returns {string[]} Array of new words formed
+ */
 function findNewWords(beforeBoard, afterBoard, placedTiles) {
     const newWords = new Set();
 
@@ -92,6 +129,13 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
     return Array.from(newWords);
 }
 
+/**
+ * Validates a Scrabble move according to game rules.
+ * 
+ * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
+ * @param {Array<Array<string|null>>} afterBoard - Board state after the move
+ * @returns {Promise<{isValid: boolean, reason?: string, word?: string, words: string[]}>} Validation result
+ */
 async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     const placedTiles = [];
     for (let r = 0; r < 15; r++) {
@@ -104,14 +148,12 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     }
 
     const numPlaced = placedTiles.length;
-
     if (numPlaced === 0) {
         return { isValid: false, reason: 'No tiles placed', words: [] };
     }
 
-    if (numPlaced === 1) {
-        // Need to check adjacency or first move on star later
-    } else {
+    // Check if tiles are in a straight line
+    if (numPlaced > 1) {
         const firstRow = placedTiles[0].row;
         const firstCol = placedTiles[0].col;
         const allSameRow = placedTiles.every(tile => tile.row === firstRow);
@@ -121,6 +163,7 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
             return { isValid: false, reason: 'Tiles must be placed in a straight line', words: [] };
         }
 
+        // Check for gaps
         if (allSameRow) {
             const cols = placedTiles.map(tile => tile.col).sort((a, b) => a - b);
             for (let i = 0; i < cols.length - 1; i++) {
@@ -146,12 +189,12 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
         }
     }
 
+    // Check adjacency and center star
     let isAdjacent = false;
     let isOnStar = false;
 
     for (const tile of placedTiles) {
         const { row, col } = tile;
-
         const adjacentSquares = [
             { dr: 0, dc: 1 }, { dr: 0, dc: -1 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 }
         ];
@@ -165,16 +208,14 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
             }
         }
         if (isAdjacent) break;
-
-        if (row === 7 && col === 7) {
-            isOnStar = true;
-        }
+        if (row === 7 && col === 7) isOnStar = true;
     }
 
     const isFirstMove = beforeBoard.every(row => 
         row.every(cell => typeof cell !== 'string' || !cell.match(/[A-Z]/))
     );
 
+    // Validate first move
     if (isFirstMove) {
         if (!isOnStar && numPlaced > 0) {
             const placedOnStar = placedTiles.some(tile => tile.row === 7 && tile.col === 7);
@@ -184,15 +225,13 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
         } else if (isFirstMove && numPlaced === 0) {
             return { isValid: false, reason: 'No tiles placed', words: [] };
         }
-    } else {
-        if (!isAdjacent) {
-            return { isValid: false, reason: 'New tiles must be adjacent to existing tiles', words: [] };
-        }
+    } else if (!isAdjacent) {
+        return { isValid: false, reason: 'New tiles must be adjacent to existing tiles', words: [] };
     }
 
+    // Validate words
     if ((isFirstMove && isOnStar && numPlaced > 0) || (!isFirstMove && isAdjacent)) {
         const words = findNewWords(beforeBoard, afterBoard, placedTiles);
-        // Check if all words are valid
         for (const word of words) {
             const isValid = await isValidWord(word);
             if (!isValid) {
@@ -210,12 +249,19 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     return { isValid: false, reason: 'Invalid placement', words: [] };
 }
 
+/**
+ * Calculates the score for a play.
+ * 
+ * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
+ * @param {Array<Array<string|null>>} afterBoard - Board state after the move
+ * @returns {Promise<number>} The total score for the play
+ */
 async function scorePlay(beforeBoard, afterBoard) {
     let totalScore = 0;
     const formedWords = new Set();
     const placedTiles = [];
 
-    // Find all newly placed tiles
+    // Find placed tiles
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
             if (typeof afterBoard[r][c] === 'string' && afterBoard[r][c].match(/[A-Z]/) &&
@@ -225,9 +271,7 @@ async function scorePlay(beforeBoard, afterBoard) {
         }
     }
 
-    if (placedTiles.length === 0) {
-        return 0;
-    }
+    if (placedTiles.length === 0) return 0;
 
     // Helper function to get word score
     function getWordScore(wordTiles) {
@@ -242,9 +286,7 @@ async function scorePlay(beforeBoard, afterBoard) {
             const letterScore = letterScores[letter];
             let letterMultiplier = 1;
 
-            // Check if this is a newly placed tile
             const isNewTile = placedTiles.some(pt => pt.row === row && pt.col === col);
-
             if (isNewTile) {
                 const premiumType = boardMultipliers[row][col];
                 if (premiumType === 3) { // Double word
@@ -277,13 +319,11 @@ async function scorePlay(beforeBoard, afterBoard) {
         let currentCol = startCol;
 
         if (direction === 'horizontal') {
-            // Move left to find start of word
             while (currentCol >= 0 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 currentCol--;
             }
             currentCol++;
-            // Collect word tiles
             while (currentCol < 15 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 wordTiles.push({
@@ -294,13 +334,11 @@ async function scorePlay(beforeBoard, afterBoard) {
                 currentCol++;
             }
         } else if (direction === 'vertical') {
-            // Move up to find start of word
             while (currentRow >= 0 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 currentRow--;
             }
             currentRow++;
-            // Collect word tiles
             while (currentRow < 15 && typeof board[currentRow][currentCol] === 'string' && 
                    board[currentRow][currentCol].match(/[A-Z]/)) {
                 wordTiles.push({
@@ -315,7 +353,7 @@ async function scorePlay(beforeBoard, afterBoard) {
         return wordTiles.length > 1 ? wordTiles : [];
     }
 
-    // Score all words formed by the placed tiles
+    // Score all words
     for (const placedTile of placedTiles) {
         const r = placedTile.row;
         const c = placedTile.col;
@@ -355,7 +393,30 @@ async function scorePlay(beforeBoard, afterBoard) {
     return totalScore;
 }
 
-exports.handler = async function(event, context) {
+/**
+ * Netlify serverless function handler for game logic operations.
+ * 
+ * @param {Object} event - The Netlify function event object
+ * @param {string} event.httpMethod - The HTTP method of the request
+ * @param {string} event.body - The request body as a JSON string
+ * @returns {Object} Response object with status code and body
+ * 
+ * @example
+ * // Example request body for validation:
+ * {
+ *   "action": "validate",
+ *   "beforeBoard": [["A", "B", null, ...], ...],
+ *   "afterBoard": [["A", "B", "C", ...], ...]
+ * }
+ * 
+ * // Example request body for scoring:
+ * {
+ *   "action": "score",
+ *   "beforeBoard": [["A", "B", null, ...], ...],
+ *   "afterBoard": [["A", "B", "C", ...], ...]
+ * }
+ */
+exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
@@ -364,9 +425,10 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        // Load dictionary if not already cached
         if (!cachedTrie) {
+            console.log('Loading dictionary...');
             cachedTrie = await loadDictionary();
+            console.log('Dictionary loaded and cached');
         }
 
         const { action, beforeBoard, afterBoard } = JSON.parse(event.body);
@@ -388,9 +450,14 @@ exports.handler = async function(event, context) {
             body: JSON.stringify(result)
         };
     } catch (error) {
+        console.error('❌ Game logic error:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message })
         };
     }
-}; 
+};
+
+// Export constants for use by other modules
+exports.letterScores = letterScores;
+exports.boardMultipliers = boardMultipliers; 
