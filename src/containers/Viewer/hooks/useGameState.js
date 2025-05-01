@@ -17,7 +17,7 @@ export const useGameState = (onChange) => {
   const [mode, setMode] = useState("VIEWER");
   const [resetCount, setResetCount] = useState(0);
   const [moveDirection, setMoveDirection] = useState("neutral");
-  const [theme, setTheme] = useState("STANDARD");
+  const [boardMode, setBoardMode] = useState("STANDARD");
   const [tiles, setTiles] = useState("PROTILES");
   const [dictionary, setDictionary] = useState("ANY");
   const [ELOCommentary, setELOCommentary] = useState("NO");
@@ -215,7 +215,7 @@ export const useGameState = (onChange) => {
     mode, setMode,
     resetCount, setResetCount,
     moveDirection, setMoveDirection,
-    theme, setTheme,
+    boardMode, setBoardMode,
     tiles, setTiles,
     dictionary, setDictionary,
     ELOCommentary, setELOCommentary,

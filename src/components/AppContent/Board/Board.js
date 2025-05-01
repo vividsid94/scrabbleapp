@@ -7,7 +7,7 @@ import Cell from './Cell';
 import cellType from './cellType';
 
 export default function Board({
-    theme = "STANDARD",
+    boardMode = "STANDARD",
     move = "N/A",
     points = "",
     rack = "",
@@ -23,8 +23,8 @@ export default function Board({
     showSlip = true,
     showDictionary = true
 }) {
-    let boardTheme = "Board__" + theme;
-    let tableTheme = "Table__" + theme;
+    let boardTheme = "Board__" + boardMode;
+    let tableTheme = "Table__" + boardMode;
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
     const [circledLetters, setCircledLetters] = useState([]);
@@ -141,9 +141,9 @@ export default function Board({
                 <Box className={styles.headerContent}>
                     {dictionary}
                 </Box>
-                {theme === "STANDARD" && showSlip && (
+                {boardMode === "STANDARD" && showSlip && (
                     <Box 
-                        className={`${styles.coloredBox} ${styles.slipBox} ${styles[`slipBox__${theme}`]}`} 
+                        className={`${styles.coloredBox} ${styles.slipBox} ${styles[`slipBox__${boardMode}`]}`} 
                         onClick={handleSlipClick}
                     >
                         Slip
@@ -197,7 +197,7 @@ export default function Board({
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    {showSlip && theme !== "STANDARD" && (
+                    {showSlip && boardMode !== "STANDARD" && (
                         <Box className={`${styles.coloredBox} ${styles.slipBox}`} onClick={handleSlipClick}>
                             Slip
                         </Box>

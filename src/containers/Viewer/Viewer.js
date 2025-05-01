@@ -17,6 +17,7 @@ import { revealPlayers, revealElo } from '../../functions/playerFunctions';
 import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
 import ColorScheme from '../../components/common/ColorScheme';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
+import { ThemeContext } from '../../App';
 
 // Import components
 import PlayerInfo from './components/PlayerInfo';
@@ -25,6 +26,7 @@ import RecentGamesList from './components/RecentGamesList';
 import ViewedGamesList from './components/ViewedGamesList';
 
 export default function Viewer({ onChange }){ 
+  const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const {
     gameNum, setGameNum,
     boardClickCount, setBoardClickCount,
@@ -38,7 +40,7 @@ export default function Viewer({ onChange }){
     mode, setMode,
     resetCount, setResetCount,
     moveDirection, setMoveDirection,
-    theme, setTheme,
+    boardMode, setBoardMode,
     tiles, setTiles,
     dictionary, setDictionary,
     ELOCommentary, setELOCommentary,
@@ -108,6 +110,10 @@ export default function Viewer({ onChange }){
     setDictionary("ANY");
   };
 
+  const toggleLightMode = () => {
+    setLightMode(lightMode === 'dark' ? 'light' : 'dark');
+  };
+
   useEffect(() => {
     loadGameData();
   }, [loadGameData]);
@@ -155,7 +161,7 @@ export default function Viewer({ onChange }){
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
-      {console.log(theme, mode, tiles)}
+      {console.log(lightMode, mode, tiles)}
       <Modal
         open={open}
         onClose={handleClose}
@@ -174,8 +180,8 @@ export default function Viewer({ onChange }){
               customPlayerMode={customPlayerMode}
               handleCustomPlayerMode={handleCustomPlayerMode}
               switchValue={switchValue}
-              theme={theme}
-              handleThemeChange={(e) => setTheme(e.target.value)}
+              boardMode={boardMode}
+              handleBoardModeChange={(e) => setBoardMode(e.target.value)}
             />
           )}
           {modalContent === "colorScheme" && (
@@ -209,6 +215,19 @@ export default function Viewer({ onChange }){
       <Box className={styles.page}>
         <Box className={styles.title}>
           {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
+          <button 
+            onClick={toggleLightMode}
+            style={{
+              marginLeft: '10px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '20px',
+              color: lightMode === 'dark' ? '#fff' : '#000'
+            }}
+          >
+            {lightMode === 'dark' ? '☀️' : '🌙'}
+          </button>
         </Box>
         <Box className={styles.mainPanel}>
           <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -216,9 +235,9 @@ export default function Viewer({ onChange }){
               onBoardChildClick={() => handleBoardClick(boardClickCount, setBoardClickCount, setUnlockEloMode)} 
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
-              board={createBoard(boardCoords, currentMoveCoords, tiles, theme, color.current, complementaryColor.current)} 
+              board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current, complementaryColor.current)} 
               points={pointsScored} 
-              theme={theme} 
+              boardMode={boardMode}
               rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} 
               move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}
             />   

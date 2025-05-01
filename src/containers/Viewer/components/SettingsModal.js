@@ -13,8 +13,8 @@ const SettingsModal = ({
   customPlayerMode,
   handleCustomPlayerMode,
   switchValue,
-  theme,
-  handleThemeChange
+  boardMode,
+  handleBoardModeChange
 }) => {
   const [showWhy, setShowWhy] = useState(false);
 
@@ -27,8 +27,8 @@ const SettingsModal = ({
       {!showWhy && (
         <div>
           <Box className={styles.modalContainer__dictionary}>
-            Theme
-            {<select className={styles.styleSelection} value={theme} onChange={handleThemeChange}>
+            Board Mode
+            {<select className={styles.styleSelection} value={boardMode} onChange={handleBoardModeChange}>
               <option value="STANDARD">Standard</option>
               <option value="FULLBOARD">Full Board</option>
             </select>}
