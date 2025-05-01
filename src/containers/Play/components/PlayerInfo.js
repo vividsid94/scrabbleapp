@@ -2,13 +2,38 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import styles from '../Play.module.css';
 import Rack from '../../../components/AppContent/Board/Rack.js';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import ColorizeIcon from '@mui/icons-material/Colorize';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import CheckIcon from '@mui/icons-material/Check';
+import SendIcon from '@mui/icons-material/Send';
+import CancelIcon from '@mui/icons-material/Cancel';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import { Tooltip, Button } from '@mui/material';
+import { Tooltip } from '@mui/material';
+
+const actionButtonStyle = {
+  width: '24px',
+  height: '24px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
+};
+
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles }) => (
+  <Box className={styles.playerPanel}>
+    <Box className={styles.playerInfo}>
+      <Box className={styles.playerName}>{name}</Box>
+      <Box className={styles.timer}>{time}</Box>
+    </Box>
+    <Box className={styles.points}>{points}</Box>
+    {rack && (
+      <Box className={styles.Rack}>
+        <Rack 
+          rack={rack} 
+          color={color.current} 
+          onTileClick={onTileClick}
+          selectedTiles={selectedTiles}
+        />
+      </Box>
+    )}
+  </Box>
+);
 
 export default function PlayerInfo({
   player1Name,
@@ -36,140 +61,130 @@ export default function PlayerInfo({
   onPass,
   onExchange,
   selectedBoardPosition,
-  tilesToExchange
+  tilesToExchange,
+  icons
 }) {
+  const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
+  const isExchangeDisabled = !gameStarted || tilesToExchange.length === 0;
+
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
         <Tooltip title="Settings">
-          <SettingsOutlinedIcon className={styles.keyBtn} onClick={onSettingsOpen}/>
+          <Box onClick={onSettingsOpen}>
+            {icons.settings}
+          </Box>
         </Tooltip>
         <Tooltip title="Color Scheme">
-          <ColorizeIcon className={styles.keyBtn} onClick={onColorSchemeOpen}/>
+          <Box onClick={onColorSchemeOpen}>
+            {icons.colorScheme}
+          </Box>
         </Tooltip>
         <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
-          <SmartToyIcon 
-            className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
-            onClick={() => {
+          {React.cloneElement(icons.botMode, {
+            onClick: () => {
               if (isDictionaryLoading) return;
               if (!gameStarted) {
                 onStartGame();
               }
               onBotModeToggle();
-            }}
-            sx={{ 
+            },
+            style: {
               opacity: isDictionaryLoading ? 0.5 : 1,
               cursor: isDictionaryLoading ? 'not-allowed' : 'pointer'
-            }}
-          />
+            }
+          })}
         </Tooltip>
-        <Tooltip title="Get Top Moves">
-          <LightbulbIcon 
-            className={styles.keyBtn}
-            onClick={onGetTopMoves}
-            sx={{ 
-              color: isLoadingTopMoves ? '#FFD700' : 'inherit'
-            }}
-          />
+        <Tooltip title={gameStarted ? "Get Top Moves" : "Start game to enable top moves"} placement="top">
+          {React.cloneElement(icons.topMoves, {
+            onClick: onGetTopMoves,
+            style: {
+              opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
+              cursor: !gameStarted ? 'not-allowed' : 'pointer',
+              pointerEvents: !gameStarted ? 'none' : 'auto'
+            }
+          })}
         </Tooltip>
       </Box>
 
       <Box className={styles.playerToggle}>
-        <Tooltip title="Submit" placement="top">
+        <Tooltip title={gameStarted ? "Submit" : "Start game to enable submit"} placement="top">
           <Box 
             className={styles.keyBtn}
             onClick={onWordSubmit}
             sx={{ 
-              opacity: !selectedBoardPosition || selectedTiles.length === 0 ? 0.5 : 1,
-              cursor: !selectedBoardPosition || selectedTiles.length === 0 ? 'not-allowed' : 'pointer'
+              ...actionButtonStyle,
+              opacity: !gameStarted ? 0.3 : (isSubmitDisabled ? 0.5 : 1),
+              cursor: !gameStarted ? 'not-allowed' : (isSubmitDisabled ? 'not-allowed' : 'pointer'),
+              pointerEvents: !gameStarted ? 'none' : 'auto'
             }}
           >
-            <CheckIcon sx={{ fontSize: 18 }} />
+            <SendIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
-        <Tooltip title="Pass" placement="top">
+        <Tooltip title={gameStarted ? "Pass" : "Start game to enable pass"} placement="top">
           <Box 
             className={styles.keyBtn}
             onClick={onPass}
             sx={{ 
-              opacity: !gameStarted ? 0.5 : 1,
-              cursor: !gameStarted ? 'not-allowed' : 'pointer'
+              ...actionButtonStyle,
+              opacity: !gameStarted ? 0.3 : 1,
+              cursor: !gameStarted ? 'not-allowed' : 'pointer',
+              pointerEvents: !gameStarted ? 'none' : 'auto'
             }}
           >
-            <Box sx={{ 
-              fontSize: '18px', 
-              fontWeight: 'bold',
-              color: 'inherit'
-            }}>
-              P
-            </Box>
+            <CancelIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
-        <Tooltip title="Exchange" placement="top">
+        <Tooltip title={gameStarted ? "Exchange" : "Start game to enable exchange"} placement="top">
           <Box 
             className={styles.keyBtn}
             onClick={onExchange}
             sx={{ 
-              opacity: tilesToExchange.length === 0 ? 0.5 : 1,
-              cursor: tilesToExchange.length === 0 ? 'not-allowed' : 'pointer'
+              ...actionButtonStyle,
+              opacity: !gameStarted ? 0.3 : (isExchangeDisabled ? 0.5 : 1),
+              cursor: !gameStarted ? 'not-allowed' : (isExchangeDisabled ? 'not-allowed' : 'pointer'),
+              pointerEvents: !gameStarted ? 'none' : 'auto'
             }}
           >
-            <SwapHorizIcon sx={{ fontSize: 18 }} />
+            <SwapHorizIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
       </Box>
 
       {currentPlayer === 2 ? (
         <>
-          <Box className={styles.playerPanel}>
-            <Box className={styles.playerInfo}>
-              <Box className={styles.playerName}>{player2Name}</Box>
-              <Box className={styles.timer}>{player2Time}</Box>
-            </Box>
-            <Box className={styles.points}>{player2Points}</Box>
-            <Box className={styles.Rack}>
-              <Rack 
-                rack={player2Rack} 
-                color={color.current} 
-                onTileClick={onTileClick}
-                selectedTiles={selectedTiles}
-              />
-            </Box>
-          </Box>
-
-          <Box className={styles.playerPanel}>
-            <Box className={styles.playerInfo}>
-              <Box className={styles.playerName}>{player1Name}</Box>
-              <Box className={styles.timer}>{player1Time}</Box>
-            </Box>
-            <Box className={styles.points}>{player1Points}</Box>
-          </Box>
+          <PlayerInfoSection
+            name={player2Name}
+            time={player2Time}
+            points={player2Points}
+            rack={player2Rack}
+            color={color}
+            onTileClick={onTileClick}
+            selectedTiles={selectedTiles}
+          />
+          <PlayerInfoSection
+            name={player1Name}
+            time={player1Time}
+            points={player1Points}
+          />
         </>
       ) : (
         <>
-          <Box className={styles.playerPanel}>
-            <Box className={styles.playerInfo}>
-              <Box className={styles.playerName}>{player1Name}</Box>
-              <Box className={styles.timer}>{player1Time}</Box>
-            </Box>
-            <Box className={styles.points}>{player1Points}</Box>
-            <Box className={styles.Rack}>
-              <Rack 
-                rack={player1Rack} 
-                color={color.current} 
-                onTileClick={onTileClick}
-                selectedTiles={selectedTiles}
-              />
-            </Box>
-          </Box>
-
-          <Box className={styles.playerPanel}>
-            <Box className={styles.playerInfo}>
-              <Box className={styles.playerName}>{player2Name}</Box>
-              <Box className={styles.timer}>{player2Time}</Box>
-            </Box>
-            <Box className={styles.points}>{player2Points}</Box>
-          </Box>
+          <PlayerInfoSection
+            name={player1Name}
+            time={player1Time}
+            points={player1Points}
+            rack={player1Rack}
+            color={color}
+            onTileClick={onTileClick}
+            selectedTiles={selectedTiles}
+          />
+          <PlayerInfoSection
+            name={player2Name}
+            time={player2Time}
+            points={player2Points}
+          />
         </>
       )}
     </Box>

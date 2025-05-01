@@ -7,11 +7,16 @@ import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
-import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
-import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
+import { createBoard } from "../../functions/boardFunctions.js";
+import { Snackbar, Alert } from "@mui/material";
 import BotSettingsModal from '../../components/Modals/BotSettingsModal';
 import TopMovesModal from '../../components/Modals/TopMovesModal';
 import PlayerInfo from './components/PlayerInfo';
+import ColorScheme from '../../components/common/ColorScheme';
+import TuneIcon from '@mui/icons-material/Tune';
+import PaletteIcon from '@mui/icons-material/Palette';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -19,10 +24,8 @@ export default function Play() {
   const [origBoardCoords, setOrigBoardCoords] = useState([]);
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
-  const [pointsScored, setPointsScored] = useState(0);
   const [pool, setPool] = useState(origPool);
-  const [theme] = useState("STANDARD");
-  const [dictionary, setDictionary] = useState("ANY");
+  const [theme, setTheme] = useState("STANDARD");
   const [open, setOpen] = useState(false);
   const [modalContent, setModalContent] = useState("settings");
   const [currentPlayer, setCurrentPlayer] = useState(1);
@@ -35,6 +38,7 @@ export default function Play() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const color = useRef('#6D84A2');
+  const boardColor = useRef('#ffffff');
   const complementaryColor = useRef('#9F7A83');
   const [isBotMode, setIsBotMode] = useState(false);
   const [isBotThinking, setIsBotThinking] = useState(false);
@@ -438,7 +442,7 @@ export default function Play() {
   const handleClose = () => setOpen(false);
 
   const handleDictionaryChange = event => {
-    setDictionary(event.target.value);
+    // Dictionary selection is not used in Play mode
   };
 
   const makeBotMove = async () => {
@@ -709,7 +713,6 @@ export default function Play() {
     setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     setPlayer1points(0);
     setPlayer2points(0);
-    setPointsScored(0);
     setPool(origPool);
     
     // Set current player based on who goes first
@@ -823,7 +826,7 @@ export default function Play() {
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Board 
             board={createBoard(tempBoardCoords, [], "PROTILES", theme, color.current, complementaryColor.current)} 
-            theme={theme} 
+            boardMode={theme}
             onBoardChildClick={(row, col) => {
               console.log('Board component received click:', { row, col });
               handleBoardClick(row, col);
@@ -870,6 +873,12 @@ export default function Play() {
             onExchange={handleExchange}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
+            icons={{
+              settings: <TuneIcon className={styles.keyBtn} />,
+              colorScheme: <PaletteIcon className={styles.keyBtn} />,
+              botMode: <SmartToyIcon className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} sx={{ fontSize: 24 }} />,
+              topMoves: <LightbulbIcon className={styles.keyBtn} />
+            }}
           />
 
           <Box className={styles.playerPanel}>
@@ -890,14 +899,19 @@ export default function Play() {
           {modalContent === "settings" && (
             <Box>
               <Box className={styles.modalContainer__dictionary}>
-                Dictionary
-                <select className={styles.styleSelection} value={dictionary} onChange={handleDictionaryChange}>
-                  <option value="ANY">Any</option>
-                  <option value="TWL">TWL/NWL</option>
-                  <option value="CSW">CSW</option>
+                Board Mode
+                <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
+                  <option value="STANDARD">Standard</option>
+                  <option value="FULLBOARD">Full Board</option>
                 </select>
               </Box>
             </Box>
+          )}
+          {modalContent === "colorScheme" && (
+            <ColorScheme
+              color={color}
+              boardColor={boardColor}
+            />
           )}
         </Box>
       </Modal>
