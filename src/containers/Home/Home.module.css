@@ -14,14 +14,43 @@
 .title{
   display: flex;
   justify-content: center;
+  align-items: center;
   font-size: 30px;
   margin-top: 25px;
   font-family: 'Preahvihear', sans-serif !important;
   font-weight: 600;
-  background: darkslateblue;
+  background: linear-gradient(75deg, #4A4A7A 0%, #6A6A9A 50%, #4A4A7A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  gap: 12px;
+}
+
+.titleIcon {
+  font-size: 32px !important;
+  background: linear-gradient(75deg, #4A4A7A 0%, #6A6A9A 50%, #4A4A7A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.titleIcon:hover {
+  filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.2));
+}
+
+.spinning {
+  animation: spin 0.5s ease-in-out;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .subTitle{
@@ -60,5 +89,44 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+}
+
+.easterEgg {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(75deg, #4A4A7A 0%, #6A6A9A 50%, #4A4A7A 100%);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: bold;
+  animation: popIn 0.5s ease-out, fadeOut 0.5s ease-in 2.5s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+@keyframes popIn {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 

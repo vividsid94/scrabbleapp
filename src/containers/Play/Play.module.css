@@ -493,10 +493,6 @@ form{
   }
 }
 
-@media screen and (max-width: 1200px) {
-
-}
-
 @media screen and (max-height: 992px) and (min-width: 1200px){
   .Board {
     display: flex;
