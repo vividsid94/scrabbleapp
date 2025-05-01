@@ -6,14 +6,6 @@ import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import ColorizeIcon from '@mui/icons-material/Colorize';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import CheckIcon from '@mui/icons-material/Check';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ForwardIcon from '@mui/icons-material/Forward';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard, updateBoard } from "../../functions/boardFunctions.js";
 import { TextField, Tooltip, Button, Snackbar, Alert } from "@mui/material";
@@ -691,7 +683,18 @@ export default function Play() {
   };
 
   const handleBotModeToggle = () => {
-    setShowBotSettings(true);
+    if (isDictionaryLoading) return;
+    
+    // Randomly determine who goes first
+    const randomFirst = Math.random() < 0.5;
+    setBotGoesFirst(randomFirst);
+    
+    // Set game started state
+    setGameStarted(true);
+    setTimerActive(true);
+    
+    // Start the game directly
+    startBotGame();
   };
 
   const startBotGame = () => {
@@ -704,6 +707,8 @@ export default function Play() {
     setPlayer2points(0);
     setPointsScored(0);
     setPool(origPool);
+    
+    // Set current player based on who goes first
     setCurrentPlayer(botGoesFirst ? 2 : 1);
     setConsecutivePasses(0);
     
@@ -730,9 +735,6 @@ export default function Play() {
     setIsBotMode(true);
     setPlayer1Name('You');
     setPlayer2Name('SidBot');
-    
-    // Close settings modal
-    setShowBotSettings(false);
     
     // If bot goes first, make its move
     if (botGoesFirst) {

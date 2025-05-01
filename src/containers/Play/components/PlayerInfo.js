@@ -8,7 +8,6 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import CheckIcon from '@mui/icons-material/Check';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Tooltip, Button } from '@mui/material';
 
 export default function PlayerInfo({
@@ -51,7 +50,17 @@ export default function PlayerInfo({
         <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
           <SmartToyIcon 
             className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
-            onClick={onBotModeToggle}
+            onClick={() => {
+              if (isDictionaryLoading) return;
+              if (!gameStarted) {
+                onStartGame();
+              }
+              onBotModeToggle();
+            }}
+            sx={{ 
+              opacity: isDictionaryLoading ? 0.5 : 1,
+              cursor: isDictionaryLoading ? 'not-allowed' : 'pointer'
+            }}
           />
         </Tooltip>
         <Tooltip title="Get Top Moves">
@@ -66,18 +75,6 @@ export default function PlayerInfo({
       </Box>
 
       <Box className={styles.playerToggle}>
-        <Tooltip title="Start Game" placement="top">
-          <Box 
-            className={styles.keyBtn}
-            onClick={onStartGame}
-            sx={{ 
-              opacity: gameStarted || isDictionaryLoading ? 0.5 : 1,
-              cursor: gameStarted || isDictionaryLoading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <PlayArrowIcon sx={{ fontSize: 18 }} />
-          </Box>
-        </Tooltip>
         <Tooltip title="Submit" placement="top">
           <Box 
             className={styles.keyBtn}
@@ -122,41 +119,59 @@ export default function PlayerInfo({
         </Tooltip>
       </Box>
 
-      <Box className={styles.playerPanel}>
-        <Box className={styles.playerInfo}>
-          <Box className={styles.playerName}>{player1Name}</Box>
-          <Box className={styles.timer}>{player1Time}</Box>
-        </Box>
-        <Box className={styles.points}>{player1Points}</Box>
-        {currentPlayer === 1 && (
-          <Box className={styles.Rack}>
-            <Rack 
-              rack={player1Rack} 
-              color={color.current} 
-              onTileClick={onTileClick}
-              selectedTiles={selectedTiles}
-            />
+      {currentPlayer === 2 ? (
+        <>
+          <Box className={styles.playerPanel}>
+            <Box className={styles.playerInfo}>
+              <Box className={styles.playerName}>{player2Name}</Box>
+              <Box className={styles.timer}>{player2Time}</Box>
+            </Box>
+            <Box className={styles.points}>{player2Points}</Box>
+            <Box className={styles.Rack}>
+              <Rack 
+                rack={player2Rack} 
+                color={color.current} 
+                onTileClick={onTileClick}
+                selectedTiles={selectedTiles}
+              />
+            </Box>
           </Box>
-        )}
-      </Box>
 
-      <Box className={styles.playerPanel}>
-        <Box className={styles.playerInfo}>
-          <Box className={styles.playerName}>{player2Name}</Box>
-          <Box className={styles.timer}>{player2Time}</Box>
-        </Box>
-        <Box className={styles.points}>{player2Points}</Box>
-        {currentPlayer === 2 && (
-          <Box className={styles.Rack}>
-            <Rack 
-              rack={player2Rack} 
-              color={color.current} 
-              onTileClick={onTileClick}
-              selectedTiles={selectedTiles}
-            />
+          <Box className={styles.playerPanel}>
+            <Box className={styles.playerInfo}>
+              <Box className={styles.playerName}>{player1Name}</Box>
+              <Box className={styles.timer}>{player1Time}</Box>
+            </Box>
+            <Box className={styles.points}>{player1Points}</Box>
           </Box>
-        )}
-      </Box>
+        </>
+      ) : (
+        <>
+          <Box className={styles.playerPanel}>
+            <Box className={styles.playerInfo}>
+              <Box className={styles.playerName}>{player1Name}</Box>
+              <Box className={styles.timer}>{player1Time}</Box>
+            </Box>
+            <Box className={styles.points}>{player1Points}</Box>
+            <Box className={styles.Rack}>
+              <Rack 
+                rack={player1Rack} 
+                color={color.current} 
+                onTileClick={onTileClick}
+                selectedTiles={selectedTiles}
+              />
+            </Box>
+          </Box>
+
+          <Box className={styles.playerPanel}>
+            <Box className={styles.playerInfo}>
+              <Box className={styles.playerName}>{player2Name}</Box>
+              <Box className={styles.timer}>{player2Time}</Box>
+            </Box>
+            <Box className={styles.points}>{player2Points}</Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 } 
