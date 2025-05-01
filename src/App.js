@@ -11,6 +11,7 @@ import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
 import Changelog from "./containers/Changelog/Changelog";
+import Study from "./containers/Study/Study";
 
 export const ThemeContext = React.createContext();
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="/series" element={<Series/>}/>
               <Route path="/play" element={<Play/>}/>
               <Route path="/changelog" element={<Changelog/>}/>
+              <Route path="/study" element={<Study/>}/>
             </Routes>
           </Router>
         </header>

@@ -69,7 +69,54 @@ export default function Play() {
     return [...rack].sort((a, b) => a.localeCompare(b));
   };
 
-  const startGame = () => {
+  useEffect(() => {
+    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
+    
+    // Check dictionary loading state on mount
+    const checkDictionary = async () => {
+      try {
+        const response = await fetch('/.netlify/functions/gameLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'validate',
+            beforeBoard: parsedOrigBoardCoords,
+            afterBoard: parsedOrigBoardCoords
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        // Set loading to false if we get any response
+        setIsDictionaryLoading(false);
+        setSnackbarOpen(false);
+      } catch (error) {
+        console.error('Error checking dictionary:', error);
+        // Retry after a short delay
+        setTimeout(checkDictionary, 1000);
+      }
+    };
+    
+    setIsDictionaryLoading(true);
+    setSnackbarMessage('Loading dictionary.. (up to 30s)');
+    setSnackbarSeverity('info');
+    setSnackbarOpen(true);
+    checkDictionary();
+  }, []);
+
+  const startGame = async () => {
+    if (isDictionaryLoading) {
+      return;
+    }
+
     // Initialize player racks with 7 tiles each
     const newPool = [...origPool];
     const rack1 = [];
@@ -91,19 +138,6 @@ export default function Play() {
     setGameStarted(true);
     setTimerActive(true);
   };
-
-  useEffect(() => {
-    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-    setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
-    
-    const timer = setTimeout(() => {
-      // Don't initialize game automatically anymore
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleTileClick = (tile, index) => {
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -841,7 +875,7 @@ export default function Play() {
                 <Button 
                   variant="contained" 
                   onClick={startGame}
-                  disabled={gameStarted}
+                  disabled={gameStarted || isDictionaryLoading}
                   sx={{ 
                     marginRight: '8px',
                     backgroundColor: '#4CAF50',
@@ -1058,9 +1092,9 @@ export default function Play() {
       </Box>
       <Snackbar 
         open={snackbarOpen} 
-        autoHideDuration={3000} 
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 

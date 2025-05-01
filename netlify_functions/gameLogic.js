@@ -364,6 +364,11 @@ exports.handler = async function(event, context) {
     }
 
     try {
+        // Load dictionary if not already cached
+        if (!cachedTrie) {
+            cachedTrie = await loadDictionary();
+        }
+
         const { action, beforeBoard, afterBoard } = JSON.parse(event.body);
         
         let result;
