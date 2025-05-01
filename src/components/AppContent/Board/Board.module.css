@@ -171,7 +171,7 @@ td {
   align-items: center;
   border-radius: 50%;
   width: 100%;
-  max-width: 600px;
+  width: 680px;
   height: auto;
   aspect-ratio: 1;
 }

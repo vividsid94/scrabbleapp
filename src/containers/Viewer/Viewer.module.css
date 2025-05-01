@@ -157,6 +157,7 @@ form{
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-bottom: 15px;
 }
 
 .playerToggle{
@@ -166,6 +167,7 @@ form{
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 15px;
 }
 
 .unlockText{
@@ -329,6 +331,8 @@ form{
   gap: 4px;
   margin: 8px 0;
   padding: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .turnNumber {
