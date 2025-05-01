@@ -32,7 +32,7 @@ export const useGameState = (onChange) => {
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(true);
-  const color = useRef('#6D84A2');
+  const color = useRef('#BB77A2');
   const complementaryColor = useRef('#E07A5F');
   const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
