@@ -159,10 +159,9 @@ form{
   margin-top: 25px;
   font-family: 'Preahvihear', sans-serif !important;
   font-weight: 600;
-  background: linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%);
+  background: darkslateblue;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 .mainPanel{
