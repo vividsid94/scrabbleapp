@@ -169,7 +169,6 @@ export default function Play() {
       console.log('Invalid board position:', { row, col });
       return;
     }
-    console.log('Board clicked at:', { row, col });
     const isSamePosition =
       selectedBoardPosition?.row === row &&
       selectedBoardPosition?.col === col;
@@ -545,7 +544,6 @@ export default function Play() {
 
   // Update useEffect to handle bot turns
   useEffect(() => {
-    console.log('Bot turn effect', { isBotMode, currentPlayer, isBotThinking });
     if (isBotMode && currentPlayer === 2 && !isBotThinking) {
       makeBotMove();
     }
@@ -646,7 +644,33 @@ export default function Play() {
     setIsLoadingTopMoves(true);
     setShowTopMoves(true); // Show modal immediately when lightbulb is clicked
     try {
+      // Get the current rack
       const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      
+      // Get any tiles that are placed on the board but not committed
+      const uncommittedTiles = [];
+      for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+          if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+            uncommittedTiles.push(tempBoardCoords[row][col]);
+          }
+        }
+      }
+      
+      // Return uncommitted tiles to the rack
+      const newRack = [...currentRack, ...uncommittedTiles];
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(newRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(newRack));
+      }
+      
+      // Reset the board state
+      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
+      
+      console.log('Getting top moves for rack:', newRack);
       const response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
@@ -654,7 +678,7 @@ export default function Play() {
         },
         body: JSON.stringify({
           board: boardCoords,
-          letters: currentRack
+          letters: newRack
         })
       });
 
@@ -663,6 +687,7 @@ export default function Play() {
       }
 
       const data = await response.json();
+      console.log('Top moves API response:', data);
       
       // Check if this is the first load (dictionary loading)
       if (data.message && data.message.includes('Loading dictionary')) {
@@ -689,6 +714,35 @@ export default function Play() {
 
   const handleBotModeToggle = () => {
     if (isDictionaryLoading) return;
+    
+    // If there are tiles on the board, return them to the rack first
+    if (selectedTiles.length > 0) {
+      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      const newRack = [...currentRack, ...selectedTiles];
+      
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(newRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(newRack));
+      }
+      
+      // Reset the board state by rebuilding from origBoardCoords
+      const newBoard = JSON.parse(JSON.stringify(origBoardCoords));
+      
+      // Copy over any committed tiles from boardCoords
+      for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+          if (typeof boardCoords[row][col] === 'string') {
+            newBoard[row][col] = boardCoords[row][col];
+          }
+        }
+      }
+      
+      setTempBoardCoords(newBoard);
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
+      setArrowDirection('right');
+    }
     
     // Randomly determine who goes first
     const randomFirst = Math.random() < 0.5;
@@ -812,6 +866,61 @@ export default function Play() {
     // If next player is bot, make bot move
     if (isBotMode && currentPlayer === 2) {
       makeBotMove();
+    }
+  };
+
+  const handleMoveSelect = (move) => {
+    console.log('Selected move full object:', JSON.stringify(move, null, 2));
+    
+    // Reset the board to its current state
+    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+    
+    // Set the direction
+    setArrowDirection(move.direction);
+    
+    // Set the position to the end of the word
+    const lastTile = move.tiles[move.tiles.length - 1];
+    setSelectedBoardPosition({ row: lastTile.row, col: lastTile.col });
+    
+    // Place the tiles on the board
+    const newTempBoard = [...tempBoardCoords];
+    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+    const newRack = [...currentRack];
+    const newSelectedTiles = [];
+    
+    console.log('Current rack:', currentRack);
+    console.log('Word to place:', move.word);
+    
+    // Place each tile using the exact positions from the tiles array
+    for (const tile of move.tiles) {
+      if (tile.isNew) {
+        console.log('Placing tile at:', { row: tile.row, col: tile.col, letter: tile.letter });
+        
+        // Check if the tile is already on the board in the committed state
+        if (typeof boardCoords[tile.row][tile.col] === 'string') {
+          console.log('Tile already on board at this position, skipping');
+          continue;
+        }
+        
+        const tileIndex = newRack.indexOf(tile.letter);
+        console.log('Tile index in rack:', tileIndex);
+        if (tileIndex !== -1) {
+          newTempBoard[tile.row][tile.col] = tile.letter;
+          newRack.splice(tileIndex, 1);
+          newSelectedTiles.push(tile.letter);
+        }
+      }
+    }
+    
+    console.log('New rack:', newRack);
+    console.log('New board:', newTempBoard);
+    
+    setTempBoardCoords(newTempBoard);
+    setSelectedTiles(newSelectedTiles);
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
     }
   };
 
@@ -954,6 +1063,7 @@ export default function Play() {
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
         topMoves={topMoves}
+        onMoveSelect={handleMoveSelect}
       />
     </Box>
   );

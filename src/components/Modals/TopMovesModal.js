@@ -7,8 +7,14 @@ export default function TopMovesModal({
   onClose, 
   isLoadingTopMoves, 
   isDictionaryLoading, 
-  topMoves 
+  topMoves,
+  onMoveSelect
 }) {
+  const handleMoveClick = (move) => {
+    onMoveSelect(move);
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
@@ -31,7 +37,12 @@ export default function TopMovesModal({
         ) : (
           <Box className={styles.topMovesList}>
             {topMoves.map((move, index) => (
-              <Box key={index} className={styles.topMoveItem}>
+              <Box 
+                key={index} 
+                className={styles.topMoveItem}
+                onClick={() => handleMoveClick(move)}
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+              >
                 <Box className={styles.movePosition}>{move.startPosition}</Box>
                 <Box className={styles.moveWord}>{move.word}</Box>
                 <Box className={styles.moveScore}>{move.score} pts</Box>
