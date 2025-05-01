@@ -1,7 +1,7 @@
 export const cellColors = {
     0: {
         value: "",
-        color: "linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9))",
+        color: "var(--board-color, white)",
     },
     1: {
         value: "",

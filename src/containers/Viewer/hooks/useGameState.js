@@ -33,7 +33,7 @@ export const useGameState = (onChange) => {
   const [tourneyNum, setTourneyNum] = useState(0);
   const [unlockEloMode, setUnlockEloMode] = useState(true);
   const color = useRef('#7878a4');
-  const complementaryColor = useRef('#E07A5F');
+  const boardColor = useRef('#ffffff');
   const customPlayerMode = useRef("");
   const [showUnlockText, setShowUnlockText] = useState(false);
   const [origPlayerRaw, setOrigPlayerRaw] = useState(""); 
@@ -228,7 +228,7 @@ export const useGameState = (onChange) => {
     tourneyNum, setTourneyNum,
     unlockEloMode, setUnlockEloMode,
     color,
-    complementaryColor,
+    boardColor,
     customPlayerMode,
     showUnlockText, setShowUnlockText,
     origPlayerRaw, setOrigPlayerRaw,

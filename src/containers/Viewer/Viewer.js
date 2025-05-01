@@ -56,7 +56,7 @@ export default function Viewer({ onChange }){
     tourneyNum, setTourneyNum,
     unlockEloMode, setUnlockEloMode,
     color,
-    complementaryColor,
+    boardColor,
     customPlayerMode,
     showUnlockText, setShowUnlockText,
     origPlayerRaw, setOrigPlayerRaw,
@@ -187,7 +187,7 @@ export default function Viewer({ onChange }){
           {modalContent === "colorScheme" && (
             <ColorScheme
               color={color}
-              complementaryColor={complementaryColor}
+              boardColor={boardColor}
             />
           )}
           {modalContent === "recentGames" && (
@@ -232,7 +232,7 @@ export default function Viewer({ onChange }){
         <Box className={styles.mainPanel}>
           <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
             <Board 
-              board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current, complementaryColor.current)} 
+              board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current)} 
               points={pointsScored} 
               boardMode={boardMode}
               rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} 
