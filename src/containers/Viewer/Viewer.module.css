@@ -153,11 +153,10 @@ form{
   border: 0;
   color: #fff;
   position: relative;
-  line-height: 50px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 15px;
+  padding-bottom: 10px;
 }
 
 .playerToggle{
@@ -167,7 +166,6 @@ form{
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 15px;
 }
 
 .unlockText{
@@ -393,13 +391,6 @@ form{
     width: 100%;
     max-width: 90vw;
     padding: 8px !important;
-  }
-  .playerToggle {
-    padding: auto;
-    height: 15px;
-  }
-  .playerToggle svg{
-    font-size: 20px !important
   }
   .questionMark{
     display: none;
