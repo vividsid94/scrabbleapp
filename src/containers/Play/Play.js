@@ -476,7 +476,6 @@ export default function Play() {
       console.log('Bot move response:', botMove);
       
       if (!botMove || !botMove.tiles || botMove.tiles.length === 0) {
-        console.log('No valid bot move found');
         setSnackbarMessage('Bot could not find a valid move');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
