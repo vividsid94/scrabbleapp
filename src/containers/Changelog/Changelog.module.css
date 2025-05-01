@@ -23,6 +23,17 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.developmentMessage {
+  width: 75%;
+  margin: auto;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .version {
   font-size: 1.2em;
   color: #3D5A80;
@@ -84,8 +95,7 @@
 }
 
 .footer {
-  margin-top: 40px;
-  text-align: center;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.7);
+  margin-top: 20px;
+  font-size: 0.8em;
+  color: #666;
 } 

@@ -15,7 +15,7 @@ export default function Home(){
           Tile Turnover<PsychologyAltIcon className={styles.questionMark}/>
         </Box>  
         <Box className={styles.developmentMessage}>
-          Hi! I'm Tile Turnover, a front-end focused project with a little back-end magic ✨. Development has restarted! Check out the <Link to="/changelog" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>changelog</Link> for updates! 🚀
+          Hi! I'm Tile Turnover, a front-end focused project. Development has restarted! Check out the <Link to="/changelog" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>changelog</Link> for updates! 🚀
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
