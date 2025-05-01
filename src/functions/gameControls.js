@@ -1,12 +1,5 @@
 import { getRandomNumber } from '../utils/gameUtils';
 
-export const handleBoardClick = (boardClickCount, setBoardClickCount, setUnlockEloMode) => {
-  setBoardClickCount(prevCount => prevCount + 1);
-  if (boardClickCount >= 5) {
-    setUnlockEloMode(true);
-  }
-};
-
 export const switchMode = (mode, setMode, onChange, randomizeGame) => {
   let newMode = mode === "GUESSELO" ? "VIEWER" : "GUESSELO";
   if (mode !== newMode) {

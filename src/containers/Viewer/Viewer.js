@@ -232,14 +232,14 @@ export default function Viewer({ onChange }){
         <Box className={styles.mainPanel}>
           <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
             <Board 
-              onBoardChildClick={() => handleBoardClick(boardClickCount, setBoardClickCount, setUnlockEloMode)} 
-              moveDirection={moveDirection} 
-              dictionary={gameDictionary} 
               board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current, complementaryColor.current)} 
               points={pointsScored} 
               boardMode={boardMode}
               rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} 
               move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}
+              moveDirection={moveDirection} 
+              dictionary={gameDictionary} 
+              onBoardChildClick={() => {}}
             />   
           </Box>
           <Box className={styles.rightPanel}>
@@ -303,9 +303,6 @@ export default function Viewer({ onChange }){
                       )}
                     </Box>
                   ))}
-                </Box>
-                <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
-                  Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
                 </Box>
               </Box>
               <Box className={styles.playerPanel} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>

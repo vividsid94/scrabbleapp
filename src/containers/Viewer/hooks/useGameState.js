@@ -31,7 +31,7 @@ export const useGameState = (onChange) => {
   const [revealedElo, setRevealedElo] = useState("");
   const [revealedElo2, setRevealedElo2] = useState("");
   const [tourneyNum, setTourneyNum] = useState(0);
-  const [unlockEloMode, setUnlockEloMode] = useState(false);
+  const [unlockEloMode, setUnlockEloMode] = useState(true);
   const color = useRef('#6D84A2');
   const complementaryColor = useRef('#E07A5F');
   const customPlayerMode = useRef("");
@@ -69,10 +69,7 @@ export const useGameState = (onChange) => {
   };
 
   const handleBoardClick = () => {
-    setBoardClickCount(prevCount => prevCount + 1);
-    if (boardClickCount >= 5) {
-      setUnlockEloMode(true);
-    }
+    // No longer needed
   };
 
   const switchMode = () => {

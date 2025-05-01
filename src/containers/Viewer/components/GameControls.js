@@ -11,16 +11,13 @@ import styles from '../Viewer.module.css';
 const GameControls = ({
   currentMoveRef,
   moveSet,
-  moveDirection,
   setMoveDirection,
   handleMove,
   randomizeGame,
   beginningOfGame,
   unlockEloMode,
-  showUnlockText,
   setShowUnlockText,
   switchMode,
-  boardClickCount
 }) => {
   const iconList = [  
     {icon: KeyboardDoubleArrowLeftIcon, toolTip: "Beginning of game", onClick: beginningOfGame},  
@@ -67,9 +64,6 @@ const GameControls = ({
           />
         </Tooltip>
       ))}
-      <Box sx={{display: showUnlockText && !unlockEloMode ? 'flex' : 'none'}} className={styles.unlockText}>
-        Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
-      </Box>
     </Box>
   );
 };
