@@ -17,7 +17,6 @@
 }
 
 .homeLogo{
-    color: white;
     font-size: 50px !important;
 }
 
@@ -32,11 +31,9 @@
 }
 
 .link{
-	color: blue !important;
     text-decoration: none !important;
 }
 .link:hover{
-	color: black !important;
     text-decoration: none !important;
 }
 .cfLogoContainer{

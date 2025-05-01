@@ -13,9 +13,9 @@ export default function Home(){
       <Box className={styles.page}>
         <Box className={styles.title}>
           Tile Turnover<PsychologyAltIcon className={styles.questionMark}/>
-        </Box>
-        <Box className={styles.subTitle}>
-          Hi! I am Tile Turnover, a front-end-only project. I am undergoing off-and-on development. Stay tuned for updates!
+        </Box>  
+        <Box className={styles.developmentMessage}>
+          Hi! I am Tile Turnover, a front-end-only project. Development has restarted! Expect new features and improvements coming soon! 🚀
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">

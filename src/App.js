@@ -15,19 +15,22 @@ export const ThemeContext = React.createContext();
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
-  const [lightMode, setLightMode] = useState('dark');
+  const [lightMode, setLightMode] = useState('light');
 
   const getHeaderBackgroundColor = () => {
     if (appState === 'VIEWER') {
-      return lightMode === 'dark' ? '#000003' : '#e0e0e0';
+      return lightMode === 'dark' ? '#000003' : '#808080';
     }
-    return lightMode === 'dark' ? '#6C695A' : '#b8b6a9';
+    return lightMode === 'dark' ? '#6C695A' : '#6c6a62';
   };
 
   return (
     <ThemeContext.Provider value={{ lightMode, setLightMode }}>
       <div className="App">
-        <header className="App-header" style={{backgroundColor: getHeaderBackgroundColor()}}>
+        <header className="App-header" style={{
+          backgroundColor: getHeaderBackgroundColor(),
+          color: lightMode === 'dark' ? '#fff' : '#000'
+        }}>
           <Router>
             <Routes>
               <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />

@@ -244,14 +244,14 @@ export default function Viewer({ onChange }){
           </Box>
           <Box className={styles.rightPanel}>
             <Box className={styles.topPlayerPanel}>
-              <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`}>
+              <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
                 <Box className={styles.playerToggle}>
                   {iconList.map((icon, index) => (
                     <Tooltip key={`icon-${index}`} title={icon.toolTip}>
                       <icon.icon
                         className={styles.Arrows} 
                         onClick={icon.onClick}
-                        sx={icon.condition}
+                        sx={{color: lightMode === 'dark' ? '#fff' : '#000'}}
                       />
                     </Tooltip>
                   ))}
@@ -262,7 +262,10 @@ export default function Viewer({ onChange }){
                           <group.icon1.icon 
                             className={styles.keyBtn} 
                             onClick={group.icon1.onClick}
-                            sx={group.icon1.condition}
+                            sx={{
+                              color: lightMode === 'dark' ? '#fff' : '#000',
+                              ...(group.icon1.condition || {})
+                            }}
                           />
                         </Tooltip>
                       )}
@@ -271,7 +274,10 @@ export default function Viewer({ onChange }){
                           <group.icon2.icon 
                             className={styles.keyBtn} 
                             onClick={group.icon2.onClick}
-                            sx={group.icon2.condition}
+                            sx={{
+                              color: lightMode === 'dark' ? '#fff' : '#000',
+                              ...(group.icon2.condition || {})
+                            }}
                           >
                             {group.icon2.text}
                           </group.icon2.icon>
@@ -282,6 +288,7 @@ export default function Viewer({ onChange }){
                           <group.icon3.icon 
                             className={styles.keyBtn} 
                             onClick={group.icon3.onClick}
+                            sx={{color: lightMode === 'dark' ? '#fff' : '#000'}}
                           />
                         </Tooltip>
                       )}
@@ -290,6 +297,7 @@ export default function Viewer({ onChange }){
                           <group.icon4.icon 
                             className={styles.keyBtn} 
                             onClick={group.icon4.onClick}
+                            sx={{color: lightMode === 'dark' ? '#fff' : '#000'}}
                           />
                         </Tooltip>
                       )}
@@ -300,7 +308,7 @@ export default function Viewer({ onChange }){
                   Hit the board {6 - boardClickCount} {(6 - boardClickCount) === 1 ? 'more time' : 'more times'} to unlock me!
                 </Box>
               </Box>
-              <Box className={styles.playerPanel}>
+              <Box className={styles.playerPanel} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
                 <PlayerInfo
                   mode={mode}
                   name1={name1}
@@ -351,10 +359,10 @@ export default function Viewer({ onChange }){
                     }
                   }}
                 />
-                <Box className={styles.poolBox}>
+                <Box className={styles.poolBox} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
                   <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
                 </Box>
-                <Box className={styles.commentaryContainer}>
+                <Box className={styles.commentaryContainer} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
                   {notes.map(([note, moveNumber], index) => (
                     <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
                       "{note.trim()}"

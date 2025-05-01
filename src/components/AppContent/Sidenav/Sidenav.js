@@ -10,6 +10,7 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
+import { ThemeContext } from '../../../App';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -20,62 +21,69 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import styles from './Sidenav.module.css';
-let texture = "maze-black";
-let background = "#110113";
-
-const openedMixin = () => ({
-  width: `180px`,
-  overflowX: 'hidden',
-  background: background,
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
-  transition: '0.5s ease',
-});
-
-const closedMixin = () => ({
-  width: `65px`,
-  overflowX: 'hidden',
-  background: background,
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
-  transition: '0.5s ease',
-});
-
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-}));
-
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open }) => ({
-    ...(open && {
-      ...openedMixin(theme),
-      '& .MuiDrawer-paper': openedMixin(theme),
-    }),
-    ...(!open && {
-      ...closedMixin(theme),
-      '& .MuiDrawer-paper': closedMixin(theme),
-    }),
-  }),
-);
-
-const MyAppBar = styled(AppBar)({
-  position: 'fixed',
-  background: background,
-  backgroundImage: "url('https://www.transparenttextures.com/patterns/" + texture + ".png')",
-  display: "flex",
-  justifyContent: "space-between"
-});
-
-const MyToolbar = styled(Toolbar)({
-  display: "flex",
-  justifyContent: "space-between"
-});
 
 export default function MiniDrawer() {
+  const { lightMode } = React.useContext(ThemeContext);
   const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const getBackgroundColor = () => {
+    return lightMode === 'dark' ? '#110113' : '#d0d0d0';
+  };
+
+  const getTextColor = () => {
+    return lightMode === 'dark' ? '#fff' : '#000';
+  };
+
+  const openedMixin = () => ({
+    width: `180px`,
+    overflowX: 'hidden',
+    background: getBackgroundColor(),
+    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    transition: '0.5s ease',
+  });
+
+  const closedMixin = () => ({
+    width: `65px`,
+    overflowX: 'hidden',
+    background: getBackgroundColor(),
+    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    transition: '0.5s ease',
+  });
+
+  const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: theme.spacing(0, 1),
+    ...theme.mixins.toolbar,
+  }));
+
+  const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+    ({ theme, open }) => ({
+      ...(open && {
+        ...openedMixin(theme),
+        '& .MuiDrawer-paper': openedMixin(theme),
+      }),
+      ...(!open && {
+        ...closedMixin(theme),
+        '& .MuiDrawer-paper': closedMixin(theme),
+      }),
+    }),
+  );
+
+  const MyAppBar = styled(AppBar)({
+    position: 'fixed',
+    background: getBackgroundColor(),
+    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    display: "flex",
+    justifyContent: "space-between"
+  });
+
+  const MyToolbar = styled(Toolbar)({
+    display: "flex",
+    justifyContent: "space-between"
+  });
 
   const handleDrawer = () => {
     if (open){
@@ -99,7 +107,7 @@ export default function MiniDrawer() {
       <MyAppBar className={styles.myAppBar}>
         <MyToolbar>
           <IconButton color="inherit" onClick={handleClick}>
-            <MenuIcon/>
+            <MenuIcon sx={{ color: getTextColor() }}/>
           </IconButton>
           <Menu
             id="simple-menu"
@@ -127,10 +135,10 @@ export default function MiniDrawer() {
             <ListItem className={styles.listItem}>
               <ListItemIcon>
                 <Tooltip title="Home">
-                  <HomeOutlinedIcon className={styles.homeLogo}/>
+                  <HomeOutlinedIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Home"} />
+              <ListItemText className={styles.listItemText} primary={"Home"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
@@ -139,10 +147,10 @@ export default function MiniDrawer() {
             <ListItem className={styles.listItem}>
               <ListItemIcon>
                 <Tooltip title="Game Viewer">
-                  <VisibilityOutlinedIcon className={styles.homeLogo}/>
+                  <VisibilityOutlinedIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Viewer"} />
+              <ListItemText className={styles.listItemText} primary={"Viewer"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>

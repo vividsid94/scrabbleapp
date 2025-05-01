@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import styles from './Board.module.css';
 import { Box } from '@mui/system';
 import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
 import Cell from './Cell';
 import cellType from './cellType';
+import { ThemeContext } from '../../../App';
 
 export default function Board({
     boardMode = "STANDARD",
@@ -23,6 +24,7 @@ export default function Board({
     showSlip = true,
     showDictionary = true
 }) {
+    const { lightMode } = useContext(ThemeContext);
     let boardTheme = "Board__" + boardMode;
     let tableTheme = "Table__" + boardMode;
     const [open, setOpen] = useState(false);
@@ -135,9 +137,19 @@ export default function Board({
         }
     };
 
+    const getHeaderStyle = () => ({
+        backgroundColor: lightMode === 'dark' ? 'rgb(12, 12, 59)' : '#b8b6a9',
+        color: lightMode === 'dark' ? '#fff' : '#000'
+    });
+
+    const getFooterStyle = () => ({
+        backgroundColor: lightMode === 'dark' ? 'rgb(108, 4, 4)' : '#d4d2c9',
+        color: lightMode === 'dark' ? '#fff' : '#000'
+    });
+
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
-            <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`}>
+            <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`} style={getHeaderStyle()}>
                 <Box className={styles.headerContent}>
                     {dictionary}
                 </Box>
@@ -204,7 +216,7 @@ export default function Board({
                     )}
                 </Box>
             </Box>
-            <Box className={`${styles.Footer} ${!showSlip ? styles.hidden : ''}`}>
+            <Box className={`${styles.Footer} ${!showSlip ? styles.hidden : ''}`} style={getFooterStyle()}>
                 {message}
             </Box>
             <Modal open={open} onClose={handleClose}>
