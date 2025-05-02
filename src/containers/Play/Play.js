@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
@@ -9,7 +9,6 @@ import { origPool, origBoard } from "../../components/AppContent/References/stat
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
-import BotSettingsModal from '../../components/Modals/BotSettingsModal';
 import ChoicesModal from '../../components/Modals/ChoicesModal';
 import PlayerInfo from './components/PlayerInfo';
 import ColorScheme from '../../components/common/ColorScheme';
@@ -58,7 +57,6 @@ export default function Play() {
   const [topMoves, setTopMoves] = useState([]);
   const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
-  const [showBotSettings, setShowBotSettings] = useState(false);
   const [botGoesFirst, setBotGoesFirst] = useState(false);
   const [tilesToExchange, setTilesToExchange] = useState([]);
   const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
@@ -1366,14 +1364,6 @@ export default function Play() {
           SidBot is thinking...
         </div>
       )}
-
-      <BotSettingsModal
-        open={showBotSettings}
-        onClose={() => setShowBotSettings(false)}
-        botGoesFirst={botGoesFirst}
-        onBotGoesFirstChange={(e) => setBotGoesFirst(e.target.value === 'bot')}
-        onStartGame={startBotGame}
-      />
 
       <ChoicesModal
         open={showTopMoves}
