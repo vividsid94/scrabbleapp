@@ -108,7 +108,8 @@ export default function PlayerInfo({
             {icons.colorScheme}
           </Box>
         </Tooltip>
-        <Tooltip title={isBotMode ? "Playing against bot" : "Play against bot"}>
+        {icons.time}
+        <Tooltip title={isBotMode ? "New Game" : "Play"}>
           {React.cloneElement(icons.botMode, {
             onClick: () => {
               if (isDictionaryLoading) return;
@@ -119,7 +120,8 @@ export default function PlayerInfo({
             },
             style: {
               opacity: isDictionaryLoading ? 0.5 : 1,
-              cursor: isDictionaryLoading ? 'not-allowed' : 'pointer'
+              cursor: isDictionaryLoading ? 'not-allowed' : 'pointer',
+              ...icons.botMode.props.sx
             }
           })}
         </Tooltip>
@@ -218,7 +220,7 @@ export default function PlayerInfo({
             name={player2Name}
             time={player2Time}
             points={player2Points}
-            rack={isBotMode ? ['🤖', '🤔', '🤫', '🤐', '🤖', '🤔', '🤫'] : player2Rack}
+            rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
             color={color}
             onTileClick={onTileClick}
             selectedTiles={selectedTiles}
@@ -247,7 +249,7 @@ export default function PlayerInfo({
             name={player2Name}
             time={player2Time}
             points={player2Points}
-            rack={isBotMode ? ['🤖', '🤔', '🤫', '🤐', '🤖', '🤔', '🤫'] : player2Rack}
+            rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
             color={color}
             isBot={isBotMode}
             currentPlayer={currentPlayer}

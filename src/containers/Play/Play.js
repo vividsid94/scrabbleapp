@@ -7,7 +7,7 @@ import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import Modal from '@mui/material/Modal';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert } from "@mui/material";
+import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
 import BotSettingsModal from '../../components/Modals/BotSettingsModal';
 import TopMovesModal from '../../components/Modals/TopMovesModal';
 import PlayerInfo from './components/PlayerInfo';
@@ -16,6 +16,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import TimerIcon from '@mui/icons-material/Timer';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -57,6 +58,8 @@ export default function Play() {
   const [botGoesFirst, setBotGoesFirst] = useState(false);
   const [tilesToExchange, setTilesToExchange] = useState([]);
   const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
+  const [gameTime, setGameTime] = useState(20); // in minutes
+  const [showTimeSlider, setShowTimeSlider] = useState(false);
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -993,6 +996,12 @@ export default function Play() {
     };
   }, [gameStarted, handlePass, handleExchange]);
 
+  // Update player time states when gameTime changes
+  useEffect(() => {
+    setPlayer1Time(gameTime * 60);
+    setPlayer2Time(gameTime * 60);
+  }, [gameTime]);
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -1012,7 +1021,7 @@ export default function Play() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-              15/0 • Classic • NWL23
+              {gameTime}/0 • Classic • NWL23
             </Box>
             <Box sx={{ 
               fontSize: '16px',
@@ -1102,10 +1111,104 @@ export default function Play() {
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,
-              botMode: <SmartToyIcon className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} sx={{ fontSize: 24 }} />,
+              time: (
+                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
+                  <TimerIcon 
+                    className={styles.keyBtn} 
+                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
+                    sx={{ 
+                      color: showTimeSlider ? '#4CAF50' : 'inherit',
+                      transform: showTimeSlider ? 'scale(1.1)' : 'scale(1)',
+                      opacity: gameStarted ? 0.5 : 1,
+                      cursor: gameStarted ? 'not-allowed' : 'pointer'
+                    }}
+                  />
+                </Tooltip>
+              ),
+              botMode: <SmartToyIcon 
+                className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
+                sx={{ 
+                  fontSize: 24,
+                  color: isBotMode ? (currentPlayer === 2 ? '#ff4444' : '#4CAF50') : 'inherit',
+                  transition: 'color 0.2s ease',
+                  opacity: isBotMode && currentPlayer === 2 ? 0.5 : 1,
+                  cursor: isBotMode && currentPlayer === 2 ? 'not-allowed' : 'pointer',
+                  pointerEvents: isBotMode && currentPlayer === 2 ? 'none' : 'auto'
+                }} 
+              />,
               topMoves: <LightbulbIcon className={styles.keyBtn} />
             }}
           />
+
+          {showTimeSlider && !gameStarted && (
+            <Box sx={{ 
+              width: '100%', 
+              mx: 'auto', 
+              mt: 2, 
+              p: 2, 
+              bgcolor: 'rgba(255,255,255,0.1)',
+              borderRadius: 2,
+              backdropFilter: 'blur(10px)',
+              boxSizing: 'border-box',
+              overflow: 'hidden'
+            }}>
+              <Box sx={{ color: '#6B7280', mb: 1, textAlign: 'center' }}>
+                Game Time: {gameTime} min
+              </Box>
+              <Box sx={{ px: 3 }}>
+                <Box sx={{ 
+                  position: 'relative',
+                  width: 'calc(100% - 16px)',
+                  mx: 'auto',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  {[5, 15, 25, 30].map((value) => (
+                    <Box
+                      key={value}
+                      sx={{
+                        position: 'absolute',
+                        left: `${((value - 5) / 25) * 100}%`,
+                        width: '1px',
+                        height: '8px',
+                        backgroundColor: '#bfbfbf',
+                        transform: 'translateX(-50%)'
+                      }}
+                    />
+                  ))}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: `${((gameTime - 5) / 25) * 100}%`,
+                      width: '16px',
+                      height: '16px',
+                      backgroundColor: '#4CAF50',
+                      borderRadius: '50%',
+                      transform: 'translateX(-50%)',
+                      cursor: 'pointer'
+                    }}
+                    onMouseDown={(e) => {
+                      const slider = e.currentTarget.parentElement;
+                      const rect = slider.getBoundingClientRect();
+                      const handleMouseMove = (e) => {
+                        const x = e.clientX - rect.left;
+                        const percentage = Math.max(0, Math.min(1, x / rect.width));
+                        const value = Math.round(5 + percentage * 25);
+                        setGameTime(value);
+                      };
+                      const handleMouseUp = () => {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                      };
+                      document.addEventListener('mousemove', handleMouseMove);
+                      document.addEventListener('mouseup', handleMouseUp);
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          )}
 
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
