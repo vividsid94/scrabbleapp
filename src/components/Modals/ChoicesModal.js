@@ -69,7 +69,7 @@ const ChoicesModal = ({
           bgcolor: 'background.paper',
           borderRadius: 2,
           boxShadow: 24,
-          p: 3,
+          p: 2,
           overflow: 'auto',
           backdropFilter: 'blur(10px)',
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -93,7 +93,7 @@ const ChoicesModal = ({
                 top: 0,
                 left: 0,
                 right: 0,
-                height: '40px',
+                height: '30px',
                 cursor: 'move',
                 '&:hover': {
                   backgroundColor: 'rgba(0, 0, 0, 0.02)',
@@ -110,8 +110,8 @@ const ChoicesModal = ({
                 background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 2,
-                pt: 1
+                mb: 1,
+                pt: 0.5
               }}
             >
               Choices
@@ -119,7 +119,7 @@ const ChoicesModal = ({
 
             {previewBoard && (
               <Box sx={{ 
-                mb: 2, 
+                mb: 1, 
                 display: 'flex', 
                 justifyContent: 'center',
                 transform: 'scale(0.65)',
@@ -152,20 +152,20 @@ const ChoicesModal = ({
             )}
             
             {isTopMovesLoading || isDictionaryLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                 <CircularProgress />
               </Box>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {topMoves.map((move, index) => (
                   <Paper
                     key={index}
                     elevation={2}
                     sx={{
-                      p: 2,
+                      p: 1.5,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 1,
+                      gap: 0.5,
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
                         transform: 'translateY(-2px)',
@@ -177,10 +177,13 @@ const ChoicesModal = ({
                       backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.1)' : 'white',
                       overflow: 'visible'
                     }}
-                    onClick={() => onMoveSelect(move)}
+                    onClick={() => {
+                      onMoveSelect(move);
+                      onClose();
+                    }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                           {move.startPosition} {move.direction === 'right' ? '→' : '↓'} {move.word}
                         </Typography>
@@ -189,62 +192,93 @@ const ChoicesModal = ({
                           sx={{ 
                             color: '#4CAF50',
                             fontWeight: 'bold',
-                            ml: 1
+                            ml: 0.5
                           }}
                         >
                           ({move.score} points)
                         </Typography>
                       </Box>
-                      <Button
-                        variant="contained"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSimulate(move);
-                        }}
-                        disabled={simulatingMove !== null}
-                        startIcon={<PlayArrowIcon />}
-                        sx={{
-                          background: 'linear-gradient(45deg, #4CAF50 30%, #45a049 90%)',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          textTransform: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          boxShadow: '0 3px 5px 2px rgba(76, 175, 80, .2)',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: '0 5px 8px 2px rgba(76, 175, 80, .3)',
-                            background: 'linear-gradient(45deg, #45a049 30%, #4CAF50 90%)',
-                          },
-                          '&:active': {
-                            transform: 'translateY(1px)',
-                            boxShadow: '0 2px 4px 1px rgba(76, 175, 80, .2)',
-                          },
-                          '&.Mui-disabled': {
-                            background: 'linear-gradient(45deg, #9E9E9E 30%, #757575 90%)',
-                            boxShadow: 'none',
-                          }
-                        }}
-                      >
-                        {simulatingMove === move ? (
-                          <CircularProgress size={20} color="inherit" />
-                        ) : (
-                          'Play it Out'
-                        )}
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Button
+                          variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onMoveSelect(move);
+                            onClose();
+                          }}
+                          sx={{
+                            background: 'linear-gradient(45deg, #2196F3 30%, #1976D2 90%)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            textTransform: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .2)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 5px 8px 2px rgba(33, 150, 243, .3)',
+                              background: 'linear-gradient(45deg, #1976D2 30%, #2196F3 90%)',
+                            },
+                            '&:active': {
+                              transform: 'translateY(1px)',
+                              boxShadow: '0 2px 4px 1px rgba(33, 150, 243, .2)',
+                            }
+                          }}
+                        >
+                          Select Play
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSimulate(move);
+                          }}
+                          disabled={simulatingMove !== null}
+                          startIcon={<PlayArrowIcon />}
+                          sx={{
+                            background: 'linear-gradient(45deg, #4CAF50 30%, #45a049 90%)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            textTransform: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            boxShadow: '0 3px 5px 2px rgba(76, 175, 80, .2)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 5px 8px 2px rgba(76, 175, 80, .3)',
+                              background: 'linear-gradient(45deg, #45a049 30%, #4CAF50 90%)',
+                            },
+                            '&:active': {
+                              transform: 'translateY(1px)',
+                              boxShadow: '0 2px 4px 1px rgba(76, 175, 80, .2)',
+                            },
+                            '&.Mui-disabled': {
+                              background: 'linear-gradient(45deg, #9E9E9E 30%, #757575 90%)',
+                              boxShadow: 'none',
+                            }
+                          }}
+                        >
+                          {simulatingMove === move ? (
+                            <CircularProgress size={20} color="inherit" />
+                          ) : (
+                            'Play it Out'
+                          )}
+                        </Button>
+                      </Box>
                     </Box>
 
                     {(simulatingMove === move || moveWithResults === move) && (
                       <>
                         {simulationProgress > 0 && simulatingMove === move && (
-                          <Box sx={{ mt: 1 }}>
+                          <Box sx={{ mt: 0.5 }}>
                             <LinearProgress 
                               variant="determinate" 
                               value={simulationProgress * 100} 
                               sx={{
-                                height: 8,
-                                borderRadius: 4,
+                                height: 6,
+                                borderRadius: 3,
                                 backgroundColor: 'rgba(76, 175, 80, 0.1)',
                                 '& .MuiLinearProgress-bar': {
                                   backgroundColor: '#4CAF50',
@@ -256,7 +290,7 @@ const ChoicesModal = ({
                               sx={{ 
                                 display: 'block', 
                                 textAlign: 'center', 
-                                mt: 0.5,
+                                mt: 0.25,
                                 color: 'text.secondary'
                               }}
                             >
@@ -267,14 +301,14 @@ const ChoicesModal = ({
 
                         {simulationResult && moveWithResults === move && (
                           <Box sx={{ 
-                            mt: 1,
-                            p: 1.5, 
+                            mt: 0.5,
+                            p: 1, 
                             bgcolor: 'rgba(0, 0, 0, 0.02)', 
                             borderRadius: 1,
                             borderTop: '1px solid rgba(0, 0, 0, 0.1)'
                           }}>
-                            <Typography variant="body2" sx={{ mb: 0.5 }}>
-                              After {Math.round(simulationResult.avgMoves)} moves:
+                            <Typography variant="body2" sx={{ mb: 0.25 }}>
+                              After {Math.round(simulationResult.avgMoves)} turns:
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#2196F3' }}>
                               You: {Math.round(simulationResult.avgScore)} points
