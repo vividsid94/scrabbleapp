@@ -6,6 +6,7 @@ import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import Modal from '@mui/material/Modal';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
+import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
 import BotSettingsModal from '../../components/Modals/BotSettingsModal';
@@ -112,33 +113,6 @@ export default function Play() {
     setSnackbarOpen(true);
     checkDictionary();
   }, []);
-
-  const startGame = async () => {
-    if (isDictionaryLoading) {
-      return;
-    }
-
-    // Initialize player racks with 7 tiles each
-    const newPool = [...origPool];
-    const rack1 = [];
-    const rack2 = [];
-    
-    for (let i = 0; i < 7; i++) {
-      const randomIndex1 = Math.floor(Math.random() * newPool.length);
-      rack1.push(newPool[randomIndex1]);
-      newPool.splice(randomIndex1, 1);
-      
-      const randomIndex2 = Math.floor(Math.random() * newPool.length);
-      rack2.push(newPool[randomIndex2]);
-      newPool.splice(randomIndex2, 1);
-    }
-    
-    setPlayer1Rack(alphabetizeRack(rack1));
-    setPlayer2Rack(alphabetizeRack(rack2));
-    setPool(newPool);
-    setGameStarted(true);
-    setTimerActive(true);
-  };
 
   const handleTileClick = (tile, index) => {
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -784,6 +758,7 @@ export default function Play() {
   };
 
   const startBotGame = () => {
+    console.log('Starting bot game with test racks:', TEST_RACKS);
     // Play game start sound
     gameStartSound.current.play();
 
@@ -802,19 +777,38 @@ export default function Play() {
     
     // Initialize player racks
     const newPool = [...origPool];
-    const rack1 = [];
-    const rack2 = [];
+    let rack1 = [];
+    let rack2 = [];
     
-    for (let i = 0; i < 7; i++) {
-      const randomIndex1 = Math.floor(Math.random() * newPool.length);
-      rack1.push(newPool[randomIndex1]);
-      newPool.splice(randomIndex1, 1);
+    if (TEST_RACKS.enabled) {
+      console.log('Using test racks');
+      // Use test racks
+      rack1 = [...TEST_RACKS.player1];
+      rack2 = [...TEST_RACKS.player2];
+      console.log('Test racks:', { rack1, rack2 });
       
-      const randomIndex2 = Math.floor(Math.random() * newPool.length);
-      rack2.push(newPool[randomIndex2]);
-      newPool.splice(randomIndex2, 1);
+      // Remove test tiles from pool
+      [...rack1, ...rack2].forEach(tile => {
+        const index = newPool.indexOf(tile);
+        if (index !== -1) {
+          newPool.splice(index, 1);
+        }
+      });
+    } else {
+      console.log('Using random racks');
+      // Use random racks
+      for (let i = 0; i < 7; i++) {
+        const randomIndex1 = Math.floor(Math.random() * newPool.length);
+        rack1.push(newPool[randomIndex1]);
+        newPool.splice(randomIndex1, 1);
+        
+        const randomIndex2 = Math.floor(Math.random() * newPool.length);
+        rack2.push(newPool[randomIndex2]);
+        newPool.splice(randomIndex2, 1);
+      }
     }
     
+    console.log('Final racks:', { rack1, rack2 });
     setPlayer1Rack(alphabetizeRack(rack1));
     setPlayer2Rack(alphabetizeRack(rack2));
     setPool(newPool);
@@ -1102,7 +1096,6 @@ export default function Play() {
             onColorSchemeOpen={handleColorSchemeOpen}
             onBotModeToggle={handleBotModeToggle}
             onGetTopMoves={handleGetTopMoves}
-            onStartGame={startGame}
             onWordSubmit={handleWordSubmit}
             onPass={handlePass}
             onExchange={handleExchange}

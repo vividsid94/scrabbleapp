@@ -113,9 +113,6 @@ export default function PlayerInfo({
           {React.cloneElement(icons.botMode, {
             onClick: () => {
               if (isDictionaryLoading) return;
-              if (!gameStarted) {
-                onStartGame();
-              }
               onBotModeToggle();
             },
             style: {
