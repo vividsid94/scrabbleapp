@@ -40,7 +40,7 @@ const TopMovesModal = ({
           }}
         >
           <Typography 
-            variant="h5" 
+            variant="h6" 
             sx={{ 
               mb: 3,
               fontWeight: 'bold',
@@ -50,7 +50,7 @@ const TopMovesModal = ({
               textAlign: 'center'
             }}
           >
-            Top Moves
+            Choices
           </Typography>
           
           {isTopMovesLoading || isDictionaryLoading ? (

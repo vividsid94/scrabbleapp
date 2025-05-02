@@ -122,7 +122,7 @@ export default function PlayerInfo({
             }
           })}
         </Tooltip>
-        <Tooltip title="Top Moves">
+        <Tooltip title="Choices">
           {React.cloneElement(icons.topMoves, {
             onClick: onGetTopMoves,
             style: {
