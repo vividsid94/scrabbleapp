@@ -3,7 +3,7 @@ import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
-import Pool from "../../components/AppContent/Board/Pool.js";
+import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import Modal from '@mui/material/Modal';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { createBoard } from "../../functions/boardFunctions.js";
@@ -1061,7 +1061,11 @@ export default function Play() {
 
           <Box className={styles.playerPanel}>
             <Box className={styles.poolBox}>
-              <Pool board={pool} rack={currentPlayer === 1 ? player1Rack : player2Rack}/>  
+              <PlayPool 
+                pool={pool} 
+                player1Rack={player1Rack} 
+                player2Rack={player2Rack}
+              />  
             </Box>
           </Box>
         </Box>
