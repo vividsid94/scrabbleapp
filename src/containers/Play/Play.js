@@ -1304,7 +1304,7 @@ export default function Play() {
       </Snackbar>
       {isBotThinking && (
         <div className={styles.botThinking}>
-          Bot is thinking...
+          SidBot is thinking...
         </div>
       )}
 
