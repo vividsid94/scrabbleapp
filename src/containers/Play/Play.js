@@ -436,6 +436,9 @@ export default function Play() {
       console.log('🤖 Bot Move Request:', {
         rack: apiRack.join('')
       });
+
+      // Add minimum delay of 2 seconds
+      const startTime = Date.now();
       const response = await fetch('/.netlify/functions/botLogic', {
         method: 'POST',
         headers: {
@@ -446,6 +449,13 @@ export default function Play() {
           letters: apiRack
         })
       });
+
+      // Calculate remaining time to ensure minimum 2 second delay
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 1000 - elapsedTime);
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -461,6 +471,9 @@ export default function Play() {
         setCurrentPlayer(1); // Switch back to player 1 if bot can't move
         return;
       }
+
+      // Play bot move sound after the delay
+      botMoveSound.current.play();
 
       // Get the current rack before making the move
       const botRack = player2Rack;
