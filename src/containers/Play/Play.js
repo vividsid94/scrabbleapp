@@ -20,6 +20,7 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
 import SortIcon from '@mui/icons-material/Sort';
 import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
+import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -65,6 +66,9 @@ export default function Play() {
   const [showTimeSlider, setShowTimeSlider] = useState(false);
   const [showMoveHistory, setShowMoveHistory] = useState(false);
   const [moveHistory, setMoveHistory] = useState([]);
+  const [simulatingMove, setSimulatingMove] = useState(null);
+  const [simulationResult, setSimulationResult] = useState(null);
+  const [simulationProgress, setSimulationProgress] = useState(0);
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -1043,6 +1047,37 @@ export default function Play() {
     setPlayer2Time(gameTime * 60);
   }, [gameTime]);
 
+  const simulateMove = async (move) => {
+    setSimulatingMove(move);
+    setSimulationResult(null);
+    setSimulationProgress(0);
+    
+    try {
+      const gameState = {
+        boardCoords,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool
+      };
+      
+      const result = await simulateMoveFunction(move, gameState, (progress) => {
+        setSimulationProgress(progress);
+      });
+      setSimulationResult(result);
+    } catch (error) {
+      console.error('Error simulating move:', error);
+      setSnackbarMessage('Error simulating move: ' + error.message);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setSimulatingMove(null);
+      setSimulationProgress(0);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -1336,11 +1371,18 @@ export default function Play() {
           setShowTopMoves(false);
           setIsLoadingTopMoves(false);
           setIsDictionaryLoading(false);
+          setSimulatingMove(null);
+          setSimulationResult(null);
+          setSimulationProgress(0);
         }}
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
         topMoves={topMoves}
         onMoveSelect={handleMoveSelect}
+        onSimulateMove={simulateMove}
+        simulatingMove={simulatingMove}
+        simulationResult={simulationResult}
+        simulationProgress={simulationProgress}
       />
 
       <MoveHistoryModal
