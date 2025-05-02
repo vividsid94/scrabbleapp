@@ -40,6 +40,7 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
               boxSizing: 'border-box',
               width: type === 'rack' ? '42px' : undefined,
               height: type === 'rack' ? '42px' : undefined,
+              opacity: isBlank ? 0.7 : 1,
             }}
           ></div>
         );

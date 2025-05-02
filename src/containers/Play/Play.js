@@ -199,13 +199,18 @@ export default function Play() {
           setTempBoardCoords(newTempBoard);
           
           const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-          // If the tile was a blank, return '*' to the rack
-          const tileToAdd = selectedTiles[selectedTiles.length - 1] === '*' ? '*' : tileToRemove;
+          // If the tile was a blank, return '?' to the rack
+          const tileToAdd = selectedTiles[selectedTiles.length - 1] === '*' ? '?' : tileToRemove;
           const newRack = [...currentRack, tileToAdd];
           if (currentPlayer === 1) {
             setPlayer1Rack(alphabetizeRack(newRack));
           } else {
             setPlayer2Rack(alphabetizeRack(newRack));
+          }
+
+          // Remove from blankTiles if it was a blank
+          if (selectedTiles[selectedTiles.length - 1] === '*') {
+            setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
           }
 
           setSelectedTiles(prevTiles => {
@@ -232,8 +237,11 @@ export default function Play() {
 
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
     const tileIndex = currentRack.indexOf(key);
-    
-    if (tileIndex === -1) {
+    // Check for both '?' and '*' as blank tiles
+    const blankIndex = currentRack.indexOf('?') !== -1 ? currentRack.indexOf('?') : currentRack.indexOf('*');
+        
+    // If we don't have the letter and don't have a blank, return
+    if (tileIndex === -1 && blankIndex === -1) {
       return;
     }
 
@@ -242,18 +250,31 @@ export default function Play() {
     }
 
     const newRack = [...currentRack];
-    newRack.splice(tileIndex, 1);
+    const newTempBoard = [...tempBoardCoords];
+    const newBlankTiles = [...blankTiles];
+
+    // Always use the actual letter if we have it
+    if (tileIndex !== -1) {
+      newRack.splice(tileIndex, 1);
+      newTempBoard[row][col] = key;
+      setSelectedTiles(prevTiles => [...prevTiles, key]);
+    } 
+    // Only use the blank tile if we don't have the letter
+    else if (blankIndex !== -1) {
+      newRack.splice(blankIndex, 1);
+      newTempBoard[row][col] = key;
+      newBlankTiles.push({ row, col });
+      setBlankTiles(newBlankTiles);
+      setSelectedTiles(prevTiles => [...prevTiles, '*']);
+    }
+
     if (currentPlayer === 1) {
       setPlayer1Rack(alphabetizeRack(newRack));
     } else {
       setPlayer2Rack(alphabetizeRack(newRack));
     }
 
-    const newTempBoard = [...tempBoardCoords];
-    newTempBoard[row][col] = key;
     setTempBoardCoords(newTempBoard);
-
-    setSelectedTiles(prevTiles => [...prevTiles, key]);
 
     if (arrowDirection === 'right') {
       let nextCol = col + 1;
@@ -355,14 +376,12 @@ export default function Play() {
     });
 
     const score = await scoreResponse.json();
-    console.log("Score:", score);
 
     // Play player move sound
     playerMoveSound.current.play();
 
     // Get the current rack before making any changes
     const playerRack = player1Rack;
-    console.log(playerRack);
     // Calculate running total
     const runningTotal = player1points + score;
 
@@ -791,7 +810,6 @@ export default function Play() {
   };
 
   const startBotGame = () => {
-    console.log('Starting bot game with test racks:', TEST_RACKS);
     // Play game start sound
     gameStartSound.current.play();
 
@@ -814,11 +832,9 @@ export default function Play() {
     let rack2 = [];
     
     if (TEST_RACKS.enabled) {
-      console.log('Using test racks');
       // Use test racks
       rack1 = [...TEST_RACKS.player1];
       rack2 = [...TEST_RACKS.player2];
-      console.log('Test racks:', { rack1, rack2 });
       
       // Remove test tiles from pool
       [...rack1, ...rack2].forEach(tile => {
@@ -828,7 +844,6 @@ export default function Play() {
         }
       });
     } else {
-      console.log('Using random racks');
       // Use random racks
       for (let i = 0; i < 7; i++) {
         const randomIndex1 = Math.floor(Math.random() * newPool.length);
@@ -841,7 +856,6 @@ export default function Play() {
       }
     }
     
-    console.log('Final racks:', { rack1, rack2 });
     setPlayer1Rack(alphabetizeRack(rack1));
     setPlayer2Rack(alphabetizeRack(rack2));
     setPool(newPool);
