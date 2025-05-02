@@ -998,7 +998,55 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        Play!
+        {gameStarted ? (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <Box sx={{ 
+              fontSize: '24px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              15/0 • Classic • NWL23
+            </Box>
+            <Box sx={{ 
+              fontSize: '16px',
+              color: '#6B7280',
+              fontStyle: 'italic'
+            }}>
+              Void Challenge • Unrated
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <Box sx={{ 
+              fontSize: '28px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              Play Mode
+            </Box>
+            <Box sx={{ 
+              fontSize: '18px',
+              color: '#6B7280',
+              fontStyle: 'italic'
+            }}>
+              Click the robot to play against SidBot
+            </Box>
+          </Box>
+        )}
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
