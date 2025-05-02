@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,9 +13,9 @@ import TableCell from '@mui/material/TableCell';
 import Paper from '@mui/material/Paper';
 
 export default function MoveHistoryModal({ open, onClose, moves }) {
-  const formatMove = (move) => {
+  const formatMove = useMemo(() => (move) => {
     const { beforeBoard, afterBoard, player, score, rack, total } = move;
-    
+    console.log(move);
     // Find the first tile that changed
     let firstRow = -1;
     let firstCol = -1;
@@ -163,7 +163,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
             fontWeight: 600,
             minWidth: '60px'
           }}>
-            +{score}
+            {score}
           </Box>
           <Box sx={{ 
             color: '#6B7280',
@@ -177,7 +177,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
       displayWord: displayWord,
       allWords: allWords
     };
-  };
+  }, []); // Empty dependency array since the function doesn't depend on any props or state
 
   const handleDownload = () => {
     const header = `#character-encoding UTF-8
@@ -198,6 +198,90 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   };
+
+  const tableContent = useMemo(() => {
+    if (moves.length === 0) {
+      return (
+        <Box sx={{ 
+          textAlign: 'center', 
+          color: '#6B7280',
+          py: 4
+        }}>
+          No moves yet
+        </Box>
+      );
+    }
+
+    return (
+      <TableContainer component={Paper} sx={{ 
+        boxShadow: 'none',
+        border: '1px solid rgba(0,0,0,0.1)',
+        borderRadius: 2,
+        width: '100%'
+      }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: '40px', fontWeight: 600 }}>#</TableCell>
+              <TableCell sx={{ width: '80px', fontWeight: 600 }}>Player</TableCell>
+              <TableCell sx={{ width: '80px', fontWeight: 600 }}>Rack</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Words</TableCell>
+              <TableCell sx={{ width: '60px', fontWeight: 600 }}>Score</TableCell>
+              <TableCell sx={{ width: '100px', fontWeight: 600 }}>Total</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {moves.map((move, index) => {
+              const formattedMove = formatMove(move);
+              const isPlayer1 = move.player === moves[0]?.player;
+              return (
+                <TableRow 
+                  key={index}
+                  sx={{ 
+                    backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.05)' : 'rgba(33, 150, 243, 0.05)',
+                    '&:hover': {
+                      backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(33, 150, 243, 0.1)'
+                    }
+                  }}
+                >
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{move.player}</TableCell>
+                  <TableCell>{move.rack}</TableCell>
+                  <TableCell sx={{ maxWidth: '200px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    {formattedMove.allWords.join(', ')}
+                  </TableCell>
+                  <TableCell sx={{ color: '#4CAF50', fontWeight: 600 }}>{move.score}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', fontSize: '0.875rem' }}>
+                      <Box sx={{ 
+                        bgcolor: isPlayer1 ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                        px: 0.5,
+                        py: 0.25,
+                        borderRadius: 1,
+                        fontWeight: isPlayer1 ? 600 : 400
+                      }}>
+                        {isPlayer1 ? move.total : (index > 0 ? moves[index - 1].total : 0)}
+                      </Box>
+                      <Box>-</Box>
+                      <Box sx={{ 
+                        bgcolor: !isPlayer1 ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                        px: 0.5,
+                        py: 0.25,
+                        borderRadius: 1,
+                        fontWeight: !isPlayer1 ? 600 : 400
+                      }}>
+                        {!isPlayer1 ? move.total : (index > 0 ? moves[index - 1].total : 0)}
+                      </Box>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  }, [moves, formatMove]); // Only re-render when moves array changes
 
   return (
     <Modal
@@ -254,67 +338,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
             )}
           </Box>
 
-          {moves.length > 0 ? (
-            <TableContainer component={Paper} sx={{ 
-              boxShadow: 'none',
-              border: '1px solid rgba(0,0,0,0.1)',
-              borderRadius: 2
-            }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ width: '60px', fontWeight: 600 }}>#</TableCell>
-                    <TableCell sx={{ width: '100px', fontWeight: 600 }}>Player</TableCell>
-                    <TableCell sx={{ width: '120px', fontWeight: 600 }}>Rack</TableCell>
-                    <TableCell sx={{ width: '200px', fontWeight: 600 }}>Words</TableCell>
-                    <TableCell sx={{ width: '80px', fontWeight: 600 }}>Score</TableCell>
-                    <TableCell sx={{ width: '120px', fontWeight: 600 }}>Total</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {moves.map((move, index) => {
-                    const formattedMove = formatMove(move);
-                    const isPlayer1 = move.player === moves[0]?.player;
-                    return (
-                      <TableRow 
-                        key={index}
-                        sx={{ 
-                          backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.05)' : 'rgba(33, 150, 243, 0.05)',
-                          '&:hover': {
-                            backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(33, 150, 243, 0.1)'
-                          }
-                        }}
-                      >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{move.player}</TableCell>
-                        <TableCell>{move.rack}</TableCell>
-                        <TableCell>{formattedMove.allWords.join(', ')}</TableCell>
-                        <TableCell sx={{ color: '#4CAF50', fontWeight: 600 }}>+{move.score}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Box sx={{ 
-                              color: '#6B7280',
-                              fontSize: '14px'
-                            }}>
-                              {move.total}
-                            </Box>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box sx={{ 
-              textAlign: 'center', 
-              color: '#6B7280',
-              py: 4
-            }}>
-              No moves yet
-            </Box>
-          )}
+          {tableContent}
         </Box>
       </Box>
     </Modal>
