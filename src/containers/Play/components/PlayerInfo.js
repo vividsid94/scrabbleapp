@@ -99,40 +99,76 @@ export default function PlayerInfo({
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
         <Tooltip title="Settings">
-          <Box onClick={onSettingsOpen}>
+          <Box 
+            onClick={onSettingsOpen}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             {icons.settings}
           </Box>
         </Tooltip>
         <Tooltip title="Color Scheme">
-          <Box onClick={onColorSchemeOpen}>
+          <Box 
+            onClick={onColorSchemeOpen}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             {icons.colorScheme}
           </Box>
         </Tooltip>
-        {icons.time}
-        <Tooltip title={isBotMode ? "New Game" : "Play"}>
-          {React.cloneElement(icons.botMode, {
-            onClick: () => {
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {icons.time}
+        </Box>
+        <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (isBotMode ? "New Game" : "Play")}>
+          <Box 
+            onClick={() => {
               if (isDictionaryLoading) return;
               onBotModeToggle();
-            },
-            style: {
+            }}
+            sx={{
               opacity: isDictionaryLoading ? 0.5 : 1,
               cursor: isDictionaryLoading ? 'not-allowed' : 'pointer',
-              ...icons.botMode.props.sx
-            }
-          })}
+              pointerEvents: isDictionaryLoading ? 'none' : 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {icons.botMode}
+          </Box>
         </Tooltip>
         <Tooltip title="Choices">
-          {React.cloneElement(icons.topMoves, {
-            onClick: onGetTopMoves,
-            style: {
+          <Box 
+            onClick={onGetTopMoves}
+            sx={{
               opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
               cursor: !gameStarted ? 'not-allowed' : 'pointer',
-              pointerEvents: !gameStarted ? 'none' : 'auto'
-            }
-          })}
+              pointerEvents: !gameStarted ? 'none' : 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {icons.topMoves}
+          </Box>
         </Tooltip>
-        {icons.moveOrder}
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {icons.moveOrder}
+        </Box>
       </Box>
 
       <Box className={styles.playerToggle}>
