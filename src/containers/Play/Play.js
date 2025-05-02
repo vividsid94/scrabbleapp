@@ -18,6 +18,8 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
+import SortIcon from '@mui/icons-material/Sort';
+import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -61,6 +63,8 @@ export default function Play() {
   const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
   const [gameTime, setGameTime] = useState(20); // in minutes
   const [showTimeSlider, setShowTimeSlider] = useState(false);
+  const [showMoveHistory, setShowMoveHistory] = useState(false);
+  const [moveHistory, setMoveHistory] = useState([]);
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -360,17 +364,32 @@ export default function Play() {
     // Play player move sound
     playerMoveSound.current.play();
 
+    // Get the current rack before making the move
+    const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
+    
+    // Calculate running total
+    const runningTotal = currentPlayer === 1 ? player1points + score : player2points + score;
+
+    // Add move to history with board states
+    setMoveHistory(prev => [...prev, {
+      beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
+      afterBoard: JSON.parse(JSON.stringify(tempBoardCoords)),
+      player: currentPlayer === 1 ? player1Name : player2Name,
+      score: score,
+      rack: alphabetizeRack(playerRack).join(''),
+      total: runningTotal
+    }]);
+
     // Update player points
     if (currentPlayer === 1) {
-      setPlayer1points(prev => prev + score);
+      setPlayer1points(runningTotal);
     } else {
-      setPlayer2points(prev => prev + score);
+      setPlayer2points(runningTotal);
     }
 
     // Refill the current player's rack
     const newPool = [...pool];
-    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    const newRack = [...currentRack];
+    const newRack = [...playerRack];
     
     // Remove used tiles
     for (const tile of selectedTiles) {
@@ -462,13 +481,13 @@ export default function Play() {
         return;
       }
 
+      // Get the current rack before making the move
+      const botRack = player2Rack;
+      
       // Create a copy of the board with the bot's move
       const newBoard = JSON.parse(JSON.stringify(boardCoords));
       const newRack = [...player2Rack];
       const newBlankTiles = [...blankTiles];
-      
-      //console.log('Processing bot move tiles:', botMove.tiles);
-      //console.log('Current rack before processing:', newRack);
       
       for (const tile of botMove.tiles) {
         if (tile.isNew) {
@@ -498,6 +517,19 @@ export default function Play() {
         }
       }
       
+      // Calculate running total
+      const botRunningTotal = player2points + botMove.score;
+
+      // Add bot move to history with board states
+      setMoveHistory(prev => [...prev, {
+        beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
+        afterBoard: JSON.parse(JSON.stringify(newBoard)),
+        player: player2Name,
+        score: botMove.score,
+        rack: alphabetizeRack(botRack).join(''),
+        total: botRunningTotal
+      }]);
+
       // Update the board state
       setBoardCoords(newBoard);
       setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
@@ -514,12 +546,6 @@ export default function Play() {
       setPlayer2Rack(alphabetizeRack(newRack));
       setPool(newPool);
       
-      // Update player 2's score
-      setPlayer2points(prev => prev + botMove.score);
-      
-      // Play bot move sound
-      botMoveSound.current.play();
-      
       // Show toast notification for bot's move
       setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
       setSnackbarSeverity("success");
@@ -533,6 +559,9 @@ export default function Play() {
       setSelectedBoardPosition(null);
       setSelectedTiles([]);
       setArrowDirection('right');
+      
+      // Update bot's score
+      setPlayer2points(botRunningTotal);
       
     } catch (error) {
       console.error('Error making bot move:', error);
@@ -1129,7 +1158,20 @@ export default function Play() {
                   pointerEvents: isBotMode && currentPlayer === 2 ? 'none' : 'auto'
                 }} 
               />,
-              topMoves: <LightbulbIcon className={styles.keyBtn} />
+              topMoves: <LightbulbIcon className={styles.keyBtn} />,
+              moveOrder: (
+                <Tooltip title="Move History">
+                  <SortIcon 
+                    className={styles.keyBtn}
+                    onClick={() => setShowMoveHistory(true)}
+                    sx={{
+                      opacity: !gameStarted ? 0.3 : 1,
+                      cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                      pointerEvents: !gameStarted ? 'none' : 'auto'
+                    }}
+                  />
+                </Tooltip>
+              )
             }}
           />
 
@@ -1281,6 +1323,12 @@ export default function Play() {
         isDictionaryLoading={isDictionaryLoading}
         topMoves={topMoves}
         onMoveSelect={handleMoveSelect}
+      />
+
+      <MoveHistoryModal
+        open={showMoveHistory}
+        onClose={() => setShowMoveHistory(false)}
+        moves={moveHistory}
       />
     </Box>
   );

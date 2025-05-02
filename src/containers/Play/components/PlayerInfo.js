@@ -122,7 +122,7 @@ export default function PlayerInfo({
             }
           })}
         </Tooltip>
-        <Tooltip title={gameStarted ? "Get Top Moves" : "Start game to enable top moves"} placement="top">
+        <Tooltip title="Top Moves">
           {React.cloneElement(icons.topMoves, {
             onClick: onGetTopMoves,
             style: {
@@ -132,6 +132,7 @@ export default function PlayerInfo({
             }
           })}
         </Tooltip>
+        {icons.moveOrder}
       </Box>
 
       <Box className={styles.playerToggle}>
