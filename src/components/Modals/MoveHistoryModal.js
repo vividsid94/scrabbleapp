@@ -19,7 +19,6 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
 
   const formatMove = useMemo(() => (move) => {
     const { beforeBoard, afterBoard, player, score, rack, total } = move;
-    console.log(move);
 
     // Check if this is a pass move (no changes to the board)
     const isPass = beforeBoard.every((row, i) => 
