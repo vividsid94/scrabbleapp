@@ -54,7 +54,7 @@ export const simulateMove = async (move, gameState, onProgress) => {
       for (let turn = 0; turn < 2; turn++) {
         try {
           // Get bot's response
-          const response = await fetch('/.netlify/functions/botLogic', {
+          const response = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -69,11 +69,14 @@ export const simulateMove = async (move, gameState, onProgress) => {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           
-          const botMove = await response.json();
+          const botMoves = await response.json();
           
-          if (!botMove || !botMove.tiles || botMove.tiles.length === 0) {
+          if (!botMoves || !botMoves.moves || botMoves.moves.length === 0) {
             break;
           }
+
+          // Select the highest scoring move for bot
+          const botMove = botMoves.moves[0];  // Moves are already sorted by score
           
           // Apply bot's move
           for (const tile of botMove.tiles) {
