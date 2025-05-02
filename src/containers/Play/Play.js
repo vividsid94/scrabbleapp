@@ -331,13 +331,9 @@ export default function Play() {
       setSnackbarOpen(true);
 
       // Return tiles to the player's rack
-      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-      const newRack = [...currentRack, ...selectedTiles];
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(newRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(newRack));
-      }
+      const rackToUpdate = player1Rack;
+      const updatedRack = [...rackToUpdate, ...selectedTiles];
+      setPlayer1Rack(alphabetizeRack(updatedRack));
 
       // Reset the board state
       setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
@@ -365,16 +361,16 @@ export default function Play() {
     playerMoveSound.current.play();
 
     // Get the current rack before making any changes
-    const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    
+    const playerRack = player1Rack;
+    console.log(playerRack);
     // Calculate running total
-    const runningTotal = currentPlayer === 1 ? player1points + score : player2points + score;
+    const runningTotal = player1points + score;
 
     // Add move to history with board states
     setMoveHistory(prev => [...prev, {
       beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
       afterBoard: JSON.parse(JSON.stringify(tempBoardCoords)),
-      player: currentPlayer === 1 ? player1Name : player2Name,
+      player: player1Name,
       score: score,
       rack: alphabetizeRack(playerRack).join(''),
       total: runningTotal
@@ -388,19 +384,11 @@ export default function Play() {
     setArrowDirection('right');
 
     // Update player's points
-    if (currentPlayer === 1) {
-      setPlayer1points(runningTotal);
-    } else {
-      setPlayer2points(runningTotal);
-    }
+    setPlayer1points(runningTotal);
 
     // Remove played tiles from rack
     const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
+    setPlayer1Rack(alphabetizeRack(newRack));
 
     // Refill the current player's rack
     const newPool = [...pool];
@@ -412,12 +400,7 @@ export default function Play() {
       newPool.splice(randomIndex, 1);
     }
 
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-
+    setPlayer1Rack(alphabetizeRack(newRack));
     setPool(newPool);
     
     // Switch to next player

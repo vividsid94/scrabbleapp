@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -11,8 +11,12 @@ import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import Paper from '@mui/material/Paper';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 export default function MoveHistoryModal({ open, onClose, moves }) {
+  const [showBotRacks, setShowBotRacks] = useState(false);
+
   const formatMove = useMemo(() => (move) => {
     const { beforeBoard, afterBoard, player, score, rack, total } = move;
     console.log(move);
@@ -303,7 +307,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
                           right: 0,
                           bottom: 0,
                           background: 'repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 2px, #e0e0e0 2px, #e0e0e0 4px)',
-                          opacity: 1,
+                          opacity: showBotRacks ? 0 : 1,
                           borderRadius: '4px'
                         }
                       }}>
@@ -353,7 +357,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
         </Table>
       </TableContainer>
     );
-  }, [moves, formatMove]); // Only re-render when moves array changes
+  }, [moves, formatMove, showBotRacks]); // Add showBotRacks to dependencies
 
   return (
     <Modal
@@ -400,20 +404,56 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
                 Move History
               </Typography>
             </Box>
-            {moves.length > 0 && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={handleDownload}
-                startIcon={<DownloadIcon />}
-              >
-                Download GCG
-              </Button>
-            )}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              {moves.length > 0 && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={showBotRacks}
+                        onChange={(e) => setShowBotRacks(e.target.checked)}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#4CAF50',
+                            '& + .MuiSwitch-track': {
+                              backgroundColor: '#4CAF50',
+                            },
+                          },
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" color="text.secondary">
+                        Show Bot Racks
+                      </Typography>
+                    }
+                  />
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleDownload}
+                    startIcon={<DownloadIcon />}
+                    sx={{
+                      borderColor: '#4CAF50',
+                      color: '#4CAF50',
+                      '&:hover': {
+                        borderColor: '#388E3C',
+                        backgroundColor: 'rgba(76, 175, 80, 0.04)',
+                        boxShadow: '0 2px 4px rgba(76, 175, 80, 0.2)',
+                      },
+                      transition: 'all 0.2s ease-in-out',
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      px: 2
+                    }}
+                  >
+                    Download GCG
+                  </Button>
+                </>
+              )}
+            </Box>
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-            SidBot's racks are hidden. You can download the GCG file to view them, even during the game, if you like.
-          </Typography>
           {tableContent}
         </Box>
       </Box>
