@@ -364,7 +364,7 @@ export default function Play() {
     // Play player move sound
     playerMoveSound.current.play();
 
-    // Get the current rack before making the move
+    // Get the current rack before making any changes
     const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
     
     // Calculate running total
@@ -380,31 +380,30 @@ export default function Play() {
       total: runningTotal
     }]);
 
-    // Update player points
+    // Update the board state
+    setBoardCoords(tempBoardCoords);
+    setTempBoardCoords(JSON.parse(JSON.stringify(tempBoardCoords)));
+    setSelectedTiles([]);
+    setSelectedBoardPosition(null);
+    setArrowDirection('right');
+
+    // Update player's points
     if (currentPlayer === 1) {
       setPlayer1points(runningTotal);
     } else {
       setPlayer2points(runningTotal);
     }
 
-    // Refill the current player's rack
-    const newPool = [...pool];
-    const newRack = [...playerRack];
-    
-    // Remove used tiles
-    for (const tile of selectedTiles) {
-      const index = newRack.indexOf(tile);
-      if (index !== -1) {
-        newRack.splice(index, 1);
-      }
-    }
+    // Remove played tiles from rack
+    const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
     if (currentPlayer === 1) {
       setPlayer1Rack(alphabetizeRack(newRack));
     } else {
       setPlayer2Rack(alphabetizeRack(newRack));
     }
-    
-    setPool(newPool);
+
+    // Refill the current player's rack
+    const newPool = [...pool];
     
     // Add new tiles from pool
     while (newRack.length < 7 && newPool.length > 0) {
@@ -419,11 +418,10 @@ export default function Play() {
       setPlayer2Rack(alphabetizeRack(newRack));
     }
 
+    setPool(newPool);
+    
+    // Switch to next player
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
-    setSelectedBoardPosition(null);
-    setSelectedTiles([]);
-    setArrowDirection('right');
-    setBoardCoords(JSON.parse(JSON.stringify(tempBoardCoords)));
   };
 
   const handleSettingsOpen = () => {

@@ -4,6 +4,13 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import DownloadIcon from '@mui/icons-material/Download';
+import TableContainer from '@mui/material/TableContainer';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Paper from '@mui/material/Paper';
 
 export default function MoveHistoryModal({ open, onClose, moves }) {
   const formatMove = (move) => {
@@ -219,162 +226,96 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
         outline: 'none'
       }}>
         <Box sx={{ 
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
-          borderBottom: '1px solid rgba(0,0,0,0.1)',
-          pb: 2
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: 2,
+          p: 3,
+          maxHeight: '80vh',
+          overflow: 'auto'
         }}>
           <Box sx={{ 
-            fontSize: '20px', 
-            fontWeight: 'bold', 
-            color: '#4B5563'
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2
           }}>
-            Move History
+            <Typography variant="h6" component="h2">
+              Move History
+            </Typography>
+            {moves.length > 0 && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleDownload}
+                startIcon={<DownloadIcon />}
+              >
+                Download GCG
+              </Button>
+            )}
           </Box>
-          {moves && moves.length > 0 && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<DownloadIcon />}
-              onClick={handleDownload}
-              sx={{
-                textTransform: 'none',
-                color: '#4B5563',
-                borderColor: '#4B5563',
-                '&:hover': {
-                  borderColor: '#6B7280',
-                  backgroundColor: 'rgba(0,0,0,0.04)'
-                }
-              }}
-            >
-              Download GCG
-            </Button>
+
+          {moves.length > 0 ? (
+            <TableContainer component={Paper} sx={{ 
+              boxShadow: 'none',
+              border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: 2
+            }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: '60px', fontWeight: 600 }}>#</TableCell>
+                    <TableCell sx={{ width: '100px', fontWeight: 600 }}>Player</TableCell>
+                    <TableCell sx={{ width: '120px', fontWeight: 600 }}>Rack</TableCell>
+                    <TableCell sx={{ width: '200px', fontWeight: 600 }}>Words</TableCell>
+                    <TableCell sx={{ width: '80px', fontWeight: 600 }}>Score</TableCell>
+                    <TableCell sx={{ width: '120px', fontWeight: 600 }}>Total</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {moves.map((move, index) => {
+                    const formattedMove = formatMove(move);
+                    const isPlayer1 = move.player === moves[0]?.player;
+                    return (
+                      <TableRow 
+                        key={index}
+                        sx={{ 
+                          backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.05)' : 'rgba(33, 150, 243, 0.05)',
+                          '&:hover': {
+                            backgroundColor: isPlayer1 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(33, 150, 243, 0.1)'
+                          }
+                        }}
+                      >
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{move.player}</TableCell>
+                        <TableCell>{move.rack}</TableCell>
+                        <TableCell>{formattedMove.allWords.join(', ')}</TableCell>
+                        <TableCell sx={{ color: '#4CAF50', fontWeight: 600 }}>+{move.score}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            <Box sx={{ 
+                              color: '#6B7280',
+                              fontSize: '14px'
+                            }}>
+                              {move.total}
+                            </Box>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Box sx={{ 
+              textAlign: 'center', 
+              color: '#6B7280',
+              py: 4
+            }}>
+              No moves yet
+            </Box>
           )}
         </Box>
-        {moves && moves.length > 0 ? (
-          <Box sx={{ 
-            display: 'table',
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}>
-            {/* Table Header */}
-            <Box sx={{ 
-              display: 'table-header-group',
-              bgcolor: 'rgba(0,0,0,0.02)',
-              borderBottom: '2px solid rgba(0,0,0,0.1)'
-            }}>
-              <Box sx={{ 
-                display: 'table-row',
-                '& > *': { 
-                  display: 'table-cell',
-                  py: 1.5,
-                  px: 2,
-                  fontWeight: 600,
-                  color: '#4B5563',
-                  fontSize: '14px',
-                  textAlign: 'left'
-                }
-              }}>
-                <Box sx={{ width: '60px' }}>#</Box>
-                <Box sx={{ width: '120px' }}>Player</Box>
-                <Box sx={{ width: '200px' }}>Words</Box>
-                <Box sx={{ width: '100px' }}>Points</Box>
-                <Box sx={{ width: '100px' }}>Score</Box>
-              </Box>
-            </Box>
-            {/* Table Body */}
-            <Box sx={{ display: 'table-row-group' }}>
-              {moves.map((move, index) => {
-                const formattedMove = formatMove(move);
-                const isPlayer1 = move.player === moves[0].player;
-                const prevScore = index > 0 ? moves[index - 1].total : 0;
-                const player1Score = isPlayer1 ? move.total : prevScore;
-                const player2Score = isPlayer1 ? prevScore : move.total;
-                const isPlayer1Turn = isPlayer1;
-                
-                return (
-                  <Box 
-                    key={index}
-                    sx={{ 
-                      display: 'table-row',
-                      bgcolor: index % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
-                      '&:hover': {
-                        bgcolor: 'rgba(0,0,0,0.04)'
-                      },
-                      '& > *': {
-                        display: 'table-cell',
-                        py: 1.5,
-                        px: 2,
-                        borderBottom: '1px solid rgba(0,0,0,0.05)'
-                      }
-                    }}
-                  >
-                    <Box sx={{ 
-                      color: '#6B7280',
-                      fontSize: '14px'
-                    }}>
-                      {index + 1}
-                    </Box>
-                    <Box sx={{ 
-                      color: '#4B5563',
-                      fontWeight: 500
-                    }}>
-                      {move.player}
-                    </Box>
-                    <Box sx={{ 
-                      color: '#4B5563',
-                      fontWeight: 600
-                    }}>
-                      {formattedMove.allWords.join(', ')}
-                    </Box>
-                    <Box sx={{ 
-                      color: '#4CAF50',
-                      fontWeight: 600
-                    }}>
-                      +{move.score}
-                    </Box>
-                    <Box sx={{ 
-                      color: '#6B7280',
-                      fontSize: '14px'
-                    }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ 
-                          bgcolor: isPlayer1Turn ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          fontWeight: isPlayer1Turn ? 600 : 400
-                        }}>
-                          {player1Score}
-                        </Box>
-                        <Box>-</Box>
-                        <Box sx={{ 
-                          bgcolor: !isPlayer1Turn ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          fontWeight: !isPlayer1Turn ? 600 : 400
-                        }}>
-                          {player2Score}
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ 
-            textAlign: 'center', 
-            color: '#6B7280',
-            py: 4
-          }}>
-            No moves yet
-          </Box>
-        )}
       </Box>
     </Modal>
   );
