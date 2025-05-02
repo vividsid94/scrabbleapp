@@ -44,6 +44,12 @@ export const simulateMove = async (move, gameState, onProgress) => {
         }
       }
       
+      // Store the board after initial move
+      onProgress?.(sim / 5, {
+        board: JSON.parse(JSON.stringify(simBoard)),
+        move: 'initial'
+      });
+      
       // Simulate 4 more moves (2 turns each)
       for (let turn = 0; turn < 2; turn++) {
         try {
@@ -83,8 +89,14 @@ export const simulateMove = async (move, gameState, onProgress) => {
           simBotScore += (botMove.score || 0);
           simMoves++;
           
+          // Store the board after bot's move
+          onProgress?.(sim / 5, {
+            board: JSON.parse(JSON.stringify(simBoard)),
+            move: 'bot'
+          });
+          
           // Get our next move
-          const ourResponse = await fetch('/.netlify/functions/botLogic', {
+          const ourResponse = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -99,11 +111,14 @@ export const simulateMove = async (move, gameState, onProgress) => {
             throw new Error(`HTTP error! status: ${ourResponse.status}`);
           }
           
-          const ourMove = await ourResponse.json();
+          const ourMoves = await ourResponse.json();
           
-          if (!ourMove || !ourMove.tiles || ourMove.tiles.length === 0) {
+          if (!ourMoves || !ourMoves.moves || ourMoves.moves.length === 0) {
             break;
           }
+
+          // Select the highest scoring move
+          const ourMove = ourMoves.moves[0];  // Moves are already sorted by score
           
           // Apply our move
           for (const tile of ourMove.tiles) {
@@ -118,6 +133,12 @@ export const simulateMove = async (move, gameState, onProgress) => {
           
           simOurScore += (ourMove.score || 0);
           simMoves++;
+          
+          // Store the board after our move
+          onProgress?.(sim / 5, {
+            board: JSON.parse(JSON.stringify(simBoard)),
+            move: 'player'
+          });
           
           // Draw new tiles for both players
           const newPool = [...pool];

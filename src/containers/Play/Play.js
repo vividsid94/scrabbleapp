@@ -10,7 +10,7 @@ import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js"
 import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
 import BotSettingsModal from '../../components/Modals/BotSettingsModal';
-import TopMovesModal from '../../components/Modals/TopMovesModal';
+import ChoicesModal from '../../components/Modals/ChoicesModal';
 import PlayerInfo from './components/PlayerInfo';
 import ColorScheme from '../../components/common/ColorScheme';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -69,6 +69,9 @@ export default function Play() {
   const [simulatingMove, setSimulatingMove] = useState(null);
   const [simulationResult, setSimulationResult] = useState(null);
   const [simulationProgress, setSimulationProgress] = useState(0);
+  const [previewBoard, setPreviewBoard] = useState(null);
+  const [previewMove, setPreviewMove] = useState(null);
+  const [moveWithResults, setMoveWithResults] = useState(null);
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -1005,7 +1008,7 @@ export default function Play() {
 
   const board = useMemo(() => {
     return createBoard(
-      tempBoardCoords.map((row, rowIndex) => 
+      showTopMoves ? boardCoords : (previewBoard || tempBoardCoords.map((row, rowIndex) => 
         row.map((col, colIndex) => {
           // If there's a temporary move, use that
           if (typeof col === 'string') {
@@ -1014,7 +1017,7 @@ export default function Play() {
           // Otherwise use the committed board state
           return boardCoords[rowIndex][colIndex];
         })
-      ),
+      )),
       [], 
       "PROTILES", 
       theme, 
@@ -1022,7 +1025,7 @@ export default function Play() {
       complementaryColor.current, 
       blankTiles
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles]);
+  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard, showTopMoves]);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -1049,8 +1052,9 @@ export default function Play() {
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
-    setSimulationResult(null);
     setSimulationProgress(0);
+    setPreviewBoard(null);
+    setPreviewMove(null);
     
     try {
       const gameState = {
@@ -1063,10 +1067,15 @@ export default function Play() {
         pool
       };
       
-      const result = await simulateMoveFunction(move, gameState, (progress) => {
+      const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
         setSimulationProgress(progress);
+        if (previewData) {
+          setPreviewBoard(previewData.board);
+          setPreviewMove(previewData.move);
+        }
       });
       setSimulationResult(result);
+      setMoveWithResults(move);
     } catch (error) {
       console.error('Error simulating move:', error);
       setSnackbarMessage('Error simulating move: ' + error.message);
@@ -1075,6 +1084,7 @@ export default function Play() {
     } finally {
       setSimulatingMove(null);
       setSimulationProgress(0);
+      // Don't clear previewBoard and previewMove here
     }
   };
 
@@ -1365,7 +1375,7 @@ export default function Play() {
         onStartGame={startBotGame}
       />
 
-      <TopMovesModal
+      <ChoicesModal
         open={showTopMoves}
         onClose={() => {
           setShowTopMoves(false);
@@ -1374,6 +1384,9 @@ export default function Play() {
           setSimulatingMove(null);
           setSimulationResult(null);
           setSimulationProgress(0);
+          setMoveWithResults(null);
+          setPreviewBoard(null);  // Clear preview board when modal closes
+          setPreviewMove(null);   // Clear preview move when modal closes
         }}
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
@@ -1383,6 +1396,13 @@ export default function Play() {
         simulatingMove={simulatingMove}
         simulationResult={simulationResult}
         simulationProgress={simulationProgress}
+        moveWithResults={moveWithResults}
+        previewBoard={previewBoard}
+        boardCoords={boardCoords}
+        theme={theme}
+        color={color}
+        complementaryColor={complementaryColor}
+        blankTiles={blankTiles}
       />
 
       <MoveHistoryModal
