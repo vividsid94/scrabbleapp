@@ -4,6 +4,7 @@ import Draggable from 'react-draggable';
 import Board from '../AppContent/Board/Board';
 import { createBoard } from '../../functions/boardFunctions';
 import styles from './ChoicesModal.module.css';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 const ChoicesModal = ({
   open,
@@ -113,7 +114,7 @@ const ChoicesModal = ({
                 pt: 1
               }}
             >
-              Top Moves
+              Choices
             </Typography>
 
             {previewBoard && (
@@ -196,24 +197,40 @@ const ChoicesModal = ({
                       </Box>
                       <Button
                         variant="contained"
-                        size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSimulate(move);
                         }}
                         disabled={simulatingMove !== null}
+                        startIcon={<PlayArrowIcon />}
                         sx={{
-                          bgcolor: '#4CAF50',
+                          background: 'linear-gradient(45deg, #4CAF50 30%, #45a049 90%)',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          textTransform: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          boxShadow: '0 3px 5px 2px rgba(76, 175, 80, .2)',
+                          transition: 'all 0.3s ease',
                           '&:hover': {
-                            bgcolor: '#388E3C',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 5px 8px 2px rgba(76, 175, 80, .3)',
+                            background: 'linear-gradient(45deg, #45a049 30%, #4CAF50 90%)',
                           },
-                          minWidth: '100px',
+                          '&:active': {
+                            transform: 'translateY(1px)',
+                            boxShadow: '0 2px 4px 1px rgba(76, 175, 80, .2)',
+                          },
+                          '&.Mui-disabled': {
+                            background: 'linear-gradient(45deg, #9E9E9E 30%, #757575 90%)',
+                            boxShadow: 'none',
+                          }
                         }}
                       >
                         {simulatingMove === move ? (
                           <CircularProgress size={20} color="inherit" />
                         ) : (
-                          'Small Sim'
+                          'Play it Out'
                         )}
                       </Button>
                     </Box>
