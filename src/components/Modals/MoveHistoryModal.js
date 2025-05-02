@@ -16,6 +16,51 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
   const formatMove = useMemo(() => (move) => {
     const { beforeBoard, afterBoard, player, score, rack, total } = move;
     console.log(move);
+
+    // Check if this is a pass move (no changes to the board)
+    const isPass = beforeBoard.every((row, i) => 
+      row.every((cell, j) => cell === afterBoard[i][j])
+    );
+
+    if (isPass) {
+      return {
+        display: (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ 
+              color: '#4B5563',
+              fontWeight: 500,
+              minWidth: '80px'
+            }}>
+              {player}
+            </Box>
+            <Box sx={{ 
+              color: '#4B5563',
+              fontWeight: 600,
+              minWidth: '100px'
+            }}>
+              Pass
+            </Box>
+            <Box sx={{ 
+              color: '#4CAF50',
+              fontWeight: 600,
+              minWidth: '60px'
+            }}>
+              {score}
+            </Box>
+            <Box sx={{ 
+              color: '#6B7280',
+              fontSize: '14px'
+            }}>
+              ({total})
+            </Box>
+          </Box>
+        ),
+        gcg: `${player}: ${rack} - +${score} ${total}`,
+        displayWord: 'Pass',
+        allWords: []
+      };
+    }
+
     // Find the first tile that changed
     let firstRow = -1;
     let firstCol = -1;
@@ -225,7 +270,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
               <TableCell sx={{ width: '40px', fontWeight: 600 }}>#</TableCell>
               <TableCell sx={{ width: '80px', fontWeight: 600 }}>Player</TableCell>
               <TableCell sx={{ width: '80px', fontWeight: 600 }}>Rack</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Words</TableCell>
+              <TableCell sx={{ width: '250px', fontWeight: 600 }}>Words</TableCell>
               <TableCell sx={{ width: '60px', fontWeight: 600 }}>Score</TableCell>
               <TableCell sx={{ width: '100px', fontWeight: 600 }}>Total</TableCell>
             </TableRow>
@@ -246,9 +291,36 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
                 >
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{move.player}</TableCell>
-                  <TableCell>{move.rack}</TableCell>
-                  <TableCell sx={{ maxWidth: '200px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                    {formattedMove.allWords.join(', ')}
+                  <TableCell>
+                    {move.player === 'SidBot' ? (
+                      <Box sx={{ 
+                        position: 'relative',
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 2px, #e0e0e0 2px, #e0e0e0 4px)',
+                          opacity: 1,
+                          borderRadius: '4px'
+                        }
+                      }}>
+                        {move.rack}
+                      </Box>
+                    ) : move.rack}
+                  </TableCell>
+                  <TableCell sx={{ maxWidth: '250px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    {formattedMove.displayWord === 'Pass' ? (
+                      <Box sx={{ 
+                        color: '#6B7280',
+                        fontSize: '1.2rem',
+                        fontWeight: 500
+                      }}>
+                        ×
+                      </Box>
+                    ) : formattedMove.allWords.join(', ')}
                   </TableCell>
                   <TableCell sx={{ color: '#4CAF50', fontWeight: 600 }}>{move.score}</TableCell>
                   <TableCell>
@@ -320,12 +392,14 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             mb: 2
           }}>
-            <Typography variant="h6" component="h2">
-              Move History
-            </Typography>
+            <Box>
+              <Typography variant="h6" component="h2">
+                Move History
+              </Typography>
+            </Box>
             {moves.length > 0 && (
               <Button
                 variant="outlined"
@@ -337,7 +411,9 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
               </Button>
             )}
           </Box>
-
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+            SidBot's racks are hidden. You can download the GCG file to view them, even during the game, if you like.
+          </Typography>
           {tableContent}
         </Box>
       </Box>

@@ -642,6 +642,16 @@ export default function Play() {
       return;
     }
 
+    // Add pass move to history
+    setMoveHistory(prev => [...prev, {
+      beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
+      afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for pass
+      player: currentPlayer === 1 ? player1Name : player2Name,
+      score: 0,
+      rack: currentPlayer === 1 ? alphabetizeRack(player1Rack).join('') : alphabetizeRack(player2Rack).join(''),
+      total: currentPlayer === 1 ? player1points : player2points
+    }]);
+
     // Switch to next player
     setCurrentPlayer(prev => prev === 1 ? 2 : 1);
     setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
