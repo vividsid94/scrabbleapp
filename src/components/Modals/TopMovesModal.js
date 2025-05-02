@@ -83,8 +83,10 @@ const TopMovesModal = ({
                         transform: 'translateY(-2px)',
                         boxShadow: 3
                       },
-                      background: hasSimulation ? 'rgba(76, 175, 80, 0.05)' : 'white'
+                      background: hasSimulation ? 'rgba(76, 175, 80, 0.05)' : 'white',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => onMoveSelect(move)}
                   >
                     <Box sx={{ 
                       display: 'flex', 
@@ -123,7 +125,10 @@ const TopMovesModal = ({
                       <Button
                         variant="outlined"
                         size="small"
-                        onClick={() => onSimulateMove(move)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSimulateMove(move);
+                        }}
                         disabled={isSimulating}
                         sx={{
                           borderColor: '#4CAF50',
