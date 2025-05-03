@@ -107,11 +107,13 @@ const ChoicesModal = ({
               sx={{
                 textAlign: 'center',
                 fontWeight: 'bold',
-                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                mb: 1,
-                pt: 0.5
+                mb: 2,
+                pt: 0.5,
+                fontSize: '1.75rem',
+                letterSpacing: '-0.5px'
               }}
             >
               Choices
