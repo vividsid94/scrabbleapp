@@ -207,26 +207,25 @@ const ChoicesModal = ({
                             onClose();
                           }}
                           sx={{
-                            background: 'linear-gradient(45deg, #2196F3 30%, #1976D2 90%)',
+                            background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
                             color: 'white',
-                            fontWeight: 'bold',
+                            fontWeight: 500,
                             textTransform: 'none',
-                            padding: '6px 12px',
+                            padding: '6px 16px',
                             borderRadius: '8px',
-                            boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .2)',
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 5px 8px 2px rgba(33, 150, 243, .3)',
-                              background: 'linear-gradient(45deg, #1976D2 30%, #2196F3 90%)',
+                              background: 'linear-gradient(135deg, #93B1FF 0%, #7F9CF5 100%)',
+                              transform: 'translateY(-2px) scale(1.02)',
+                              boxShadow: '0 4px 12px rgba(127, 156, 245, 0.3)',
                             },
                             '&:active': {
-                              transform: 'translateY(1px)',
-                              boxShadow: '0 2px 4px 1px rgba(33, 150, 243, .2)',
+                              transform: 'translateY(0) scale(0.98)',
+                              boxShadow: '0 2px 6px rgba(127, 156, 245, 0.2)',
                             }
                           }}
                         >
-                          Select Play
+                          Select
                         </Button>
                         <Button
                           variant="contained"
@@ -237,34 +236,30 @@ const ChoicesModal = ({
                           disabled={simulatingMove !== null}
                           startIcon={<PlayArrowIcon />}
                           sx={{
-                            background: 'linear-gradient(45deg, #4CAF50 30%, #45a049 90%)',
+                            background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
                             color: 'white',
-                            fontWeight: 'bold',
+                            fontWeight: 500,
                             textTransform: 'none',
-                            padding: '6px 12px',
+                            padding: '6px 16px',
                             borderRadius: '8px',
-                            boxShadow: '0 3px 5px 2px rgba(76, 175, 80, .2)',
-                            transition: 'all 0.3s ease',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 5px 8px 2px rgba(76, 175, 80, .3)',
-                              background: 'linear-gradient(45deg, #45a049 30%, #4CAF50 90%)',
+                              background: 'linear-gradient(135deg, #93B1FF 0%, #7F9CF5 100%)',
+                              transform: 'translateY(-2px) scale(1.02)',
+                              boxShadow: '0 4px 12px rgba(127, 156, 245, 0.3)',
                             },
                             '&:active': {
-                              transform: 'translateY(1px)',
-                              boxShadow: '0 2px 4px 1px rgba(76, 175, 80, .2)',
+                              transform: 'translateY(0) scale(0.98)',
+                              boxShadow: '0 2px 6px rgba(127, 156, 245, 0.2)',
                             },
                             '&.Mui-disabled': {
-                              background: 'linear-gradient(45deg, #9E9E9E 30%, #757575 90%)',
-                              boxShadow: 'none',
+                              background: 'linear-gradient(135deg, #E2E8F0 0%, #CBD5E0 100%)',
+                              color: 'rgba(0, 0, 0, 0.26)',
+                              boxShadow: 'none'
                             }
                           }}
                         >
-                          {simulatingMove === move ? (
-                            <CircularProgress size={20} color="inherit" />
-                          ) : (
-                            'Play it Out'
-                          )}
+                          Play It Out
                         </Button>
                       </Box>
                     </Box>
