@@ -183,7 +183,6 @@
 }
 
 .playerPanel{
-  width: 380px;
   height: auto;
   padding: 10px 0px;
   background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
@@ -220,6 +219,7 @@
 }
 
 .playerToggle {
+  height: auto;
   display: flex;
   gap: 8px;
   justify-content: center;
@@ -233,6 +233,7 @@
 
 
 .rightPanel{
+  width: 380px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -314,12 +315,6 @@
 }
 
 @media screen and (max-width: 992px) {
-  .rightPanel{
-    padding: 24px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-  }
   .mainPanel{
     display: flex;
     flex-direction: column;
@@ -328,32 +323,12 @@
   .page{
     margin-top: 100px;
   }
-  .playerPanel {
-    width: 90vw;
-  }
 }
 
 @media screen and (max-width: 676px) {
-  .rightPanel{
-    padding: 0px 0px 24px 0px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-  }
-  .playerToggle {
-    padding: auto;
-    height: 15px;
-  }
-  .playerToggle svg{
-    font-size: 20px !important
-  }
+
   .questionMark{
     display: none;
-  }
-  .topPlayerPanel{
-    padding-bottom: 12px;
-    padding-right: 0px;
-    height: 225px;
   }
   .title{
     margin: auto;
@@ -362,15 +337,6 @@
   .page{
     margin-top: 80px;
   }
-  .playerPanels {
-    max-width: 100%;
-    padding: 12px;
-  }
-  
-  .playerPanel {
-    padding: 4px;
-  }
-  
   .playerName {
     font-size: 12px;
   }
