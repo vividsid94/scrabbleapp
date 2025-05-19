@@ -23,7 +23,8 @@ const ChoicesModal = ({
   theme = "STANDARD",
   color = { current: '#6D84A2' },
   complementaryColor = { current: '#9F7A83' },
-  blankTiles = []
+  blankTiles = [],
+  leaveValues = {}
 }) => {
   const modalRef = useRef(null);
 
@@ -64,7 +65,7 @@ const ChoicesModal = ({
       <Box
         sx={{
           position: 'relative',
-          width: '500px',
+          width: '800px',
           maxHeight: '80vh',
           bgcolor: 'background.paper',
           borderRadius: 2,
@@ -159,7 +160,13 @@ const ChoicesModal = ({
               </Box>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {topMoves.map((move, index) => (
+                {topMoves
+                  .map(move => ({
+                    ...move,
+                    totalValue: move.score + (leaveValues[move.word] || 0)
+                  }))
+                  .sort((a, b) => b.totalValue - a.totalValue)
+                  .map((move, index) => (
                   <Paper
                     key={index}
                     elevation={2}
@@ -185,20 +192,100 @@ const ChoicesModal = ({
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 'medium', minWidth: '120px' }}>
                           {move.startPosition} {move.direction === 'right' ? '→' : '↓'} {move.word}
                         </Typography>
-                        <Typography 
-                          variant="body1" 
-                          sx={{ 
-                            color: '#4CAF50',
-                            fontWeight: 'bold',
-                            ml: 0.5
-                          }}
-                        >
-                          ({move.score} points)
-                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              color: '#4CAF50',
+                              fontWeight: 'bold',
+                              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
+                              padding: '3px 6px',
+                              borderRadius: '6px',
+                              minWidth: '70px',
+                              textAlign: 'center',
+                              boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
+                              border: '1px solid rgba(76, 175, 80, 0.2)',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.2) 100%)',
+                                boxShadow: '0 4px 8px rgba(76, 175, 80, 0.15)',
+                                transform: 'translateY(-1px)'
+                              }
+                            }}
+                          >
+                            {move.score} pts
+                          </Typography>
+                          {leaveValues[move.word] && (
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                color: '#2196F3',
+                                fontWeight: 'bold',
+                                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%)',
+                                padding: '3px 6px',
+                                borderRadius: '6px',
+                                minWidth: '90px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px',
+                                boxShadow: '0 2px 4px rgba(33, 150, 243, 0.1)',
+                                border: '1px solid rgba(33, 150, 243, 0.2)',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': {
+                                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.2) 100%)',
+                                  boxShadow: '0 4px 8px rgba(33, 150, 243, 0.15)',
+                                  transform: 'translateY(-1px)'
+                                }
+                              }}
+                            >
+                              <span style={{ 
+                                color: '#1565C0',
+                                fontSize: '0.9rem',
+                                letterSpacing: '0.3px'
+                              }}>{move.leave}</span>
+                              <span style={{ 
+                                width: '1px',
+                                height: '14px',
+                                background: 'linear-gradient(to bottom, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.4), rgba(33, 150, 243, 0.2))',
+                                margin: '0 2px'
+                              }}></span>
+                              <span style={{ 
+                                color: leaveValues[move.word] < 0 ? '#d32f2f' : '#2e7d32',
+                                fontSize: '0.9rem',
+                                letterSpacing: '0.3px',
+                                fontWeight: 'bold'
+                              }}>{leaveValues[move.word].toFixed(1)}</span>
+                            </Typography>
+                          )}
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              color: '#9C27B0',
+                              fontWeight: 'bold',
+                              background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.15) 100%)',
+                              padding: '3px 6px',
+                              borderRadius: '6px',
+                              minWidth: '70px',
+                              textAlign: 'center',
+                              boxShadow: '0 2px 4px rgba(156, 39, 176, 0.1)',
+                              border: '1px solid rgba(156, 39, 176, 0.2)',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(156, 39, 176, 0.2) 100%)',
+                                boxShadow: '0 4px 8px rgba(156, 39, 176, 0.15)',
+                                transform: 'translateY(-1px)'
+                              }
+                            }}
+                          >
+                            {move.totalValue.toFixed(1)} eq
+                          </Typography>
+                        </Box>
                       </Box>
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         <Button
@@ -209,21 +296,24 @@ const ChoicesModal = ({
                             onClose();
                           }}
                           sx={{
-                            background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
-                            color: 'white',
-                            fontWeight: 500,
+                            background: 'linear-gradient(135deg, rgba(97, 97, 97, 0.15) 0%, rgba(97, 97, 97, 0.2) 100%)',
+                            color: '#616161',
+                            fontWeight: 'bold',
                             textTransform: 'none',
-                            padding: '6px 16px',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            padding: '3px 12px',
+                            borderRadius: '6px',
+                            minWidth: '70px',
+                            boxShadow: '0 2px 4px rgba(97, 97, 97, 0.1)',
+                            border: '1px solid rgba(97, 97, 97, 0.3)',
+                            transition: 'all 0.2s ease-in-out',
                             '&:hover': {
-                              background: 'linear-gradient(135deg, #93B1FF 0%, #7F9CF5 100%)',
-                              transform: 'translateY(-2px) scale(1.02)',
-                              boxShadow: '0 4px 12px rgba(127, 156, 245, 0.3)',
+                              background: 'linear-gradient(135deg, rgba(97, 97, 97, 0.2) 0%, rgba(97, 97, 97, 0.25) 100%)',
+                              boxShadow: '0 4px 8px rgba(97, 97, 97, 0.15)',
+                              transform: 'translateY(-1px)'
                             },
                             '&:active': {
-                              transform: 'translateY(0) scale(0.98)',
-                              boxShadow: '0 2px 6px rgba(127, 156, 245, 0.2)',
+                              transform: 'translateY(0)',
+                              boxShadow: '0 2px 4px rgba(97, 97, 97, 0.1)'
                             }
                           }}
                         >
@@ -236,27 +326,31 @@ const ChoicesModal = ({
                             handleSimulate(move);
                           }}
                           disabled={simulatingMove !== null}
-                          startIcon={<PlayArrowIcon />}
+                          startIcon={<PlayArrowIcon sx={{ fontSize: '1.1rem' }} />}
                           sx={{
-                            background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
-                            color: 'white',
-                            fontWeight: 500,
+                            background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.15) 0%, rgba(66, 66, 66, 0.2) 100%)',
+                            color: '#424242',
+                            fontWeight: 'bold',
                             textTransform: 'none',
-                            padding: '6px 16px',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            padding: '3px 12px',
+                            borderRadius: '6px',
+                            minWidth: '100px',
+                            boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)',
+                            border: '1px solid rgba(66, 66, 66, 0.3)',
+                            transition: 'all 0.2s ease-in-out',
                             '&:hover': {
-                              background: 'linear-gradient(135deg, #93B1FF 0%, #7F9CF5 100%)',
-                              transform: 'translateY(-2px) scale(1.02)',
-                              boxShadow: '0 4px 12px rgba(127, 156, 245, 0.3)',
+                              background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.2) 0%, rgba(66, 66, 66, 0.25) 100%)',
+                              boxShadow: '0 4px 8px rgba(66, 66, 66, 0.15)',
+                              transform: 'translateY(-1px)'
                             },
                             '&:active': {
-                              transform: 'translateY(0) scale(0.98)',
-                              boxShadow: '0 2px 6px rgba(127, 156, 245, 0.2)',
+                              transform: 'translateY(0)',
+                              boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)'
                             },
                             '&.Mui-disabled': {
-                              background: 'linear-gradient(135deg, #E2E8F0 0%, #CBD5E0 100%)',
+                              background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%)',
                               color: 'rgba(0, 0, 0, 0.26)',
+                              border: '1px solid rgba(0, 0, 0, 0.1)',
                               boxShadow: 'none'
                             }
                           }}

@@ -70,6 +70,7 @@ export default function Play() {
   const [previewBoard, setPreviewBoard] = useState(null);
   const [previewMove, setPreviewMove] = useState(null);
   const [moveWithResults, setMoveWithResults] = useState(null);
+  const [leaveValues, setLeaveValues] = useState({});
   
   // Add audio refs
   const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
@@ -1086,6 +1087,66 @@ export default function Play() {
     }
   };
 
+  const calculateLeave = (move) => {
+    // Create a copy of the current rack
+    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+    const rackCopy = [...currentRack];
+    
+    // Remove tiles used in the move
+    for (const tile of move.tiles) {
+      if (tile.isNew) {
+        const tileIndex = tile.isBlank ? rackCopy.indexOf('*') : rackCopy.indexOf(tile.letter);
+        if (tileIndex !== -1) {
+          rackCopy.splice(tileIndex, 1);
+        }
+      }
+    }
+    
+    // Sort the remaining tiles to create the leave
+    return rackCopy.sort().join('');
+  };
+
+  const fetchLeaveValues = async (moves) => {
+    try {
+      // Calculate leave values for each move
+      const leaveValues = {};
+      
+      for (const move of moves) {
+        const leave = calculateLeave(move);
+        leaveValues[move.word] = leave;
+        move.leave = leave; // Add leave to the move object
+      }
+
+      console.log('Calculated leave values:', leaveValues);
+      
+      const response = await fetch('/.netlify/functions/getLeaveValues', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ leaves: leaveValues }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch leave values');
+      }
+
+      const data = await response.json();
+      console.log('Received leave values:', data.leaveValues);
+      setLeaveValues(data.leaveValues);
+    } catch (error) {
+      console.error('Error fetching leave values:', error);
+    }
+  };
+
+  // Modify the existing code that sets topMoves to also fetch leave values
+  useEffect(() => {
+    if (topMoves.length > 0) {
+      console.log('Top moves updated, fetching leave values');
+      fetchLeaveValues(topMoves);
+    }
+  }, [topMoves]);
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -1375,8 +1436,9 @@ export default function Play() {
           setSimulationResult(null);
           setSimulationProgress(0);
           setMoveWithResults(null);
-          setPreviewBoard(null);  // Clear preview board when modal closes
-          setPreviewMove(null);   // Clear preview move when modal closes
+          setPreviewBoard(null);
+          setPreviewMove(null);
+          setLeaveValues({}); // Clear leave values when modal closes
         }}
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
@@ -1393,6 +1455,7 @@ export default function Play() {
         color={color}
         complementaryColor={complementaryColor}
         blankTiles={blankTiles}
+        leaveValues={leaveValues}
       />
 
       <MoveHistoryModal
