@@ -1110,30 +1110,46 @@ export default function Play() {
     try {
       // Calculate leave values for each move
       const leaveValues = {};
+      const uniqueLeaves = new Set();
       
       for (const move of moves) {
         const leave = calculateLeave(move);
         leaveValues[move.word] = leave;
         move.leave = leave; // Add leave to the move object
+        uniqueLeaves.add(leave);
       }
 
-      console.log('Calculated leave values:', leaveValues);
-      
-      const response = await fetch('/.netlify/functions/getLeaveValues', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ leaves: leaveValues }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch leave values');
+      // Only fetch if we have new leaves that aren't already in our state
+      const newLeaves = {};
+      for (const [word, leave] of Object.entries(leaveValues)) {
+        if (!leaveValues[word] || !leaveValues[word].value) {
+          newLeaves[word] = leave;
+        }
       }
 
-      const data = await response.json();
-      console.log('Received leave values:', data.leaveValues);
-      setLeaveValues(data.leaveValues);
+      if (Object.keys(newLeaves).length > 0) {
+        console.log('Fetching leave values for new leaves:', newLeaves);
+        const response = await fetch('/.netlify/functions/getLeaveValues', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ leaves: newLeaves }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch leave values');
+        }
+
+        const data = await response.json();
+        console.log('Received leave values:', data.leaveValues);
+        
+        // Merge new leave values with existing ones
+        setLeaveValues(prev => ({
+          ...prev,
+          ...data.leaveValues
+        }));
+      }
     } catch (error) {
       console.error('Error fetching leave values:', error);
     }
@@ -1438,7 +1454,8 @@ export default function Play() {
           setMoveWithResults(null);
           setPreviewBoard(null);
           setPreviewMove(null);
-          setLeaveValues({}); // Clear leave values when modal closes
+          // Don't clear leave values when modal closes
+          // setLeaveValues({});
         }}
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}

@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Cache for leave values
+const leaveCache = new Map();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
 exports.handler = async function(event, context) {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -33,25 +37,59 @@ exports.handler = async function(event, context) {
     const uniqueLeaves = [...new Set(Object.values(leaves))].sort();
     console.log('Unique leaves:', uniqueLeaves);
 
-    // Fetch leave values for the given leaves
-    const { data, error } = await supabase
-      .from('quackle_leaves')
-      .select('leave, value')
-      .in('leave', uniqueLeaves);
+    // Check cache first
+    const uncachedLeaves = uniqueLeaves.filter(leave => {
+      const cached = leaveCache.get(leave);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return false;
+      }
+      return true;
+    });
 
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
+    let leaveValues = {};
+    
+    // If we have uncached leaves, fetch them from the database
+    if (uncachedLeaves.length > 0) {
+      const { data, error } = await supabase
+        .from('quackle_leaves')
+        .select('leave, value')
+        .in('leave', uncachedLeaves);
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      // Update cache with new values
+      data.forEach(item => {
+        leaveCache.set(item.leave, {
+          value: item.value,
+          timestamp: Date.now()
+        });
+      });
     }
 
-    console.log('Retrieved data from Supabase:', data);
-
-    // Convert the array of objects to a map of word -> leave_value
-    const leaveValues = {};
+    // Build response using cache
     for (const [word, leave] of Object.entries(leaves)) {
-      const leaveData = data.find(d => d.leave === leave);
-      if (leaveData) {
-        leaveValues[word] = leaveData.value;
+      const cached = leaveCache.get(leave);
+      if (cached) {
+        leaveValues[word] = cached.value;
+      } else {
+        // If not in cache, try to fetch it directly
+        const { data, error } = await supabase
+          .from('quackle_leaves')
+          .select('value')
+          .eq('leave', leave)
+          .single();
+
+        if (!error && data) {
+          leaveValues[word] = data.value;
+          // Cache the value for future use
+          leaveCache.set(leave, {
+            value: data.value,
+            timestamp: Date.now()
+          });
+        }
       }
     }
 
