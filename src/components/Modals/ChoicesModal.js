@@ -41,6 +41,23 @@ const ChoicesModal = ({
     }
   };
 
+  const handleMoveSelect = (move) => {
+    if (move.isExchange) {
+      // For exchange moves, just select the tiles to exchange
+      onMoveSelect({
+        ...move,
+        tiles: move.tiles.map(tile => ({
+          ...tile,
+          isNew: true
+        }))
+      });
+    } else {
+      // For regular moves, use the existing logic
+      onMoveSelect(move);
+    }
+    onClose();
+  };
+
   const board = createBoard(
     previewBoard || boardCoords,
     [],
@@ -163,7 +180,9 @@ const ChoicesModal = ({
                 {topMoves
                   .map(move => ({
                     ...move,
-                    totalValue: move.score + (leaveValues[move.word] || 0)
+                    totalValue: move.isExchange ? 
+                      (leaveValues[move.leave] || 0) : // For exchanges, total value is just the leave value
+                      (move.score + (leaveValues[move.word] || 0)) // For regular moves, add score and leave value
                   }))
                   .sort((a, b) => b.totalValue - a.totalValue)
                   .map((move, index) => (
@@ -186,40 +205,43 @@ const ChoicesModal = ({
                       backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.1)' : 'white',
                       overflow: 'visible'
                     }}
-                    onClick={() => {
-                      onMoveSelect(move);
-                      onClose();
-                    }}
+                    onClick={() => handleMoveSelect(move)}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
                         <Typography variant="body1" sx={{ fontWeight: 'medium', minWidth: '120px' }}>
-                          {move.startPosition} {move.direction === 'right' ? '→' : '↓'} {move.word}
+                          {move.isExchange ? (
+                            `Exchange ${move.tiles.map(t => t.letter).join('')}`
+                          ) : (
+                            `${move.startPosition} ${move.direction === 'right' ? '→' : '↓'} ${move.word}`
+                          )}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              color: '#4CAF50',
-                              fontWeight: 'bold',
-                              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
-                              padding: '3px 6px',
-                              borderRadius: '6px',
-                              minWidth: '70px',
-                              textAlign: 'center',
-                              boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
-                              border: '1px solid rgba(76, 175, 80, 0.2)',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.2) 100%)',
-                                boxShadow: '0 4px 8px rgba(76, 175, 80, 0.15)',
-                                transform: 'translateY(-1px)'
-                              }
-                            }}
-                          >
-                            {move.score} pts
-                          </Typography>
-                          {leaveValues[move.word] && (
+                          {!move.isExchange && (
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                color: '#4CAF50',
+                                fontWeight: 'bold',
+                                background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
+                                padding: '3px 6px',
+                                borderRadius: '6px',
+                                minWidth: '70px',
+                                textAlign: 'center',
+                                boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
+                                border: '1px solid rgba(76, 175, 80, 0.2)',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': {
+                                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.2) 100%)',
+                                  boxShadow: '0 4px 8px rgba(76, 175, 80, 0.15)',
+                                  transform: 'translateY(-1px)'
+                                }
+                              }}
+                            >
+                              {move.score} pts
+                            </Typography>
+                          )}
+                          {leaveValues[move.isExchange ? move.leave : move.word] !== undefined && (
                             <Typography 
                               variant="body1" 
                               sx={{ 
@@ -256,11 +278,11 @@ const ChoicesModal = ({
                                 margin: '0 2px'
                               }}></span>
                               <span style={{ 
-                                color: leaveValues[move.word] < 0 ? '#d32f2f' : '#2e7d32',
+                                color: leaveValues[move.isExchange ? move.leave : move.word] < 0 ? '#d32f2f' : '#2e7d32',
                                 fontSize: '0.9rem',
                                 letterSpacing: '0.3px',
                                 fontWeight: 'bold'
-                              }}>{leaveValues[move.word].toFixed(1)}</span>
+                              }}>{leaveValues[move.isExchange ? move.leave : move.word].toFixed(1)}</span>
                             </Typography>
                           )}
                           <Typography 
@@ -292,8 +314,7 @@ const ChoicesModal = ({
                           variant="contained"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onMoveSelect(move);
-                            onClose();
+                            handleMoveSelect(move);
                           }}
                           sx={{
                             background: 'linear-gradient(135deg, rgba(97, 97, 97, 0.15) 0%, rgba(97, 97, 97, 0.2) 100%)',
@@ -317,46 +338,48 @@ const ChoicesModal = ({
                             }
                           }}
                         >
-                          Select
+                          {move.isExchange ? 'Exchange' : 'Select'}
                         </Button>
-                        <Button
-                          variant="contained"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSimulate(move);
-                          }}
-                          disabled={simulatingMove !== null}
-                          startIcon={<PlayArrowIcon sx={{ fontSize: '1.1rem' }} />}
-                          sx={{
-                            background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.15) 0%, rgba(66, 66, 66, 0.2) 100%)',
-                            color: '#424242',
-                            fontWeight: 'bold',
-                            textTransform: 'none',
-                            padding: '3px 12px',
-                            borderRadius: '6px',
-                            minWidth: '100px',
-                            boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)',
-                            border: '1px solid rgba(66, 66, 66, 0.3)',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.2) 0%, rgba(66, 66, 66, 0.25) 100%)',
-                              boxShadow: '0 4px 8px rgba(66, 66, 66, 0.15)',
-                              transform: 'translateY(-1px)'
-                            },
-                            '&:active': {
-                              transform: 'translateY(0)',
-                              boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)'
-                            },
-                            '&.Mui-disabled': {
-                              background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%)',
-                              color: 'rgba(0, 0, 0, 0.26)',
-                              border: '1px solid rgba(0, 0, 0, 0.1)',
-                              boxShadow: 'none'
-                            }
-                          }}
-                        >
-                          Play It Out
-                        </Button>
+                        {!move.isExchange && (
+                          <Button
+                            variant="contained"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSimulate(move);
+                            }}
+                            disabled={simulatingMove !== null}
+                            startIcon={<PlayArrowIcon sx={{ fontSize: '1.1rem' }} />}
+                            sx={{
+                              background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.15) 0%, rgba(66, 66, 66, 0.2) 100%)',
+                              color: '#424242',
+                              fontWeight: 'bold',
+                              textTransform: 'none',
+                              padding: '3px 12px',
+                              borderRadius: '6px',
+                              minWidth: '100px',
+                              boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)',
+                              border: '1px solid rgba(66, 66, 66, 0.3)',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.2) 0%, rgba(66, 66, 66, 0.25) 100%)',
+                                boxShadow: '0 4px 8px rgba(66, 66, 66, 0.15)',
+                                transform: 'translateY(-1px)'
+                              },
+                              '&:active': {
+                                transform: 'translateY(0)',
+                                boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)'
+                              },
+                              '&.Mui-disabled': {
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%)',
+                                color: 'rgba(0, 0, 0, 0.26)',
+                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                boxShadow: 'none'
+                              }
+                            }}
+                          >
+                            Play It Out
+                          </Button>
+                        )}
                       </Box>
                     </Box>
 

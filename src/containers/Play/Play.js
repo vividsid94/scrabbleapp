@@ -690,9 +690,41 @@ export default function Play() {
     }
   };
 
+  const generateExchangeCombinations = (rack) => {
+    const combinations = [];
+    // Generate all possible combinations of 1-7 tiles
+    for (let i = 1; i <= Math.min(rack.length, 7); i++) {
+      const generateCombos = (current, start, remaining) => {
+        if (current.length === i) {
+          combinations.push([...current]);
+          return;
+        }
+        for (let j = start; j < remaining.length; j++) {
+          current.push(remaining[j]);
+          generateCombos(current, j + 1, remaining);
+          current.pop();
+        }
+      };
+      generateCombos([], 0, rack);
+    }
+    return combinations;
+  };
+
+  const calculateExchangeLeave = (rack, tilesToExchange) => {
+    const rackCopy = [...rack];
+    // Remove tiles that would be exchanged
+    for (const tile of tilesToExchange) {
+      const index = rackCopy.indexOf(tile);
+      if (index !== -1) {
+        rackCopy.splice(index, 1);
+      }
+    }
+    return rackCopy.sort().join('');
+  };
+
   const handleGetTopMoves = async () => {
     setIsLoadingTopMoves(true);
-    setShowTopMoves(true); // Show modal immediately when lightbulb is clicked
+    setShowTopMoves(true);
     try {
       // Get the current rack
       const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -702,7 +734,6 @@ export default function Play() {
       for (let row = 0; row < 15; row++) {
         for (let col = 0; col < 15; col++) {
           if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-            // If the tile was a blank, we need to get the original blank tile back
             const tileIndex = selectedTiles.findIndex(t => t === '*');
             if (tileIndex !== -1) {
               uncommittedTiles.push('*');
@@ -729,7 +760,6 @@ export default function Play() {
       // Convert any '?' in the rack to '*' for the API
       const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
       
-      console.log('Getting top moves for rack:', apiRack);
       const response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
@@ -746,7 +776,6 @@ export default function Play() {
       }
 
       const data = await response.json();
-      console.log('Top moves API response:', data);
       
       // Check if this is the first load (dictionary loading)
       if (data.message && data.message.includes('Loading dictionary')) {
@@ -759,13 +788,48 @@ export default function Play() {
       }
       
       setIsDictionaryLoading(false);
-      setTopMoves(data.moves);
+
+      // Generate exchange moves
+      const exchangeCombinations = generateExchangeCombinations(newRack);
+      const exchangeMoves = exchangeCombinations.map(tiles => {
+        const leave = calculateExchangeLeave(newRack, tiles);
+        return {
+          word: `Exchange ${tiles.join('')}`,
+          score: 0,
+          tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
+          direction: 'exchange',
+          startPosition: 'Exchange',
+          leave: leave,
+          isExchange: true
+        };
+      });
+
+      // First, fetch leave values for all moves
+      const allMoves = [...data.moves, ...exchangeMoves];
+      const updatedLeaveValues = await fetchLeaveValues(allMoves);
+
+      // Then calculate total values and sort
+      const topFifteenMoves = allMoves
+        .map(move => {
+          const leaveValue = updatedLeaveValues[move.leave] || 0;
+          const totalValue = move.isExchange ? 
+            leaveValue : // For exchanges, total value is just the leave value
+            (move.score + leaveValue); // For regular moves, add score and leave value
+          return {
+            ...move,
+            totalValue
+          };
+        })
+        .sort((a, b) => b.totalValue - a.totalValue)
+        .slice(0, 15);
+
+      setTopMoves(topFifteenMoves);
     } catch (error) {
       console.error('Error getting top moves:', error);
       setSnackbarMessage('Error getting top moves: ' + error.message);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
-      setShowTopMoves(false); // Close modal on error
+      setShowTopMoves(false);
     } finally {
       setIsLoadingTopMoves(false);
     }
@@ -1095,6 +1159,7 @@ export default function Play() {
     // Remove tiles used in the move
     for (const tile of move.tiles) {
       if (tile.isNew) {
+        // For blank tiles, we need to find the blank in the rack
         const tileIndex = tile.isBlank ? rackCopy.indexOf('*') : rackCopy.indexOf(tile.letter);
         if (tileIndex !== -1) {
           rackCopy.splice(tileIndex, 1);
@@ -1109,32 +1174,29 @@ export default function Play() {
   const fetchLeaveValues = async (moves) => {
     try {
       // Calculate leave values for each move
-      const leaveValues = {};
-      const uniqueLeaves = new Set();
+      const leavesToFetch = new Map();
+      const leavesArray = [];
       
       for (const move of moves) {
-        const leave = calculateLeave(move);
-        leaveValues[move.word] = leave;
-        move.leave = leave; // Add leave to the move object
-        uniqueLeaves.add(leave);
-      }
-
-      // Only fetch if we have new leaves that aren't already in our state
-      const newLeaves = {};
-      for (const [word, leave] of Object.entries(leaveValues)) {
-        if (!leaveValues[word] || !leaveValues[word].value) {
-          newLeaves[word] = leave;
+        // For regular moves, calculate the leave after playing the word
+        const leaveStr = move.isExchange ? move.leave : calculateLeave(move);
+        move.leave = leaveStr; // Add leave to the move object
+        
+        // Only fetch if we don't already have this leave value
+        if (!leaveValues[leaveStr]) {
+          leavesToFetch.set(leaveStr, true);
+          leavesArray.push(leaveStr);
         }
       }
 
-      if (Object.keys(newLeaves).length > 0) {
-        console.log('Fetching leave values for new leaves:', newLeaves);
+      // Only make the API call if we have new leaves to fetch
+      if (leavesToFetch.size > 0) {
         const response = await fetch('/.netlify/functions/getLeaveValues', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ leaves: newLeaves }),
+          body: JSON.stringify({ leaves: leavesArray }),
         });
 
         if (!response.ok) {
@@ -1142,16 +1204,36 @@ export default function Play() {
         }
 
         const data = await response.json();
-        console.log('Received leave values:', data.leaveValues);
+        
+        // Update the leaveValues state with the new values
+        const newLeaveValues = {};
+        if (data.leaveValues) {
+          // Map the numeric indices back to the actual leave strings
+          for (let i = 0; i < leavesArray.length; i++) {
+            const leave = leavesArray[i];
+            const value = data.leaveValues[i];
+            if (typeof value === 'number') {
+              newLeaveValues[leave] = value;
+            }
+          }
+        }
         
         // Merge new leave values with existing ones
-        setLeaveValues(prev => ({
-          ...prev,
-          ...data.leaveValues
-        }));
+        const updatedLeaveValues = {
+          ...leaveValues,
+          ...newLeaveValues
+        };
+        setLeaveValues(updatedLeaveValues);
+
+        // Return the updated leave values for immediate use
+        return updatedLeaveValues;
       }
+
+      // If no new leaves to fetch, return current leave values
+      return leaveValues;
     } catch (error) {
       console.error('Error fetching leave values:', error);
+      return leaveValues;
     }
   };
 
