@@ -73,9 +73,24 @@ export default function Play() {
   const [leaveValues, setLeaveValues] = useState({});
   
   // Add audio refs
-  const playerMoveSound = useRef(new Audio('/sounds/player-move.mp3'));
-  const botMoveSound = useRef(new Audio('/sounds/bot-move.mp3'));
   const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
+
+  // Add state for move sound selection
+  const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
+  const [botMoveSoundType, setBotMoveSoundType] = useState('classic');
+
+  // Update audio refs to use selected sound
+  const playerMoveSound = useRef(new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
+  const botMoveSound = useRef(new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
+
+  // Update audio refs when sound type changes
+  useEffect(() => {
+    playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+  }, [playerMoveSoundType]);
+
+  useEffect(() => {
+    botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+  }, [botMoveSoundType]);
 
   const alphabetizeRack = (rack) => {
     return [...rack].sort((a, b) => a.localeCompare(b));
@@ -1498,6 +1513,28 @@ export default function Play() {
                 <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
                   <option value="STANDARD">Standard</option>
                   <option value="FULLBOARD">Full Board</option>
+                </select>
+              </Box>
+              <Box className={styles.modalContainer__dictionary}>
+                Player Move Sound
+                <select
+                  className={styles.styleSelection}
+                  value={playerMoveSoundType}
+                  onChange={e => setPlayerMoveSoundType(e.target.value)}
+                >
+                  <option value="classic">Classic</option>
+                  <option value="sword">Sword</option>
+                </select>
+              </Box>
+              <Box className={styles.modalContainer__dictionary}>
+                Bot Move Sound
+                <select
+                  className={styles.styleSelection}
+                  value={botMoveSoundType}
+                  onChange={e => setBotMoveSoundType(e.target.value)}
+                >
+                  <option value="classic">Classic</option>
+                  <option value="sword">Sword</option>
                 </select>
               </Box>
             </Box>
