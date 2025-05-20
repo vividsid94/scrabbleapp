@@ -815,6 +815,7 @@ export default function Play() {
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
             (move.score + leaveValue); // For regular moves, add score and leave value
+          console.log('Move:', move.word, 'Leave:', move.leave, 'Leave Value:', leaveValue, 'Total Value:', totalValue);
           return {
             ...move,
             totalValue
@@ -1168,7 +1169,9 @@ export default function Play() {
     }
     
     // Sort the remaining tiles to create the leave
-    return rackCopy.sort().join('');
+    const leave = rackCopy.sort().join('');
+    console.log('Calculated leave for move:', move.word, 'Leave:', leave);
+    return leave;
   };
 
   const fetchLeaveValues = async (moves) => {
@@ -1189,6 +1192,8 @@ export default function Play() {
         }
       }
 
+      console.log('Leaves to fetch:', leavesArray);
+
       // Only make the API call if we have new leaves to fetch
       if (leavesToFetch.size > 0) {
         const response = await fetch('/.netlify/functions/getLeaveValues', {
@@ -1204,6 +1209,7 @@ export default function Play() {
         }
 
         const data = await response.json();
+        console.log('Leave values from API:', data.leaveValues);
         
         // Update the leaveValues state with the new values
         const newLeaveValues = {};
@@ -1223,6 +1229,7 @@ export default function Play() {
           ...leaveValues,
           ...newLeaveValues
         };
+        console.log('Updated leave values:', updatedLeaveValues);
         setLeaveValues(updatedLeaveValues);
 
         // Return the updated leave values for immediate use

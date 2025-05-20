@@ -182,7 +182,7 @@ const ChoicesModal = ({
                     ...move,
                     totalValue: move.isExchange ? 
                       (leaveValues[move.leave] || 0) : // For exchanges, total value is just the leave value
-                      (move.score + (leaveValues[move.word] || 0)) // For regular moves, add score and leave value
+                      (move.score + (leaveValues[move.leave] || 0)) // For regular moves, add score and leave value
                   }))
                   .sort((a, b) => b.totalValue - a.totalValue)
                   .map((move, index) => (
@@ -241,7 +241,7 @@ const ChoicesModal = ({
                               {move.score} pts
                             </Typography>
                           )}
-                          {leaveValues[move.isExchange ? move.leave : move.word] !== undefined && (
+                          {leaveValues[move.leave] !== undefined && (
                             <Typography 
                               variant="body1" 
                               sx={{ 
@@ -278,11 +278,11 @@ const ChoicesModal = ({
                                 margin: '0 2px'
                               }}></span>
                               <span style={{ 
-                                color: leaveValues[move.isExchange ? move.leave : move.word] < 0 ? '#d32f2f' : '#2e7d32',
+                                color: leaveValues[move.leave] < 0 ? '#d32f2f' : '#2e7d32',
                                 fontSize: '0.9rem',
                                 letterSpacing: '0.3px',
                                 fontWeight: 'bold'
-                              }}>{leaveValues[move.isExchange ? move.leave : move.word].toFixed(1)}</span>
+                              }}>{leaveValues[move.leave].toFixed(1)}</span>
                             </Typography>
                           )}
                           <Typography 
