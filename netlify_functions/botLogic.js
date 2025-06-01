@@ -61,8 +61,49 @@ exports.handler = async function (event) {
       console.log('Dictionary loaded and cached');
     }
 
+    // Get all possible moves
     const allMoves = generateMoves(board, letters, [], cachedTrie);
-    const sortedMoves = allMoves.sort((a, b) => b.score - a.score);
+
+    // Generate exchange moves
+    const exchangeMoves = [];
+    // Generate all possible combinations of 1-7 tiles
+    for (let i = 1; i <= Math.min(letters.length, 7); i++) {
+      const generateCombos = (current, start, remaining) => {
+        if (current.length === i) {
+          const leave = remaining.sort().join('');
+          exchangeMoves.push({
+            word: `Exchange ${current.join('')}`,
+            score: 0,
+            tiles: current.map(letter => ({ letter, isNew: false })),
+            direction: 'exchange',
+            startPosition: 'Exchange',
+            leave: leave,
+            isExchange: true
+          });
+          return;
+        }
+        for (let j = start; j < remaining.length; j++) {
+          current.push(remaining[j]);
+          generateCombos(current, j + 1, remaining);
+          current.pop();
+        }
+      };
+      generateCombos([], 0, letters);
+    }
+
+    // Combine regular moves and exchange moves
+    const combinedMoves = [...allMoves, ...exchangeMoves];
+
+    // Sort moves by score (for now, we'll add leave values later)
+    const sortedMoves = combinedMoves.sort((a, b) => {
+      if (a.isExchange && b.isExchange) {
+        // For exchanges, prefer exchanging fewer tiles
+        return a.tiles.length - b.tiles.length;
+      }
+      if (a.isExchange) return 1;  // Prefer regular moves over exchanges
+      if (b.isExchange) return -1;
+      return b.score - a.score;    // For regular moves, sort by score
+    });
 
     if (sortedMoves.length === 0) {
       return {
@@ -77,7 +118,9 @@ exports.handler = async function (event) {
       body: JSON.stringify({
         word: best.word,
         score: best.score,
-        tiles: best.tiles
+        tiles: best.tiles,
+        leave: best.leave,
+        isExchange: best.isExchange
       })
     };
 
