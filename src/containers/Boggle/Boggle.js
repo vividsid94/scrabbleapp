@@ -2,6 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import styles from './Boggle.module.css';
 import { findAllPossibleWords, canFormWord } from '../../functions/boggleFunctions';
+import { modifyImageColor } from '../../functions/tileFunctions';
+
+// Preload tile images
+let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
+let preloadedImages = {};
+
+function preload() {
+  allLetters.forEach(letter => {
+    let srcString = '/images/compressed-clean-protiles/' + letter + '.png';
+    preloadedImages[letter] = new Image();
+    preloadedImages[letter].src = srcString;
+  });
+}
+
+// Initialize preloading
+if (Object.keys(preloadedImages).length === 0) {
+  preload();
+}
 
 const Boggle = () => {
   const [board, setBoard] = useState([]);
@@ -14,6 +32,8 @@ const Boggle = () => {
   const [possibleWords, setPossibleWords] = useState([]);
   const [showHints, setShowHints] = useState(false);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(true);
+  const [tileColor, setTileColor] = useState('#6D84A2');
+  const [highlightedTile, setHighlightedTile] = useState(null);
 
   // Load dictionary
   useEffect(() => {
@@ -151,6 +171,69 @@ const Boggle = () => {
     }
   }, [board, dictionary, isDictionaryLoading]);
 
+  // Add keyboard event listener
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (!isPlaying) return;
+      
+      const key = event.key.toUpperCase();
+      if (key === 'Q') {
+        // Special handling for 'Qu'
+        const quTile = findTile('Qu');
+        if (quTile) {
+          setHighlightedTile(quTile);
+          setTimeout(() => setHighlightedTile(null), 500);
+        }
+      } else if (/^[A-Z]$/.test(key)) {
+        const tile = findTile(key);
+        if (tile) {
+          setHighlightedTile(tile);
+          setTimeout(() => setHighlightedTile(null), 500);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isPlaying, board]);
+
+  // Helper function to find tile coordinates
+  const findTile = (letter) => {
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        if (board[row][col] === letter) {
+          return [row, col];
+        }
+      }
+    }
+    return null;
+  };
+
+  const renderTile = (letter, row, col) => {
+    const isSelected = selectedLetters.some(([r, c]) => r === row && c === col);
+    const isHighlighted = highlightedTile && highlightedTile[0] === row && highlightedTile[1] === col;
+    const cacheKey = letter === 'Qu' ? 'Q' : letter;
+    const cachedImage = preloadedImages[cacheKey];
+
+    if (cachedImage) {
+      const modifiedImageUrl = modifyImageColor(cachedImage, tileColor);
+      
+      return (
+        <Box
+          key={`${row}-${col}`}
+          className={`${styles.letter} ${isSelected ? styles.selected : ''} ${isHighlighted ? styles.highlighted : ''}`}
+          onClick={() => handleLetterClick(row, col)}
+          style={{
+            backgroundImage: `url(${modifiedImageUrl})`,
+            backgroundSize: '100%',
+            backgroundColor: isSelected ? '#4CAF50' : tileColor,
+          }}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
     <Box className={styles.container}>
       <Box className={styles.gameInfo}>
@@ -180,17 +263,7 @@ const Boggle = () => {
         <>
           <Box className={styles.board}>
             {board.map((row, rowIndex) => (
-              row.map((letter, colIndex) => (
-                <Box
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`${styles.letter} ${
-                    selectedLetters.some(([r, c]) => r === rowIndex && c === colIndex) ? styles.selected : ''
-                  }`}
-                  onClick={() => handleLetterClick(rowIndex, colIndex)}
-                >
-                  {letter}
-                </Box>
-              ))
+              row.map((letter, colIndex) => renderTile(letter, rowIndex, colIndex))
             ))}
           </Box>
 
