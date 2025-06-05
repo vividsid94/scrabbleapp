@@ -37,11 +37,42 @@ const Boggle = () => {
 
   // Initialize board with random letters
   const initializeBoard = () => {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const newBoard = Array(4).fill().map(() => 
-      Array(4).fill().map(() => letters[Math.floor(Math.random() * letters.length)])
-    );
-    setBoard(newBoard);
+    // Standard Boggle dice configuration
+    const dice = [
+      ['A', 'A', 'E', 'E', 'G', 'N'],
+      ['A', 'B', 'B', 'J', 'O', 'O'],
+      ['A', 'C', 'H', 'O', 'P', 'S'],
+      ['A', 'F', 'F', 'K', 'P', 'S'],
+      ['A', 'O', 'O', 'T', 'T', 'W'],
+      ['C', 'I', 'M', 'O', 'T', 'U'],
+      ['D', 'E', 'I', 'L', 'R', 'X'],
+      ['D', 'E', 'L', 'R', 'V', 'Y'],
+      ['D', 'I', 'S', 'T', 'T', 'Y'],
+      ['E', 'E', 'G', 'H', 'N', 'W'],
+      ['E', 'E', 'I', 'N', 'S', 'U'],
+      ['E', 'H', 'R', 'T', 'V', 'W'],
+      ['E', 'I', 'O', 'S', 'S', 'T'],
+      ['E', 'L', 'R', 'T', 'T', 'Y'],
+      ['H', 'I', 'M', 'N', 'U', 'Qu'],
+      ['H', 'L', 'N', 'N', 'R', 'Z']
+    ];
+
+    // Shuffle the dice
+    const shuffledDice = [...dice].sort(() => Math.random() - 0.5);
+    
+    // Create new board by rolling each die
+    const newBoard = shuffledDice.map(die => {
+      const randomIndex = Math.floor(Math.random() * 6);
+      return die[randomIndex];
+    });
+
+    // Convert 1D array to 4x4 grid
+    const boardGrid = [];
+    for (let i = 0; i < 4; i++) {
+      boardGrid.push(newBoard.slice(i * 4, (i + 1) * 4));
+    }
+
+    setBoard(boardGrid);
     setSelectedLetters([]);
     setFoundWords([]);
     setScore(0);
