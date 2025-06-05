@@ -104,7 +104,10 @@ const Boggle = () => {
   const submitWord = () => {
     if (selectedLetters.length < 3) return;
 
-    const word = selectedLetters.map(([row, col]) => board[row][col]).join('');
+    const word = selectedLetters.map(([row, col]) => {
+      const letter = board[row][col];
+      return letter === 'Qu' ? 'QU' : letter;
+    }).join('');
     
     // Check if word is valid and not already found
     if (dictionary.has(word) && !foundWords.includes(word)) {
@@ -177,19 +180,17 @@ const Boggle = () => {
         <>
           <Box className={styles.board}>
             {board.map((row, rowIndex) => (
-              <Box key={rowIndex} className={styles.row}>
-                {row.map((letter, colIndex) => (
-                  <Box
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`${styles.letter} ${
-                      selectedLetters.some(([r, c]) => r === rowIndex && c === colIndex) ? styles.selected : ''
-                    }`}
-                    onClick={() => handleLetterClick(rowIndex, colIndex)}
-                  >
-                    {letter}
-                  </Box>
-                ))}
-              </Box>
+              row.map((letter, colIndex) => (
+                <Box
+                  key={`${rowIndex}-${colIndex}`}
+                  className={`${styles.letter} ${
+                    selectedLetters.some(([r, c]) => r === rowIndex && c === colIndex) ? styles.selected : ''
+                  }`}
+                  onClick={() => handleLetterClick(rowIndex, colIndex)}
+                >
+                  {letter}
+                </Box>
+              ))
             ))}
           </Box>
 

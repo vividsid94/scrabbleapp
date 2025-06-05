@@ -1,95 +1,119 @@
+@import url('https://fonts.googleapis.com/css?family=Dancing+Script');
+@import url('https://fonts.googleapis.com/css2?family=Preahvihear');
+
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  padding: 2rem;
+  padding: 20px;
+  gap: 20px;
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .loadingMessage {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   min-height: 200px;
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .gameInfo {
   display: flex;
-  gap: 2rem;
+  gap: 20px;
   align-items: center;
-  background: white;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .board {
   display: grid;
-  grid-template-rows: repeat(4, 1fr);
-  gap: 0.5rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.row {
-  display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  gap: 8px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .letter {
+  width: 60px;
+  height: 60px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: white;
-  border: 2px solid #90caf9;
-  border-radius: 8px;
-  font-size: 2rem;
+  align-items: center;
+  font-family: 'Dancing Script', cursive;
+  font-size: 32px;
   font-weight: bold;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
   user-select: none;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.letter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4), 
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: 8px;
 }
 
 .letter:hover {
-  background: #e3f2fd;
-  transform: scale(1.05);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
 }
 
 .letter.selected {
-  background: #e3f2fd;
-  border-color: #2196f3;
+  background: linear-gradient(145deg, #4CAF50, #45a049);
+  color: white;
   transform: scale(1.05);
+}
+
+.letter.selected::before {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3), 
+    rgba(255, 255, 255, 0.1)
+  );
 }
 
 .controls {
   display: flex;
-  gap: 1rem;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .wordLists {
   display: flex;
-  gap: 2rem;
+  gap: 40px;
+  margin-top: 20px;
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
 }
 
 .foundWords, .possibleWords {
   flex: 1;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   max-height: 300px;
   overflow-y: auto;
 }
@@ -102,4 +126,22 @@
 .foundWords p, .possibleWords p {
   margin: 0.5rem 0;
   color: #34495e;
+}
+
+@media screen and (max-width: 600px) {
+  .gameInfo {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .letter {
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
+  }
+
+  .wordLists {
+    flex-direction: column;
+    gap: 20px;
+  }
 } 
