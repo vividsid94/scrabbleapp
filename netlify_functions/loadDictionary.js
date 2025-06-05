@@ -1,7 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
 const { Trie } = require('./trie');
+
+// Log environment variables (without exposing sensitive data)
+console.log('Supabase URL:', process.env.SUPABASE_URL);
+console.log('Supabase Key length:', process.env.SUPABASE_ANON_KEY?.length || 0);
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -13,31 +15,72 @@ async function loadDictionary() {
   const trie = new Trie();
 
   try {
-    const { count } = await supabase
+    console.log('Attempting to connect to Supabase...');
+    
+    // Test the connection with a simple query
+    const { data: testData, error: testError } = await supabase
       .from('dictionary')
-      .select('*', { count: 'exact', head: true });
+      .select('word')
+      .limit(1);
 
+    if (testError) {
+      console.error('Connection test failed:', {
+        message: testError.message,
+        details: testError.details,
+        hint: testError.hint,
+        code: testError.code
+      });
+      throw testError;
+    }
+
+    console.log('Successfully connected to Supabase');
+    console.log('Test query result:', testData);
+
+    console.log('Loading dictionary words...');
     const batchSize = 1000;
-    const batches = Math.ceil(count / batchSize);
+    let offset = 0;
+    let hasMore = true;
 
-    for (let i = 0; i < batches; i++) {
-      const { data } = await supabase
+    while (hasMore) {
+      console.log(`Loading batch starting at offset ${offset}...`);
+      const { data, error } = await supabase
         .from('dictionary')
         .select('word')
-        .range(i * batchSize, (i + 1) * batchSize - 1);
+        .range(offset, offset + batchSize - 1);
 
-      for (const entry of data) {
-        trie.insert(entry.word);
+      if (error) {
+        console.error('Error loading batch:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        for (const entry of data) {
+          trie.insert(entry.word);
+        }
+        offset += batchSize;
       }
     }
-  } catch (err) {
-    console.error("Supabase failed. Falling back to local dictionary...");
-    const words = fs.readFileSync(path.join(__dirname, 'dictionary.txt'), 'utf-8').split(/\r?\n/);
-    for (const word of words) trie.insert(word.trim());
-  }
 
-  cachedTrie = trie;
-  return trie;
+    console.log('Finished loading dictionary');
+    cachedTrie = trie;
+    return trie;
+  } catch (err) {
+    console.error("Failed to load dictionary:", err);
+    console.error('Full error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    throw err;
+  }
 }
 
 module.exports = { loadDictionary };
