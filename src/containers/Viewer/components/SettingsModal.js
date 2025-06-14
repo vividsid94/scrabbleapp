@@ -30,7 +30,7 @@ const SettingsModal = ({
             Board Mode
             {<select className={styles.styleSelection} value={boardMode} onChange={handleBoardModeChange}>
               <option value="STANDARD">Standard</option>
-              <option value="FULLBOARD">Full Board</option>
+              {/* <option value="FULLBOARD">Full Board</option> */}
             </select>}
           </Box>
           <Box className={styles.modalContainer__dictionary}>

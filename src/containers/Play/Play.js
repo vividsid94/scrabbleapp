@@ -2069,7 +2069,7 @@ export default function Play() {
                 Board Mode
                 <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
                   <option value="STANDARD">Standard</option>
-                  <option value="FULLBOARD">Full Board</option>
+                  {/* <option value="FULLBOARD">Full Board</option> */}
                 </select>
               </Box>
               <Box className={styles.modalContainer__dictionary}>
