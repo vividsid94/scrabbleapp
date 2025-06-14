@@ -1,76 +1,51 @@
-const { createClient } = require('@supabase/supabase-js');
 const { Trie } = require('./trie');
+const fs = require('fs');
+const path = require('path');
 
-// Log environment variables (without exposing sensitive data)
-console.log('Supabase URL:', process.env.SUPABASE_URL);
-console.log('Supabase Key length:', process.env.SUPABASE_ANON_KEY?.length || 0);
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-
+// Global cache for the trie
 let cachedTrie = null;
 
 async function loadDictionary() {
-  if (cachedTrie) return cachedTrie;
+  // Return cached trie if it exists
+  if (cachedTrie) {
+    return cachedTrie;
+  }
 
+  console.log('Loading dictionary...');
+  const startTime = Date.now();
   const trie = new Trie();
 
   try {
-    console.log('Attempting to connect to Supabase...');
+    // Load from local JSON file
+    const dictionaryPath = path.join(__dirname, 'dictionary.json');
+    console.log('Loading dictionary from:', dictionaryPath);
     
-    // Test the connection with a simple query
-    const { data: testData, error: testError } = await supabase
-      .from('dictionary')
-      .select('word')
-      .limit(1);
-
-    if (testError) {
-      console.error('Connection test failed:', {
-        message: testError.message,
-        details: testError.details,
-        hint: testError.hint,
-        code: testError.code
-      });
-      throw testError;
+    const fileStartTime = Date.now();
+    const words = JSON.parse(fs.readFileSync(dictionaryPath, 'utf8'));
+    const fileLoadTime = Date.now() - fileStartTime;
+    console.log(`File load time: ${fileLoadTime}ms`);
+    console.log(`Found ${words.length} words in dictionary`);
+    
+    // Verify a few sample words
+    const sampleWords = ['AA', 'QI', 'ZA', 'JAZZ', 'QUIZ'];
+    console.log('Verifying sample words:', sampleWords.map(word => ({
+      word,
+      inDictionary: words.includes(word)
+    })));
+    
+    const trieStartTime = Date.now();
+    for (const word of words) {
+      trie.insert(word);
     }
-
-    console.log('Successfully connected to Supabase');
-    console.log('Test query result:', testData);
-
-    console.log('Loading dictionary words...');
-    const batchSize = 1000;
-    let offset = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      console.log(`Loading batch starting at offset ${offset}...`);
-      const { data, error } = await supabase
-        .from('dictionary')
-        .select('word')
-        .range(offset, offset + batchSize - 1);
-
-      if (error) {
-        console.error('Error loading batch:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        hasMore = false;
-      } else {
-        for (const entry of data) {
-          trie.insert(entry.word);
-        }
-        offset += batchSize;
-      }
-    }
-
-    console.log('Finished loading dictionary');
+    const trieBuildTime = Date.now() - trieStartTime;
+    console.log(`Trie build time: ${trieBuildTime}ms`);
+    
+    console.log(`Loaded ${words.length} words into trie`);
     cachedTrie = trie;
+    
+    const totalTime = Date.now() - startTime;
+    console.log(`Total dictionary load time: ${totalTime}ms`);
+    
     return trie;
   } catch (err) {
     console.error("Failed to load dictionary:", err);
