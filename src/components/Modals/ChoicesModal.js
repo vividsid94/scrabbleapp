@@ -67,7 +67,7 @@ const ChoicesModal = ({
         sx={{
           position: 'relative',
           width: '100%',
-          maxWidth: 500,
+          maxWidth: 640,
           minWidth: 0,
           maxHeight: '90vh',
           bgcolor: 'background.paper',
@@ -281,9 +281,6 @@ const ChoicesModal = ({
                             >
                               {formatScore(leaveValues[move.leave])} {move.leave}
                             </Typography>
-                            <Tooltip title="Leave value represents the strength of your remaining tiles">
-                              <InfoIcon sx={{ color: '#2196F3', fontSize: '0.9rem' }} />
-                            </Tooltip>
                           </Box>
                         )}
                         {!move.isExchange && move.boardControl !== undefined && (
@@ -305,7 +302,7 @@ const ChoicesModal = ({
                             >
                               {formatScore(move.boardControl)} ctrl
                             </Typography>
-                            <Tooltip title="Board control represents strategic positioning and blocking opponent opportunities">
+                            <Tooltip title="Board control metric represents strategic positioning">
                               <InfoIcon sx={{ color: '#9C27B0', fontSize: '0.9rem' }} />
                             </Tooltip>
                           </Box>
