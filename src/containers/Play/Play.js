@@ -522,7 +522,7 @@ export default function Play() {
     setPlayer1Rack(alphabetizeRack(newRack));
 
     // Check if game should end
-    if (newRack.length === 0) {
+    if (newRack.length === 0 && pool.length === 0) {
       handleGameEnd(newRack, player1Name, player2Rack, player2points);
       return;
     }
@@ -759,7 +759,7 @@ export default function Play() {
       }
       
       // Check if game should end
-      if (newRack.length === 0) {
+      if (newRack.length === 0 && pool.length === 0) {
         handleGameEnd(newRack, player2Name, player1Rack, player1points);
         return;
       }
@@ -1521,7 +1521,7 @@ export default function Play() {
         setMoveHistory(stateUpdates.newMoveHistory);
         
         // Check if game should end
-        if (stateUpdates.newRack.length === 0) {
+        if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
           handleGameEnd(
             stateUpdates.newRack,
             currentPlayer === 1 ? player1Name : player2Name,
