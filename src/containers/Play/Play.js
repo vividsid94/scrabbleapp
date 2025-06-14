@@ -1228,14 +1228,8 @@ export default function Play() {
         // Update the leaveValues state with the new values
         const newLeaveValues = {};
         if (data.leaveValues) {
-          // Map the numeric indices back to the actual leave strings
-          for (let i = 0; i < leavesArray.length; i++) {
-            const leave = leavesArray[i];
-            const value = data.leaveValues[i];
-            if (typeof value === 'number') {
-              newLeaveValues[leave] = value;
-            }
-          }
+          // The response is now an object with leave strings as keys
+          Object.assign(newLeaveValues, data.leaveValues);
         }
         
         // Merge new leave values with existing ones

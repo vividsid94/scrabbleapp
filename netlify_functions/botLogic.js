@@ -10,9 +10,36 @@
 const { normalizeBoard } = require('./normalizeBoard');
 const { loadDictionary } = require('./loadDictionary');
 const { generateMoves } = require('./generateMoves');
+const fs = require('fs');
+const path = require('path');
 
 /** @type {import('./trie').Trie} */
 let cachedTrie = null;
+
+// Cache for leave values
+let leaveValues = {};
+try {
+  const leavesPath = path.join(__dirname, 'leaves.json');
+  const leaves = JSON.parse(fs.readFileSync(leavesPath, 'utf8'));
+  console.log('Loaded leaves from JSON file, count:', Object.keys(leaves).length);
+  // Convert leaves to the same format as getLeaveValues
+  leaveValues = leaves;
+} catch (err) {
+  console.error('Failed to load leaves:', err);
+  leaveValues = {};
+}
+
+/**
+ * Get leave value for a given leave string
+ */
+const getLeaveValue = (leave) => {
+  const value = leaveValues[leave];
+  if (value === undefined) {
+    console.log('Leave not found:', leave);
+    return 0;
+  }
+  return value;
+};
 
 /**
  * Netlify serverless function handler for the Scrabble bot.
@@ -64,12 +91,29 @@ exports.handler = async function (event) {
     // Get all possible moves
     const allMoves = generateMoves(board, letters, [], cachedTrie);
 
+    // Calculate leave for regular moves
+    for (const move of allMoves) {
+      const rackCopy = [...letters];
+      // Remove tiles used in the move
+      for (const tile of move.tiles) {
+        if (tile.isNew) {
+          const tileIndex = tile.isBlank ? rackCopy.indexOf('*') : rackCopy.indexOf(tile.letter);
+          if (tileIndex !== -1) {
+            rackCopy.splice(tileIndex, 1);
+          }
+        }
+      }
+      // Sort remaining tiles to create leave
+      move.leave = rackCopy.sort().join('');
+    }
+
     // Generate exchange moves
     const exchangeMoves = [];
     // Generate all possible combinations of 1-7 tiles
     for (let i = 1; i <= Math.min(letters.length, 7); i++) {
       const generateCombos = (current, start, remaining) => {
         if (current.length === i) {
+          // For exchanges, the leave is what we keep (remaining)
           const leave = remaining.sort().join('');
           exchangeMoves.push({
             word: `Exchange ${current.join('')}`,
@@ -77,14 +121,16 @@ exports.handler = async function (event) {
             tiles: current.map(letter => ({ letter, isNew: false })),
             direction: 'exchange',
             startPosition: 'Exchange',
-            leave: leave,
+            leave: leave, // The leave is what we keep
             isExchange: true
           });
           return;
         }
         for (let j = start; j < remaining.length; j++) {
+          const nextRemaining = [...remaining];
+          nextRemaining.splice(j, 1);
           current.push(remaining[j]);
-          generateCombos(current, j + 1, remaining);
+          generateCombos(current, j, nextRemaining);
           current.pop();
         }
       };
@@ -94,36 +140,21 @@ exports.handler = async function (event) {
     // Combine regular moves and exchange moves
     const combinedMoves = [...allMoves, ...exchangeMoves];
 
-    // Get leave values for all moves
-    const leaveValues = {};
-    for (const move of combinedMoves) {
-      if (!move.leave) continue;
-      try {
-        const response = await fetch(`${process.env.URL}/.netlify/functions/getLeaveValue`, {
-          method: 'POST',
-          body: JSON.stringify({ leave: move.leave })
-        });
-        const data = await response.json();
-        if (data.leaveValue !== undefined) {
-          leaveValues[move.leave] = data.leaveValue;
-        }
-      } catch (error) {
-        console.error('Error getting leave value:', error);
-      }
-    }
-
-    // Sort moves by total value (score + leave value for regular moves, just leave value for exchanges)
-    const sortedMoves = combinedMoves.sort((a, b) => {
-      const aTotalValue = a.isExchange ? 
-        (leaveValues[a.leave] || 0) : // For exchanges, total value is just the leave value
-        (a.score + (leaveValues[a.leave] || 0)); // For regular moves, add score and leave value
+    // Process moves exactly like ChoicesModal does
+    const processedMoves = combinedMoves.map(move => {
+      const leaveValue = getLeaveValue(move.leave);
+      const totalValue = move.isExchange ? 
+        leaveValue : // For exchanges, total value is just the leave value
+        (move.score + leaveValue); // For regular moves, add score and leave value
       
-      const bTotalValue = b.isExchange ? 
-        (leaveValues[b.leave] || 0) : // For exchanges, total value is just the leave value
-        (b.score + (leaveValues[b.leave] || 0)); // For regular moves, add score and leave value
-
-      return bTotalValue - aTotalValue;
+      return {
+        ...move,
+        totalValue
+      };
     });
+
+    // Sort moves by total value
+    const sortedMoves = processedMoves.sort((a, b) => b.totalValue - a.totalValue);
 
     if (sortedMoves.length === 0) {
       return {
@@ -133,6 +164,18 @@ exports.handler = async function (event) {
     }
 
     const best = sortedMoves[0];
+    
+    // Log top 10 moves sorted by total value
+    console.log('Top 10 moves:');
+    sortedMoves.slice(0, 10).forEach((move, index) => {
+      console.log(`${index + 1}. ${move.word} (${move.isExchange ? 'exchange' : 'play'})`, {
+        score: move.score,
+        leave: move.leave,
+        leaveValue: getLeaveValue(move.leave),
+        totalValue: move.totalValue
+      });
+    });
+    
     return {
       statusCode: 200,
       body: JSON.stringify({

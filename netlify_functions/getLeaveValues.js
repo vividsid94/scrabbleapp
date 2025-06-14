@@ -32,16 +32,18 @@ exports.handler = async function(event, context) {
     const { leaves: requestedLeaves } = JSON.parse(event.body);
     console.log('Requested leaves:', requestedLeaves);
 
-    if (!requestedLeaves || typeof requestedLeaves !== 'object') {
-      console.error('Invalid request: leaves is not an object');
+    if (!requestedLeaves) {
+      console.error('Invalid request: leaves is missing');
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Leaves must be an object' })
+        body: JSON.stringify({ error: 'Leaves must be provided' })
       };
     }
 
-    // Get unique leave values
-    const uniqueLeaves = [...new Set(Object.values(requestedLeaves))].sort();
+    // Handle both array and object inputs
+    const uniqueLeaves = Array.isArray(requestedLeaves) ? 
+      [...new Set(requestedLeaves)].sort() :
+      [...new Set(Object.values(requestedLeaves))].sort();
     console.log('Unique leaves:', uniqueLeaves);
 
     // Check cache first
@@ -69,20 +71,38 @@ exports.handler = async function(event, context) {
     }
 
     // Build response using cache
-    for (const [word, leave] of Object.entries(requestedLeaves)) {
-      const cached = leaveCache.get(leave);
-      if (cached) {
-        leaveValues[word] = cached.value;
-      } else {
-        // If not in cache, get it directly from the JSON object
-        const value = leaves[leave];
-        if (value !== undefined) {
-          leaveValues[word] = value;
-          // Cache the value for future use
-          leaveCache.set(leave, {
-            value,
-            timestamp: Date.now()
-          });
+    if (Array.isArray(requestedLeaves)) {
+      // For array input, return values in same order
+      requestedLeaves.forEach(leave => {
+        const cached = leaveCache.get(leave);
+        if (cached) {
+          leaveValues[leave] = cached.value;
+        } else {
+          const value = leaves[leave];
+          if (value !== undefined) {
+            leaveValues[leave] = value;
+            leaveCache.set(leave, {
+              value,
+              timestamp: Date.now()
+            });
+          }
+        }
+      });
+    } else {
+      // For object input, maintain original structure
+      for (const [word, leave] of Object.entries(requestedLeaves)) {
+        const cached = leaveCache.get(leave);
+        if (cached) {
+          leaveValues[word] = cached.value;
+        } else {
+          const value = leaves[leave];
+          if (value !== undefined) {
+            leaveValues[word] = value;
+            leaveCache.set(leave, {
+              value,
+              timestamp: Date.now()
+            });
+          }
         }
       }
     }
