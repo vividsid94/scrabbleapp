@@ -52,17 +52,6 @@
        }
    }
    
-     // Log the moves in a compact format
-     console.log('\nGenerated Moves:');
-     moves.forEach((move, index) => {
-       const moveNum = String(index + 1).padStart(3, '0');
-       const tiles = move.tiles.map(t => 
-         `${t.isBlank ? '?' : t.letter}(${t.row},${t.col})`
-       ).join(' ');
-       console.log(`${moveNum} | ${move.word.padEnd(15)} | Score: ${String(move.score).padStart(3)} | ${move.direction.padEnd(10)} | Start: (${move.startRow},${move.startCol}) | Tiles: ${tiles}`);
-     });
-     console.log(`\nTotal moves generated: ${moves.length}`);
-   
      return moves;
    }
    
@@ -122,10 +111,6 @@
        if (!node['^']) return;
        node = node['^'];
      }
-   
-     // Count blank tiles in rack
-     const blankCount = rack.filter(t => t.isBlank).length;
-     console.log(`Generating words from position (${startRow},${startCol}) with ${blankCount} blank tiles`);
    
      // For each blank tile, we need to try all possible letters
      // that could form a valid word at this position
