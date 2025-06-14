@@ -378,6 +378,19 @@ export default function Play() {
     setAutoPlayBest(false);
   }, [player1Rack, player2Rack]);
 
+  // Add a function to compress board state
+  const compressBoardState = useCallback((board) => {
+    return board.map(row => 
+      row.map(cell => {
+        if (typeof cell === 'string') {
+          return cell;
+        }
+        return 0; // Convert all numbers to 0 to save memory
+      })
+    );
+  }, []);
+
+  // Modify handleWordSubmit to use compressed board states
   const handleWordSubmit = async () => {
     const response = await fetch('/.netlify/functions/gameLogic', {
       method: 'POST',
@@ -441,8 +454,8 @@ export default function Play() {
 
     // Optimize move history entry to store only necessary data
     const moveHistoryEntry = {
-      beforeBoard: boardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)), // Only store string tiles
-      afterBoard: tempBoardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
+      beforeBoard: compressBoardState(boardCoords),
+      afterBoard: compressBoardState(tempBoardCoords),
       player: currentPlayer === 1 ? player1Name : player2Name,
       score: score,
       rack: alphabetizeRack(playerRack).join(''),
@@ -517,7 +530,11 @@ export default function Play() {
       return;
     }
 
-    setIsBotThinking(true);
+    // Only show thinking state if auto-play is not enabled
+    if (!autoPlayBest) {
+      setIsBotThinking(true);
+    }
+
     try {
       // Create a deep copy of the board and rack
       const boardCopy = JSON.parse(JSON.stringify(boardCoords));
@@ -664,8 +681,8 @@ export default function Play() {
 
         // Optimize move history entry
         const moveHistoryEntry = {
-          beforeBoard: boardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
-          afterBoard: newBoard.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
+          beforeBoard: compressBoardState(boardCoords),
+          afterBoard: compressBoardState(newBoard),
           player: player2Name,
           score: botMove.score,
           rack: alphabetizeRack(botRack).join(''),
@@ -720,7 +737,10 @@ export default function Play() {
       setSnackbarOpen(true);
       setCurrentPlayer(1); // Switch back to player 1 on error
     } finally {
-      setIsBotThinking(false);
+      // Only clear thinking state if auto-play is not enabled
+      if (!autoPlayBest) {
+        setIsBotThinking(false);
+      }
       // Clear states even on error
       setSimulatingMove(null);
       setSimulationResult(null);
@@ -1374,8 +1394,8 @@ export default function Play() {
           
           // Update move history
           stateUpdates.newMoveHistory.push({
-            beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-            afterBoard: JSON.parse(JSON.stringify(boardCoords)),
+            beforeBoard: compressBoardState(boardCoords),
+            afterBoard: compressBoardState(stateUpdates.newBoard),
             player: currentPlayer === 1 ? player1Name : player2Name,
             score: 0,
             rack: alphabetizeRack(currentRack).join(''),
@@ -1425,8 +1445,8 @@ export default function Play() {
           
           // Update move history
           stateUpdates.newMoveHistory.push({
-            beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-            afterBoard: JSON.parse(JSON.stringify(stateUpdates.newBoard)),
+            beforeBoard: compressBoardState(boardCoords),
+            afterBoard: compressBoardState(stateUpdates.newBoard),
             player: currentPlayer === 1 ? player1Name : player2Name,
             score: bestMove.score,
             rack: alphabetizeRack(currentRack).join(''),
@@ -1511,7 +1531,8 @@ export default function Play() {
     blankTiles,
     moveHistory,
     leaveValues,
-    handleGameEnd
+    handleGameEnd,
+    compressBoardState
   ]);
 
   // Add effect to handle auto-play
@@ -1535,13 +1556,19 @@ export default function Play() {
   // Add cleanup effect for all temporary states
   useEffect(() => {
     return () => {
+      // Clear all state
+      setBoardCoords([]);
+      setTempBoardCoords([]);
+      setOrigBoardCoords([]);
+      setMoveHistory([]);
+      setTopMoves([]);
       setSimulatingMove(null);
       setSimulationResult(null);
       setSimulationProgress(0);
       setPreviewBoard(null);
       setPreviewMove(null);
       setMoveWithResults(null);
-      setTopMoves([]); // Clear top moves
+      setLeaveValues({}); // Clear leave values cache
     };
   }, []);
 
