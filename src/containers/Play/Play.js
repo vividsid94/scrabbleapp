@@ -72,6 +72,7 @@ export default function Play() {
   const [moveWithResults, setMoveWithResults] = useState(null);
   const [leaveValues, setLeaveValues] = useState({});
   const [autoPlayBest, setAutoPlayBest] = useState(false);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   
   // Add audio refs
   const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
@@ -346,6 +347,37 @@ export default function Play() {
     setTempBoardCoords(newTempBoard);
   };
 
+  const handleGameEnd = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
+    // Calculate sum of loser's remaining tiles
+    const rackSum = loserRack.reduce((sum, tile) => {
+      const value = tile === '?' || tile === '*' ? 0 : 
+        tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
+        tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
+        tile === 'D' || tile === 'G' ? 2 :
+        tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
+        tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
+        tile === 'K' ? 5 :
+        tile === 'J' || tile === 'X' ? 8 :
+        tile === 'Q' || tile === 'Z' ? 10 : 0;
+      return sum + value;
+    }, 0);
+    
+    // Add remaining tiles to loser's score
+    if (winnerRack === player1Rack) {
+      setPlayer2points(loserPoints + rackSum);
+    } else {
+      setPlayer1points(loserPoints + rackSum);
+    }
+    
+    // Show game over message
+    setSnackbarMessage(`Game Over! ${winnerName} played all their tiles!`);
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
+    
+    // Disable auto-play
+    setAutoPlayBest(false);
+  }, [player1Rack, player2Rack]);
+
   const handleWordSubmit = async () => {
     const response = await fetch('/.netlify/functions/gameLogic', {
       method: 'POST',
@@ -431,6 +463,12 @@ export default function Play() {
     const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
     setPlayer1Rack(alphabetizeRack(newRack));
 
+    // Check if game should end
+    if (newRack.length === 0) {
+      handleGameEnd(newRack, player1Name, player2Rack, player2points);
+      return;
+    }
+    
     // Refill the current player's rack
     const newPool = [...pool];
     
@@ -446,6 +484,9 @@ export default function Play() {
     
     // Switch to next player
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+    setSelectedBoardPosition(null);
+    setSelectedTiles([]);
+    setArrowDirection('right');
   };
 
   const handleSettingsOpen = () => {
@@ -626,6 +667,12 @@ export default function Play() {
         
         // Update bot's score
         setPlayer2points(botRunningTotal);
+      }
+      
+      // Check if game should end
+      if (newRack.length === 0) {
+        handleGameEnd(newRack, player2Name, player1Rack, player1points);
+        return;
       }
       
       // Reset consecutive passes since bot made a move
@@ -1365,6 +1412,17 @@ export default function Play() {
         setPool(stateUpdates.newPool);
         setMoveHistory(stateUpdates.newMoveHistory);
         
+        // Check if game should end
+        if (stateUpdates.newRack.length === 0) {
+          handleGameEnd(
+            stateUpdates.newRack,
+            currentPlayer === 1 ? player1Name : player2Name,
+            currentPlayer === 1 ? player2Rack : player1Rack,
+            currentPlayer === 1 ? player2points : player1points
+          );
+          return;
+        }
+        
         // Switch to next player
         setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
         setSelectedBoardPosition(null);
@@ -1393,15 +1451,19 @@ export default function Play() {
     player2Name,
     blankTiles,
     moveHistory,
-    leaveValues
+    leaveValues,
+    handleGameEnd
   ]);
 
   // Add effect to handle auto-play
   useEffect(() => {
-    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading) {
-      handlePlayTopMove();
+    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying) {
+      setIsAutoPlaying(true);
+      handlePlayTopMove().finally(() => {
+        setIsAutoPlaying(false);
+      });
     }
-  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMove]);
+  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMove, isAutoPlaying]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
