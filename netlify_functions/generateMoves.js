@@ -20,14 +20,15 @@
      }));
    
      const moves = [];
+     const moveSet = new Set(); // Track unique moves
      const crossChecks = computeCrossChecks(board);
    
      // First move special case - must start at H8 (7,7)
      if (isBoardEmpty(board)) {
        const centerRow = 7;  // H
        const centerCol = 7;  // 8
-       generateMovesAt(board, rackArr, centerRow, centerCol, 'horizontal', moves, crossChecks);
-       generateMovesAt(board, rackArr, centerRow, centerCol, 'vertical', moves, crossChecks);
+       generateMovesAt(board, rackArr, centerRow, centerCol, 'horizontal', moves, crossChecks, moveSet);
+       generateMovesAt(board, rackArr, centerRow, centerCol, 'vertical', moves, crossChecks, moveSet);
        return moves;
      }
    
@@ -37,8 +38,8 @@
          if (board[row][col] === null) {
            // Check if this square can be an anchor (adjacent to existing tiles)
            if (hasAdjacentTile(board, row, col)) {
-             generateMovesAt(board, rackArr, row, col, 'horizontal', moves, crossChecks);
-             generateMovesAt(board, rackArr, row, col, 'vertical', moves, crossChecks);
+             generateMovesAt(board, rackArr, row, col, 'horizontal', moves, crossChecks, moveSet);
+             generateMovesAt(board, rackArr, row, col, 'vertical', moves, crossChecks, moveSet);
            }
          }
        }
@@ -47,7 +48,7 @@
      return moves;
    }
    
-   function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, crossChecks) {
+   function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, crossChecks, moveSet) {
      // Find the leftmost/topmost position for potential words through this anchor
      let leftLimit = anchorCol;
      let topLimit = anchorRow;
@@ -67,16 +68,16 @@
      // Try all possible starting positions
      if (direction === 'horizontal') {
        for (let startCol = leftLimit; startCol <= anchorCol; startCol++) {
-         generateWordsFromPosition(board, rack, anchorRow, startCol, direction, moves, crossChecks);
+         generateWordsFromPosition(board, rack, anchorRow, startCol, direction, moves, crossChecks, moveSet);
      }
      } else {
        for (let startRow = topLimit; startRow <= anchorRow; startRow++) {
-         generateWordsFromPosition(board, rack, startRow, anchorCol, direction, moves, crossChecks);
+         generateWordsFromPosition(board, rack, startRow, anchorCol, direction, moves, crossChecks, moveSet);
      }
    }
    }
    
-   function generateWordsFromPosition(board, rack, startRow, startCol, direction, moves, crossChecks) {
+   function generateWordsFromPosition(board, rack, startRow, startCol, direction, moves, crossChecks, moveSet) {
      // Build the prefix from existing tiles
      let prefix = '';
      let currentRow = startRow;
@@ -116,11 +117,12 @@
        direction, 
        moves, 
        crossChecks,
-       prefix.length > 0 // isInSuffixMode
+       prefix.length > 0, // isInSuffixMode
+       moveSet
      );
    }
    
-   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, crossChecks, isInSuffixMode) {
+   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, crossChecks, isInSuffixMode, moveSet) {
      // Check if we can form a valid word
      if (node['$'] && tilesPlaced.length > 0) {
        const cleanWord = wordSoFar.replace(/\^/g, '');
@@ -132,9 +134,13 @@
          startCol: tilesPlaced[0].col
        };
        
-       if (validateMove(board, move.tiles)) {
+       // Create a unique key for this move
+       const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}`;
+       
+       if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
          move.score = calculateScore(board, move.tiles, boardMultipliers);
          moves.push(move);
+         moveSet.add(moveKey);
        }
      }
    
@@ -157,7 +163,8 @@
            direction, 
            moves, 
            crossChecks,
-           isInSuffixMode
+           isInSuffixMode,
+           moveSet
          );
        }
        return;
@@ -204,7 +211,8 @@
                direction, 
                moves, 
                crossChecks,
-               false
+               false,
+               moveSet
            );
          }
    
@@ -228,7 +236,8 @@
                direction, 
                moves, 
                crossChecks,
-               true
+               true,
+               moveSet
          );
        }
          } else {
@@ -252,7 +261,8 @@
                direction, 
                moves, 
                crossChecks,
-               true
+               true,
+               moveSet
              );
            }
          }

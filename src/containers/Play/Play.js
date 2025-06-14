@@ -931,6 +931,32 @@ export default function Play() {
     return rackCopy.sort().join('');
   };
 
+  const fetchBoardControl = async (moves) => {
+    try {
+      const response = await fetch('/.netlify/functions/getBoardControl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          moves: moves
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch board control metrics');
+      }
+
+      const data = await response.json();
+      return data.moveMetrics;
+    } catch (error) {
+      console.error('Error fetching board control:', error);
+      return [];
+    }
+  };
+
+  // Modify handleGetTopMoves to include board control
   const handleGetTopMoves = async () => {
     setIsLoadingTopMoves(true);
     setShowTopMoves(true);
@@ -1015,18 +1041,29 @@ export default function Play() {
 
       // First, fetch leave values for all moves
       const allMoves = [...data.moves, ...exchangeMoves];
-      const updatedLeaveValues = await fetchLeaveValues(allMoves);
+      const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
+        fetchLeaveValues(allMoves),
+        fetchBoardControl(allMoves)
+      ]);
+
+      // Create a map of move words to their control metrics
+      const controlMap = new Map(
+        boardControlMetrics.map(metric => [metric.move, metric])
+      );
 
       // Then calculate total values and sort
       const topFifteenMoves = allMoves
         .map(move => {
           const leaveValue = updatedLeaveValues[move.leave] || 0;
+          const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
-            (move.score + leaveValue); // For regular moves, add score and leave value
+            (move.score + leaveValue + controlMetrics.totalControl * 0.5); // Add control value with 0.5 weight
           return {
             ...move,
-            totalValue
+            totalValue,
+            defensiveValue: controlMetrics.defensiveValue,
+            boardControl: controlMetrics.boardControl
           };
         })
         .sort((a, b) => b.totalValue - a.totalValue)

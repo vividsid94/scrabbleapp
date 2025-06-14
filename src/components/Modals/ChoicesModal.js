@@ -1,12 +1,10 @@
 import React, { useRef } from 'react';
-import { Modal, Box, Typography, Button, CircularProgress, Paper, LinearProgress, IconButton } from '@mui/material';
+import { Modal, Box, Typography, Button, CircularProgress, Paper, LinearProgress, IconButton, Tooltip } from '@mui/material';
 import Board from '../AppContent/Board/Board';
 import { createBoard } from '../../functions/boardFunctions';
-import styles from './ChoicesModal.module.css';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CloseIcon from '@mui/icons-material/Close';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import InfoIcon from '@mui/icons-material/Info';
-import { Tooltip } from '@mui/material';
 
 const ChoicesModal = ({
   open,
@@ -28,36 +26,20 @@ const ChoicesModal = ({
   blankTiles = [],
   leaveValues = {}
 }) => {
-  const modalRef = useRef(null);
-
   const formatScore = (score) => {
-    if (score === undefined || score === null || isNaN(score)) return 'N/A';
-    return score.toFixed(1);
+    return typeof score === 'number' ? score.toFixed(1) : '0.0';
   };
 
   const handleSimulate = async (move) => {
-    try {
-      await onSimulateMove(move);
-    } catch (error) {
-      console.error('Error simulating move:', error);
+    if (onSimulateMove) {
+      onSimulateMove(move);
     }
   };
 
   const handleMoveSelect = (move) => {
-    if (move.isExchange) {
-      // For exchange moves, just select the tiles to exchange
-      onMoveSelect({
-        ...move,
-        tiles: move.tiles.map(tile => ({
-          ...tile,
-          isNew: true
-        }))
-      });
-    } else {
-      // For regular moves, use the existing logic
+    if (onMoveSelect) {
       onMoveSelect(move);
     }
-    onClose();
   };
 
   const board = createBoard(
@@ -221,181 +203,196 @@ const ChoicesModal = ({
                   },
                 },
               }}>
-                {topMoves
-                  .map(move => ({
-                    ...move,
-                    totalValue: move.isExchange ? 
-                      (leaveValues[move.leave] || 0) :
-                      (move.score + (leaveValues[move.leave] || 0))
-                  }))
-                  .sort((a, b) => b.totalValue - a.totalValue)
-                  .slice(0, 15)
-                  .map((move, index) => (
-                    <Paper
-                      key={index}
-                      elevation={2}
-                      sx={{
-                        p: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 0.25,
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
-                        },
-                        cursor: 'pointer',
-                        position: 'relative',
-                        border: (simulatingMove === move || moveWithResults === move) ? '2px solid #4CAF50' : 'none',
-                        backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.05)' : 'white',
-                        borderRadius: '6px',
-                        overflow: 'visible',
-                      }}
-                      onClick={() => handleMoveSelect(move)}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
+                {topMoves.map((move, index) => (
+                  <Paper
+                    key={index}
+                    elevation={2}
+                    sx={{
+                      p: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.25,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+                      },
+                      cursor: 'pointer',
+                      position: 'relative',
+                      border: (simulatingMove === move || moveWithResults === move) ? '2px solid #4CAF50' : 'none',
+                      backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.05)' : 'white',
+                      borderRadius: '6px',
+                      overflow: 'visible',
+                    }}
+                    onClick={() => handleMoveSelect(move)}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            color: '#2D3748',
+                            minWidth: '140px'
+                          }}
+                        >
+                          {move.isExchange ? (
+                            `Exchange ${move.tiles.map(t => t.letter).join('')}`
+                          ) : (
+                            `${move.startPosition} ${move.direction === 'right' ? '→' : '↓'} ${move.word}`
+                          )}
+                        </Typography>
+                        {!move.isExchange && (
                           <Typography 
                             variant="body1" 
                             sx={{ 
-                              fontWeight: 600,
-                              fontSize: '0.9rem',
-                              color: '#2D3748',
-                              minWidth: '140px'
+                              color: '#4CAF50',
+                              fontWeight: 'bold',
+                              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
+                              padding: '1px 4px',
+                              borderRadius: '4px',
+                              minWidth: '60px',
+                              textAlign: 'center',
+                              boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
+                              border: '1px solid rgba(76, 175, 80, 0.2)',
+                              fontSize: '0.85rem'
                             }}
                           >
-                            {move.isExchange ? (
-                              `Exchange ${move.tiles.map(t => t.letter).join('')}`
-                            ) : (
-                              `${move.startPosition} ${move.direction === 'right' ? '→' : '↓'} ${move.word}`
-                            )}
+                            {move.score} pts
                           </Typography>
-                          {!move.isExchange && (
+                        )}
+                        {leaveValues[move.leave] !== undefined && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                             <Typography 
                               variant="body1" 
                               sx={{ 
-                                color: '#4CAF50',
+                                color: '#2196F3',
                                 fontWeight: 'bold',
-                                background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
+                                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%)',
                                 padding: '1px 4px',
                                 borderRadius: '4px',
                                 minWidth: '60px',
                                 textAlign: 'center',
-                                boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
-                                border: '1px solid rgba(76, 175, 80, 0.2)',
+                                boxShadow: '0 2px 4px rgba(33, 150, 243, 0.1)',
+                                border: '1px solid rgba(33, 150, 243, 0.2)',
                                 fontSize: '0.85rem'
                               }}
                             >
-                              {move.score} pts
+                              {formatScore(leaveValues[move.leave])} {move.leave}
                             </Typography>
-                          )}
-                          {leaveValues[move.leave] !== undefined && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                              <Typography 
-                                variant="body1" 
-                                sx={{ 
-                                  color: '#2196F3',
-                                  fontWeight: 'bold',
-                                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%)',
-                                  padding: '1px 4px',
-                                  borderRadius: '4px',
-                                  minWidth: '60px',
-                                  textAlign: 'center',
-                                  boxShadow: '0 2px 4px rgba(33, 150, 243, 0.1)',
-                                  border: '1px solid rgba(33, 150, 243, 0.2)',
-                                  fontSize: '0.85rem'
-                                }}
-                              >
-                                {formatScore(leaveValues[move.leave])} {move.leave}
-                              </Typography>
-                              <Tooltip title="Leave value represents the strength of your remaining tiles">
-                                <InfoIcon sx={{ color: '#2196F3', fontSize: '0.9rem' }} />
-                              </Tooltip>
-                            </Box>
-                          )}
-                        </Box>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSimulate(move);
-                          }}
-                          disabled={simulatingMove === move}
-                          sx={{
-                            background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
-                            color: 'white',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: '4px',
-                            minWidth: '80px',
-                            fontSize: '0.85rem',
-                            '&:hover': {
-                              background: 'linear-gradient(135deg, #5A67D8 0%, #4C51BF 100%)',
-                            },
-                            '&:disabled': {
-                              background: '#E2E8F0',
-                              color: '#A0AEC0'
-                            }
-                          }}
-                        >
-                          {simulatingMove === move ? (
-                            <CircularProgress size={14} color="inherit" />
-                          ) : (
-                            <>
-                              <PlayArrowIcon sx={{ mr: 0.25, fontSize: '0.9rem' }} />
-                              Simulate
-                            </>
-                          )}
-                        </Button>
-                      </Box>
-                      {simulationResult && moveWithResults === move && (
-                        <Box sx={{ 
-                          mt: 0.25,
-                          pt: 0.5,
-                          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 0.25
-                        }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                            Simulation Results:
-                          </Typography>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                              Win Rate: {formatScore(simulationResult.winRate)}%
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                              Avg Score: {formatScore(simulationResult.avgScore)}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                              Best Case: {formatScore(simulationResult.bestCase)}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                              Worst Case: {formatScore(simulationResult.worstCase)}
-                            </Typography>
+                            <Tooltip title="Leave value represents the strength of your remaining tiles">
+                              <InfoIcon sx={{ color: '#2196F3', fontSize: '0.9rem' }} />
+                            </Tooltip>
                           </Box>
-                          {simulationProgress < 100 && (
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={simulationProgress}
-                              sx={{
-                                height: 3,
-                                borderRadius: 1.5,
-                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 1.5,
-                                  background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
-                                }
+                        )}
+                        {!move.isExchange && move.boardControl !== undefined && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                color: '#9C27B0',
+                                fontWeight: 'bold',
+                                background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.15) 100%)',
+                                padding: '1px 4px',
+                                borderRadius: '4px',
+                                minWidth: '60px',
+                                textAlign: 'center',
+                                boxShadow: '0 2px 4px rgba(156, 39, 176, 0.1)',
+                                border: '1px solid rgba(156, 39, 176, 0.2)',
+                                fontSize: '0.85rem'
                               }}
-                            />
-                          )}
+                            >
+                              {formatScore(move.boardControl)} ctrl
+                            </Typography>
+                            <Tooltip title="Board control represents strategic positioning and blocking opponent opportunities">
+                              <InfoIcon sx={{ color: '#9C27B0', fontSize: '0.9rem' }} />
+                            </Tooltip>
+                          </Box>
+                        )}
+                      </Box>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSimulate(move);
+                        }}
+                        disabled={simulatingMove === move}
+                        sx={{
+                          background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
+                          color: 'white',
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: '4px',
+                          minWidth: '80px',
+                          fontSize: '0.85rem',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #5A67D8 0%, #4C51BF 100%)',
+                          },
+                          '&:disabled': {
+                            background: '#E2E8F0',
+                            color: '#A0AEC0'
+                          }
+                        }}
+                      >
+                        {simulatingMove === move ? (
+                          <CircularProgress size={14} color="inherit" />
+                        ) : (
+                          <>
+                            <PlayArrowIcon sx={{ mr: 0.25, fontSize: '0.9rem' }} />
+                            Simulate
+                          </>
+                        )}
+                      </Button>
+                    </Box>
+                    {simulationResult && moveWithResults === move && (
+                      <Box sx={{ 
+                        mt: 0.25,
+                        pt: 0.5,
+                        borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.25
+                      }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          Simulation Results:
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                            Win Rate: {formatScore(simulationResult.winRate)}%
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                            Avg Score: {formatScore(simulationResult.avgScore)}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                            Best Case: {formatScore(simulationResult.bestCase)}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                            Worst Case: {formatScore(simulationResult.worstCase)}
+                          </Typography>
                         </Box>
-                      )}
-                    </Paper>
-                  ))}
+                        {simulationProgress < 100 && (
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={simulationProgress}
+                            sx={{
+                              height: 3,
+                              borderRadius: 1.5,
+                              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 1.5,
+                                background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
+                              }
+                            }}
+                          />
+                        )}
+                      </Box>
+                    )}
+                  </Paper>
+                ))}
               </Box>
             )}
           </Box>
