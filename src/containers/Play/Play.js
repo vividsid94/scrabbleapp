@@ -768,7 +768,7 @@ export default function Play() {
     const rackCopy = [...rack];
     // Remove tiles that would be exchanged
     for (const tile of tilesToExchange) {
-      const index = rackCopy.indexOf(tile);
+      const index = rackCopy.indexOf(tile === '*' ? '?' : tile);
       if (index !== -1) {
         rackCopy.splice(index, 1);
       }
@@ -1214,7 +1214,7 @@ export default function Play() {
     for (const tile of move.tiles) {
       if (tile.isNew) {
         // For blank tiles, we need to find the blank in the rack
-        const tileIndex = tile.isBlank ? rackCopy.indexOf('*') : rackCopy.indexOf(tile.letter);
+        const tileIndex = tile.isBlank ? rackCopy.indexOf('?') : rackCopy.indexOf(tile.letter);
         if (tileIndex !== -1) {
           rackCopy.splice(tileIndex, 1);
         }
@@ -1298,6 +1298,120 @@ export default function Play() {
       fetchLeaveValues(topMoves);
     }
   }, [topMoves]);
+
+  const handlePlayTopMove = async () => {
+    if (isLoadingTopMoves || isDictionaryLoading) return;
+    
+    try {
+      // Get the current rack
+      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      
+      // Get any tiles that are placed on the board but not committed
+      const uncommittedTiles = [];
+      for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+          if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+            const tileIndex = selectedTiles.findIndex(t => t === '*');
+            if (tileIndex !== -1) {
+              uncommittedTiles.push('*');
+            } else {
+              uncommittedTiles.push(tempBoardCoords[row][col]);
+            }
+          }
+        }
+      }
+      
+      // Return uncommitted tiles to the rack
+      const newRack = [...currentRack, ...uncommittedTiles];
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(newRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(newRack));
+      }
+      
+      // Reset the board state
+      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
+      
+      // Convert any '?' in the rack to '*' for the API
+      const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
+      
+      const response = await fetch('/.netlify/functions/getTopMoves', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: apiRack
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Check if this is the first load (dictionary loading)
+      if (data.message && data.message.includes('Loading dictionary')) {
+        setIsDictionaryLoading(true);
+        // Retry after a short delay
+        setTimeout(() => {
+          handlePlayTopMove();
+        }, 1000);
+        return;
+      }
+      
+      setIsDictionaryLoading(false);
+
+      // Generate exchange moves
+      const exchangeCombinations = generateExchangeCombinations(newRack);
+      const exchangeMoves = exchangeCombinations.map(tiles => {
+        const leave = calculateExchangeLeave(newRack, tiles);
+        return {
+          word: `Exchange ${tiles.join('')}`,
+          score: 0,
+          tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
+          direction: 'exchange',
+          startPosition: 'Exchange',
+          leave: leave,
+          isExchange: true
+        };
+      });
+
+      // First, fetch leave values for all moves
+      const allMoves = [...data.moves, ...exchangeMoves];
+      const updatedLeaveValues = await fetchLeaveValues(allMoves);
+
+      // Then calculate total values and sort
+      const topMoves = allMoves
+        .map(move => {
+          const leaveValue = updatedLeaveValues[move.leave] || 0;
+          const totalValue = move.isExchange ? 
+            leaveValue : // For exchanges, total value is just the leave value
+            (move.score + leaveValue); // For regular moves, add score and leave value
+          return {
+            ...move,
+            totalValue
+          };
+        })
+        .sort((a, b) => b.totalValue - a.totalValue);
+
+      if (topMoves.length > 0) {
+        // Play the top move
+        handleMoveSelect(topMoves[0]);
+        // Submit the move
+        handleWordSubmit();
+      }
+    } catch (error) {
+      console.error('Error playing top move:', error);
+      setSnackbarMessage('Error playing top move: ' + error.message);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex'}}>
@@ -1402,6 +1516,7 @@ export default function Play() {
             onWordSubmit={handleWordSubmit}
             onPass={handlePass}
             onExchange={handleExchange}
+            onPlayTopMove={handlePlayTopMove}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
             icons={{

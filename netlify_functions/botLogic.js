@@ -93,14 +93,24 @@ exports.handler = async function (event) {
       // Remove tiles used in the move
       for (const tile of move.tiles) {
         if (tile.isNew) {
-          const tileIndex = tile.isBlank ? rackCopy.indexOf('*') : rackCopy.indexOf(tile.letter);
-          if (tileIndex !== -1) {
-            rackCopy.splice(tileIndex, 1);
+          if (tile.isBlank) {
+            // For blank tiles, we need to find the specific blank that was used
+            // Look for the blank in the rack
+            const blankIndex = rackCopy.indexOf('*');
+            if (blankIndex !== -1) {
+              rackCopy.splice(blankIndex, 1);
+            }
+          } else {
+            // For regular tiles, find and remove the letter
+            const tileIndex = rackCopy.indexOf(tile.letter);
+            if (tileIndex !== -1) {
+              rackCopy.splice(tileIndex, 1);
+            }
           }
         }
       }
       // Sort remaining tiles to create leave
-      move.leave = rackCopy.sort().join('');
+      move.leave = rackCopy.map(tile => tile === '*' ? '?' : tile).sort().join('');
     }
 
     // Generate exchange moves
@@ -110,7 +120,8 @@ exports.handler = async function (event) {
       const generateCombos = (current, start, remaining) => {
         if (current.length === i) {
           // For exchanges, the leave is what we keep (remaining)
-          const leave = remaining.sort().join('');
+          // Convert any * to ? for leave lookup
+          const leave = remaining.map(tile => tile === '*' ? '?' : tile).sort().join('');
           
           // Calculate the new rack after exchange
           const newRack = [...remaining];
@@ -129,7 +140,7 @@ exports.handler = async function (event) {
           exchangeMoves.push({
             word: `Exchange ${current.join('')}`,
             score: 0,
-            tiles: current.map(letter => ({ letter, isNew: false })),
+            tiles: current.map(letter => ({ letter: letter === '?' ? '*' : letter, isNew: false })),
             direction: 'exchange',
             startPosition: 'Exchange',
             leave: leave, // The leave is what we keep BEFORE drawing new tiles

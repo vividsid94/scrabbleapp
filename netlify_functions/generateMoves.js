@@ -106,7 +106,7 @@
      const alphabetArr = alphabet.split('');
    
      for (const sym of uniqueSymbols) {
-       if (sym === '*') {
+       if (sym === '?' || sym === '*') {
          for (const letter of alphabetArr) {
            const node = trie.root.children.get(letter);
            if (node && node.isTerminal) {
@@ -220,8 +220,8 @@
    
      for (let i = 0; i < rack.length; i++) {
        const sym = rack[i];
-   
-       if (sym === '*') { // blank expands to every letter
+
+       if (sym === '?' || sym === '*') { // blank expands to every letter
          for (const letter of alphabet) {
            if (allowed && allowed.size && !allowed.has(letter.toLowerCase())) continue;
            const nextNode = node.children.get(letter);
@@ -230,7 +230,7 @@
          }
          continue; // finished exploring blank expansions
        }
-   
+
        const letter = sym;
        if (allowed && allowed.size && !allowed.has(letter.toLowerCase())) continue;
        const nextNode = node.children.get(letter);

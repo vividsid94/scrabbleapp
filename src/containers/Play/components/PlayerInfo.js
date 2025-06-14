@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Tooltip } from '@mui/material';
 import { BOT_RACK_VISIBILITY } from '../../../components/AppContent/References/testRacks';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 const actionButtonStyle = {
   width: '24px',
@@ -85,10 +86,10 @@ export default function PlayerInfo({
   onColorSchemeOpen,
   onBotModeToggle,
   onGetTopMoves,
-  onStartGame,
   onWordSubmit,
   onPass,
   onExchange,
+  onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
   icons
@@ -112,7 +113,7 @@ export default function PlayerInfo({
           </Box>
         </Tooltip>
         <Tooltip title="Color Scheme">
-          <Box 
+          <Box
             onClick={onColorSchemeOpen}
             sx={{
               display: 'flex',
@@ -131,7 +132,7 @@ export default function PlayerInfo({
           {icons.time}
         </Box>
         <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (isBotMode ? "New Game" : "Play")}>
-          <Box 
+          <Box
             onClick={() => {
               if (isDictionaryLoading) return;
               onBotModeToggle();
@@ -149,7 +150,7 @@ export default function PlayerInfo({
           </Box>
         </Tooltip>
         <Tooltip title="Choices">
-          <Box 
+          <Box
             onClick={onGetTopMoves}
             sx={{
               opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
@@ -174,7 +175,7 @@ export default function PlayerInfo({
 
       <Box className={styles.playerToggle}>
         <Tooltip title={gameStarted ? "Submit" : "Start game to enable submit"} placement="top">
-          <Box 
+          <Box
             className={styles.keyBtn}
             onClick={onWordSubmit}
             sx={{ 
@@ -188,7 +189,7 @@ export default function PlayerInfo({
           </Box>
         </Tooltip>
         <Tooltip title={gameStarted ? "Pass (1)" : "Start game to enable pass"} placement="top">
-          <Box 
+          <Box
             className={styles.keyBtn}
             onClick={onPass}
             sx={{ 
@@ -218,7 +219,7 @@ export default function PlayerInfo({
           </Box>
         </Tooltip>
         <Tooltip title={gameStarted ? "Exchange (2)" : "Start game to enable exchange"} placement="top">
-          <Box 
+          <Box
             className={styles.keyBtn}
             onClick={onExchange}
             sx={{ 
@@ -244,6 +245,36 @@ export default function PlayerInfo({
               justifyContent: 'center'
             }}>
               2
+            </Box>
+          </Box>
+        </Tooltip>
+        <Tooltip title={gameStarted ? "Play Best Move" : "Start game to enable"} placement="top">
+          <Box
+            className={styles.keyBtn}
+            onClick={onPlayTopMove}
+            sx={{ 
+              ...actionButtonStyle,
+              opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
+              cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
+              pointerEvents: !gameStarted ? 'none' : 'auto',
+              position: 'relative'
+            }}
+          >
+            <LightbulbIcon sx={{ fontSize: 20 }} />
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -5, 
+              right: -5, 
+              fontSize: '10px',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '50%',
+              width: '14px',
+              height: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              3
             </Box>
           </Box>
         </Tooltip>
