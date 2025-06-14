@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
-import { Modal, Box, Typography, Button, CircularProgress, Paper, LinearProgress } from '@mui/material';
-import Draggable from 'react-draggable';
+import { Modal, Box, Typography, Button, CircularProgress, Paper, LinearProgress, IconButton } from '@mui/material';
 import Board from '../AppContent/Board/Board';
 import { createBoard } from '../../functions/boardFunctions';
 import styles from './ChoicesModal.module.css';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CloseIcon from '@mui/icons-material/Close';
+import InfoIcon from '@mui/icons-material/Info';
+import { Tooltip } from '@mui/material';
 
 const ChoicesModal = ({
   open,
@@ -30,7 +32,7 @@ const ChoicesModal = ({
 
   const formatScore = (score) => {
     if (score === undefined || score === null || isNaN(score)) return 'N/A';
-    return Math.round(score).toString();
+    return score.toFixed(1);
   };
 
   const handleSimulate = async (move) => {
@@ -82,67 +84,76 @@ const ChoicesModal = ({
       <Box
         sx={{
           position: 'relative',
-          width: '800px',
-          maxHeight: '80vh',
+          width: '100%',
+          maxWidth: 500,
+          minWidth: 0,
+          maxHeight: '90vh',
           bgcolor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 2,
-          overflow: 'auto',
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          p: 0,
+          overflow: 'hidden',
           backdropFilter: 'blur(10px)',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
-        <Draggable
-          handle=".drag-handle"
-          nodeRef={modalRef}
+        <Box
+          sx={{
+            position: 'relative',
+          }}
         >
           <Box
-            ref={modalRef}
             sx={{
-              position: 'relative',
-              cursor: 'move',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '40px',
+              background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
+              borderTopLeftRadius: '12px',
+              borderTopRightRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 2,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
+              },
+              mb: '8px',
             }}
           >
-            <Box 
-              className="drag-handle"
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '30px',
-                cursor: 'move',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                }
-              }}
-            />
             <Typography 
-              variant="h5" 
-              component="h2" 
-              gutterBottom
+              variant="h6" 
               sx={{
-                textAlign: 'center',
-                fontWeight: 'bold',
-                background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 2,
-                pt: 0.5,
-                fontSize: '1.75rem',
-                letterSpacing: '-0.5px'
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                letterSpacing: '0.5px'
               }}
             >
-              Choices
+              Move Choices
             </Typography>
+            <IconButton 
+              onClick={onClose}
+              sx={{ 
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
 
+          <Box sx={{ p: 3, pt: '56px' }}>
             {previewBoard && (
               <Box sx={{ 
-                mb: 1, 
+                mb: 3, 
                 display: 'flex', 
                 justifyContent: 'center',
-                transform: 'scale(0.65)',
+                transform: 'scale(0.7)',
                 transformOrigin: 'top center',
                 height: '350px',
                 overflow: 'visible',
@@ -152,7 +163,10 @@ const ChoicesModal = ({
                   position: 'absolute',
                   top: 0,
                   left: '50%',
-                  transform: 'translateX(-50%)'
+                  transform: 'translateX(-50%)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '12px',
+                  overflow: 'hidden'
                 }}>
                   <Board
                     board={board}
@@ -172,52 +186,90 @@ const ChoicesModal = ({
             )}
             
             {isTopMovesLoading || isDictionaryLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                <CircularProgress />
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                gap: 2,
+                p: 4 
+              }}>
+                <CircularProgress size={40} />
+                <Typography variant="body1" color="text.secondary">
+                  Analyzing possible moves...
+                </Typography>
               </Box>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: 1.5,
+                maxHeight: 'calc(90vh - 400px)',
+                overflowY: 'auto',
+                px: 1,
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#c1c1c1',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    background: '#a8a8a8',
+                  },
+                },
+              }}>
                 {topMoves
                   .map(move => ({
                     ...move,
                     totalValue: move.isExchange ? 
-                      (leaveValues[move.leave] || 0) : // For exchanges, total value is just the leave value
-                      (move.score + (leaveValues[move.leave] || 0)) // For regular moves, add score and leave value
+                      (leaveValues[move.leave] || 0) :
+                      (move.score + (leaveValues[move.leave] || 0))
                   }))
                   .sort((a, b) => b.totalValue - a.totalValue)
-                  .slice(0, 15) // Only show top 15 moves overall
+                  .slice(0, 15)
                   .map((move, index) => (
-                  <Paper
-                    key={index}
-                    elevation={2}
-                    sx={{
-                      p: 1.5,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 0.5,
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 3,
-                      },
-                      cursor: 'pointer',
-                      position: 'relative',
-                      border: (simulatingMove === move || moveWithResults === move) ? '2px solid #4CAF50' : 'none',
-                      backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.1)' : 'white',
-                      overflow: 'visible'
-                    }}
-                    onClick={() => handleMoveSelect(move)}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium', minWidth: '120px' }}>
-                          {move.isExchange ? (
-                            `Exchange ${move.tiles.map(t => t.letter).join('')}`
-                          ) : (
-                            `${move.startPosition} ${move.direction === 'right' ? '→' : '↓'} ${move.word}`
-                          )}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Paper
+                      key={index}
+                      elevation={2}
+                      sx={{
+                        p: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.25,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+                        },
+                        cursor: 'pointer',
+                        position: 'relative',
+                        border: (simulatingMove === move || moveWithResults === move) ? '2px solid #4CAF50' : 'none',
+                        backgroundColor: (simulatingMove === move || moveWithResults === move) ? 'rgba(76, 175, 80, 0.05)' : 'white',
+                        borderRadius: '6px',
+                        overflow: 'visible',
+                      }}
+                      onClick={() => handleMoveSelect(move)}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              fontWeight: 600,
+                              fontSize: '0.9rem',
+                              color: '#2D3748',
+                              minWidth: '140px'
+                            }}
+                          >
+                            {move.isExchange ? (
+                              `Exchange ${move.tiles.map(t => t.letter).join('')}`
+                            ) : (
+                              `${move.startPosition} ${move.direction === 'right' ? '→' : '↓'} ${move.word}`
+                            )}
+                          </Typography>
                           {!move.isExchange && (
                             <Typography 
                               variant="body1" 
@@ -225,222 +277,129 @@ const ChoicesModal = ({
                                 color: '#4CAF50',
                                 fontWeight: 'bold',
                                 background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.15) 100%)',
-                                padding: '3px 6px',
-                                borderRadius: '6px',
-                                minWidth: '70px',
+                                padding: '1px 4px',
+                                borderRadius: '4px',
+                                minWidth: '60px',
                                 textAlign: 'center',
                                 boxShadow: '0 2px 4px rgba(76, 175, 80, 0.1)',
                                 border: '1px solid rgba(76, 175, 80, 0.2)',
-                                transition: 'all 0.2s ease-in-out',
-                                '&:hover': {
-                                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.2) 100%)',
-                                  boxShadow: '0 4px 8px rgba(76, 175, 80, 0.15)',
-                                  transform: 'translateY(-1px)'
-                                }
+                                fontSize: '0.85rem'
                               }}
                             >
                               {move.score} pts
                             </Typography>
                           )}
                           {leaveValues[move.leave] !== undefined && (
-                            <Typography 
-                              variant="body1" 
-                              sx={{ 
-                                color: '#2196F3',
-                                fontWeight: 'bold',
-                                background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%)',
-                                padding: '3px 6px',
-                                borderRadius: '6px',
-                                minWidth: '90px',
-                                textAlign: 'center',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '4px',
-                                boxShadow: '0 2px 4px rgba(33, 150, 243, 0.1)',
-                                border: '1px solid rgba(33, 150, 243, 0.2)',
-                                transition: 'all 0.2s ease-in-out',
-                                '&:hover': {
-                                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.2) 100%)',
-                                  boxShadow: '0 4px 8px rgba(33, 150, 243, 0.15)',
-                                  transform: 'translateY(-1px)'
-                                }
-                              }}
-                            >
-                              <span style={{ 
-                                color: '#1565C0',
-                                fontSize: '0.9rem',
-                                letterSpacing: '0.3px'
-                              }}>{move.leave}</span>
-                              <span style={{ 
-                                width: '1px',
-                                height: '14px',
-                                background: 'linear-gradient(to bottom, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.4), rgba(33, 150, 243, 0.2))',
-                                margin: '0 2px'
-                              }}></span>
-                              <span style={{ 
-                                color: leaveValues[move.leave] < 0 ? '#d32f2f' : '#2e7d32',
-                                fontSize: '0.9rem',
-                                letterSpacing: '0.3px',
-                                fontWeight: 'bold'
-                              }}>{leaveValues[move.leave].toFixed(1)}</span>
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                              <Typography 
+                                variant="body1" 
+                                sx={{ 
+                                  color: '#2196F3',
+                                  fontWeight: 'bold',
+                                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.15) 100%)',
+                                  padding: '1px 4px',
+                                  borderRadius: '4px',
+                                  minWidth: '60px',
+                                  textAlign: 'center',
+                                  boxShadow: '0 2px 4px rgba(33, 150, 243, 0.1)',
+                                  border: '1px solid rgba(33, 150, 243, 0.2)',
+                                  fontSize: '0.85rem'
+                                }}
+                              >
+                                {formatScore(leaveValues[move.leave])} {move.leave}
+                              </Typography>
+                              <Tooltip title="Leave value represents the strength of your remaining tiles">
+                                <InfoIcon sx={{ color: '#2196F3', fontSize: '0.9rem' }} />
+                              </Tooltip>
+                            </Box>
                           )}
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              color: '#9C27B0',
-                              fontWeight: 'bold',
-                              background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.15) 100%)',
-                              padding: '3px 6px',
-                              borderRadius: '6px',
-                              minWidth: '70px',
-                              textAlign: 'center',
-                              boxShadow: '0 2px 4px rgba(156, 39, 176, 0.1)',
-                              border: '1px solid rgba(156, 39, 176, 0.2)',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(156, 39, 176, 0.2) 100%)',
-                                boxShadow: '0 4px 8px rgba(156, 39, 176, 0.15)',
-                                transform: 'translateY(-1px)'
-                              }
-                            }}
-                          >
-                            {move.totalValue.toFixed(1)} eq
-                          </Typography>
                         </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         <Button
                           variant="contained"
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleMoveSelect(move);
+                            handleSimulate(move);
                           }}
+                          disabled={simulatingMove === move}
                           sx={{
-                            background: 'linear-gradient(135deg, rgba(97, 97, 97, 0.15) 0%, rgba(97, 97, 97, 0.2) 100%)',
-                            color: '#616161',
-                            fontWeight: 'bold',
+                            background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
+                            color: 'white',
                             textTransform: 'none',
-                            padding: '3px 12px',
-                            borderRadius: '6px',
-                            minWidth: '70px',
-                            boxShadow: '0 2px 4px rgba(97, 97, 97, 0.1)',
-                            border: '1px solid rgba(97, 97, 97, 0.3)',
-                            transition: 'all 0.2s ease-in-out',
+                            fontWeight: 600,
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: '4px',
+                            minWidth: '80px',
+                            fontSize: '0.85rem',
                             '&:hover': {
-                              background: 'linear-gradient(135deg, rgba(97, 97, 97, 0.2) 0%, rgba(97, 97, 97, 0.25) 100%)',
-                              boxShadow: '0 4px 8px rgba(97, 97, 97, 0.15)',
-                              transform: 'translateY(-1px)'
+                              background: 'linear-gradient(135deg, #5A67D8 0%, #4C51BF 100%)',
                             },
-                            '&:active': {
-                              transform: 'translateY(0)',
-                              boxShadow: '0 2px 4px rgba(97, 97, 97, 0.1)'
+                            '&:disabled': {
+                              background: '#E2E8F0',
+                              color: '#A0AEC0'
                             }
                           }}
                         >
-                          {move.isExchange ? 'Exchange' : 'Select'}
+                          {simulatingMove === move ? (
+                            <CircularProgress size={14} color="inherit" />
+                          ) : (
+                            <>
+                              <PlayArrowIcon sx={{ mr: 0.25, fontSize: '0.9rem' }} />
+                              Simulate
+                            </>
+                          )}
                         </Button>
-                        {!move.isExchange && (
-                          <Button
-                            variant="contained"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSimulate(move);
-                            }}
-                            disabled={simulatingMove !== null}
-                            startIcon={<PlayArrowIcon sx={{ fontSize: '1.1rem' }} />}
-                            sx={{
-                              background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.15) 0%, rgba(66, 66, 66, 0.2) 100%)',
-                              color: '#424242',
-                              fontWeight: 'bold',
-                              textTransform: 'none',
-                              padding: '3px 12px',
-                              borderRadius: '6px',
-                              minWidth: '100px',
-                              boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)',
-                              border: '1px solid rgba(66, 66, 66, 0.3)',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': {
-                                background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.2) 0%, rgba(66, 66, 66, 0.25) 100%)',
-                                boxShadow: '0 4px 8px rgba(66, 66, 66, 0.15)',
-                                transform: 'translateY(-1px)'
-                              },
-                              '&:active': {
-                                transform: 'translateY(0)',
-                                boxShadow: '0 2px 4px rgba(66, 66, 66, 0.1)'
-                              },
-                              '&.Mui-disabled': {
-                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%)',
-                                color: 'rgba(0, 0, 0, 0.26)',
-                                border: '1px solid rgba(0, 0, 0, 0.1)',
-                                boxShadow: 'none'
-                              }
-                            }}
-                          >
-                            Play It Out
-                          </Button>
-                        )}
                       </Box>
-                    </Box>
-
-                    {(simulatingMove === move || moveWithResults === move) && (
-                      <>
-                        {simulationProgress > 0 && simulatingMove === move && (
-                          <Box sx={{ mt: 0.5 }}>
+                      {simulationResult && moveWithResults === move && (
+                        <Box sx={{ 
+                          mt: 0.25,
+                          pt: 0.5,
+                          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 0.25
+                        }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                            Simulation Results:
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                              Win Rate: {formatScore(simulationResult.winRate)}%
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                              Avg Score: {formatScore(simulationResult.avgScore)}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                              Best Case: {formatScore(simulationResult.bestCase)}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                              Worst Case: {formatScore(simulationResult.worstCase)}
+                            </Typography>
+                          </Box>
+                          {simulationProgress < 100 && (
                             <LinearProgress 
                               variant="determinate" 
-                              value={simulationProgress * 100} 
+                              value={simulationProgress}
                               sx={{
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                height: 3,
+                                borderRadius: 1.5,
+                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
                                 '& .MuiLinearProgress-bar': {
-                                  backgroundColor: '#4CAF50',
+                                  borderRadius: 1.5,
+                                  background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
                                 }
                               }}
                             />
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                display: 'block', 
-                                textAlign: 'center', 
-                                mt: 0.25,
-                                color: 'text.secondary'
-                              }}
-                            >
-                              Running simulation {Math.ceil(simulationProgress * 5)}/5...
-                            </Typography>
-                          </Box>
-                        )}
-
-                        {simulationResult && moveWithResults === move && (
-                          <Box sx={{ 
-                            mt: 0.5,
-                            p: 1, 
-                            bgcolor: 'rgba(0, 0, 0, 0.02)', 
-                            borderRadius: 1,
-                            borderTop: '1px solid rgba(0, 0, 0, 0.1)'
-                          }}>
-                            <Typography variant="body2" sx={{ mb: 0.25 }}>
-                              After {Math.round(simulationResult.avgMoves)} turns:
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#2196F3' }}>
-                              You: {Math.round(simulationResult.avgScore)} points
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#F44336' }}>
-                              Bot: {Math.round(simulationResult.avgBotScore)} points
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    )}
-                  </Paper>
-                ))}
+                          )}
+                        </Box>
+                      )}
+                    </Paper>
+                  ))}
               </Box>
             )}
           </Box>
-        </Draggable>
+        </Box>
       </Box>
     </Modal>
   );
