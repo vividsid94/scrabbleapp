@@ -104,45 +104,38 @@ exports.handler = async function (event) {
       throw new Error('generateMoves did not return an array');
     }
 
-    const sortedMoves = allMoves.sort((a, b) => b.score - a.score);
-
-    // Validate each move and keep only valid ones
+    // Don't sort here - let the frontend handle sorting with leave values
     const validMoves = [];
-    for (const move of sortedMoves) {
+    for (const move of allMoves) {
       if (!move || !move.tiles) {
         console.warn('Invalid move object:', move);
         continue;
       }
       if (validateMove(board, move.tiles, cachedDictionary)) {
-        validMoves.push(move);
+        // Find the starting position (first tile in the move)
+        const startTile = move.tiles.reduce((first, current) => {
+          if (!first) return current;
+          if (move.direction === 'right') {
+            return current.col < first.col ? current : first;
+          } else {
+            return current.row < first.row ? current : first;
+          }
+        }, null);
+
+        validMoves.push({
+          word: move.word,
+          score: move.score,
+          tiles: move.tiles,
+          direction: move.direction,
+          startPosition: getScrabbleCoordinates(startTile.row, startTile.col)
+        });
       }
     }
-
-    // Return top 50 moves instead of 10
-    const topMoves = validMoves.slice(0, 50).map(move => {
-      // Find the starting position (first tile in the move)
-      const startTile = move.tiles.reduce((first, current) => {
-        if (!first) return current;
-        if (move.direction === 'right') {
-          return current.col < first.col ? current : first;
-        } else {
-          return current.row < first.row ? current : first;
-        }
-      }, null);
-
-      return {
-        word: move.word,
-        score: move.score,
-        tiles: move.tiles,
-        direction: move.direction,
-        startPosition: getScrabbleCoordinates(startTile.row, startTile.col)
-      };
-    });
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        moves: topMoves
+        moves: validMoves // Return ALL valid moves, let frontend sort them
       })
     };
 

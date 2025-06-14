@@ -1052,24 +1052,24 @@ export default function Play() {
       );
 
       // Then calculate total values and sort
-      const topFifteenMoves = allMoves
+      const topMoves = allMoves
         .map(move => {
           const leaveValue = updatedLeaveValues[move.leave] || 0;
           const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
-            (move.score + leaveValue + controlMetrics.totalControl * 0.5); // Add control value with 0.5 weight
+            (move.score + leaveValue); // Just points + leave, no control value
           return {
             ...move,
             totalValue,
             defensiveValue: controlMetrics.defensiveValue,
-            boardControl: controlMetrics.boardControl
+            boardControl: controlMetrics.boardControl,
           };
         })
         .sort((a, b) => b.totalValue - a.totalValue)
-        .slice(0, 15);
+        .slice(0, 15); // Show top 15 moves
 
-      setTopMoves(topFifteenMoves);
+      setTopMoves(topMoves);
     } catch (error) {
       console.error('Error getting top moves:', error);
       setSnackbarMessage('Error getting top moves: ' + error.message);
