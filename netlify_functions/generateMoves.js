@@ -4,7 +4,7 @@
 
    const { letterScores, boardMultipliers } = require('./gameLogic');
    const loadDictionary = require('./loadDictionary');
-   
+
    const theGADDAG = loadDictionary();
    const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
    const alphaArr = ALPHA.split('');
@@ -68,12 +68,12 @@
      if (direction === 'horizontal') {
        for (let startCol = leftLimit; startCol <= anchorCol; startCol++) {
          generateWordsFromPosition(board, rack, anchorRow, startCol, direction, moves, crossChecks);
-       }
+     }
      } else {
        for (let startRow = topLimit; startRow <= anchorRow; startRow++) {
          generateWordsFromPosition(board, rack, startRow, anchorCol, direction, moves, crossChecks);
-       }
      }
+   }
    }
    
    function generateWordsFromPosition(board, rack, startRow, startCol, direction, moves, crossChecks) {
@@ -141,7 +141,7 @@
      if (!inBounds(row, col)) return;
    
      const existingLetter = board[row][col];
-     
+   
      if (existingLetter !== null) {
        // Must use existing letter
        if (node[existingLetter]) {
@@ -166,7 +166,7 @@
      // Get cross-check constraints for this position
      const crossCheckKey = `${row},${col}`;
      const crossCheck = crossChecks.get(crossCheckKey);
-     
+   
      // Try placing tiles from rack
      for (let i = 0; i < rack.length; i++) {
        const tile = rack[i];
@@ -205,8 +205,8 @@
                moves, 
                crossChecks,
                false
-             );
-           }
+           );
+         }
    
            // Try switching to suffix mode
            if (node['^'] && node['^'][letter]) {
@@ -229,8 +229,8 @@
                moves, 
                crossChecks,
                true
-             );
-           }
+         );
+       }
          } else {
            // In suffix mode - can only continue in suffix
            if (node[letter]) {
@@ -301,7 +301,7 @@
          const key = `${r},${c}`;
          const horizontalChecks = getValidLetters(board, r, c, 'horizontal');
          const verticalChecks = getValidLetters(board, r, c, 'vertical');
-         
+   
          if (horizontalChecks || verticalChecks) {
            map.set(key, {
              horizontal: horizontalChecks,
@@ -356,7 +356,7 @@
        while (startRow > 0 && tempBoard[startRow - 1][col] !== null) {
          startRow--;
        }
-     } else {
+       } else {
        while (startCol > 0 && tempBoard[row][startCol - 1] !== null) {
          startCol--;
        }
@@ -411,7 +411,7 @@
      
      if (!mainWord || mainWord.length < 2 || !theGADDAG.contains(mainWord)) {
        return false;
-     }
+       }
      
      // Validate all cross-words
      for (const tile of tiles) {
@@ -600,7 +600,7 @@
      return [startRow, startCol];
    }
    
-   module.exports = { 
+   module.exports = {
      generateMoves,
      validateMove,
      isConnectedToBoard,

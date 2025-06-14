@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import styles from './Board.module.css';
-import { Box } from '@mui/system';
+import { Box, Tooltip } from '@mui/material';
 import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
 import { ThemeContext } from '../../../App';
@@ -19,7 +19,9 @@ export default function Board({
     arrowDirection,
     animate = true,
     showSlip = true,
-    showDictionary = true
+    showDictionary = true,
+    previewScore,
+    previewScorePosition
 }) {
     const { lightMode } = useContext(ThemeContext);
     let boardTheme = "Board__" + boardMode;
@@ -184,7 +186,10 @@ export default function Board({
                                             {col}
                                             {selectedPosition && selectedPosition.row === rowIndex && selectedPosition.col === colIndex && (
                                                 <div className={styles.arrowIndicator}>
-                                                    {arrowDirection === 'right' ? '→' : '↓'}
+                                                    {previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
+                                                        previewScore : 
+                                                        arrowDirection === 'right' ? '→' : '↓'
+                                                    }
                                                 </div>
                                             )}
                                         </td>

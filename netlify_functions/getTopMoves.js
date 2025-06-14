@@ -11,8 +11,8 @@ const { normalizeBoard } = require('./normalizeBoard');
 const loadDictionary = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
-/** @type {import('./loadDictionary').DAWG} */
-let cachedDAWG = null;
+/** @type {import('./loadDictionary').GADDAG} */
+let cachedDictionary = null;
 
 /**
  * Converts row/column coordinates to Scrabble-style coordinates (e.g., "8H").
@@ -92,13 +92,13 @@ exports.handler = async function (event) {
     const board = normalizeBoard(rawBoard);
     
     // Load dictionary if not already cached
-    if (!cachedDAWG) {
+    if (!cachedDictionary) {
       console.log('Loading dictionary...');
-      cachedDAWG = await loadDictionary();
-      console.log('Dictionary loaded and cached');
+      cachedDictionary = await loadDictionary();
+      console.log('Dictionary loaded successfully');
     }
 
-    const allMoves = generateMoves(board, letters, [], cachedDAWG);
+    const allMoves = generateMoves(board, letters, [], cachedDictionary);
 
     if (!Array.isArray(allMoves)) {
       throw new Error('generateMoves did not return an array');
@@ -113,7 +113,7 @@ exports.handler = async function (event) {
         console.warn('Invalid move object:', move);
         continue;
       }
-      if (validateMove(board, move.tiles, cachedDAWG)) {
+      if (validateMove(board, move.tiles, cachedDictionary)) {
         validMoves.push(move);
       }
     }

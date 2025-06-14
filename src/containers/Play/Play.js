@@ -5,7 +5,7 @@ import styles from './Play.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import Modal from '@mui/material/Modal';
-import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
+import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
@@ -20,6 +20,16 @@ import TimerIcon from '@mui/icons-material/Timer';
 import SortIcon from '@mui/icons-material/Sort';
 import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
 import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
+import { calculateScore } from '../../functions/scoreFunctions';
+
+// Add letter scores and board multipliers
+const letterScores = {
+  'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1,
+  'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1,
+  'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '?': 0
+};
+
+const boardMultipliers = JSON.parse(origBoard);
 
 export default function Play() {
   const [boardCoords, setBoardCoords] = useState([]);
@@ -269,6 +279,10 @@ export default function Play() {
             newTiles.pop();
             return newTiles;
           });
+          
+          // Reset preview score
+          setPreviewScore(null);
+          setPreviewScorePosition(null);
         }
       }
       
@@ -1780,6 +1794,37 @@ export default function Play() {
     }
   }, [moveHistory]);
 
+  const [previewScore, setPreviewScore] = useState(null);
+  const [previewScorePosition, setPreviewScorePosition] = useState(null);
+
+  // Add this function to calculate preview score
+  const calculatePreviewScore = () => {
+    if (selectedTiles.length === 0) {
+      setPreviewScore(null);
+      setPreviewScorePosition(null);
+      return;
+    }
+
+    const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
+    setPreviewScore(score);
+    
+    // Calculate position for score preview
+    if (selectedBoardPosition) {
+      const { row, col } = selectedBoardPosition;
+      setPreviewScorePosition({ row, col });
+    }
+  };
+
+  // Add effect to calculate preview score when tiles are placed
+  useEffect(() => {
+    if (selectedTiles.length > 0) {
+      calculatePreviewScore();
+    } else {
+      setPreviewScore(null);
+      setPreviewScorePosition(null);
+    }
+  }, [selectedTiles, tempBoardCoords]);
+
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -1855,6 +1900,8 @@ export default function Play() {
             showSlip={false}
             showDictionary={false}
             dictionary=""
+            previewScore={previewScore}
+            previewScorePosition={previewScorePosition}
           />   
         </Box>
 

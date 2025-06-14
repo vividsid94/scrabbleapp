@@ -1,9 +1,14 @@
 [build]
+    command = "npm run build"
     functions = "netlify_functions"
+    publish = "build"
+    include = [
+        "netlify_functions/dictionary.gaddag.json",
+        "netlify_functions/leaveValues.json"
+    ]
 
 [functions]
     included_files = [
-        "netlify_functions/dictionary.dawg.json",
         "netlify_functions/leaves.json",
         "netlify_functions/dictionary.gaddag.json"
     ]
