@@ -1780,7 +1780,6 @@ export default function Play() {
         }
 
         const data = await response.json();
-        console.log('Leave values from API:', data.leaveValues);
         
         // Update the leaveValues state with the new values
         const newLeaveValues = {};
@@ -1794,7 +1793,6 @@ export default function Play() {
           ...leaveValues,
           ...newLeaveValues
         };
-        console.log('Updated leave values:', updatedLeaveValues);
         setLeaveValues(updatedLeaveValues);
 
         // Return the updated leave values for immediate use
