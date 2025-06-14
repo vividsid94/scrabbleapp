@@ -830,7 +830,6 @@ export default function Play() {
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
             (move.score + leaveValue); // For regular moves, add score and leave value
-          console.log('Move:', move.word, 'Leave:', move.leave, 'Leave Value:', leaveValue, 'Total Value:', totalValue);
           return {
             ...move,
             totalValue

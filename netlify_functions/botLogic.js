@@ -94,15 +94,35 @@ exports.handler = async function (event) {
     // Combine regular moves and exchange moves
     const combinedMoves = [...allMoves, ...exchangeMoves];
 
-    // Sort moves by score (for now, we'll add leave values later)
-    const sortedMoves = combinedMoves.sort((a, b) => {
-      if (a.isExchange && b.isExchange) {
-        // For exchanges, prefer exchanging fewer tiles
-        return a.tiles.length - b.tiles.length;
+    // Get leave values for all moves
+    const leaveValues = {};
+    for (const move of combinedMoves) {
+      if (!move.leave) continue;
+      try {
+        const response = await fetch(`${process.env.URL}/.netlify/functions/getLeaveValue`, {
+          method: 'POST',
+          body: JSON.stringify({ leave: move.leave })
+        });
+        const data = await response.json();
+        if (data.leaveValue !== undefined) {
+          leaveValues[move.leave] = data.leaveValue;
+        }
+      } catch (error) {
+        console.error('Error getting leave value:', error);
       }
-      if (a.isExchange) return 1;  // Prefer regular moves over exchanges
-      if (b.isExchange) return -1;
-      return b.score - a.score;    // For regular moves, sort by score
+    }
+
+    // Sort moves by total value (score + leave value for regular moves, just leave value for exchanges)
+    const sortedMoves = combinedMoves.sort((a, b) => {
+      const aTotalValue = a.isExchange ? 
+        (leaveValues[a.leave] || 0) : // For exchanges, total value is just the leave value
+        (a.score + (leaveValues[a.leave] || 0)); // For regular moves, add score and leave value
+      
+      const bTotalValue = b.isExchange ? 
+        (leaveValues[b.leave] || 0) : // For exchanges, total value is just the leave value
+        (b.score + (leaveValues[b.leave] || 0)); // For regular moves, add score and leave value
+
+      return bTotalValue - aTotalValue;
     });
 
     if (sortedMoves.length === 0) {

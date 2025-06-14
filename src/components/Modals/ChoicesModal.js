@@ -185,6 +185,7 @@ const ChoicesModal = ({
                       (move.score + (leaveValues[move.leave] || 0)) // For regular moves, add score and leave value
                   }))
                   .sort((a, b) => b.totalValue - a.totalValue)
+                  .slice(0, 15) // Only show top 15 moves overall
                   .map((move, index) => (
                   <Paper
                     key={index}

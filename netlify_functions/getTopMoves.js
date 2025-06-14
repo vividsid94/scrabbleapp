@@ -118,8 +118,8 @@ exports.handler = async function (event) {
       }
     }
 
-    // Return top 10 moves
-    const topMoves = validMoves.slice(0, 10).map(move => {
+    // Return top 50 moves instead of 10
+    const topMoves = validMoves.slice(0, 50).map(move => {
       // Find the starting position (first tile in the move)
       const startTile = move.tiles.reduce((first, current) => {
         if (!first) return current;

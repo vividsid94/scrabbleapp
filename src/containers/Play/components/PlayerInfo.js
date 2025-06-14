@@ -6,6 +6,7 @@ import SendIcon from '@mui/icons-material/Send';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Tooltip } from '@mui/material';
+import { BOT_RACK_VISIBILITY } from '../../../components/AppContent/References/testRacks';
 
 const actionButtonStyle = {
   width: '24px',
@@ -22,7 +23,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       <Box className={styles.timer}>{time}</Box>
     </Box>
     <Box className={styles.points}>{points}</Box>
-    {rack && ((!isBot) || (isBot && currentPlayer === 2)) && (
+    {rack && ((!isBot) || (isBot && (BOT_RACK_VISIBILITY.enabled || currentPlayer === 2))) && (
       <Box className={styles.Rack}>
         {isBot ? (
           <Box sx={{ 
