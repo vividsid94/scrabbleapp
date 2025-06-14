@@ -4,7 +4,8 @@
 [functions]
     included_files = [
         "netlify_functions/dictionary.dawg.json",
-        "netlify_functions/leaves.json"
+        "netlify_functions/leaves.json",
+        "netlify_functions/dictionary.gaddag.json"
     ]
 
 [[redirects]]
