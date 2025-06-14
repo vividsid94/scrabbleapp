@@ -71,6 +71,7 @@ export default function Play() {
   const [previewMove, setPreviewMove] = useState(null);
   const [moveWithResults, setMoveWithResults] = useState(null);
   const [leaveValues, setLeaveValues] = useState({});
+  const [autoPlayBest, setAutoPlayBest] = useState(false);
   
   // Add audio refs
   const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
@@ -1395,6 +1396,14 @@ export default function Play() {
     leaveValues
   ]);
 
+  // Add effect to handle auto-play
+  useEffect(() => {
+    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading) {
+      handlePlayTopMove();
+    }
+  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMove]);
+
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (!gameStarted) return;
@@ -1652,6 +1661,8 @@ export default function Play() {
             onPlayTopMove={handlePlayTopMove}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
+            autoPlayBest={autoPlayBest}
+            setAutoPlayBest={setAutoPlayBest}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,

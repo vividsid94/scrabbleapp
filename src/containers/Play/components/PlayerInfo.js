@@ -92,6 +92,8 @@ export default function PlayerInfo({
   onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
+  autoPlayBest,
+  setAutoPlayBest,
   icons
 }) {
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -276,6 +278,23 @@ export default function PlayerInfo({
             }}>
               3
             </Box>
+          </Box>
+        </Tooltip>
+        <Tooltip title={gameStarted ? "Auto Play Best Move" : "Start game to enable"} placement="top">
+          <Box
+            className={styles.keyBtn}
+            onClick={() => setAutoPlayBest(!autoPlayBest)}
+            sx={{ 
+              ...actionButtonStyle,
+              opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
+              cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
+              pointerEvents: !gameStarted ? 'none' : 'auto',
+              color: autoPlayBest ? '#4CAF50' : 'inherit',
+              transform: autoPlayBest ? 'scale(1.1)' : 'scale(1)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <LightbulbIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
       </Box>
