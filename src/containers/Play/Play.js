@@ -22,13 +22,6 @@ import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
 import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
 import { calculateScore } from '../../functions/scoreFunctions';
 
-// Add letter scores and board multipliers
-const letterScores = {
-  'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1,
-  'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1,
-  'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '?': 0
-};
-
 const boardMultipliers = JSON.parse(origBoard);
 
 export default function Play() {
@@ -50,7 +43,7 @@ export default function Play() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
-  const color = useRef('#6D84A2');
+  const color = useRef('#b064af');
   const boardColor = useRef('#ffffff');
   const complementaryColor = useRef('#9F7A83');
   const [isBotMode, setIsBotMode] = useState(false);
