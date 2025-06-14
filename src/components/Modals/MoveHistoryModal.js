@@ -15,10 +15,13 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Board from '../AppContent/Board/Board';
 import { createBoard } from '../../functions/boardFunctions';
+import { IconButton, Tooltip } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import InfoIcon from '@mui/icons-material/Info';
 
 export default function MoveHistoryModal({ open, onClose, moves }) {
-  const [showBotRacks, setShowBotRacks] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'board'
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
   const formatMove = useMemo(() => (move) => {
     const { boardDiff, player, score, rack, total } = move;
@@ -240,9 +243,9 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
               <TableCell sx={{ width: '40px', fontWeight: 600 }}>#</TableCell>
               <TableCell sx={{ width: '80px', fontWeight: 600 }}>Player</TableCell>
               <TableCell sx={{ width: '80px', fontWeight: 600 }}>Rack</TableCell>
-              <TableCell sx={{ width: '250px', fontWeight: 600 }}>Words</TableCell>
+              <TableCell sx={{ width: '80px', fontWeight: 600 }}>Words</TableCell>
               <TableCell sx={{ width: '60px', fontWeight: 600 }}>Score</TableCell>
-              <TableCell sx={{ width: '100px', fontWeight: 600 }}>Total</TableCell>
+              <TableCell sx={{ width: '60px', fontWeight: 600 }}>Total</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -273,7 +276,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
                           right: 0,
                           bottom: 0,
                           background: 'repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 2px, #e0e0e0 2px, #e0e0e0 4px)',
-                          opacity: showBotRacks ? 0 : 1,
+                          opacity: 1,
                           borderRadius: '4px'
                         }
                       }}>
@@ -323,7 +326,7 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
         </Table>
       </TableContainer>
     );
-  }, [moves, formatMove, showBotRacks]);
+  }, [moves, formatMove]);
 
   const renderMove = useCallback((move, index) => {
     // Reconstruct board state from diffs
@@ -383,34 +386,71 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
       onClose={onClose}
       aria-labelledby="move-history-modal"
     >
-      <Box sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '80%',
-        maxWidth: '800px',
-        bgcolor: 'background.paper',
-        boxShadow: 24,
-        p: 4,
-        maxHeight: '80vh',
-        overflow: 'auto'
-      }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="h2">
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: viewMode === 'board' ? 'auto' : '100%',
+          maxWidth: viewMode === 'board' ? 460 : 800,
+          minWidth: 0,
+          maxHeight: '90vh',
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          p: 0,
+          overflow: 'hidden',
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '40px',
+            background: 'linear-gradient(135deg, #7F9CF5 0%, #667EEA 100%)',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            '&:hover': {
+              background: 'linear-gradient(135deg, #667EEA 0%, #5A67D8 100%)',
+            },
+            mb: '8px',
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              letterSpacing: '0.5px'
+            }}
+          >
             Move History
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showBotRacks}
-                  onChange={(e) => setShowBotRacks(e.target.checked)}
-                  size="small"
-                />
+          <IconButton 
+            onClick={onClose}
+            sx={{ 
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
               }
-              label="Show Bot Racks"
-            />
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Box sx={{ p: 4, pt: '56px' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2, gap: 2 }}>
             <Button
               variant="outlined"
               size="small"
@@ -427,15 +467,82 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
               Download GCG
             </Button>
           </Box>
+          {viewMode === 'table' ? (
+            tableContent
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, maxHeight: '60vh', overflowY: 'auto' }}>
+              {moves.length > 0 && (() => {
+                const move = moves[currentMoveIndex];
+                // Reconstruct board state up to this move
+                const board = Array(15).fill().map(() => Array(15).fill(0));
+                for (let i = 0; i <= currentMoveIndex; i++) {
+                  const currentMove = moves[i];
+                  if (currentMove.boardDiff) {
+                    currentMove.boardDiff.forEach(({ row, col, value }) => {
+                      board[row][col] = value;
+                    });
+                  }
+                }
+                return (
+                  <Paper key={currentMoveIndex} sx={{ p: 1.5, mb: 1, width: 'auto', maxWidth: 420, mx: 'auto', boxShadow: 2 }}>
+                    <Typography variant="subtitle1">
+                      {move.player}: {move.score} points
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Rack: {move.rack}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total: {move.total}
+                    </Typography>
+                    <Box sx={{ mb: 0, display: 'flex', justifyContent: 'center', height: '275px', width: '275px', overflow: 'hidden' }}>
+                      <Box sx={{ transform: 'scale(0.6)', transformOrigin: 'top center'}}>
+                        <Board
+                          board={createBoard(
+                            board,
+                            [],
+                            "PROTILES",
+                            "STANDARD",
+                            '#6D84A2',
+                            '#9F7A83',
+                            []
+                          )}
+                          boardMode="STANDARD"
+                          onBoardChildClick={() => {}}
+                          onTileDrop={() => {}}
+                          animate={false}
+                          showSlip={false}
+                          showDictionary={false}
+                          dictionary=""
+                        />
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 0 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={currentMoveIndex === 0}
+                        onClick={() => setCurrentMoveIndex(i => Math.max(0, i - 1))}
+                      >
+                        Previous
+                      </Button>
+                      <Typography variant="body2" sx={{ alignSelf: 'center' }}>
+                        Move {currentMoveIndex + 1} of {moves.length}
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={currentMoveIndex === moves.length - 1}
+                        onClick={() => setCurrentMoveIndex(i => Math.min(moves.length - 1, i + 1))}
+                      >
+                        Next
+                      </Button>
+                    </Box>
+                  </Paper>
+                );
+              })()}
+            </Box>
+          )}
         </Box>
-        
-        {viewMode === 'table' ? (
-          tableContent
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {moves.map((move, index) => renderMove(move, index))}
-          </Box>
-        )}
       </Box>
     </Modal>
   );
