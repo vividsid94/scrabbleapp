@@ -1605,9 +1605,7 @@ export default function Play() {
       } else if (event.key === '2') {
         handleExchange();
       } else if (event.key === '3') {
-        // First get top moves to ensure leave values are calculated
-        await handleGetTopMoves();
-        // Then play the best move
+        // Directly play the best move without showing choices
         handlePlayTopMove();
       }
     };
@@ -1616,7 +1614,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [gameStarted, handlePass, handleExchange, handleGetTopMoves, handlePlayTopMove]);
+  }, [gameStarted, handlePass, handleExchange, handlePlayTopMove]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1674,7 +1672,6 @@ export default function Play() {
     
     // Sort the remaining tiles to create the leave
     const leave = rackCopy.sort().join('');
-    console.log('Calculated leave for move:', move.word, 'Leave:', leave);
     return leave;
   };
 
@@ -1695,8 +1692,6 @@ export default function Play() {
           leavesArray.push(leaveStr);
         }
       }
-
-      console.log('Leaves to fetch:', leavesArray);
 
       // Only make the API call if we have new leaves to fetch
       if (leavesToFetch.size > 0) {
