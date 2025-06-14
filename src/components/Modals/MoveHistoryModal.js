@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,19 +13,18 @@ import TableCell from '@mui/material/TableCell';
 import Paper from '@mui/material/Paper';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Board from '../AppContent/Board/Board';
+import { createBoard } from '../../functions/boardFunctions';
 
 export default function MoveHistoryModal({ open, onClose, moves }) {
   const [showBotRacks, setShowBotRacks] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'board'
 
   const formatMove = useMemo(() => (move) => {
-    const { beforeBoard, afterBoard, player, score, rack, total } = move;
+    const { boardDiff, player, score, rack, total } = move;
 
-    // Check if this is a pass move (no changes to the board)
-    const isPass = beforeBoard.every((row, i) => 
-      row.every((cell, j) => cell === afterBoard[i][j])
-    );
-
-    if (isPass) {
+    // If no board diff, it's a pass move
+    if (!boardDiff || boardDiff.length === 0) {
       return {
         display: (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -64,6 +63,12 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
       };
     }
 
+    // Reconstruct the board state for this move
+    const board = Array(15).fill().map(() => Array(15).fill(0));
+    boardDiff.forEach(({ row, col, value }) => {
+      board[row][col] = value;
+    });
+
     // Find the first tile that changed
     let firstRow = -1;
     let firstCol = -1;
@@ -72,114 +77,76 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
     let gcgWord = '';
     let allWords = [];
     
-    // First pass: find the first changed tile and determine direction
-    for (let row = 0; row < 15; row++) {
-      for (let col = 0; col < 15; col++) {
-        if (beforeBoard[row][col] !== afterBoard[row][col]) {
-          if (firstRow === -1) {
-            firstRow = row;
-            firstCol = col;
-            // Check if it's horizontal by looking at the next tile
-            isHorizontal = col < 14 && beforeBoard[row][col + 1] !== afterBoard[row][col + 1];
-          }
-        }
+    // Find the first changed tile and determine direction
+    for (const { row, col } of boardDiff) {
+      if (firstRow === -1) {
+        firstRow = row;
+        firstCol = col;
+        // Check if it's horizontal by looking at the next tile
+        isHorizontal = col < 14 && boardDiff.some(d => d.row === row && d.col === col + 1);
       }
     }
 
-    // Second pass: build both display word and GCG word
+    // Build the word based on direction
     if (isHorizontal) {
       // For horizontal plays, scan left to find the start of the word
-      while (firstCol > 0 && typeof afterBoard[firstRow][firstCol - 1] === 'string') {
+      while (firstCol > 0 && board[firstRow][firstCol - 1] !== 0) {
         firstCol--;
       }
       // Now scan right to build the word
       let col = firstCol;
-      while (col < 15 && typeof afterBoard[firstRow][col] === 'string') {
-        displayWord += afterBoard[firstRow][col];
-        // If this position had a tile before, use a dot
-        if (beforeBoard[firstRow][col] === afterBoard[firstRow][col]) {
-          gcgWord += '.';
-        } else {
-          gcgWord += afterBoard[firstRow][col];
-        }
+      while (col < 15 && board[firstRow][col] !== 0) {
+        displayWord += board[firstRow][col];
+        gcgWord += board[firstRow][col];
         col++;
       }
       allWords.push(displayWord);
 
       // Check for vertical words at each new tile
-      col = firstCol;
-      while (col < 15 && typeof afterBoard[firstRow][col] === 'string') {
-        if (beforeBoard[firstRow][col] === afterBoard[firstRow][col]) {
-          col++;
-          continue;
-        }
+      for (const { row, col } of boardDiff) {
         // Check for vertical word at this position
-        let vRow = firstRow;
-        while (vRow > 0 && typeof afterBoard[vRow - 1][col] === 'string') {
+        let vRow = row;
+        while (vRow > 0 && board[vRow - 1][col] !== 0) {
           vRow--;
         }
         let verticalWord = '';
-        let verticalGcgWord = '';
-        while (vRow < 15 && typeof afterBoard[vRow][col] === 'string') {
-          verticalWord += afterBoard[vRow][col];
-          if (beforeBoard[vRow][col] === afterBoard[vRow][col]) {
-            verticalGcgWord += '.';
-          } else {
-            verticalGcgWord += afterBoard[vRow][col];
-          }
+        while (vRow < 15 && board[vRow][col] !== 0) {
+          verticalWord += board[vRow][col];
           vRow++;
         }
         if (verticalWord.length > 1) {
           allWords.push(verticalWord);
         }
-        col++;
       }
     } else {
       // For vertical plays, scan up to find the start of the word
-      while (firstRow > 0 && typeof afterBoard[firstRow - 1][firstCol] === 'string') {
+      while (firstRow > 0 && board[firstRow - 1][firstCol] !== 0) {
         firstRow--;
       }
       // Now scan down to build the word
       let row = firstRow;
-      while (row < 15 && typeof afterBoard[row][firstCol] === 'string') {
-        displayWord += afterBoard[row][firstCol];
-        // If this position had a tile before, use a dot
-        if (beforeBoard[row][firstCol] === afterBoard[row][firstCol]) {
-          gcgWord += '.';
-        } else {
-          gcgWord += afterBoard[row][firstCol];
-        }
+      while (row < 15 && board[row][firstCol] !== 0) {
+        displayWord += board[row][firstCol];
+        gcgWord += board[row][firstCol];
         row++;
       }
       allWords.push(displayWord);
 
       // Check for horizontal words at each new tile
-      row = firstRow;
-      while (row < 15 && typeof afterBoard[row][firstCol] === 'string') {
-        if (beforeBoard[row][firstCol] === afterBoard[row][firstCol]) {
-          row++;
-          continue;
-        }
+      for (const { row, col } of boardDiff) {
         // Check for horizontal word at this position
-        let hCol = firstCol;
-        while (hCol > 0 && typeof afterBoard[row][hCol - 1] === 'string') {
+        let hCol = col;
+        while (hCol > 0 && board[row][hCol - 1] !== 0) {
           hCol--;
         }
         let horizontalWord = '';
-        let horizontalGcgWord = '';
-        while (hCol < 15 && typeof afterBoard[row][hCol] === 'string') {
-          horizontalWord += afterBoard[row][hCol];
-          if (beforeBoard[row][hCol] === afterBoard[row][hCol]) {
-            horizontalGcgWord += '.';
-          } else {
-            horizontalGcgWord += afterBoard[row][hCol];
-          }
+        while (hCol < 15 && board[row][hCol] !== 0) {
+          horizontalWord += board[row][hCol];
           hCol++;
         }
         if (horizontalWord.length > 1) {
           allWords.push(horizontalWord);
         }
-        row++;
       }
     }
 
@@ -356,105 +323,119 @@ export default function MoveHistoryModal({ open, onClose, moves }) {
         </Table>
       </TableContainer>
     );
-  }, [moves, formatMove, showBotRacks]); // Add showBotRacks to dependencies
+  }, [moves, formatMove, showBotRacks]);
+
+  const renderMove = useCallback((move, index) => {
+    // Reconstruct board state from diffs
+    const board = Array(15).fill().map(() => Array(15).fill(0));
+    for (let i = 0; i <= index; i++) {
+      const currentMove = moves[i];
+      if (currentMove.boardDiff) {
+        currentMove.boardDiff.forEach(({ row, col, value }) => {
+          board[row][col] = value;
+        });
+      }
+    }
+
+    return (
+      <Box key={index} sx={{ 
+        p: 2, 
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1
+      }}>
+        <Typography variant="subtitle1">
+          {move.player}: {move.score} points
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Rack: {move.rack}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Total: {move.total}
+        </Typography>
+        <Box sx={{ mt: 1 }}>
+          <Board
+            board={createBoard(
+              board,
+              [],
+              "PROTILES",
+              "STANDARD",
+              '#6D84A2',
+              '#9F7A83',
+              []
+            )}
+            boardMode="STANDARD"
+            onBoardChildClick={() => {}}
+            onTileDrop={() => {}}
+            animate={false}
+            showSlip={false}
+            showDictionary={false}
+            dictionary=""
+          />
+        </Box>
+      </Box>
+    );
+  }, [moves]);
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1300
-      }}
+      aria-labelledby="move-history-modal"
     >
       <Box sx={{
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '90%',
-        maxWidth: 600,
+        width: '80%',
+        maxWidth: '800px',
         bgcolor: 'background.paper',
         boxShadow: 24,
         p: 4,
-        borderRadius: 2,
         maxHeight: '80vh',
-        overflow: 'auto',
-        outline: 'none'
+        overflow: 'auto'
       }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: 2,
-          p: 3,
-          maxHeight: '80vh',
-          overflow: 'auto'
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            mb: 2
-          }}>
-            <Box>
-              <Typography variant="h6" component="h2">
-                Move History
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              {moves.length > 0 && (
-                <>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        size="small"
-                        checked={showBotRacks}
-                        onChange={(e) => setShowBotRacks(e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#4CAF50',
-                            '& + .MuiSwitch-track': {
-                              backgroundColor: '#4CAF50',
-                            },
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography variant="body2" color="text.secondary">
-                        Show Bot Racks
-                      </Typography>
-                    }
-                  />
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={handleDownload}
-                    startIcon={<DownloadIcon />}
-                    sx={{
-                      borderColor: '#4CAF50',
-                      color: '#4CAF50',
-                      '&:hover': {
-                        borderColor: '#388E3C',
-                        backgroundColor: 'rgba(76, 175, 80, 0.04)',
-                        boxShadow: '0 2px 4px rgba(76, 175, 80, 0.2)',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                      textTransform: 'none',
-                      fontWeight: 500,
-                      px: 2
-                    }}
-                  >
-                    Download GCG
-                  </Button>
-                </>
-              )}
-            </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" component="h2">
+            Move History
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showBotRacks}
+                  onChange={(e) => setShowBotRacks(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Show Bot Racks"
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setViewMode(viewMode === 'table' ? 'board' : 'table')}
+            >
+              {viewMode === 'table' ? 'Board View' : 'Table View'}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<DownloadIcon />}
+              onClick={handleDownload}
+            >
+              Download GCG
+            </Button>
           </Box>
-          {tableContent}
         </Box>
+        
+        {viewMode === 'table' ? (
+          tableContent
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {moves.map((move, index) => renderMove(move, index))}
+          </Box>
+        )}
       </Box>
     </Modal>
   );

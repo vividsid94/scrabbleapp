@@ -378,19 +378,34 @@ export default function Play() {
     setAutoPlayBest(false);
   }, [player1Rack, player2Rack]);
 
-  // Add a function to compress board state
+  // Add a function to compress board state more aggressively
   const compressBoardState = useCallback((board) => {
-    return board.map(row => 
-      row.map(cell => {
-        if (typeof cell === 'string') {
-          return cell;
-        }
-        return 0; // Convert all numbers to 0 to save memory
-      })
-    );
+    const compressed = [];
+    for (let row = 0; row < 15; row++) {
+      const compressedRow = [];
+      for (let col = 0; col < 15; col++) {
+        const cell = board[row][col];
+        compressedRow.push(typeof cell === 'string' ? cell : 0);
+      }
+      compressed.push(compressedRow);
+    }
+    return compressed;
   }, []);
 
-  // Modify handleWordSubmit to use compressed board states
+  // Add a function to store only the differences in board states
+  const getBoardDiff = useCallback((before, after) => {
+    const diff = [];
+    for (let row = 0; row < 15; row++) {
+      for (let col = 0; col < 15; col++) {
+        if (before[row][col] !== after[row][col]) {
+          diff.push({ row, col, value: after[row][col] });
+        }
+      }
+    }
+    return diff;
+  }, []);
+
+  // Modify handleWordSubmit to use board diffs
   const handleWordSubmit = async () => {
     const response = await fetch('/.netlify/functions/gameLogic', {
       method: 'POST',
@@ -452,17 +467,17 @@ export default function Play() {
     // Calculate running total
     const runningTotal = player1points + score;
 
-    // Optimize move history entry to store only necessary data
+    // Store only the differences in board states
+    const boardDiff = getBoardDiff(boardCoords, tempBoardCoords);
     const moveHistoryEntry = {
-      beforeBoard: compressBoardState(boardCoords),
-      afterBoard: compressBoardState(tempBoardCoords),
+      boardDiff,
       player: currentPlayer === 1 ? player1Name : player2Name,
       score: score,
       rack: alphabetizeRack(playerRack).join(''),
       total: runningTotal
     };
 
-    setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]); // Keep only last 49 + new move
+    setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
 
     // Update the board state
     setBoardCoords(tempBoardCoords);
@@ -483,7 +498,7 @@ export default function Play() {
       handleGameEnd(newRack, player1Name, player2Rack, player2points);
       return;
     }
-    
+
     // Refill the current player's rack
     const newPool = [...pool];
     
@@ -532,7 +547,7 @@ export default function Play() {
 
     // Only show thinking state if auto-play is not enabled
     if (!autoPlayBest) {
-      setIsBotThinking(true);
+    setIsBotThinking(true);
     }
 
     try {
@@ -550,24 +565,24 @@ export default function Play() {
       let response;
       // Only add delay if auto-play is not enabled
       if (!autoPlayBest) {
-        const startTime = Date.now();
+      const startTime = Date.now();
         response = await fetch('/.netlify/functions/botLogic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            board: boardCopy,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCopy,
             letters: apiRack,
             pool: pool // Pass the pool to the bot
-          })
-        });
+        })
+      });
 
-        // Calculate remaining time to ensure minimum 2 second delay
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, 1000 - elapsedTime);
-        if (remainingTime > 0) {
-          await new Promise(resolve => setTimeout(resolve, remainingTime));
+      // Calculate remaining time to ensure minimum 2 second delay
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 1000 - elapsedTime);
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
         }
       } else {
         // Skip delay when auto-play is enabled
@@ -648,41 +663,41 @@ export default function Play() {
         setSnackbarOpen(true);
       } else {
         // Handle regular move
-        for (const tile of botMove.tiles) {
-          if (tile.isNew) {
-            newBoard[tile.row][tile.col] = tile.letter;
+      for (const tile of botMove.tiles) {
+        if (tile.isNew) {
+          newBoard[tile.row][tile.col] = tile.letter;
+          
+          // For blank tiles, we need to find the blank in the rack
+          if (tile.isBlank) {
+            newBlankTiles.push({ row: tile.row, col: tile.col });
             
-            // For blank tiles, we need to find the blank in the rack
-            if (tile.isBlank) {
-              newBlankTiles.push({ row: tile.row, col: tile.col });
-              
-              // Remove the blank tile from the rack - look for both '?' and '*'
-              const blankIndex = newRack.indexOf('?');
-              if (blankIndex !== -1) {
-                newRack.splice(blankIndex, 1);
-              } else {
-                const starIndex = newRack.indexOf('*');
-                if (starIndex !== -1) {
-                  newRack.splice(starIndex, 1);
-                }
-              }
+            // Remove the blank tile from the rack - look for both '?' and '*'
+            const blankIndex = newRack.indexOf('?');
+            if (blankIndex !== -1) {
+              newRack.splice(blankIndex, 1);
             } else {
-              // For non-blank tiles, find and remove the letter
-              const tileIndex = newRack.indexOf(tile.letter);
-              if (tileIndex !== -1) {
-                newRack.splice(tileIndex, 1);
+              const starIndex = newRack.indexOf('*');
+              if (starIndex !== -1) {
+                newRack.splice(starIndex, 1);
               }
+            }
+          } else {
+            // For non-blank tiles, find and remove the letter
+            const tileIndex = newRack.indexOf(tile.letter);
+            if (tileIndex !== -1) {
+              newRack.splice(tileIndex, 1);
             }
           }
         }
-        
-        // Calculate running total
-        const botRunningTotal = player2points + botMove.score;
+      }
+      
+      // Calculate running total
+      const botRunningTotal = player2points + botMove.score;
 
-        // Optimize move history entry
+        // Store only the differences in board states
+        const boardDiff = getBoardDiff(boardCoords, newBoard);
         const moveHistoryEntry = {
-          beforeBoard: compressBoardState(boardCoords),
-          afterBoard: compressBoardState(newBoard),
+          boardDiff,
           player: player2Name,
           score: botMove.score,
           rack: alphabetizeRack(botRack).join(''),
@@ -691,25 +706,25 @@ export default function Play() {
 
         setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
 
-        // Update the board state
-        setBoardCoords(newBoard);
-        setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
-        setPlayer2Rack(alphabetizeRack(newRack));
-        setBlankTiles(newBlankTiles);
-        
-        // Draw new tiles for bot
-        while (newRack.length < 7 && newPool.length > 0) {
-          const randomIndex = Math.floor(Math.random() * newPool.length);
-          newRack.push(newPool[randomIndex]);
-          newPool.splice(randomIndex, 1);
-        }
-        setPlayer2Rack(alphabetizeRack(newRack));
-        setPool(newPool);
-        
-        // Show toast notification for bot's move
-        setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
+      // Update the board state
+      setBoardCoords(newBoard);
+      setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
+      setPlayer2Rack(alphabetizeRack(newRack));
+      setBlankTiles(newBlankTiles);
+      
+      // Draw new tiles for bot
+      while (newRack.length < 7 && newPool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * newPool.length);
+        newRack.push(newPool[randomIndex]);
+        newPool.splice(randomIndex, 1);
+      }
+      setPlayer2Rack(alphabetizeRack(newRack));
+      setPool(newPool);
+      
+      // Show toast notification for bot's move
+      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
         
         // Update bot's score
         setPlayer2points(botRunningTotal);
@@ -739,7 +754,7 @@ export default function Play() {
     } finally {
       // Only clear thinking state if auto-play is not enabled
       if (!autoPlayBest) {
-        setIsBotThinking(false);
+      setIsBotThinking(false);
       }
       // Clear states even on error
       setSimulatingMove(null);
@@ -1392,15 +1407,17 @@ export default function Play() {
           // Add exchanged tiles back to pool
           stateUpdates.newPool.push(...tilesToExchange);
           
-          // Update move history
-          stateUpdates.newMoveHistory.push({
-            beforeBoard: compressBoardState(boardCoords),
-            afterBoard: compressBoardState(stateUpdates.newBoard),
+          // Store only the differences in board states
+          const boardDiff = getBoardDiff(boardCoords, stateUpdates.newBoard);
+          const moveHistoryEntry = {
+            boardDiff,
             player: currentPlayer === 1 ? player1Name : player2Name,
             score: 0,
             rack: alphabetizeRack(currentRack).join(''),
             total: stateUpdates.runningTotal
-          });
+          };
+
+          setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
           
           // Show toast notification
           setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
@@ -1443,15 +1460,17 @@ export default function Play() {
           // Update running total
           stateUpdates.runningTotal += bestMove.score;
           
-          // Update move history
-          stateUpdates.newMoveHistory.push({
-            beforeBoard: compressBoardState(boardCoords),
-            afterBoard: compressBoardState(stateUpdates.newBoard),
+          // Store only the differences in board states
+          const boardDiff = getBoardDiff(boardCoords, stateUpdates.newBoard);
+          const moveHistoryEntry = {
+            boardDiff,
             player: currentPlayer === 1 ? player1Name : player2Name,
             score: bestMove.score,
             rack: alphabetizeRack(currentRack).join(''),
             total: stateUpdates.runningTotal
-          });
+          };
+
+          setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
           
           // Show toast notification
           setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} played "${bestMove.word}" for ${bestMove.score} points`);
@@ -1532,7 +1551,8 @@ export default function Play() {
     moveHistory,
     leaveValues,
     handleGameEnd,
-    compressBoardState
+    compressBoardState,
+    getBoardDiff
   ]);
 
   // Add effect to handle auto-play
@@ -1569,6 +1589,9 @@ export default function Play() {
       setPreviewMove(null);
       setMoveWithResults(null);
       setLeaveValues({}); // Clear leave values cache
+      setSelectedTiles([]);
+      setSelectedBoardPosition(null);
+      setArrowDirection('right');
     };
   }, []);
 
