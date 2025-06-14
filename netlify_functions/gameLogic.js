@@ -16,8 +16,8 @@ const letterScores = {
 
 const { loadDictionary } = require('./loadDictionary');
 
-/** @type {import('./trie').Trie} */
-let cachedTrie = null;
+/** @type {import('./dawg').DAWG} */
+let cachedDAWG = null;
 
 /**
  * Checks if a word exists in the Scrabble dictionary.
@@ -27,10 +27,10 @@ let cachedTrie = null;
  */
 async function isValidWord(word) {
     try {
-        if (!cachedTrie) {
-            cachedTrie = await loadDictionary();
+        if (!cachedDAWG) {
+            cachedDAWG = await loadDictionary();
         }
-        return cachedTrie.contains(word.toUpperCase());
+        return cachedDAWG.contains(word.toUpperCase());
     } catch (error) {
         console.error('❌ Dictionary error:', error);
         return false;
@@ -425,9 +425,9 @@ exports.handler = async function(event) {
     }
 
     try {
-        if (!cachedTrie) {
+        if (!cachedDAWG) {
             console.log('Loading dictionary...');
-            cachedTrie = await loadDictionary();
+            cachedDAWG = await loadDictionary();
             console.log('Dictionary loaded and cached');
         }
 

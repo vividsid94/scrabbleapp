@@ -36,7 +36,7 @@
    /* -------------------------------------------------------------
       Main entry
       ------------------------------------------------------------- */
-   function generateMoves(board, rack, anchors = [], trie) {
+   function generateMoves(board, rack, anchors = [], dawg) {
      // all runs start fresh
      memo.clear();
 
@@ -45,7 +45,7 @@
    
      // Opening move handled separately
      if (isBoardEmpty(board)) {
-       generateFirstMove(board, rack, trie, moves);
+       generateFirstMove(board, rack, dawg, moves);
        return moves;
      }
    
@@ -55,15 +55,15 @@
      for (let r = 0; r < 15; r++) {
        for (let c = 0; c < 15; c++) {
          if (board[r][c] !== null) continue;
-         horizCross.set(`${r},${c}`, getValidLetters(board, r, c, 'down', trie));
-         vertCross.set(`${r},${c}`, getValidLetters(board, r, c, 'right', trie));
+         horizCross.set(`${r},${c}`, getValidLetters(board, r, c, 'down', dawg));
+         vertCross.set(`${r},${c}`, getValidLetters(board, r, c, 'right', dawg));
        }
      }
    
      // Explore from every anchor in both directions
      for (const anchor of anchorList) {
-       generateMovesInDirection(board, rack, anchor, 'right', trie, moves, horizCross);
-       generateMovesInDirection(board, rack, anchor, 'down', trie, moves, vertCross);
+       generateMovesInDirection(board, rack, anchor, 'right', dawg, moves, horizCross);
+       generateMovesInDirection(board, rack, anchor, 'down', dawg, moves, vertCross);
      }
    
      return moves;
@@ -72,7 +72,7 @@
    /* -------------------------------------------------------------
       Opening move – must cross the centre
       ------------------------------------------------------------- */
-   function generateFirstMove(board, rack, trie, moves) {
+   function generateFirstMove(board, rack, dawg, moves) {
      const centerRow = 7;
      const centerCol = 7;
      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -83,8 +83,8 @@
        if (centerCol < startCol || centerCol >= startCol + maxLen) continue;
    
        generateAllWords(
-         board, [...rack], trie.root, '',
-         centerRow, startCol, 'right', moves, trie,
+         board, [...rack], dawg.root, '',
+         centerRow, startCol, 'right', moves, dawg,
          [], true, centerCol, null, new Map()
        );
      }
@@ -95,8 +95,8 @@
        if (centerRow < startRow || centerRow >= startRow + maxLen) continue;
    
        generateAllWords(
-         board, [...rack], trie.root, '',
-         startRow, centerCol, 'down', moves, trie,
+         board, [...rack], dawg.root, '',
+         startRow, centerCol, 'down', moves, dawg,
          [], true, centerRow, null, new Map()
        );
      }
@@ -108,19 +108,19 @@
      for (const sym of uniqueSymbols) {
        if (sym === '?' || sym === '*') {
          for (const letter of alphabetArr) {
-           const node = trie.root.children.get(letter);
+           const node = dawg.root.children.get(letter);
            if (node && node.isTerminal) {
              const tile = { row: centerRow, col: centerCol, letter, isNew: true, isBlank: true };
-             const score = calculateScore(board, [tile], boardMultipliers, trie);
+             const score = calculateScore(board, [tile], boardMultipliers, dawg);
              moves.push({ word: letter, tiles: [tile], score, direction: 'right' });
            }
          }
        } else {
          const letter = sym;
-         const node = trie.root.children.get(letter);
+         const node = dawg.root.children.get(letter);
          if (node && node.isTerminal) {
            const tile = { row: centerRow, col: centerCol, letter, isNew: true, isBlank: false };
-           const score = calculateScore(board, [tile], boardMultipliers, trie);
+           const score = calculateScore(board, [tile], boardMultipliers, dawg);
            moves.push({ word: letter, tiles: [tile], score, direction: 'right' });
          }
        }
@@ -130,7 +130,7 @@
    /* -------------------------------------------------------------
       Directional search from a single anchor
       ------------------------------------------------------------- */
-   function generateMovesInDirection(board, rack, anchor, direction, trie, moves, crossChecks) {
+   function generateMovesInDirection(board, rack, anchor, direction, dawg, moves, crossChecks) {
      const { row, col } = anchor;
      const maxBackup = Math.min(7, direction === 'right' ? col : row);
    
@@ -145,7 +145,7 @@
        if (beforeRow >= 0 && beforeCol >= 0 && board[beforeRow][beforeCol] !== null) continue;
    
        // Consume forced prefix
-       let node = trie.root;
+       let node = dawg.root;
        let valid = true;
        let r = startRow;
        let c = startCol;
@@ -163,7 +163,7 @@
    
        generateAllWords(
          board, [...rack], node, prefix, r, c, direction,
-         moves, trie, [], false, null, null, crossChecks
+         moves, dawg, [], false, null, null, crossChecks
        );
      }
    }
@@ -173,7 +173,7 @@
       ------------------------------------------------------------- */
    function generateAllWords(
      board, rack, node, wordSoFar, row, col, direction,
-     moves, trie, placedTiles = [], isFirstMove = false,
+     moves, dawg, placedTiles = [], isFirstMove = false,
      centerToCheck = null, anchor = null, crossChecks = null
    ) {
      // off‑board
@@ -196,7 +196,7 @@
        if (!nextNode) return;
        generateAllWords(board, rack, nextNode, wordSoFar + existingLetter,
          nextRow, nextCol, direction,
-         moves, trie, placedTiles, isFirstMove, centerToCheck, anchor, crossChecks);
+         moves, dawg, placedTiles, isFirstMove, centerToCheck, anchor, crossChecks);
        return;
      }
    
@@ -204,11 +204,11 @@
      if (node.isTerminal && wordSoFar.length > 1) {
        const connected = isFirstMove ? isCoveringCenter(placedTiles, centerToCheck)
                                      : isConnected(board, placedTiles);
-       if (connected && validateMove(board, placedTiles, trie) && !moveExists(moves, placedTiles)) {
+       if (connected && validateMove(board, placedTiles, dawg) && !moveExists(moves, placedTiles)) {
          moves.push({
            word: wordSoFar,
            tiles: [...placedTiles],
-           score: calculateScore(board, placedTiles, boardMultipliers, trie),
+           score: calculateScore(board, placedTiles, boardMultipliers, dawg),
            direction
          });
        }
@@ -248,7 +248,7 @@
        generateAllWords(
          board, newRack, nextNode, wordSoFar + letter,
          nextRow, nextCol, direction,
-         moves, trie, [...placedTiles, newTile],
+         moves, dawg, [...placedTiles, newTile],
          isFirstMove, centerToCheck, anchor, crossChecks
        );
      }
@@ -257,7 +257,7 @@
    /* -------------------------------------------------------------
       Cross‑check helper – returns set of lowercase letters allowed, or null (all)
       ------------------------------------------------------------- */
-   function getValidLetters(board, row, col, direction, trie) {
+   function getValidLetters(board, row, col, direction, dawg) {
      if (board[row][col] !== null) return new Set();
    
      const hasPerpTile = direction === 'right'
@@ -270,7 +270,7 @@
      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
    
      for (const letter of alphabet) {
-       if (isValidCrossWord(board, row, col, letter, direction === 'right' ? 'down' : 'right', trie)) {
+       if (isValidCrossWord(board, row, col, letter, direction === 'right' ? 'down' : 'right', dawg)) {
          valid.add(letter);
        }
      }
@@ -280,7 +280,7 @@
    /* -------------------------------------------------------------
       Supporting validators & utilities (mostly unchanged)
       ------------------------------------------------------------- */
-   function isValidCrossWord(board, row, col, letter, crossDir, trie) {
+   function isValidCrossWord(board, row, col, letter, crossDir, dawg) {
      const hasAdjacent = crossDir === 'down'
        ? (row > 0 && board[row - 1][col] !== null) || (row < 14 && board[row + 1][col] !== null)
        : (col > 0 && board[row][col - 1] !== null) || (col < 14 && board[row][col + 1] !== null);
@@ -304,16 +304,16 @@
        word += ch;
        if (crossDir === 'down') r++; else c++;
      }
-     return word.length <= 1 || trie.contains(word);
+     return word.length <= 1 || dawg.contains(word);
    }
    
-   function validateMove(board, tiles, trie) {
+   function validateMove(board, tiles, dawg) {
      if (!tiles.length) return false;
      if (!areInLine(tiles)) return false;
      if (!isBoardEmpty(board) && !isConnected(board, tiles)) return false;
    
      const words = getAllWords(board, tiles);
-     return words.every(w => trie.contains(w));
+     return words.every(w => dawg.contains(w));
    }
    
    function areInLine(tiles) {
@@ -354,7 +354,7 @@
    }
    
    /* ---------------- Scoring ---------------- */
-   function calculateScore(board, tiles, boardMultipliers, trie) {
+   function calculateScore(board, tiles, boardMultipliers, dawg) {
      let total = 0;
      const dir = tiles.length === 1 ? 'both' : (tiles[0].row === tiles[1].row ? 'right' : 'down');
    
