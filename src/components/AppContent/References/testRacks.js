@@ -3,7 +3,7 @@
 export const TEST_RACKS = {
   enabled: false, // Set to false to use random racks
   player1: ['R', 'C', 'C', 'D', 'L', 'F', 'G'], // Example test rack
-  player2: ['Q', 'E', 'R', 'N', 'T', 'E', 'S']  // Example test rack
+  player2: ['L', 'A', 'R', 'V', 'T', 'E', 'O']  // Example test rack
 }; 
 
 // Configuration for bot rack visibility

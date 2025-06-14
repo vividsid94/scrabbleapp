@@ -13,9 +13,6 @@ const { generateMoves } = require('./generateMoves');
 const fs = require('fs');
 const path = require('path');
 
-/** @type {import('./trie').Trie} */
-let cachedTrie = null;
-
 // Cache for leave values
 let leaveValues = {};
 try {
@@ -54,7 +51,8 @@ const getLeaveValue = (leave) => {
  * // Example request body:
  * {
  *   "board": [["A", "B", null, ...], ...], // 15x15 array
- *   "letters": ["A", "B", "C", "D", "E", "F", "G"] // Up to 7 letters
+ *   "letters": ["A", "B", "C", "D", "E", "F", "G"], // Up to 7 letters
+ *   "pool": ["A", "B", "C", ...] // Optional: Available tiles in the pool
  * }
  * 
  * // Example response:
@@ -73,7 +71,7 @@ exports.handler = async function (event) {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { board: rawBoard, letters } = JSON.parse(event.body || '{}');
+    const { board: rawBoard, letters, pool = [] } = JSON.parse(event.body || '{}');
     
     if (!Array.isArray(rawBoard) || rawBoard.length !== 15 || !Array.isArray(letters) || letters.length > 7) {
       throw new Error('Invalid input: board must be 15x15 array and letters must be array of up to 7 letters');
@@ -81,15 +79,13 @@ exports.handler = async function (event) {
 
     const board = normalizeBoard(rawBoard);
     
-    // Load dictionary if not already cached
-    if (!cachedTrie) {
-      console.log('Loading dictionary...');
-      cachedTrie = await loadDictionary();
-      console.log('Dictionary loaded and cached');
-    }
+    // Load dictionary
+    console.log('Loading dictionary...');
+    const trie = await loadDictionary();
+    console.log('Dictionary loaded');
 
     // Get all possible moves
-    const allMoves = generateMoves(board, letters, [], cachedTrie);
+    const allMoves = generateMoves(board, letters, [], trie);
 
     // Calculate leave for regular moves
     for (const move of allMoves) {
@@ -115,14 +111,31 @@ exports.handler = async function (event) {
         if (current.length === i) {
           // For exchanges, the leave is what we keep (remaining)
           const leave = remaining.sort().join('');
+          
+          // Calculate the new rack after exchange
+          const newRack = [...remaining];
+          // Draw new tiles from pool if available
+          const tilesToDraw = current.length;
+          let newTiles = [];
+          if (Array.isArray(pool) && pool.length >= tilesToDraw) {
+            // Shuffle pool and take tiles
+            const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+            newTiles = shuffledPool.slice(0, tilesToDraw);
+            newRack.push(...newTiles);
+            // Sort the new rack
+            newRack.sort();
+          }
+          
           exchangeMoves.push({
             word: `Exchange ${current.join('')}`,
             score: 0,
             tiles: current.map(letter => ({ letter, isNew: false })),
             direction: 'exchange',
             startPosition: 'Exchange',
-            leave: leave, // The leave is what we keep
-            isExchange: true
+            leave: leave, // The leave is what we keep BEFORE drawing new tiles
+            isExchange: true,
+            newTiles: newTiles, // Store the new tiles to be drawn
+            tilesToExchange: [...current] // Store the tiles being exchanged
           });
           return;
         }
@@ -134,7 +147,7 @@ exports.handler = async function (event) {
           current.pop();
         }
       };
-      generateCombos([], 0, letters);
+      generateCombos([], 0, [...letters]);
     }
 
     // Combine regular moves and exchange moves
@@ -183,7 +196,9 @@ exports.handler = async function (event) {
         score: best.score,
         tiles: best.tiles,
         leave: best.leave,
-        isExchange: best.isExchange
+        isExchange: best.isExchange,
+        newTiles: best.newTiles, // Include the new tiles to be drawn
+        tilesToExchange: best.isExchange ? best.tilesToExchange : [] // Include the tiles being exchanged
       })
     };
 

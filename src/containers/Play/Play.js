@@ -486,7 +486,8 @@ export default function Play() {
         },
         body: JSON.stringify({
           board: boardCopy,
-          letters: apiRack
+          letters: apiRack,
+          pool: pool // Pass the pool to the bot
         })
       });
 
@@ -522,68 +523,109 @@ export default function Play() {
       const newBoard = JSON.parse(JSON.stringify(boardCoords));
       const newRack = [...player2Rack];
       const newBlankTiles = [...blankTiles];
+      const newPool = [...pool];
       
-      for (const tile of botMove.tiles) {
-        if (tile.isNew) {
-          newBoard[tile.row][tile.col] = tile.letter;
-          
-          // For blank tiles, we need to find the blank in the rack
-          if (tile.isBlank) {
-            newBlankTiles.push({ row: tile.row, col: tile.col });
+      if (botMove.isExchange) {
+        // Handle exchange move
+        const tilesToExchange = botMove.tilesToExchange || botMove.tiles.map(t => t.letter);
+        const newTiles = botMove.newTiles || [];
+        
+        // Remove exchanged tiles from rack
+        for (const tile of tilesToExchange) {
+          const tileIndex = newRack.indexOf(tile);
+          if (tileIndex !== -1) {
+            newRack.splice(tileIndex, 1);
+          }
+        }
+        
+        // Add new tiles to rack
+        newRack.push(...newTiles);
+        
+        // Remove new tiles from pool
+        for (const tile of newTiles) {
+          const poolIndex = newPool.indexOf(tile);
+          if (poolIndex !== -1) {
+            newPool.splice(poolIndex, 1);
+          }
+        }
+        
+        // Add exchanged tiles back to pool
+        newPool.push(...tilesToExchange);
+        
+        // Update state
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setPool(newPool);
+        
+        // Show toast notification for bot's exchange
+        setSnackbarMessage(`SidBot exchanged ${tilesToExchange.length} tiles`);
+        setSnackbarSeverity("info");
+        setSnackbarOpen(true);
+      } else {
+        // Handle regular move
+        for (const tile of botMove.tiles) {
+          if (tile.isNew) {
+            newBoard[tile.row][tile.col] = tile.letter;
             
-            // Remove the blank tile from the rack - look for both '?' and '*'
-            const blankIndex = newRack.indexOf('?');
-            if (blankIndex !== -1) {
-              newRack.splice(blankIndex, 1);
-            } else {
-              const starIndex = newRack.indexOf('*');
-              if (starIndex !== -1) {
-                newRack.splice(starIndex, 1);
+            // For blank tiles, we need to find the blank in the rack
+            if (tile.isBlank) {
+              newBlankTiles.push({ row: tile.row, col: tile.col });
+              
+              // Remove the blank tile from the rack - look for both '?' and '*'
+              const blankIndex = newRack.indexOf('?');
+              if (blankIndex !== -1) {
+                newRack.splice(blankIndex, 1);
+              } else {
+                const starIndex = newRack.indexOf('*');
+                if (starIndex !== -1) {
+                  newRack.splice(starIndex, 1);
+                }
               }
-            }
-          } else {
-            // For non-blank tiles, find and remove the letter
-            const tileIndex = newRack.indexOf(tile.letter);
-            if (tileIndex !== -1) {
-              newRack.splice(tileIndex, 1);
+            } else {
+              // For non-blank tiles, find and remove the letter
+              const tileIndex = newRack.indexOf(tile.letter);
+              if (tileIndex !== -1) {
+                newRack.splice(tileIndex, 1);
+              }
             }
           }
         }
-      }
-      
-      // Calculate running total
-      const botRunningTotal = player2points + botMove.score;
+        
+        // Calculate running total
+        const botRunningTotal = player2points + botMove.score;
 
-      // Add bot move to history with board states
-      setMoveHistory(prev => [...prev, {
-        beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-        afterBoard: JSON.parse(JSON.stringify(newBoard)),
-        player: player2Name,
-        score: botMove.score,
-        rack: alphabetizeRack(botRack).join(''),
-        total: botRunningTotal
-      }]);
+        // Add bot move to history with board states
+        setMoveHistory(prev => [...prev, {
+          beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
+          afterBoard: JSON.parse(JSON.stringify(newBoard)),
+          player: player2Name,
+          score: botMove.score,
+          rack: alphabetizeRack(botRack).join(''),
+          total: botRunningTotal
+        }]);
 
-      // Update the board state
-      setBoardCoords(newBoard);
-      setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
-      setPlayer2Rack(alphabetizeRack(newRack));
-      setBlankTiles(newBlankTiles);
-      
-      // Draw new tiles for bot
-      const newPool = [...pool];
-      while (newRack.length < 7 && newPool.length > 0) {
-        const randomIndex = Math.floor(Math.random() * newPool.length);
-        newRack.push(newPool[randomIndex]);
-        newPool.splice(randomIndex, 1);
+        // Update the board state
+        setBoardCoords(newBoard);
+        setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setBlankTiles(newBlankTiles);
+        
+        // Draw new tiles for bot
+        while (newRack.length < 7 && newPool.length > 0) {
+          const randomIndex = Math.floor(Math.random() * newPool.length);
+          newRack.push(newPool[randomIndex]);
+          newPool.splice(randomIndex, 1);
+        }
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setPool(newPool);
+        
+        // Show toast notification for bot's move
+        setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        
+        // Update bot's score
+        setPlayer2points(botRunningTotal);
       }
-      setPlayer2Rack(alphabetizeRack(newRack));
-      setPool(newPool);
-      
-      // Show toast notification for bot's move
-      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
       
       // Reset consecutive passes since bot made a move
       setConsecutivePasses(0);
@@ -593,9 +635,6 @@ export default function Play() {
       setSelectedBoardPosition(null);
       setSelectedTiles([]);
       setArrowDirection('right');
-      
-      // Update bot's score
-      setPlayer2points(botRunningTotal);
       
     } catch (error) {
       console.error('Error making bot move:', error);
