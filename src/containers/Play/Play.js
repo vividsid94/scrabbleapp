@@ -487,6 +487,15 @@ export default function Play() {
     setSelectedBoardPosition(null);
     setSelectedTiles([]);
     setArrowDirection('right');
+
+    // After successful move
+    setSimulatingMove(null);
+    setSimulationResult(null);
+    setSimulationProgress(0);
+    setPreviewBoard(null);
+    setPreviewMove(null);
+    setMoveWithResults(null);
+    setTopMoves([]); // Clear top moves
   };
 
   const handleSettingsOpen = () => {
@@ -519,25 +528,41 @@ export default function Play() {
         rack: apiRack.join('')
       });
 
-      // Add minimum delay of 2 seconds
-      const startTime = Date.now();
-      const response = await fetch('/.netlify/functions/botLogic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCopy,
-          letters: apiRack,
-          pool: pool // Pass the pool to the bot
-        })
-      });
+      let response;
+      // Only add delay if auto-play is not enabled
+      if (!autoPlayBest) {
+        const startTime = Date.now();
+        response = await fetch('/.netlify/functions/botLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCopy,
+            letters: apiRack,
+            pool: pool // Pass the pool to the bot
+          })
+        });
 
-      // Calculate remaining time to ensure minimum 2 second delay
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 1000 - elapsedTime);
-      if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        // Calculate remaining time to ensure minimum 2 second delay
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, 1000 - elapsedTime);
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+      } else {
+        // Skip delay when auto-play is enabled
+        response = await fetch('/.netlify/functions/botLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCopy,
+            letters: apiRack,
+            pool: pool
+          })
+        });
       }
 
       if (!response.ok) {
@@ -692,6 +717,14 @@ export default function Play() {
       setCurrentPlayer(1); // Switch back to player 1 on error
     } finally {
       setIsBotThinking(false);
+      // Clear states even on error
+      setSimulatingMove(null);
+      setSimulationResult(null);
+      setSimulationProgress(0);
+      setPreviewBoard(null);
+      setPreviewMove(null);
+      setMoveWithResults(null);
+      setTopMoves([]); // Clear top moves
     }
   };
 
@@ -1428,12 +1461,30 @@ export default function Play() {
         setSelectedBoardPosition(null);
         setSelectedTiles([]);
         setArrowDirection('right');
+
+        // After successful move
+        setSimulatingMove(null);
+        setSimulationResult(null);
+        setSimulationProgress(0);
+        setPreviewBoard(null);
+        setPreviewMove(null);
+        setMoveWithResults(null);
+        setTopMoves([]); // Clear top moves
       }
     } catch (error) {
       console.error('Error playing top move:', error);
       setSnackbarMessage('Error playing top move: ' + error.message);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+    } finally {
+      // Clear states even on error
+      setSimulatingMove(null);
+      setSimulationResult(null);
+      setSimulationProgress(0);
+      setPreviewBoard(null);
+      setPreviewMove(null);
+      setMoveWithResults(null);
+      setTopMoves([]); // Clear top moves
     }
   }, [
     isLoadingTopMoves,
@@ -1461,9 +1512,30 @@ export default function Play() {
       setIsAutoPlaying(true);
       handlePlayTopMove().finally(() => {
         setIsAutoPlaying(false);
+        // Clear all temporary states
+        setSimulatingMove(null);
+        setSimulationResult(null);
+        setSimulationProgress(0);
+        setPreviewBoard(null);
+        setPreviewMove(null);
+        setMoveWithResults(null);
+        setTopMoves([]); // Clear top moves
       });
     }
   }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMove, isAutoPlaying]);
+
+  // Add cleanup effect for all temporary states
+  useEffect(() => {
+    return () => {
+      setSimulatingMove(null);
+      setSimulationResult(null);
+      setSimulationProgress(0);
+      setPreviewBoard(null);
+      setPreviewMove(null);
+      setMoveWithResults(null);
+      setTopMoves([]); // Clear top moves
+    };
+  }, []);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -1616,6 +1688,13 @@ export default function Play() {
       fetchLeaveValues(topMoves);
     }
   }, [topMoves]);
+
+  // Add effect to limit move history size
+  useEffect(() => {
+    if (moveHistory.length > 100) { // Keep only last 100 moves
+      setMoveHistory(prev => prev.slice(-100));
+    }
+  }, [moveHistory]);
 
   return (
     <Box sx={{ display: 'flex'}}>
