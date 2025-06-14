@@ -22,9 +22,9 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       <Box className={styles.timer}>{time}</Box>
     </Box>
     <Box className={styles.points}>{points}</Box>
-    {rack && (!isBot || (isBot && currentPlayer === 2)) && (
+    {rack && ((!isBot) || (isBot && currentPlayer === 2)) && (
       <Box className={styles.Rack}>
-        {rack[0] === '🤖' ? (
+        {isBot ? (
           <Box sx={{ 
             display: 'flex', 
             gap: '4px', 
@@ -265,7 +265,12 @@ export default function PlayerInfo({
             name={player1Name}
             time={player1Time}
             points={player1Points}
+            rack={player1Rack}
             color={color}
+            onTileClick={onTileClick}
+            selectedTiles={selectedTiles}
+            isBot={false}
+            currentPlayer={currentPlayer}
           />
         </>
       ) : (
@@ -278,6 +283,8 @@ export default function PlayerInfo({
             color={color}
             onTileClick={onTileClick}
             selectedTiles={selectedTiles}
+            isBot={false}
+            currentPlayer={currentPlayer}
           />
           <PlayerInfoSection
             name={player2Name}
