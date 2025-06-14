@@ -223,7 +223,7 @@
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .Rack {
@@ -408,4 +408,33 @@
     opacity: 1;
     transform: translate(-50%, -50%);
   }
+}
+
+.bestMoveSection {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  margin: 4px 0;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: center;
+}
+
+.bestMoveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bestMoveButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bestMoveButton.active {
+  background-color: rgba(76, 175, 80, 0.2);
 }

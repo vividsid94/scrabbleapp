@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import styles from '../Play.module.css';
 import Rack from '../../../components/AppContent/Board/Rack.js';
 import SendIcon from '@mui/icons-material/Send';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import { Tooltip } from '@mui/material';
+import { Tooltip, Collapse } from '@mui/material';
 import { BOT_RACK_VISIBILITY } from '../../../components/AppContent/References/testRacks';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import HistoryIcon from '@mui/icons-material/History';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 const actionButtonStyle = {
@@ -92,10 +95,10 @@ export default function PlayerInfo({
   onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
-  autoPlayBest,
-  setAutoPlayBest,
+  setShowMoveHistory,
   icons
 }) {
+  const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
   const isExchangeDisabled = !gameStarted || tilesToExchange.length === 0;
 
@@ -151,136 +154,67 @@ export default function PlayerInfo({
             {icons.botMode}
           </Box>
         </Tooltip>
-        <Tooltip title="Choices">
-          <Box
-            onClick={onGetTopMoves}
-            sx={{
-              opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
-              cursor: !gameStarted ? 'not-allowed' : 'pointer',
-              pointerEvents: !gameStarted ? 'none' : 'auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {icons.topMoves}
-          </Box>
-        </Tooltip>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {icons.moveOrder}
-        </Box>
-      </Box>
-
-      <Box className={styles.playerToggle}>
-        <Tooltip title={gameStarted ? "Submit" : "Start game to enable submit"} placement="top">
+        <Tooltip title={showBestMove ? "Hide Options" : "Show Options"}>
           <Box
             className={styles.keyBtn}
-            onClick={onWordSubmit}
-            sx={{ 
-              ...actionButtonStyle,
-              opacity: !gameStarted ? 0.3 : (isSubmitDisabled ? 0.5 : 1),
-              cursor: !gameStarted ? 'not-allowed' : (isSubmitDisabled ? 'not-allowed' : 'pointer'),
-              pointerEvents: !gameStarted ? 'none' : 'auto'
-            }}
-          >
-            <SendIcon sx={{ fontSize: 20 }} />
-          </Box>
-        </Tooltip>
-        <Tooltip title={gameStarted ? "Pass (1)" : "Start game to enable pass"} placement="top">
-          <Box
-            className={styles.keyBtn}
-            onClick={onPass}
+            onClick={() => setShowBestMove(!showBestMove)}
             sx={{ 
               ...actionButtonStyle,
               opacity: !gameStarted ? 0.3 : 1,
               cursor: !gameStarted ? 'not-allowed' : 'pointer',
               pointerEvents: !gameStarted ? 'none' : 'auto',
-              position: 'relative'
+              transform: showBestMove ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.2s ease'
             }}
           >
-            <CancelIcon sx={{ fontSize: 20 }} />
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -5, 
-              right: -5, 
-              fontSize: '10px',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              borderRadius: '50%',
-              width: '14px',
-              height: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              1
-            </Box>
-          </Box>
-        </Tooltip>
-        <Tooltip title={gameStarted ? "Exchange (2)" : "Start game to enable exchange"} placement="top">
-          <Box
-            className={styles.keyBtn}
-            onClick={onExchange}
-            sx={{ 
-              ...actionButtonStyle,
-              opacity: !gameStarted ? 0.3 : (isExchangeDisabled ? 0.5 : 1),
-              cursor: !gameStarted ? 'not-allowed' : (isExchangeDisabled ? 'not-allowed' : 'pointer'),
-              pointerEvents: !gameStarted ? 'none' : 'auto',
-              position: 'relative'
-            }}
-          >
-            <SwapHorizIcon sx={{ fontSize: 20 }} />
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -5, 
-              right: -5, 
-              fontSize: '10px',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              borderRadius: '50%',
-              width: '14px',
-              height: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              2
-            </Box>
-          </Box>
-        </Tooltip>
-        <Tooltip title={gameStarted ? "Play Best Move" : "Start game to enable"} placement="top">
-          <Box
-            className={styles.keyBtn}
-            onClick={onPlayTopMove}
-            sx={{ 
-              ...actionButtonStyle,
-              opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
-              cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
-              pointerEvents: !gameStarted ? 'none' : 'auto',
-              position: 'relative'
-            }}
-          >
-            <LightbulbIcon sx={{ fontSize: 20 }} />
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -5, 
-              right: -5, 
-              fontSize: '10px',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              borderRadius: '50%',
-              width: '14px',
-              height: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              3
-            </Box>
+            <MoreHorizIcon sx={{ fontSize: 20 }} />
           </Box>
         </Tooltip>
       </Box>
+
+      <Collapse in={showBestMove}>
+        <Box className={styles.bestMoveSection}>
+          <Tooltip title="Play Best Move">
+            <Box
+              className={styles.bestMoveButton}
+              onClick={onPlayTopMove}
+              sx={{ 
+                opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
+                cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
+                pointerEvents: !gameStarted ? 'none' : 'auto'
+              }}
+            >
+              <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title="View Move History">
+            <Box
+              className={styles.bestMoveButton}
+              onClick={() => setShowMoveHistory(true)}
+              sx={{ 
+                opacity: !gameStarted ? 0.3 : 1,
+                cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                pointerEvents: !gameStarted ? 'none' : 'auto'
+              }}
+            >
+              <HistoryIcon sx={{ fontSize: 20 }} />
+            </Box>
+          </Tooltip>
+          <Tooltip title="View Top Moves">
+            <Box
+              className={styles.bestMoveButton}
+              onClick={onGetTopMoves}
+              sx={{ 
+                opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
+                cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                pointerEvents: !gameStarted ? 'none' : 'auto'
+              }}
+            >
+              <LightbulbIcon sx={{ fontSize: 20 }} />
+            </Box>
+          </Tooltip>
+        </Box>
+      </Collapse>
 
       {currentPlayer === 2 ? (
         <>

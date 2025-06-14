@@ -1935,6 +1935,7 @@ export default function Play() {
             tilesToExchange={tilesToExchange}
             autoPlayBest={autoPlayBest}
             setAutoPlayBest={setAutoPlayBest}
+            setShowMoveHistory={setShowMoveHistory}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,
