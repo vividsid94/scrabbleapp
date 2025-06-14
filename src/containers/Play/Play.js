@@ -1188,28 +1188,17 @@ export default function Play() {
       // Convert any '?' in the rack to '*' for the API
       const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
       
-      // Make API calls in parallel
-      const [movesResponse, leaveValuesResponse] = await Promise.all([
-        fetch('/.netlify/functions/getTopMoves', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            board: boardCoords,
-            letters: apiRack
-          })
-        }),
-        fetch('/.netlify/functions/getLeaveValues', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            leaves: newRack.map(tile => tile === '?' ? '*' : tile).sort().join('')
-          })
+      // Make API call for moves
+      const movesResponse = await fetch('/.netlify/functions/getTopMoves', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: apiRack
         })
-      ]);
+      });
 
       if (!movesResponse.ok) {
         throw new Error(`HTTP error! status: ${movesResponse.status}`);
@@ -1228,10 +1217,6 @@ export default function Play() {
       }
       
       setIsDictionaryLoading(false);
-
-      // Get leave values
-      const leaveValuesData = await leaveValuesResponse.json();
-      const leaveValues = leaveValuesData.leaveValues || {};
 
       // Generate exchange moves only if we have enough tiles in the pool
       const exchangeMoves = pool.length >= 7 ? generateExchangeCombinations(newRack).map(tiles => {
@@ -1406,7 +1391,8 @@ export default function Play() {
     player1Name,
     player2Name,
     blankTiles,
-    moveHistory
+    moveHistory,
+    leaveValues
   ]);
 
   useEffect(() => {
