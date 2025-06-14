@@ -439,15 +439,17 @@ export default function Play() {
     // Calculate running total
     const runningTotal = player1points + score;
 
-    // Add move to history with board states
-    setMoveHistory(prev => [...prev, {
-      beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-      afterBoard: JSON.parse(JSON.stringify(tempBoardCoords)),
-      player: player1Name,
+    // Optimize move history entry to store only necessary data
+    const moveHistoryEntry = {
+      beforeBoard: boardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)), // Only store string tiles
+      afterBoard: tempBoardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
+      player: currentPlayer === 1 ? player1Name : player2Name,
       score: score,
       rack: alphabetizeRack(playerRack).join(''),
       total: runningTotal
-    }]);
+    };
+
+    setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]); // Keep only last 49 + new move
 
     // Update the board state
     setBoardCoords(tempBoardCoords);
@@ -660,15 +662,17 @@ export default function Play() {
         // Calculate running total
         const botRunningTotal = player2points + botMove.score;
 
-        // Add bot move to history with board states
-        setMoveHistory(prev => [...prev, {
-          beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-          afterBoard: JSON.parse(JSON.stringify(newBoard)),
+        // Optimize move history entry
+        const moveHistoryEntry = {
+          beforeBoard: boardCoords.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
+          afterBoard: newBoard.map(row => row.map(cell => typeof cell === 'string' ? cell : 0)),
           player: player2Name,
           score: botMove.score,
           rack: alphabetizeRack(botRack).join(''),
           total: botRunningTotal
-        }]);
+        };
+
+        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
 
         // Update the board state
         setBoardCoords(newBoard);
@@ -1313,10 +1317,14 @@ export default function Play() {
         };
       }) : [];
 
-      // Calculate total values and sort
-      const topMoves = [...data.moves, ...exchangeMoves]
+      // First, fetch leave values for all moves
+      const allMoves = [...data.moves, ...exchangeMoves];
+      const updatedLeaveValues = await fetchLeaveValues(allMoves);
+
+      // Then calculate total values and sort
+      const topMoves = allMoves
         .map(move => {
-          const leaveValue = leaveValues[move.leave] || 0;
+          const leaveValue = updatedLeaveValues[move.leave] || 0;
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
             (move.score + leaveValue); // For regular moves, add score and leave value
@@ -1539,7 +1547,7 @@ export default function Play() {
 
   // Handle keyboard shortcuts
   useEffect(() => {
-    const handleKeyPress = (event) => {
+    const handleKeyPress = async (event) => {
       if (!gameStarted) return;
       
       if (event.key === '1') {
@@ -1547,6 +1555,9 @@ export default function Play() {
       } else if (event.key === '2') {
         handleExchange();
       } else if (event.key === '3') {
+        // First get top moves to ensure leave values are calculated
+        await handleGetTopMoves();
+        // Then play the best move
         handlePlayTopMove();
       }
     };
@@ -1555,7 +1566,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [gameStarted, handlePass, handleExchange, handlePlayTopMove]);
+  }, [gameStarted, handlePass, handleExchange, handleGetTopMoves, handlePlayTopMove]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1689,10 +1700,10 @@ export default function Play() {
     }
   }, [topMoves]);
 
-  // Add effect to limit move history size
+  // Add effect to limit move history size more aggressively
   useEffect(() => {
-    if (moveHistory.length > 100) { // Keep only last 100 moves
-      setMoveHistory(prev => prev.slice(-100));
+    if (moveHistory.length > 50) { // Reduce to last 50 moves instead of 100
+      setMoveHistory(prev => prev.slice(-50));
     }
   }, [moveHistory]);
 
