@@ -41,7 +41,7 @@ export default (function() {
                     >
                         <Cell 
                             type="rack"
-                            bonus={{ value: letter }}
+                            bonus={{ value: letter === '?' ? '_' : letter }}
                             color={props.color}
                         />
                     </Box>
