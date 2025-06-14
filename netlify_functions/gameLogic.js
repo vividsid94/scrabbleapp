@@ -14,23 +14,20 @@ const letterScores = {
     'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10
 };
 
-const { loadDictionary } = require('./loadDictionary');
+const loadDictionary = require('./loadDictionary');
 
-/** @type {import('./dawg').DAWG} */
-let cachedDAWG = null;
+// Load the GADDAG once at module level
+const gaddag = loadDictionary();
 
 /**
  * Checks if a word exists in the Scrabble dictionary.
  * 
  * @param {string} word - The word to check
- * @returns {Promise<boolean>} True if the word is valid
+ * @returns {boolean} True if the word is valid
  */
-async function isValidWord(word) {
+function isValidWord(word) {
     try {
-        if (!cachedDAWG) {
-            cachedDAWG = await loadDictionary();
-        }
-        return cachedDAWG.contains(word.toUpperCase());
+        return gaddag.contains(word.toUpperCase());
     } catch (error) {
         console.error('❌ Dictionary error:', error);
         return false;
@@ -134,9 +131,9 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
  * 
  * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
  * @param {Array<Array<string|null>>} afterBoard - Board state after the move
- * @returns {Promise<{isValid: boolean, reason?: string, word?: string, words: string[]}>} Validation result
+ * @returns {{isValid: boolean, reason?: string, word?: string, words: string[]}} Validation result
  */
-async function isValidScrabblePlacement(beforeBoard, afterBoard) {
+function isValidScrabblePlacement(beforeBoard, afterBoard) {
     const placedTiles = [];
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
@@ -198,55 +195,41 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
         const adjacentSquares = [
             { dr: 0, dc: 1 }, { dr: 0, dc: -1 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 }
         ];
-        for (const adj of adjacentSquares) {
-            const nr = row + adj.dr;
-            const nc = col + adj.dc;
-            if (nr >= 0 && nr < 15 && nc >= 0 && nc < 15 && 
-                typeof beforeBoard[nr][nc] === 'string' && beforeBoard[nr][nc].match(/[A-Z]/)) {
-                isAdjacent = true;
-                break;
+
+        for (const { dr, dc } of adjacentSquares) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15) {
+                if (typeof beforeBoard[newRow][newCol] === 'string' && beforeBoard[newRow][newCol].match(/[A-Z]/)) {
+                    isAdjacent = true;
+                    break;
+                }
             }
         }
-        if (isAdjacent) break;
-        if (row === 7 && col === 7) isOnStar = true;
-    }
 
-    const isFirstMove = beforeBoard.every(row => 
-        row.every(cell => typeof cell !== 'string' || !cell.match(/[A-Z]/))
-    );
-
-    // Validate first move
-    if (isFirstMove) {
-        if (!isOnStar && numPlaced > 0) {
-            const placedOnStar = placedTiles.some(tile => tile.row === 7 && tile.col === 7);
-            if (!placedOnStar) {
-                return { isValid: false, reason: 'First word must cover the center star', words: [] };
-            }
-        } else if (isFirstMove && numPlaced === 0) {
-            return { isValid: false, reason: 'No tiles placed', words: [] };
+        if (row === 7 && col === 7) {
+            isOnStar = true;
         }
-    } else if (!isAdjacent) {
-        return { isValid: false, reason: 'New tiles must be adjacent to existing tiles', words: [] };
     }
 
-    // Validate words
-    if ((isFirstMove && isOnStar && numPlaced > 0) || (!isFirstMove && isAdjacent)) {
-        const words = findNewWords(beforeBoard, afterBoard, placedTiles);
-        for (const word of words) {
-            const isValid = await isValidWord(word);
-            if (!isValid) {
-                return { 
-                    isValid: false, 
-                    reason: `Invalid word: ${word}`, 
-                    word: word,
-                    words: [] 
-                };
-            }
+    if (!isAdjacent && !isOnStar) {
+        return { isValid: false, reason: 'First move must cover center star or connect to existing tiles', words: [] };
+    }
+
+    // Find all new words
+    const newWords = findNewWords(beforeBoard, afterBoard, placedTiles);
+    if (newWords.length === 0) {
+        return { isValid: false, reason: 'No valid words formed', words: [] };
+    }
+
+    // Check if all words are valid
+    for (const word of newWords) {
+        if (!isValidWord(word)) {
+            return { isValid: false, reason: `Invalid word: ${word}`, words: newWords };
         }
-        return { isValid: true, words: words };
     }
 
-    return { isValid: false, reason: 'Invalid placement', words: [] };
+    return { isValid: true, words: newWords };
 }
 
 /**
@@ -425,17 +408,11 @@ exports.handler = async function(event) {
     }
 
     try {
-        if (!cachedDAWG) {
-            console.log('Loading dictionary...');
-            cachedDAWG = await loadDictionary();
-            console.log('Dictionary loaded and cached');
-        }
-
         const { action, beforeBoard, afterBoard } = JSON.parse(event.body);
         
         let result;
         if (action === 'validate') {
-            result = await isValidScrabblePlacement(beforeBoard, afterBoard);
+            result = isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
             result = await scorePlay(beforeBoard, afterBoard);
         } else {
@@ -460,4 +437,8 @@ exports.handler = async function(event) {
 
 // Export constants for use by other modules
 exports.letterScores = letterScores;
-exports.boardMultipliers = boardMultipliers; 
+exports.boardMultipliers = boardMultipliers;
+exports.isValidWord = isValidWord;
+exports.isValidScrabblePlacement = isValidScrabblePlacement;
+exports.scorePlay = scorePlay;
+exports.findNewWords = findNewWords; 

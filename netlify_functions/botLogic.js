@@ -8,7 +8,7 @@
  */
 
 const { normalizeBoard } = require('./normalizeBoard');
-const { loadDictionary } = require('./loadDictionary');
+const loadDictionary = require('./loadDictionary');
 const { generateMoves } = require('./generateMoves');
 const fs = require('fs');
 const path = require('path');

@@ -1,53 +1,89 @@
 const fs = require('fs');
 const path = require('path');
 
-// DAWGNode and DAWG classes (should match your build script)
-class DAWGNode {
+// Simple GADDAG implementation
+class GADDAG {
   constructor() {
-    this.children = new Map();
-    this.isTerminal = false;
+    this.root = {};
   }
-  static fromJSON(obj) {
-    const node = new DAWGNode();
-    node.isTerminal = obj.isTerminal;
-    for (const [ch, childObj] of Object.entries(obj.children)) {
-      node.children.set(ch, DAWGNode.fromJSON(childObj));
-    }
-    return node;
-  }
-}
 
-class DAWG {
-  constructor() {
-    this.root = new DAWGNode();
+  static fromJSON(json) {
+    const gaddag = new GADDAG();
+    gaddag.root = json;
+    return gaddag;
   }
-  static fromJSON(obj) {
-    const dawg = new DAWG();
-    dawg.root = DAWGNode.fromJSON(obj.root);
-    return dawg;
-  }
+
   contains(word) {
-    let node = this.root;
-    for (const char of word) {
-      if (!node.children.has(char)) return false;
-      node = node.children.get(char);
+    word = word.toUpperCase();
+    // Try all GADDAG traversals for the word
+    for (let i = 1; i < word.length; i++) {
+      const prefix = word.substring(0, i).split('').reverse().join('');
+      const suffix = word.substring(i);
+      const gaddagPath = prefix + '^' + suffix;
+      let node = this.root;
+      let found = true;
+      for (const letter of gaddagPath) {
+        if (!node[letter]) {
+          found = false;
+          break;
+        }
+        node = node[letter];
+      }
+      if (found && node['$'] === true) {
+        return true;
+      }
     }
-    return node.isTerminal;
+    // Also check the full reversed word with no suffix
+    const rev = word.split('').reverse().join('') + '^';
+    let node = this.root;
+    let found = true;
+    for (const letter of rev) {
+      if (!node[letter]) {
+        found = false;
+        break;
+      }
+      node = node[letter];
+    }
+    if (found && node['$'] === true) {
+      return true;
+    }
+    return false;
   }
 }
 
-let cachedDAWG = null;
+// Cache the loaded GADDAG
+let cachedGaddag = null;
 
-/**
- * Load the pre-built DAWG
- * @returns {Promise<DAWG>} The DAWG containing all valid words
- */
-async function loadDictionary() {
-  if (cachedDAWG) return cachedDAWG;
-  const dawgPath = path.join(__dirname, 'dictionary.dawg.json');
-  const dawgData = JSON.parse(fs.readFileSync(dawgPath, 'utf8'));
-  cachedDAWG = DAWG.fromJSON(dawgData);
-  return cachedDAWG;
+function loadDictionary() {
+  try {
+    if (cachedGaddag) {
+      console.log('Using cached GADDAG');
+      return cachedGaddag;
+    }
+
+    // Load the pre-built GADDAG using fs.readFileSync
+    const gaddagPath = path.join(__dirname, 'dictionary.gaddag.json');
+    console.log('Loading GADDAG from:', gaddagPath);
+    const jsonData = fs.readFileSync(gaddagPath, 'utf8');
+    console.log('GADDAG JSON file size:', jsonData.length);
+    const gaddagJson = JSON.parse(jsonData);
+    console.log('GADDAG JSON parsed successfully');
+    
+    cachedGaddag = GADDAG.fromJSON(gaddagJson);
+    
+    // Test a few common words to verify the GADDAG is working
+    const testWords = ['HELLO', 'WORLD', 'SCRABBLE'];
+    console.log('Testing GADDAG with sample words:');
+    for (const word of testWords) {
+      console.log(`${word}: ${cachedGaddag.contains(word)}`);
+    }
+
+    return cachedGaddag;
+  } catch (error) {
+    console.error('Error loading GADDAG:', error);
+    throw new Error('Failed to load GADDAG dictionary');
+  }
 }
 
-module.exports = { loadDictionary };
+module.exports = loadDictionary;
+module.exports.GADDAG = GADDAG;

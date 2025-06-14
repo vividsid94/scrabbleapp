@@ -8,7 +8,7 @@
  */
 
 const { normalizeBoard } = require('./normalizeBoard');
-const { loadDictionary } = require('./loadDictionary');
+const loadDictionary = require('./loadDictionary');
 const { generateMoves, validateMove } = require('./generateMoves');
 
 /** @type {import('./loadDictionary').DAWG} */
