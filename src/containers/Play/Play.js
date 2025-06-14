@@ -635,7 +635,9 @@ export default function Play() {
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        console.error('Bot error details:', errorData);
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
       }
 
       const botMove = await response.json();

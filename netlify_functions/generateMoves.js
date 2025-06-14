@@ -53,23 +53,18 @@
    }
    
      // Log the moves in a compact format
-     logLines.push('\nGenerated Moves:');
+     console.log('\nGenerated Moves:');
      moves.forEach((move, index) => {
        const moveNum = String(index + 1).padStart(3, '0');
        const tiles = move.tiles.map(t => 
          `${t.isBlank ? '?' : t.letter}(${t.row},${t.col})`
        ).join(' ');
-       logLines.push(`${moveNum} | ${move.word.padEnd(15)} | Score: ${String(move.score).padStart(3)} | ${move.direction.padEnd(10)} | Start: (${move.startRow},${move.startCol}) | Tiles: ${tiles}`);
+       console.log(`${moveNum} | ${move.word.padEnd(15)} | Score: ${String(move.score).padStart(3)} | ${move.direction.padEnd(10)} | Start: (${move.startRow},${move.startCol}) | Tiles: ${tiles}`);
      });
-     logLines.push(`\nTotal moves generated: ${moves.length}`);
+     console.log(`\nTotal moves generated: ${moves.length}`);
    
-     // Write to file
-     const logPath = path.join(__dirname, 'moves.log');
-     fs.writeFileSync(logPath, logLines.join('\n'));
-     console.log(`Moves logged to ${logPath}`);
-   
-       return moves;
-     }
+     return moves;
+   }
    
    function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, crossChecks, moveSet) {
      // Find the leftmost/topmost position for potential words through this anchor

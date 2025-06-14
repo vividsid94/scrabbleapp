@@ -71,6 +71,7 @@ exports.handler = async function (event) {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
+    console.log('Received request body:', event.body);
     const { board: rawBoard, letters, pool = [] } = JSON.parse(event.body || '{}');
     
     if (!Array.isArray(rawBoard) || rawBoard.length !== 15 || !Array.isArray(letters) || letters.length > 7) {
@@ -81,11 +82,18 @@ exports.handler = async function (event) {
     
     // Load dictionary
     console.log('Loading dictionary...');
-    const trie = await loadDictionary();
-    console.log('Dictionary loaded');
+    try {
+      const gaddag = await loadDictionary();
+      console.log('Dictionary loaded successfully');
+    } catch (dictError) {
+      console.error('Failed to load dictionary:', dictError);
+      throw new Error(`Dictionary loading failed: ${dictError.message}`);
+    }
 
     // Get all possible moves
-    const allMoves = generateMoves(board, letters, [], trie);
+    console.log('Generating moves...');
+    const allMoves = generateMoves(board, letters);
+    console.log(`Generated ${allMoves.length} possible moves`);
 
     // Calculate leave for regular moves
     for (const move of allMoves) {
@@ -215,11 +223,13 @@ exports.handler = async function (event) {
 
   } catch (err) {
     console.error('❌ Bot error:', err);
+    console.error('Error stack:', err.stack);
     return {
       statusCode: 500,
       body: JSON.stringify({ 
         error: err.message,
-        stack: err.stack
+        stack: err.stack,
+        details: err.toString()
       })
     };
   }
