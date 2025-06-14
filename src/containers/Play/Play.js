@@ -74,24 +74,52 @@ export default function Play() {
   const [autoPlayBest, setAutoPlayBest] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   
-  // Add audio refs
-  const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
-
-  // Add state for move sound selection
+  // Add state for move sound selection first
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
   const [botMoveSoundType, setBotMoveSoundType] = useState('classic');
 
-  // Update audio refs to use selected sound
+  // Then add audio refs with error handling
+  const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
   const playerMoveSound = useRef(new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
   const botMoveSound = useRef(new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
 
-  // Update audio refs when sound type changes
+  // Add error handlers for sounds
   useEffect(() => {
-    playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+    const handleSoundError = (sound, name) => {
+      console.error(`Error playing ${name} sound:`, sound.error);
+      setSnackbarMessage(`Error playing ${name} sound`);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    };
+
+    gameStartSound.current.addEventListener('error', () => handleSoundError(gameStartSound.current, 'game start'));
+    playerMoveSound.current.addEventListener('error', () => handleSoundError(playerMoveSound.current, 'player move'));
+    botMoveSound.current.addEventListener('error', () => handleSoundError(botMoveSound.current, 'bot move'));
+
+    return () => {
+      gameStartSound.current.removeEventListener('error', () => handleSoundError(gameStartSound.current, 'game start'));
+      playerMoveSound.current.removeEventListener('error', () => handleSoundError(playerMoveSound.current, 'player move'));
+      botMoveSound.current.removeEventListener('error', () => handleSoundError(botMoveSound.current, 'bot move'));
+    };
+  }, []);
+
+  // Update audio refs when sound type changes with error handling
+  useEffect(() => {
+    try {
+      playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+      console.log('Player move sound updated:', playerMoveSoundType);
+    } catch (error) {
+      console.error('Error updating player move sound:', error);
+    }
   }, [playerMoveSoundType]);
 
   useEffect(() => {
-    botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+    try {
+      botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+      console.log('Bot move sound updated:', botMoveSoundType);
+    } catch (error) {
+      console.error('Error updating bot move sound:', error);
+    }
   }, [botMoveSoundType]);
 
   const alphabetizeRack = (rack) => {
