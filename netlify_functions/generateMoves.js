@@ -4,6 +4,8 @@
 
    const { letterScores, boardMultipliers } = require('./gameLogic');
    const loadDictionary = require('./loadDictionary');
+   const fs = require('fs');
+   const path = require('path');
 
    const theGADDAG = loadDictionary();
    const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -12,12 +14,18 @@
    function generateMoves(board, rack) {
      // Convert rack to array of objects with isBlank flag
      const rackArr = Array.isArray(rack) ? rack.map(l => ({
-       letter: l.toUpperCase(),
+       letter: l === '?' || l === '*' ? '?' : l.toUpperCase(),
        isBlank: l === '?' || l === '*'
      })) : rack.split('').map(l => ({
-       letter: l.toUpperCase(),
+       letter: l === '?' || l === '*' ? '?' : l.toUpperCase(),
        isBlank: l === '?' || l === '*'
      }));
+   
+     // Count blank tiles
+     const blankCount = rackArr.filter(t => t.isBlank).length;
+     const logLines = [];
+     logLines.push(`Found ${blankCount} blank tiles in rack`);
+     logLines.push('Rack: ' + rackArr.map(t => t.isBlank ? '?' : t.letter).join(''));
    
      const moves = [];
      const moveSet = new Set(); // Track unique moves
@@ -29,24 +37,39 @@
        const centerCol = 7;  // 8
        generateMovesAt(board, rackArr, centerRow, centerCol, 'horizontal', moves, crossChecks, moveSet);
        generateMovesAt(board, rackArr, centerRow, centerCol, 'vertical', moves, crossChecks, moveSet);
-       return moves;
-     }
-   
-     // Regular moves - check every empty square
-     for (let row = 0; row < 15; row++) {
-       for (let col = 0; col < 15; col++) {
-         if (board[row][col] === null) {
-           // Check if this square can be an anchor (adjacent to existing tiles)
-           if (hasAdjacentTile(board, row, col)) {
-             generateMovesAt(board, rackArr, row, col, 'horizontal', moves, crossChecks, moveSet);
-             generateMovesAt(board, rackArr, row, col, 'vertical', moves, crossChecks, moveSet);
-           }
+     } else {
+       // Regular moves - check every empty square
+       for (let row = 0; row < 15; row++) {
+         for (let col = 0; col < 15; col++) {
+           if (board[row][col] === null) {
+             // Check if this square can be an anchor (adjacent to existing tiles)
+             if (hasAdjacentTile(board, row, col)) {
+               generateMovesAt(board, rackArr, row, col, 'horizontal', moves, crossChecks, moveSet);
+               generateMovesAt(board, rackArr, row, col, 'vertical', moves, crossChecks, moveSet);
          }
        }
      }
-   
-     return moves;
+       }
    }
+   
+     // Log the moves in a compact format
+     logLines.push('\nGenerated Moves:');
+     moves.forEach((move, index) => {
+       const moveNum = String(index + 1).padStart(3, '0');
+       const tiles = move.tiles.map(t => 
+         `${t.isBlank ? '?' : t.letter}(${t.row},${t.col})`
+       ).join(' ');
+       logLines.push(`${moveNum} | ${move.word.padEnd(15)} | Score: ${String(move.score).padStart(3)} | ${move.direction.padEnd(10)} | Start: (${move.startRow},${move.startCol}) | Tiles: ${tiles}`);
+     });
+     logLines.push(`\nTotal moves generated: ${moves.length}`);
+   
+     // Write to file
+     const logPath = path.join(__dirname, 'moves.log');
+     fs.writeFileSync(logPath, logLines.join('\n'));
+     console.log(`Moves logged to ${logPath}`);
+   
+       return moves;
+     }
    
    function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, crossChecks, moveSet) {
      // Find the leftmost/topmost position for potential words through this anchor
@@ -105,6 +128,19 @@
        node = node['^'];
      }
    
+     // Count blank tiles in rack
+     const blankCount = rack.filter(t => t.isBlank).length;
+     console.log(`Generating words from position (${startRow},${startCol}) with ${blankCount} blank tiles`);
+   
+     // For each blank tile, we need to try all possible letters
+     // that could form a valid word at this position
+     const validLetters = new Set();
+     for (const letter of ALPHA) {
+       if (node[letter] || (node['^'] && node['^'][letter])) {
+         validLetters.add(letter);
+       }
+     }
+   
      // Generate words from this position
      extendWords(
        node, 
@@ -118,11 +154,12 @@
        moves, 
        crossChecks,
        prefix.length > 0, // isInSuffixMode
-       moveSet
+       moveSet,
+       validLetters // Pass valid letters for blank tiles
      );
    }
    
-   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, crossChecks, isInSuffixMode, moveSet) {
+   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, crossChecks, isInSuffixMode, moveSet, validLetters) {
      // Check if we can form a valid word
      if (node['$'] && tilesPlaced.length > 0) {
        const cleanWord = wordSoFar.replace(/\^/g, '');
@@ -135,7 +172,7 @@
        };
        
        // Create a unique key for this move
-       const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}`;
+       const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${move.tiles.map(t => t.isBlank ? t.letter : '').join('')}`;
        
        if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
          move.score = calculateScore(board, move.tiles, boardMultipliers);
@@ -164,7 +201,8 @@
            moves, 
            crossChecks,
            isInSuffixMode,
-           moveSet
+           moveSet,
+           validLetters
          );
        }
        return;
@@ -173,6 +211,8 @@
      // Get cross-check constraints for this position
      const crossCheckKey = `${row},${col}`;
      const crossCheck = crossChecks.get(crossCheckKey);
+     const perpDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
+     const perpChecks = crossCheck ? crossCheck[perpDirection] : null;
    
      // Try placing tiles from rack
      for (let i = 0; i < rack.length; i++) {
@@ -182,29 +222,112 @@
        const newRack = rack.slice();
        newRack[i] = null;
    
-       const letters = tile.isBlank ? alphaArr : [tile.letter];
+       if (tile.isBlank) {
+         // For blank tiles, try each letter that could form a valid word
+         // and respects cross-check constraints
+         for (const letter of validLetters) {
+           // Skip if this letter doesn't satisfy cross-check constraints
+           if (perpChecks && !perpChecks.has(letter)) continue;
    
-       for (const letter of letters) {
-         // Check cross-check constraints
-         if (crossCheck && crossCheck[direction] && !crossCheck[direction].has(letter.toLowerCase())) {
-           continue;
+           if (!isInSuffixMode) {
+             // In prefix mode - can continue in prefix or switch to suffix
+             if (node[letter]) {
+               const newTile = {
+                 row, col,
+                 letter,
+                 isNew: true,
+                 isBlank: true
+               };
+               const [nextRow, nextCol] = step(row, col, direction);
+               extendWords(
+                 node[letter], 
+                 board, 
+                 newRack, 
+                 wordSoFar + letter, 
+                 [...tilesPlaced, newTile], 
+                 nextRow, 
+                 nextCol, 
+                 direction, 
+                 moves, 
+                 crossChecks,
+                 false,
+                 moveSet,
+                 validLetters
+               );
+             }
+   
+             // Try switching to suffix mode
+             if (node['^'] && node['^'][letter]) {
+               const newTile = {
+                 row, col,
+                 letter,
+                 isNew: true,
+                 isBlank: true
+               };
+               const [nextRow, nextCol] = step(row, col, direction);
+               extendWords(
+                 node['^'][letter], 
+                 board, 
+                 newRack, 
+                 wordSoFar + '^' + letter, 
+                 [...tilesPlaced, newTile], 
+                 nextRow, 
+                 nextCol, 
+                 direction, 
+                 moves, 
+                 crossChecks,
+                 true,
+                 moveSet,
+                 validLetters
+           );
          }
+       } else {
+             // In suffix mode - can only continue in suffix
+             if (node[letter]) {
+               const newTile = {
+                 row, col,
+                 letter,
+                 isNew: true,
+                 isBlank: true
+               };
+               const [nextRow, nextCol] = step(row, col, direction);
+               extendWords(
+                 node[letter], 
+                 board, 
+                 newRack, 
+                 wordSoFar + letter, 
+                 [...tilesPlaced, newTile], 
+                 nextRow, 
+                 nextCol, 
+                 direction, 
+                 moves, 
+                 crossChecks,
+                 true,
+                 moveSet,
+                 validLetters
+         );
+       }
+     }
+   }
+       } else {
+         // Regular tile - check cross-check constraints
+         if (perpChecks && !perpChecks.has(tile.letter)) continue;
    
          if (!isInSuffixMode) {
            // In prefix mode - can continue in prefix or switch to suffix
-           if (node[letter]) {
+           if (node[tile.letter]) {
              const newTile = {
                row, col,
-               letter,
+               letter: tile.letter,
                isNew: true,
-               isBlank: tile.isBlank
+               isBlank: false
              };
              const [nextRow, nextCol] = step(row, col, direction);
              extendWords(
-               node[letter], 
+               node[tile.letter], 
                board, 
                newRack, 
-               wordSoFar + letter, 
+               wordSoFar + tile.letter, 
                [...tilesPlaced, newTile], 
                nextRow, 
                nextCol, 
@@ -212,24 +335,25 @@
                moves, 
                crossChecks,
                false,
-               moveSet
-           );
-         }
+               moveSet,
+               validLetters
+             );
+   }
    
            // Try switching to suffix mode
-           if (node['^'] && node['^'][letter]) {
+           if (node['^'] && node['^'][tile.letter]) {
              const newTile = {
                row, col,
-               letter,
+               letter: tile.letter,
                isNew: true,
-               isBlank: tile.isBlank
+               isBlank: false
              };
              const [nextRow, nextCol] = step(row, col, direction);
              extendWords(
-               node['^'][letter], 
+               node['^'][tile.letter], 
                board, 
                newRack, 
-               wordSoFar + '^' + letter, 
+               wordSoFar + '^' + tile.letter, 
                [...tilesPlaced, newTile], 
                nextRow, 
                nextCol, 
@@ -237,24 +361,25 @@
                moves, 
                crossChecks,
                true,
-               moveSet
-         );
-       }
+               moveSet,
+               validLetters
+             );
+           }
          } else {
            // In suffix mode - can only continue in suffix
-           if (node[letter]) {
+           if (node[tile.letter]) {
              const newTile = {
                row, col,
-               letter,
+               letter: tile.letter,
                isNew: true,
-               isBlank: tile.isBlank
+               isBlank: false
              };
              const [nextRow, nextCol] = step(row, col, direction);
              extendWords(
-               node[letter], 
+               node[tile.letter], 
                board, 
                newRack, 
-               wordSoFar + letter, 
+               wordSoFar + tile.letter, 
                [...tilesPlaced, newTile], 
                nextRow, 
                nextCol, 
@@ -262,7 +387,8 @@
                moves, 
                crossChecks,
                true,
-               moveSet
+               moveSet,
+               validLetters
              );
            }
          }
@@ -345,9 +471,10 @@
      // Find valid letters that form valid cross-words
      const validLetters = new Set();
      
+     // For cross-checks, we only need uppercase since that's what we use throughout
      for (const letter of ALPHA) {
        if (isValidCrossWord(board, row, col, letter, perpDirection)) {
-         validLetters.add(letter.toLowerCase());
+         validLetters.add(letter);
        }
      }
      
