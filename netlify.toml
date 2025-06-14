@@ -1,6 +1,12 @@
 [build]
     functions = "netlify_functions"
 
+[functions]
+    included_files = [
+        "netlify_functions/dictionary.dawg.json",
+        "netlify_functions/leaves.json"
+    ]
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
