@@ -106,7 +106,7 @@ export default function Play() {
   // Update audio refs when sound type changes with error handling
   useEffect(() => {
     try {
-      playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+    playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
       console.log('Player move sound updated:', playerMoveSoundType);
     } catch (error) {
       console.error('Error updating player move sound:', error);
@@ -115,7 +115,7 @@ export default function Play() {
 
   useEffect(() => {
     try {
-      botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
+    botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
       console.log('Bot move sound updated:', botMoveSoundType);
     } catch (error) {
       console.error('Error updating bot move sound:', error);
@@ -726,10 +726,10 @@ export default function Play() {
         const boardDiff = getBoardDiff(boardCoords, newBoard);
         const moveHistoryEntry = {
           boardDiff,
-          player: player2Name,
-          score: botMove.score,
-          rack: alphabetizeRack(botRack).join(''),
-          total: botRunningTotal
+        player: player2Name,
+        score: botMove.score,
+        rack: alphabetizeRack(botRack).join(''),
+        total: botRunningTotal
         };
 
         setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
