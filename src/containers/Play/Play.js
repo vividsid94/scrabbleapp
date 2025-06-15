@@ -298,6 +298,11 @@ export default function Play() {
 
     if (!/[A-Z]/.test(key)) return;
 
+    // Check if there's already a tile at this position (either in boardCoords or tempBoardCoords)
+    if (typeof boardCoords[row][col] === 'string' || typeof tempBoardCoords[row][col] === 'string') {
+      return;
+    }
+
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
     const tileIndex = currentRack.indexOf(key);
     // Check for both '?' and '*' as blank tiles
