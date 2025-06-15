@@ -2,7 +2,7 @@
  * Scrabble Bot Logic
  * 
  * This module implements a Netlify serverless function that acts as a Scrabble bot.
- * It takes a game board and available letters, then returns the highest-scoring valid move.
+ * It takes a game board and available letters, then returns all possible valid moves.
  * 
  * @module botLogic
  */
@@ -59,9 +59,20 @@ const getLeaveValue = (leave) => {
  * {
  *   "statusCode": 200,
  *   "body": {
- *     "word": "HELLO",
- *     "score": 8,
- *     "tiles": [{row: 7, col: 7, letter: "H", isNew: true}, ...]
+ *     "moves": [
+ *       {
+ *         "word": "HELLO",
+ *         "score": 8,
+ *         "tiles": [{row: 7, col: 7, letter: "H", isNew: true}, ...],
+ *         "direction": "right",
+ *         "startPosition": "8H",
+ *         "leave": "ABC",
+ *         "leaveValue": 5,
+ *         "totalValue": 13,
+ *         "isExchange": false
+ *       },
+ *       // ... all valid moves
+ *     ]
  *   }
  * }
  */
@@ -172,7 +183,7 @@ exports.handler = async function (event) {
     // Combine regular moves and exchange moves
     const combinedMoves = [...allMoves, ...exchangeMoves];
 
-    // Process moves exactly like ChoicesModal does
+    // Process moves to add leave values but don't sort
     const processedMoves = combinedMoves.map(move => {
       const leaveValue = getLeaveValue(move.leave);
       const totalValue = move.isExchange ? 
@@ -181,43 +192,22 @@ exports.handler = async function (event) {
       
       return {
         ...move,
+        leaveValue,
         totalValue
       };
     });
 
-    // Sort moves by total value
-    const sortedMoves = processedMoves.sort((a, b) => b.totalValue - a.totalValue);
-
-    if (sortedMoves.length === 0) {
+    if (processedMoves.length === 0) {
       return {
         statusCode: 200,
         body: JSON.stringify({ message: 'No valid move found' })
       };
     }
-
-    const best = sortedMoves[0];
-    
-    // Log top 10 moves sorted by total value
-    console.log('Top 10 moves:');
-    sortedMoves.slice(0, 10).forEach((move, index) => {
-      console.log(`${index + 1}. ${move.word} (${move.isExchange ? 'exchange' : 'play'})`, {
-        score: move.score,
-        leave: move.leave,
-        leaveValue: getLeaveValue(move.leave),
-        totalValue: move.totalValue
-      });
-    });
     
     return {
       statusCode: 200,
       body: JSON.stringify({
-        word: best.word,
-        score: best.score,
-        tiles: best.tiles,
-        leave: best.leave,
-        isExchange: best.isExchange,
-        newTiles: best.newTiles, // Include the new tiles to be drawn
-        tilesToExchange: best.isExchange ? best.tilesToExchange : [] // Include the tiles being exchanged
+        moves: processedMoves // Return ALL moves, let frontend handle sorting
       })
     };
 

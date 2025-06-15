@@ -582,7 +582,7 @@ export default function Play() {
 
     // Only show thinking state if auto-play is not enabled
     if (!autoPlayBest) {
-    setIsBotThinking(true);
+      setIsBotThinking(true);
     }
 
     try {
@@ -600,24 +600,24 @@ export default function Play() {
       let response;
       // Only add delay if auto-play is not enabled
       if (!autoPlayBest) {
-      const startTime = Date.now();
+        const startTime = Date.now();
         response = await fetch('/.netlify/functions/botLogic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCopy,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCopy,
             letters: apiRack,
             pool: pool // Pass the pool to the bot
-        })
-      });
+          })
+        });
 
-      // Calculate remaining time to ensure minimum 2 second delay
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 1000 - elapsedTime);
-      if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        // Calculate remaining time to ensure minimum 2 second delay
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, 1000 - elapsedTime);
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
         }
       } else {
         // Skip delay when auto-play is enabled
@@ -640,16 +640,20 @@ export default function Play() {
         throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
       }
 
-      const botMove = await response.json();
-      console.log('Bot move response:', botMove);
+      const data = await response.json();
+      console.log('Bot moves response:', data);
       
-      if (!botMove || !botMove.tiles || botMove.tiles.length === 0) {
+      if (!data.moves || data.moves.length === 0) {
         setSnackbarMessage('Bot could not find a valid move');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
         setCurrentPlayer(1); // Switch back to player 1 if bot can't move
         return;
       }
+
+      // Sort moves by totalValue (points + leave) from the backend
+      const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
+      const bestMove = sortedMoves[0];
 
       // Play bot move sound after the delay
       botMoveSound.current.play();
@@ -663,10 +667,10 @@ export default function Play() {
       const newBlankTiles = [...blankTiles];
       const newPool = [...pool];
       
-      if (botMove.isExchange) {
+      if (bestMove.isExchange) {
         // Handle exchange move
-        const tilesToExchange = botMove.tilesToExchange || botMove.tiles.map(t => t.letter);
-        const newTiles = botMove.newTiles || [];
+        const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
+        const newTiles = bestMove.newTiles || [];
         
         // Remove exchanged tiles from rack
         for (const tile of tilesToExchange) {
@@ -700,68 +704,68 @@ export default function Play() {
         setSnackbarOpen(true);
       } else {
         // Handle regular move
-      for (const tile of botMove.tiles) {
-        if (tile.isNew) {
-          newBoard[tile.row][tile.col] = tile.letter;
-          
-          // For blank tiles, we need to find the blank in the rack
-          if (tile.isBlank) {
-            newBlankTiles.push({ row: tile.row, col: tile.col });
+        for (const tile of bestMove.tiles) {
+          if (tile.isNew) {
+            newBoard[tile.row][tile.col] = tile.letter;
             
-            // Remove the blank tile from the rack - look for both '?' and '*'
-            const blankIndex = newRack.indexOf('?');
-            if (blankIndex !== -1) {
-              newRack.splice(blankIndex, 1);
-            } else {
-              const starIndex = newRack.indexOf('*');
-              if (starIndex !== -1) {
-                newRack.splice(starIndex, 1);
+            // For blank tiles, we need to find the blank in the rack
+            if (tile.isBlank) {
+              newBlankTiles.push({ row: tile.row, col: tile.col });
+              
+              // Remove the blank tile from the rack - look for both '?' and '*'
+              const blankIndex = newRack.indexOf('?');
+              if (blankIndex !== -1) {
+                newRack.splice(blankIndex, 1);
+              } else {
+                const starIndex = newRack.indexOf('*');
+                if (starIndex !== -1) {
+                  newRack.splice(starIndex, 1);
+                }
               }
-            }
-          } else {
-            // For non-blank tiles, find and remove the letter
-            const tileIndex = newRack.indexOf(tile.letter);
-            if (tileIndex !== -1) {
-              newRack.splice(tileIndex, 1);
+            } else {
+              // For non-blank tiles, find and remove the letter
+              const tileIndex = newRack.indexOf(tile.letter);
+              if (tileIndex !== -1) {
+                newRack.splice(tileIndex, 1);
+              }
             }
           }
         }
-      }
-      
-      // Calculate running total
-      const botRunningTotal = player2points + botMove.score;
+        
+        // Calculate running total
+        const botRunningTotal = player2points + bestMove.score;
 
         // Store only the differences in board states
         const boardDiff = getBoardDiff(boardCoords, newBoard);
         const moveHistoryEntry = {
           boardDiff,
-        player: player2Name,
-        score: botMove.score,
-        rack: alphabetizeRack(botRack).join(''),
-        total: botRunningTotal
+          player: player2Name,
+          score: bestMove.score,
+          rack: alphabetizeRack(botRack).join(''),
+          total: botRunningTotal
         };
 
         setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
 
-      // Update the board state
-      setBoardCoords(newBoard);
-      setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
-      setPlayer2Rack(alphabetizeRack(newRack));
-      setBlankTiles(newBlankTiles);
-      
-      // Draw new tiles for bot
-      while (newRack.length < 7 && newPool.length > 0) {
-        const randomIndex = Math.floor(Math.random() * newPool.length);
-        newRack.push(newPool[randomIndex]);
-        newPool.splice(randomIndex, 1);
-      }
-      setPlayer2Rack(alphabetizeRack(newRack));
-      setPool(newPool);
-      
-      // Show toast notification for bot's move
-      setSnackbarMessage(`SidBot played "${botMove.word}" for ${botMove.score} points`);
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+        // Update the board state
+        setBoardCoords(newBoard);
+        setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setBlankTiles(newBlankTiles);
+        
+        // Draw new tiles for bot
+        while (newRack.length < 7 && newPool.length > 0) {
+          const randomIndex = Math.floor(Math.random() * newPool.length);
+          newRack.push(newPool[randomIndex]);
+          newPool.splice(randomIndex, 1);
+        }
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setPool(newPool);
+        
+        // Show toast notification for bot's move
+        setSnackbarMessage(`SidBot played "${bestMove.word}" for ${bestMove.score} points`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
         
         // Update bot's score
         setPlayer2points(botRunningTotal);
@@ -791,7 +795,7 @@ export default function Play() {
     } finally {
       // Only clear thinking state if auto-play is not enabled
       if (!autoPlayBest) {
-      setIsBotThinking(false);
+        setIsBotThinking(false);
       }
       // Clear states even on error
       setSimulatingMove(null);
