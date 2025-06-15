@@ -105,30 +105,6 @@ export default function PlayerInfo({
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
-        <Tooltip title="Settings">
-          <Box 
-            onClick={onSettingsOpen}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {icons.settings}
-          </Box>
-        </Tooltip>
-        <Tooltip title="Color Scheme">
-          <Box
-            onClick={onColorSchemeOpen}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {icons.colorScheme}
-          </Box>
-        </Tooltip>
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
@@ -148,7 +124,8 @@ export default function PlayerInfo({
               pointerEvents: isDictionaryLoading ? 'none' : 'auto',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginRight: '30px'
             }}
           >
             {icons.botMode}
@@ -173,46 +150,136 @@ export default function PlayerInfo({
       </Box>
 
       <Collapse in={showBestMove}>
-        <Box className={styles.bestMoveSection}>
-          <Tooltip title="Play Best Move">
-            <Box
-              className={styles.bestMoveButton}
-              onClick={onPlayTopMove}
-              sx={{ 
-                opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
-                cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
-                pointerEvents: !gameStarted ? 'none' : 'auto'
-              }}
-            >
-              <AutoAwesomeIcon sx={{ fontSize: 20 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip title="View Move History">
-            <Box
-              className={styles.bestMoveButton}
-              onClick={() => setShowMoveHistory(true)}
-              sx={{ 
-                opacity: !gameStarted ? 0.3 : 1,
-                cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                pointerEvents: !gameStarted ? 'none' : 'auto'
-              }}
-            >
-              <HistoryIcon sx={{ fontSize: 20 }} />
-            </Box>
-          </Tooltip>
-          <Tooltip title="View Top Moves">
-            <Box
-              className={styles.bestMoveButton}
-              onClick={onGetTopMoves}
-              sx={{ 
-                opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
-                cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                pointerEvents: !gameStarted ? 'none' : 'auto'
-              }}
-            >
-              <LightbulbIcon sx={{ fontSize: 20 }} />
-            </Box>
-          </Tooltip>
+        <Box className={styles.bestMoveSection} sx={{ display: 'flex', gap: '50px', padding: '8px 0' }}>
+          <Box sx={{ display: 'flex', gap: '4px' }}>
+            <Tooltip title="Play Best Move">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={onPlayTopMove}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
+                  cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
+                  pointerEvents: !gameStarted ? 'none' : 'auto'
+                }}
+              >
+                <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+              </Box>
+            </Tooltip>
+            <Tooltip title="View Move History">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={() => setShowMoveHistory(true)}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : 1,
+                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                  pointerEvents: !gameStarted ? 'none' : 'auto'
+                }}
+              >
+                <HistoryIcon sx={{ fontSize: 20 }} />
+              </Box>
+            </Tooltip>
+            <Tooltip title="View Top Moves">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={onGetTopMoves}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
+                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                  pointerEvents: !gameStarted ? 'none' : 'auto'
+                }}
+              >
+                <LightbulbIcon sx={{ fontSize: 20 }} />
+              </Box>
+            </Tooltip>
+            <Tooltip title="Pass">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={onPass}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : 1,
+                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                  pointerEvents: !gameStarted ? 'none' : 'auto',
+                  position: 'relative'
+                }}
+              >
+                <CancelIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  fontSize: '10px',
+                  backgroundColor: 'rgba(0,128,0,0.6)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '14px',
+                  height: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  1
+                </Box>
+              </Box>
+            </Tooltip>
+            <Tooltip title="Exchange">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={onExchange}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : (isExchangeDisabled ? 0.5 : 1),
+                  cursor: !gameStarted ? 'not-allowed' : (isExchangeDisabled ? 'not-allowed' : 'pointer'),
+                  pointerEvents: !gameStarted ? 'none' : 'auto',
+                  position: 'relative'
+                }}
+              >
+                <SwapHorizIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  fontSize: '10px',
+                  backgroundColor: 'rgba(0,128,0,0.6)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '14px',
+                  height: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  2
+                </Box>
+              </Box>
+            </Tooltip>
+          </Box>
+          <Box sx={{ display: 'flex', gap: '16px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '8px' }}>
+            <Tooltip title="Settings">
+              <Box 
+                className={styles.bestMoveButton}
+                onClick={onSettingsOpen}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {icons.settings}
+              </Box>
+            </Tooltip>
+            <Tooltip title="Color Scheme">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={onColorSchemeOpen}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {icons.colorScheme}
+              </Box>
+            </Tooltip>
+          </Box>
         </Box>
       </Collapse>
 
