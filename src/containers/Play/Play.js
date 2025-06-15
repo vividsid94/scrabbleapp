@@ -126,7 +126,12 @@ export default function Play() {
   }, [botMoveSoundType]);
 
   const alphabetizeRack = (rack) => {
-    return [...rack].sort((a, b) => a.localeCompare(b));
+    return [...rack].sort((a, b) => {
+      // Handle both string tiles and tile objects
+      const tileA = typeof a === 'string' ? a : a.tile;
+      const tileB = typeof b === 'string' ? b : b.tile;
+      return tileA.localeCompare(tileB);
+    });
   };
 
   useEffect(() => {
@@ -253,25 +258,25 @@ export default function Play() {
           setTempBoardCoords(newTempBoard);
           
           const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-          // If the tile was a blank, return '?' to the rack
-          const tileToAdd = selectedTiles[selectedTiles.length - 1] === '*' ? '?' : tileToRemove;
-          const newRack = [...currentRack, tileToAdd];
-          if (currentPlayer === 1) {
-            setPlayer1Rack(alphabetizeRack(newRack));
-          } else {
-            setPlayer2Rack(alphabetizeRack(newRack));
-          }
+          // Find the tile that was placed at this position
+          const placedTile = selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
+          if (placedTile) {
+            const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
+            const newRack = [...currentRack, tileToAdd];
+            if (currentPlayer === 1) {
+              setPlayer1Rack(alphabetizeRack(newRack));
+            } else {
+              setPlayer2Rack(alphabetizeRack(newRack));
+            }
 
-          // Remove from blankTiles if it was a blank
-          if (selectedTiles[selectedTiles.length - 1] === '*') {
-            setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
-          }
+            // Remove from blankTiles if it was a blank
+            if (placedTile.tile === '*') {
+              setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+            }
 
-          setSelectedTiles(prevTiles => {
-            const newTiles = [...prevTiles];
-            newTiles.pop();
-            return newTiles;
-          });
+            // Update selectedTiles to match what's actually on the board
+            setSelectedTiles(prevTiles => prevTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+          }
           
           // Reset preview score
           setPreviewScore(null);
@@ -313,17 +318,19 @@ export default function Play() {
 
     // Always use the actual letter if we have it
     if (tileIndex !== -1) {
+      const tileToPlace = newRack[tileIndex]; // Get the actual tile from the rack
       newRack.splice(tileIndex, 1);
       newTempBoard[row][col] = key;
-      setSelectedTiles(prevTiles => [...prevTiles, key]);
+      setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]); // Store the actual tile with its position
     } 
     // Only use the blank tile if we don't have the letter
     else if (blankIndex !== -1) {
+      const tileToPlace = newRack[blankIndex]; // Get the actual blank tile from the rack
       newRack.splice(blankIndex, 1);
       newTempBoard[row][col] = key;
       newBlankTiles.push({ row, col });
       setBlankTiles(newBlankTiles);
-      setSelectedTiles(prevTiles => [...prevTiles, '*']);
+      setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]); // Store the actual blank tile with its position
     }
 
     if (currentPlayer === 1) {
@@ -468,10 +475,16 @@ export default function Play() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
 
-      // Return tiles to the player's rack
-      const rackToUpdate = player1Rack;
-      const updatedRack = [...rackToUpdate, ...selectedTiles];
-      setPlayer1Rack(alphabetizeRack(updatedRack));
+      // Return tiles to the current player's rack
+      const rackToUpdate = currentPlayer === 1 ? player1Rack : player2Rack;
+      // Extract just the tile values from selectedTiles
+      const tilesToReturn = selectedTiles.map(tile => tile.tile);
+      const updatedRack = [...rackToUpdate, ...tilesToReturn];
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(updatedRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(updatedRack));
+      }
 
       // Reset the board state
       setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
@@ -497,10 +510,10 @@ export default function Play() {
     // Play player move sound
     playerMoveSound.current.play();
 
-    // Get the current rack before making any changes
-    const playerRack = player1Rack;
+    // Get the current player's rack before making any changes
+    const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
     // Calculate running total
-    const runningTotal = player1points + score;
+    const runningTotal = currentPlayer === 1 ? player1points + score : player2points + score;
 
     // Store only the differences in board states
     const boardDiff = getBoardDiff(boardCoords, tempBoardCoords);
@@ -522,15 +535,25 @@ export default function Play() {
     setArrowDirection('right');
 
     // Update player's points
-    setPlayer1points(runningTotal);
+    if (currentPlayer === 1) {
+      setPlayer1points(runningTotal);
+    } else {
+      setPlayer2points(runningTotal);
+    }
 
     // Remove played tiles from rack
     const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
-    setPlayer1Rack(alphabetizeRack(newRack));
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
+    }
 
     // Check if game should end
     if (newRack.length === 0 && pool.length === 0) {
-      handleGameEnd(newRack, player1Name, player2Rack, player2points);
+      handleGameEnd(newRack, currentPlayer === 1 ? player1Name : player2Name, 
+        currentPlayer === 1 ? player2Rack : player1Rack,
+        currentPlayer === 1 ? player2points : player1points);
       return;
     }
 
@@ -544,7 +567,11 @@ export default function Play() {
       newPool.splice(randomIndex, 1);
     }
 
-    setPlayer1Rack(alphabetizeRack(newRack));
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
+    }
     setPool(newPool);
     
     // Switch to next player
