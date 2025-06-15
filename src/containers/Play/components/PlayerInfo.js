@@ -26,7 +26,15 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       <Box className={styles.playerName}>{name}</Box>
       <Box className={styles.timer}>{time}</Box>
     </Box>
-    <Box className={styles.points}>{points}</Box>
+    <Box 
+      className={styles.points} 
+      sx={{
+        fontSize: '24px',
+        fontWeight: 'bold'
+      }}
+    >
+      {points}
+    </Box>
     {rack && ((!isBot) || (isBot && (BOT_RACK_VISIBILITY.enabled || currentPlayer === 2))) && (
       <Box className={styles.Rack}>
         {isBot ? (
