@@ -20,8 +20,8 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer }) => (
-  <Box className={styles.playerPanel}>
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx }) => (
+  <Box className={styles.playerPanel} sx={sx}>
     <Box className={styles.playerInfo}>
       <Box className={styles.playerName}>{name}</Box>
       <Box className={styles.timer}>{time}</Box>
@@ -41,15 +41,33 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
               <Box key={index} sx={{ 
                 width: '24px', 
                 height: '24px', 
-                display: 'flex', 
-                alignItems: 'center', 
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: color.current,
                 borderRadius: '4px',
                 border: '1px solid rgba(0,0,0,0.2)',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                 fontSize: '16px',
-                color: 'white'
+                color: 'white',
+                transform: 'scale(1.3)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                animation: 'thinking 2s ease-in-out infinite',
+                '@keyframes thinking': {
+                  '0%': { 
+                    transform: 'scale(1.3)'
+                  },
+                  '50%': { 
+                    transform: 'scale(1.35)'
+                  },
+                  '100%': { 
+                    transform: 'scale(1.3)'
+                  }
+                },
+                '&:hover': {
+                  transform: 'scale(1.5)',
+                  animation: 'none'
+                }
               }}>
                 {emoji}
               </Box>
@@ -314,6 +332,35 @@ export default function PlayerInfo({
             selectedTiles={selectedTiles}
             isBot={isBotMode}
             currentPlayer={currentPlayer}
+            sx={{
+              '& .rack': {
+                background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                '& > div': {
+                  transform: 'scale(1.3)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  animation: 'thinking 2s ease-in-out infinite',
+                  '@keyframes thinking': {
+                    '0%': { 
+                      transform: 'scale(1.3)'
+                    },
+                    '50%': { 
+                      transform: 'scale(1.35)'
+                    },
+                    '100%': { 
+                      transform: 'scale(1.3)'
+                    }
+                  },
+                  '&:hover': {
+                    transform: 'scale(1.5)',
+                    animation: 'none'
+                  }
+                }
+              }
+            }}
           />
           <PlayerInfoSection
             name={player1Name}
@@ -400,6 +447,35 @@ export default function PlayerInfo({
             selectedTiles={selectedTiles}
             isBot={isBotMode}
             currentPlayer={currentPlayer}
+            sx={{
+              '& .rack': {
+                background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                '& > div': {
+                  transform: 'scale(1.3)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  animation: 'thinking 2s ease-in-out infinite',
+                  '@keyframes thinking': {
+                    '0%': { 
+                      transform: 'scale(1.3)'
+                    },
+                    '50%': { 
+                      transform: 'scale(1.35)'
+                    },
+                    '100%': { 
+                      transform: 'scale(1.3)'
+                    }
+                  },
+                  '&:hover': {
+                    transform: 'scale(1.5)',
+                    animation: 'none'
+                  }
+                }
+              }
+            }}
           />
         </>
       )}
