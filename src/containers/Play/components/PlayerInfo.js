@@ -96,7 +96,8 @@ export default function PlayerInfo({
   selectedBoardPosition,
   tilesToExchange,
   setShowMoveHistory,
-  icons
+  icons,
+  isBotThinking
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -203,22 +204,6 @@ export default function PlayerInfo({
                 }}
               >
                 <CancelIcon sx={{ fontSize: 20 }} />
-                <Box sx={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  fontSize: '10px',
-                  backgroundColor: 'rgba(0,128,0,0.6)',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '14px',
-                  height: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  1
-                </Box>
               </Box>
             </Tooltip>
             <Tooltip title="Exchange">
@@ -233,22 +218,6 @@ export default function PlayerInfo({
                 }}
               >
                 <SwapHorizIcon sx={{ fontSize: 20 }} />
-                <Box sx={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  fontSize: '10px',
-                  backgroundColor: 'rgba(0,128,0,0.6)',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '14px',
-                  height: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  2
-                </Box>
               </Box>
             </Tooltip>
           </Box>
@@ -286,7 +255,57 @@ export default function PlayerInfo({
       {currentPlayer === 2 ? (
         <>
           <PlayerInfoSection
-            name={player2Name}
+            name={isBotMode && isBotThinking ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {player2Name}
+                <Box sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  borderRadius: '12px',
+                  padding: '4px 12px',
+                  fontSize: '0.9em',
+                  fontWeight: 500,
+                  color: 'rgb(255, 255, 255)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
+                    transform: 'translateY(-1px)'
+                  },
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    height: '2px',
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '-100%',
+                    height: '2px',
+                    width: '50%',
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    animation: 'progress 2s infinite linear',
+                    '@keyframes progress': {
+                      '0%': { left: '-100%' },
+                      '100%': { left: '100%' }
+                    }
+                  }
+                }}>
+                  is thinking
+                </Box>
+              </Box>
+            ) : player2Name}
             time={player2Time}
             points={player2Points}
             rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
@@ -322,11 +341,63 @@ export default function PlayerInfo({
             currentPlayer={currentPlayer}
           />
           <PlayerInfoSection
-            name={player2Name}
+            name={isBotMode && isBotThinking ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {player2Name}
+                <Box sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  borderRadius: '12px',
+                  padding: '4px 12px',
+                  fontSize: '0.9em',
+                  fontWeight: 500,
+                  color: 'rgb(255, 255, 255)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
+                    transform: 'translateY(-1px)'
+                  },
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    height: '2px',
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '-100%',
+                    height: '2px',
+                    width: '50%',
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    animation: 'progress 2s infinite linear',
+                    '@keyframes progress': {
+                      '0%': { left: '-100%' },
+                      '100%': { left: '100%' }
+                    }
+                  }
+                }}>
+                  is thinking
+                </Box>
+              </Box>
+            ) : player2Name}
             time={player2Time}
             points={player2Points}
             rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
             color={color}
+            onTileClick={onTileClick}
+            selectedTiles={selectedTiles}
             isBot={isBotMode}
             currentPlayer={currentPlayer}
           />

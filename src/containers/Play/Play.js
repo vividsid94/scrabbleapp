@@ -2002,6 +2002,7 @@ export default function Play() {
             autoPlayBest={autoPlayBest}
             setAutoPlayBest={setAutoPlayBest}
             setShowMoveHistory={setShowMoveHistory}
+            isBotThinking={isBotThinking}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,
@@ -2192,11 +2193,6 @@ export default function Play() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      {isBotThinking && (
-        <div className={styles.botThinking}>
-          SidBot is thinking...
-        </div>
-      )}
 
       <ChoicesModal
         open={showTopMoves}
