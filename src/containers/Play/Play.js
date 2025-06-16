@@ -27,6 +27,7 @@ import { handleTileDrop, handleTileClick } from '../../functions/play/tileFuncti
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { handleKeyDown, handleKeyPress } from '../../functions/play/keyboardFunctions';
 import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
+import { calculateLeave, fetchLeaveValues } from '../../functions/play/leaveFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -862,14 +863,15 @@ export default function Play() {
           direction: 'exchange',
           startPosition: 'Exchange',
           leave: leave,
-          isExchange: true
+          isExchange: true,
+          currentRack: newRack // Add currentRack to the move object
         };
       });
 
       // First, fetch leave values for all moves
-      const allMoves = [...data.moves, ...exchangeMoves];
+      const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
       const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-        fetchLeaveValues(allMoves),
+        fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
         fetchBoardControl(allMoves)
       ]);
 
@@ -879,7 +881,7 @@ export default function Play() {
       );
 
       // Then calculate total values and sort
-      const topMoves = allMoves
+      const movesWithValues = allMoves
         .map(move => {
           const leaveValue = updatedLeaveValues[move.leave] || 0;
           const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
@@ -896,7 +898,7 @@ export default function Play() {
         .sort((a, b) => b.totalValue - a.totalValue)
         .slice(0, 15); // Show top 15 moves
 
-      setTopMoves(topMoves);
+      setTopMoves(movesWithValues);
     } catch (error) {
       console.error('Error getting top moves:', error);
       setSnackbarMessage('Error getting top moves: ' + error.message);
@@ -1179,30 +1181,42 @@ export default function Play() {
           direction: 'exchange',
           startPosition: 'Exchange',
           leave: leave,
-          isExchange: true
+          isExchange: true,
+          currentRack: newRack // Add currentRack to the move object
         };
       }) : [];
 
-      // First, fetch leave values for all moves
-      const allMoves = [...data.moves, ...exchangeMoves];
-      const updatedLeaveValues = await fetchLeaveValues(allMoves);
+      // First, fetch leave values and board control for all moves
+      const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
+      const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
+        fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
+        fetchBoardControl(allMoves)
+      ]);
+
+      // Create a map of move words to their control metrics
+      const controlMap = new Map(
+        boardControlMetrics.map(metric => [metric.move, metric])
+      );
 
       // Then calculate total values and sort
-      const topMoves = allMoves
+      const movesWithValues = allMoves
         .map(move => {
           const leaveValue = updatedLeaveValues[move.leave] || 0;
+          const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
           const totalValue = move.isExchange ? 
             leaveValue : // For exchanges, total value is just the leave value
             (move.score + leaveValue); // For regular moves, add score and leave value
           return {
             ...move,
-            totalValue
+            totalValue,
+            defensiveValue: controlMetrics.defensiveValue,
+            boardControl: controlMetrics.boardControl,
           };
         })
         .sort((a, b) => b.totalValue - a.totalValue);
 
-      if (topMoves.length > 0) {
-        const bestMove = topMoves[0];
+      if (movesWithValues.length > 0) {
+        const bestMove = movesWithValues[0];
         
         // Prepare all state updates
         const stateUpdates = {
@@ -1477,87 +1491,6 @@ export default function Play() {
       setSimulatingMove(null);
       setSimulationProgress(0);
       // Don't clear previewBoard and previewMove here
-    }
-  };
-
-  const calculateLeave = (move) => {
-    // Create a copy of the current rack
-    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    const rackCopy = [...currentRack];
-    
-    // Remove tiles used in the move
-    for (const tile of move.tiles) {
-      if (tile.isNew) {
-        // For blank tiles, we need to find the blank in the rack
-        const tileIndex = tile.isBlank ? rackCopy.indexOf('?') : rackCopy.indexOf(tile.letter);
-        if (tileIndex !== -1) {
-          rackCopy.splice(tileIndex, 1);
-        }
-      }
-    }
-    
-    // Sort the remaining tiles to create the leave
-    const leave = rackCopy.sort().join('');
-    return leave;
-  };
-
-  const fetchLeaveValues = async (moves) => {
-    try {
-      // Calculate leave values for each move
-      const leavesToFetch = new Map();
-      const leavesArray = [];
-      
-      for (const move of moves) {
-        // For regular moves, calculate the leave after playing the word
-        const leaveStr = move.isExchange ? move.leave : calculateLeave(move);
-        move.leave = leaveStr; // Add leave to the move object
-        
-        // Only fetch if we don't already have this leave value
-        if (!leaveValues[leaveStr]) {
-          leavesToFetch.set(leaveStr, true);
-          leavesArray.push(leaveStr);
-        }
-      }
-
-      // Only make the API call if we have new leaves to fetch
-      if (leavesToFetch.size > 0) {
-        const response = await fetch('/.netlify/functions/getLeaveValues', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ leaves: leavesArray }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch leave values');
-        }
-
-        const data = await response.json();
-        
-        // Update the leaveValues state with the new values
-        const newLeaveValues = {};
-        if (data.leaveValues) {
-          // The response is now an object with leave strings as keys
-          Object.assign(newLeaveValues, data.leaveValues);
-        }
-        
-        // Merge new leave values with existing ones
-        const updatedLeaveValues = {
-          ...leaveValues,
-          ...newLeaveValues
-        };
-        setLeaveValues(updatedLeaveValues);
-
-        // Return the updated leave values for immediate use
-        return updatedLeaveValues;
-      }
-
-      // If no new leaves to fetch, return current leave values
-      return leaveValues;
-    } catch (error) {
-      console.error('Error fetching leave values:', error);
-      return leaveValues;
     }
   };
 
