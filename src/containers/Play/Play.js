@@ -27,7 +27,9 @@ import { handleTileDrop, handleTileClick } from '../../functions/play/tileFuncti
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { handleKeyDown, handleKeyPress } from '../../functions/play/keyboardFunctions';
 import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
-import { calculateLeave, fetchLeaveValues } from '../../functions/play/leaveFunctions';
+import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
+import { handleExchange } from '../../functions/play/exchangeFunctions';
+import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -209,7 +211,7 @@ export default function Play() {
       setBlankTiles,
       setPreviewScore,
       setPreviewScorePosition,
-      handleWordSubmit,
+      handleWordSubmit: handleWordSubmitClick,
       arrowDirection,
       origBoard
     });
@@ -290,146 +292,42 @@ export default function Play() {
   }, []);
 
   // Modify handleWordSubmit to use board diffs
-  const handleWordSubmit = async () => {
-    const response = await fetch('/.netlify/functions/gameLogic', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'validate',
-        beforeBoard: boardCoords,
-        afterBoard: tempBoardCoords
-      })
+  const handleWordSubmitClick = () => {
+    handleWordSubmit({
+      boardCoords,
+      tempBoardCoords,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      selectedTiles,
+      pool,
+      player1points,
+      player2points,
+      player1Name,
+      player2Name,
+      blankTiles,
+      moveHistory,
+      selectedBoardPosition,
+      arrowDirection,
+      setBoardCoords,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setSelectedBoardPosition,
+      setArrowDirection,
+      setPlayer1points,
+      setPlayer2points,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setPool,
+      setCurrentPlayer,
+      setMoveHistory,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen,
+      handleGameEnd,
+      getBoardDiff,
+      playerMoveSound
     });
-
-    const validationResult = await response.json();
-    if (!validationResult.isValid) {
-      console.log('Invalid word submission:', {
-        reason: validationResult.reason || 'Word not found in dictionary',
-        word: validationResult.word || 'Unknown',
-        position: selectedBoardPosition,
-        direction: arrowDirection
-      });
-
-      // Show toast notification
-      setSnackbarMessage(validationResult.reason);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-
-      // Return tiles to the current player's rack
-      const rackToUpdate = currentPlayer === 1 ? player1Rack : player2Rack;
-      // Extract just the tile values from selectedTiles
-      const tilesToReturn = selectedTiles.map(tile => tile.tile);
-      const updatedRack = [...rackToUpdate, ...tilesToReturn];
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(updatedRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(updatedRack));
-      }
-
-      // Reset the board state
-      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-      setSelectedTiles([]);
-      setSelectedBoardPosition(null);
-      return;
-    }
-
-    const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'score',
-        beforeBoard: boardCoords,
-        afterBoard: tempBoardCoords
-      })
-    });
-
-    const score = await scoreResponse.json();
-
-    // Play player move sound
-    playerMoveSound.current.play();
-
-    // Get the current player's rack before making any changes
-    const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    // Calculate running total
-    const runningTotal = currentPlayer === 1 ? player1points + score : player2points + score;
-
-    // Store only the differences in board states
-    const boardDiff = getBoardDiff(boardCoords, tempBoardCoords);
-    const moveHistoryEntry = {
-      boardDiff,
-      player: currentPlayer === 1 ? player1Name : player2Name,
-      score: score,
-      rack: alphabetizeRack(playerRack).join(''),
-      total: runningTotal
-    };
-
-    setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
-
-    // Update the board state
-    setBoardCoords(tempBoardCoords);
-    setTempBoardCoords(JSON.parse(JSON.stringify(tempBoardCoords)));
-    setSelectedTiles([]);
-    setSelectedBoardPosition(null);
-    setArrowDirection('right');
-
-    // Update player's points
-    if (currentPlayer === 1) {
-      setPlayer1points(runningTotal);
-    } else {
-      setPlayer2points(runningTotal);
-    }
-
-    // Remove played tiles from rack
-    const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-
-    // Check if game should end
-    if (newRack.length === 0 && pool.length === 0) {
-      handleGameEnd(newRack, currentPlayer === 1 ? player1Name : player2Name, 
-        currentPlayer === 1 ? player2Rack : player1Rack,
-        currentPlayer === 1 ? player2points : player1points);
-      return;
-    }
-
-    // Refill the current player's rack
-    const newPool = [...pool];
-    
-    // Add new tiles from pool
-    while (newRack.length < 7 && newPool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * newPool.length);
-      newRack.push(newPool[randomIndex]);
-      newPool.splice(randomIndex, 1);
-    }
-
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-    setPool(newPool);
-    
-    // Switch to next player
-    setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
-    setSelectedBoardPosition(null);
-    setSelectedTiles([]);
-    setArrowDirection('right');
-
-    // After successful move
-    setSimulatingMove(null);
-    setSimulationResult(null);
-    setSimulationProgress(0);
-    setPreviewBoard(null);
-    setPreviewMove(null);
-    setMoveWithResults(null);
-    setTopMoves([]); // Clear top moves
   };
 
   const handleSettingsOpen = () => {
@@ -747,18 +645,6 @@ export default function Play() {
     return combinations;
   };
 
-  const calculateExchangeLeave = (rack, tilesToExchange) => {
-    const rackCopy = [...rack];
-    // Remove tiles that would be exchanged
-    for (const tile of tilesToExchange) {
-      const index = rackCopy.indexOf(tile === '*' ? '?' : tile);
-      if (index !== -1) {
-        rackCopy.splice(index, 1);
-      }
-    }
-    return rackCopy.sort().join('');
-  };
-
   const fetchBoardControl = async (moves) => {
     try {
       const response = await fetch('/.netlify/functions/getBoardControl', {
@@ -910,69 +796,23 @@ export default function Play() {
     }
   };
 
-  const handleExchange = () => {
-    if (tilesToExchange.length === 0) {
-      setSnackbarMessage('Please select tiles to exchange');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (pool.length < tilesToExchange.length) {
-      setSnackbarMessage('Not enough tiles in pool to exchange');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    // Check if tiles have been placed on the board for this turn
-    const hasTilesPlaced = JSON.stringify(tempBoardCoords) !== JSON.stringify(boardCoords);
-    if (hasTilesPlaced) {
-      setSnackbarMessage('Remove tiles from the board before exchanging');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    const newRack = [...currentRack];
-    const newPool = [...pool];
-
-    // Sort tiles by index in descending order to avoid index shifting issues
-    const sortedTiles = [...tilesToExchange].sort((a, b) => b.index - a.index);
-    
-    // Remove selected tiles from rack
-    sortedTiles.forEach(({ index }) => {
-      if (index < newRack.length) {
-        newRack.splice(index, 1);
-      }
-    });
-
-    // Add new tiles from pool
-    for (let i = 0; i < tilesToExchange.length; i++) {
-      const randomIndex = Math.floor(Math.random() * newPool.length);
-      newRack.push(newPool[randomIndex]);
-      newPool.splice(randomIndex, 1);
-    }
-
-    // Update state with alphabetized rack
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-    setPool(newPool);
-    setTilesToExchange([]);
-
-    // Switch to next player
-    setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-    setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
-    setSnackbarSeverity('info');
-    setSnackbarOpen(true);
-
-    // If next player is bot, make bot move
-    if (isBotMode && currentPlayer === 2) {
-      makeBotMove({
+  const handleExchangeClick = () => {
+    const result = handleExchange({
+      tilesToExchange,
+      currentRack: currentPlayer === 1 ? player1Rack : player2Rack,
+      pool,
+      currentPlayer,
+      playerName: currentPlayer === 1 ? player1Name : player2Name,
+      isBotMode,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setPool,
+      setTilesToExchange,
+      setCurrentPlayer,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen,
+      makeBotMove: () => makeBotMove({
         boardCoords,
         player2Rack,
         pool,
@@ -1010,7 +850,18 @@ export default function Play() {
         setTopMoves,
         isBotMode,
         currentPlayer
-      });
+      })
+    });
+
+    if (result) {
+      const { newRack, newPool } = result;
+      // Update state with alphabetized rack
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(newRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(newRack));
+      }
+      setPool(newPool);
     }
   };
 
@@ -1446,7 +1297,7 @@ export default function Play() {
       event,
       gameStarted,
       handlePass,
-      handleExchange,
+      handleExchangeClick,
       handlePlayTopMove
     });
 
@@ -1454,7 +1305,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, handlePass, handleExchange, handlePlayTopMove]);
+  }, [gameStarted, handlePass, handleExchangeClick, handlePlayTopMove]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1652,9 +1503,9 @@ export default function Play() {
               onColorSchemeOpen={handleColorSchemeOpen}
               onBotModeToggle={handleBotModeToggle}
               onGetTopMoves={handleGetTopMoves}
-              onWordSubmit={handleWordSubmit}
+              onWordSubmit={handleWordSubmitClick}
               onPass={handlePass}
-              onExchange={handleExchange}
+              onExchange={handleExchangeClick}
               onPlayTopMove={handlePlayTopMove}
               selectedBoardPosition={selectedBoardPosition}
               tilesToExchange={tilesToExchange}

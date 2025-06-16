@@ -91,4 +91,22 @@ export const fetchLeaveValues = async (moves, leaveValues = {}, setLeaveValues) 
     console.error('Error fetching leave values:', error);
     return leaveValues || {}; // Return empty object if leaveValues is undefined
   }
+};
+
+/**
+ * Calculates the leave after exchanging tiles
+ * @param {Array} rack - The current rack of tiles
+ * @param {Array} tilesToExchange - The tiles to be exchanged
+ * @returns {string} The sorted leave string
+ */
+export const calculateExchangeLeave = (rack, tilesToExchange) => {
+  const rackCopy = [...rack];
+  // Remove tiles that would be exchanged
+  for (const tile of tilesToExchange) {
+    const index = rackCopy.indexOf(tile === '*' ? '?' : tile);
+    if (index !== -1) {
+      rackCopy.splice(index, 1);
+    }
+  }
+  return rackCopy.sort().join('');
 }; 

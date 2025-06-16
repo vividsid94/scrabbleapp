@@ -171,15 +171,15 @@ export const handleKeyPress = ({
   event,
   gameStarted,
   handlePass,
-  handleExchange,
+  handleExchangeClick,
   handlePlayTopMove
 }) => {
   if (!gameStarted) return;
-  
+
   if (event.key === '1') {
     handlePass();
   } else if (event.key === '2') {
-    handleExchange();
+    handleExchangeClick();
   } else if (event.key === '3') {
     // Directly play the best move without showing choices
     handlePlayTopMove();
