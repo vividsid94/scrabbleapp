@@ -31,6 +31,7 @@ import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
 import { handleGetTopMoves, handlePlayTopMove } from '../../functions/play/moveFunctions';
+import { getBoardDiff } from '../../functions/play/boardUtils';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -264,33 +265,6 @@ export default function Play() {
     // Disable auto-play
     setAutoPlayBest(false);
   }, [player1Rack, player2Rack]);
-
-  // Add a function to compress board state more aggressively
-  const compressBoardState = useCallback((board) => {
-    const compressed = [];
-    for (let row = 0; row < 15; row++) {
-      const compressedRow = [];
-      for (let col = 0; col < 15; col++) {
-        const cell = board[row][col];
-        compressedRow.push(typeof cell === 'string' ? cell : 0);
-      }
-      compressed.push(compressedRow);
-    }
-    return compressed;
-  }, []);
-
-  // Add a function to store only the differences in board states
-  const getBoardDiff = useCallback((before, after) => {
-    const diff = [];
-    for (let row = 0; row < 15; row++) {
-      for (let col = 0; col < 15; col++) {
-        if (before[row][col] !== after[row][col]) {
-          diff.push({ row, col, value: after[row][col] });
-        }
-      }
-    }
-    return diff;
-  }, []);
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
