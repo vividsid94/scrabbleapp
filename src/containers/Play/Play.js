@@ -1541,250 +1541,169 @@ export default function Play() {
   }, [selectedTiles, tempBoardCoords]);
 
   return (
-    <Box sx={{ display: 'flex'}}>
+    <Box className={styles.container}>
       <Sidenav/>
       <Box className={styles.page}>
-      <Box className={styles.title}>
-        {gameStarted ? (
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <Box sx={{ 
-              fontSize: '24px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              {gameTime}/0 • Classic • NWL23
-            </Box>
-            <Box sx={{ 
-              fontSize: '16px',
-              color: '#6B7280',
-              fontStyle: 'italic'
-            }}>
-              Void Challenge • Unrated
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <Box sx={{ 
-              fontSize: '28px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              Play Mode
-            </Box>
-            <Box sx={{ 
-              fontSize: '18px',
-              color: '#6B7280',
-              fontStyle: 'italic'
-            }}>
-              Click the robot to play against SidBot
-            </Box>
-          </Box>
-        )}
-      </Box>
-      <Box className={styles.mainPanel}>
-        <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board 
-            board={board}
-            boardMode={theme}
-            onBoardChildClick={(row, col) => handleBoardPositionSelect({
-              row,
-              col,
-              boardCoords,
-              selectedBoardPosition,
-              setSelectedBoardPosition,
-              arrowDirection,
-              setArrowDirection
-            })}
-            onTileDrop={(tile, index, row, col) => handleTileDrop({
-              tile,
-              index,
-              row,
-              col,
-              player1Rack,
-              setPlayer1Rack,
-              player2Rack,
-              setPlayer2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              setSelectedBoardPosition,
-              tempBoardCoords,
-              setTempBoardCoords
-            })}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange
-            })}
-            selectedPosition={selectedBoardPosition}
-            arrowDirection={arrowDirection}
-            onArrowDirectionChange={(newDirection) => {
-                console.log('Play component received direction change:', newDirection);
-                setArrowDirection(newDirection);
-            }}
-            animate={false}
-            showSlip={false}
-            showDictionary={false}
-            dictionary=""
-            previewScore={previewScore}
-            previewScorePosition={previewScorePosition}
-          />   
-        </Box>
-
-        <Box className={styles.rightPanel}>
-          <PlayerInfo
-            player1Name={player1Name}
-            player2Name={player2Name}
-            player1Points={player1points}
-            player2Points={player2points}
-            player1Time={formatTime(player1Time)}
-            player2Time={formatTime(player2Time)}
-            currentPlayer={currentPlayer}
-            player1Rack={player1Rack}
-            player2Rack={player2Rack}
-            color={color}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange
-            })}
-            selectedTiles={tilesToExchange}
-            isBotMode={isBotMode}
-            gameStarted={gameStarted}
-            isDictionaryLoading={isDictionaryLoading}
-            isLoadingTopMoves={isLoadingTopMoves}
-            onSettingsOpen={handleSettingsOpen}
-            onColorSchemeOpen={handleColorSchemeOpen}
-            onBotModeToggle={handleBotModeToggle}
-            onGetTopMoves={handleGetTopMoves}
-            onWordSubmit={handleWordSubmit}
-            onPass={handlePass}
-            onExchange={handleExchange}
-            onPlayTopMove={handlePlayTopMove}
-            selectedBoardPosition={selectedBoardPosition}
-            tilesToExchange={tilesToExchange}
-            autoPlayBest={autoPlayBest}
-            setAutoPlayBest={setAutoPlayBest}
-            setShowMoveHistory={setShowMoveHistory}
-            isBotThinking={isBotThinking}
-            icons={{
-              settings: <TuneIcon className={styles.keyBtn} />,
-              colorScheme: <PaletteIcon className={styles.keyBtn} />,
-              time: (
-                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                  <TimerIcon 
-                    className={styles.keyBtn} 
-                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
-                    sx={{ 
-                      color: showTimeSlider ? '#4CAF50' : 'inherit',
-                      transform: showTimeSlider ? 'scale(1.1)' : 'scale(1)',
-                      opacity: gameStarted ? 0.5 : 1,
-                      cursor: gameStarted ? 'not-allowed' : 'pointer'
-                    }}
-                  />
-                </Tooltip>
-              ),
-              botMode: <SmartToyIcon 
-                className={`${styles.keyBtn} ${isBotMode ? styles.activeBot : ''}`} 
-                sx={{ 
-                  fontSize: 24,
-                  color: isBotMode ? (currentPlayer === 2 ? '#ff4444' : '#4CAF50') : 'inherit',
-                  transition: 'color 0.2s ease',
-                  opacity: isBotMode && currentPlayer === 2 ? 0.5 : 1,
-                  cursor: isBotMode && currentPlayer === 2 ? 'not-allowed' : 'pointer',
-                  pointerEvents: isBotMode && currentPlayer === 2 ? 'none' : 'auto'
-                }} 
-              />,
-              topMoves: <LightbulbIcon className={styles.keyBtn} />,
-              moveOrder: (
-                <Tooltip title="Move History">
-                  <SortIcon 
-                    className={styles.keyBtn}
-                    onClick={() => setShowMoveHistory(true)}
-                    sx={{
-                      opacity: !gameStarted ? 0.3 : 1,
-                      cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                      pointerEvents: !gameStarted ? 'none' : 'auto'
-                    }}
-                  />
-                </Tooltip>
-              )
-            }}
-          />
-
-          {showTimeSlider && !gameStarted && (
-            <Box sx={{ 
-              width: '100%', 
-              mx: 'auto', 
-              mt: 2, 
-              p: 2, 
-              bgcolor: 'rgba(255,255,255,0.1)',
-              borderRadius: 2,
-              backdropFilter: 'blur(10px)',
-              boxSizing: 'border-box',
-              overflow: 'hidden'
-            }}>
-              <Box sx={{ color: '#6B7280', mb: 1, textAlign: 'center' }}>
-                Game Time: {gameTime} min
+        <Box className={styles.title}>
+          {gameStarted ? (
+            <Box className={styles.gameTitle}>
+              <Box className={styles.gameTitleText}>
+                {gameTime}/0 • Classic • NWL23
               </Box>
-              <Box sx={{ px: 3 }}>
-                <Box sx={{ 
-                  position: 'relative',
-                  width: 'calc(100% - 16px)',
-                  mx: 'auto',
-                  height: '16px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
+              <Box className={styles.gameSubtitle}>
+                Void Challenge • Unrated
+              </Box>
+            </Box>
+          ) : (
+            <Box className={styles.gameTitle}>
+              <Box className={styles.playModeTitle}>
+                Play Mode
+              </Box>
+              <Box className={styles.playModeSubtitle}>
+                Click the robot to play against SidBot
+              </Box>
+            </Box>
+          )}
+        </Box>
+        <Box className={styles.mainPanel}>
+          <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
+            <Board 
+              board={board}
+              boardMode={theme}
+              onBoardChildClick={(row, col) => handleBoardPositionSelect({
+                row,
+                col,
+                boardCoords,
+                selectedBoardPosition,
+                setSelectedBoardPosition,
+                arrowDirection,
+                setArrowDirection
+              })}
+              onTileDrop={(tile, index, row, col) => handleTileDrop({
+                tile,
+                index,
+                row,
+                col,
+                player1Rack,
+                setPlayer1Rack,
+                player2Rack,
+                setPlayer2Rack,
+                selectedTiles,
+                setSelectedTiles,
+                setSelectedBoardPosition,
+                tempBoardCoords,
+                setTempBoardCoords
+              })}
+              onTileClick={(tile, index) => handleTileClick({
+                tile,
+                index,
+                currentPlayer,
+                player1Rack,
+                player2Rack,
+                selectedTiles,
+                setSelectedTiles,
+                tilesToExchange,
+                setTilesToExchange
+              })}
+              selectedPosition={selectedBoardPosition}
+              arrowDirection={arrowDirection}
+              onArrowDirectionChange={(newDirection) => {
+                  console.log('Play component received direction change:', newDirection);
+                  setArrowDirection(newDirection);
+              }}
+              animate={false}
+              showSlip={false}
+              showDictionary={false}
+              dictionary=""
+              previewScore={previewScore}
+              previewScorePosition={previewScorePosition}
+            />   
+          </Box>
+
+          <Box className={styles.rightPanel}>
+            <PlayerInfo
+              player1Name={player1Name}
+              player2Name={player2Name}
+              player1Points={player1points}
+              player2Points={player2points}
+              player1Time={formatTime(player1Time)}
+              player2Time={formatTime(player2Time)}
+              currentPlayer={currentPlayer}
+              player1Rack={player1Rack}
+              player2Rack={player2Rack}
+              color={color}
+              onTileClick={(tile, index) => handleTileClick({
+                tile,
+                index,
+                currentPlayer,
+                player1Rack,
+                player2Rack,
+                selectedTiles,
+                setSelectedTiles,
+                tilesToExchange,
+                setTilesToExchange
+              })}
+              selectedTiles={tilesToExchange}
+              isBotMode={isBotMode}
+              gameStarted={gameStarted}
+              isDictionaryLoading={isDictionaryLoading}
+              isLoadingTopMoves={isLoadingTopMoves}
+              onSettingsOpen={handleSettingsOpen}
+              onColorSchemeOpen={handleColorSchemeOpen}
+              onBotModeToggle={handleBotModeToggle}
+              onGetTopMoves={handleGetTopMoves}
+              onWordSubmit={handleWordSubmit}
+              onPass={handlePass}
+              onExchange={handleExchange}
+              onPlayTopMove={handlePlayTopMove}
+              selectedBoardPosition={selectedBoardPosition}
+              tilesToExchange={tilesToExchange}
+              autoPlayBest={autoPlayBest}
+              setAutoPlayBest={setAutoPlayBest}
+              setShowMoveHistory={setShowMoveHistory}
+              isBotThinking={isBotThinking}
+              icons={{
+                settings: <TuneIcon className={styles.keyBtn} />,
+                colorScheme: <PaletteIcon className={styles.keyBtn} />,
+                time: (
+                  <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
+                    <TimerIcon 
+                      className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                      onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
+                    />
+                  </Tooltip>
+                ),
+                botMode: <SmartToyIcon 
+                  className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+                />,
+                topMoves: <LightbulbIcon className={styles.keyBtn} />,
+                moveOrder: (
+                  <Tooltip title="Move History">
+                    <SortIcon 
+                      className={`${styles.keyBtn} ${styles.moveHistoryIcon} ${!gameStarted ? styles.disabled : ''}`}
+                      onClick={() => setShowMoveHistory(true)}
+                    />
+                  </Tooltip>
+                )
+              }}
+            />
+
+            {showTimeSlider && !gameStarted && (
+              <Box className={styles.timeSliderContainer}>
+                <Box className={styles.timeSliderLabel}>
+                  Game Time: {gameTime} min
+                </Box>
+                <Box className={styles.timeSliderWrapper}>
                   {[5, 15, 25, 30].map((value) => (
                     <Box
                       key={value}
-                      sx={{
-                        position: 'absolute',
-                        left: `${((value - 5) / 25) * 100}%`,
-                        width: '1px',
-                        height: '8px',
-                        backgroundColor: '#bfbfbf',
-                        transform: 'translateX(-50%)'
-                      }}
+                      className={styles.timeSliderMark}
+                      style={{ left: `${((value - 5) / 25) * 100}%` }}
                     />
                   ))}
                   <Box
-                    sx={{
-                      position: 'absolute',
-                      left: `${((gameTime - 5) / 25) * 100}%`,
-                      width: '16px',
-                      height: '16px',
-                      backgroundColor: '#4CAF50',
-                      borderRadius: '50%',
-                      transform: 'translateX(-50%)',
-                      cursor: 'pointer'
-                    }}
+                    className={styles.timeSliderThumb}
+                    style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
                     onMouseDown={(e) => {
                       const slider = e.currentTarget.parentElement;
                       const rect = slider.getBoundingClientRect();
@@ -1804,69 +1723,68 @@ export default function Play() {
                   />
                 </Box>
               </Box>
-            </Box>
-          )}
+            )}
 
-          <Box className={styles.playerPanel}>
-            <Box className={styles.poolBox}>
-              <PlayPool 
-                pool={pool} 
-                player1Rack={player1Rack} 
-                player2Rack={player2Rack}
-              />  
+            <Box className={styles.playerPanel}>
+              <Box className={styles.poolBox}>
+                <PlayPool 
+                  pool={pool} 
+                  player1Rack={player1Rack} 
+                  player2Rack={player2Rack}
+                />  
+              </Box>
             </Box>
           </Box>
         </Box>
-      </Box>
 
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box className={styles.modalContainer}>
-          {modalContent === "settings" && (
-            <Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Board Mode
-                <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
-                  <option value="STANDARD">Standard</option>
-                  {/* <option value="FULLBOARD">Full Board</option> */}
-                </select>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box className={styles.modalContainer}>
+            {modalContent === "settings" && (
+              <Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Board Mode
+                  <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
+                    <option value="STANDARD">Standard</option>
+                    {/* <option value="FULLBOARD">Full Board</option> */}
+                  </select>
+                </Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Player Move Sound
+                  <select
+                    className={styles.styleSelection}
+                    value={playerMoveSoundType}
+                    onChange={e => setPlayerMoveSoundType(e.target.value)}
+                  >
+                    <option value="classic">Classic</option>
+                    <option value="sword">Sword</option>
+                  </select>
+                </Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Bot Move Sound
+                  <select
+                    className={styles.styleSelection}
+                    value={botMoveSoundType}
+                    onChange={e => setBotMoveSoundType(e.target.value)}
+                  >
+                    <option value="classic">Classic</option>
+                    <option value="sword">Sword</option>
+                  </select>
+                </Box>
               </Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Player Move Sound
-                <select
-                  className={styles.styleSelection}
-                  value={playerMoveSoundType}
-                  onChange={e => setPlayerMoveSoundType(e.target.value)}
-                >
-                  <option value="classic">Classic</option>
-                  <option value="sword">Sword</option>
-                </select>
-              </Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Bot Move Sound
-                <select
-                  className={styles.styleSelection}
-                  value={botMoveSoundType}
-                  onChange={e => setBotMoveSoundType(e.target.value)}
-                >
-                  <option value="classic">Classic</option>
-                  <option value="sword">Sword</option>
-                </select>
-              </Box>
-            </Box>
-          )}
-          {modalContent === "colorScheme" && (
-            <ColorScheme
-              color={color}
-              boardColor={boardColor}
-            />
-          )}
-        </Box>
-      </Modal>
+            )}
+            {modalContent === "colorScheme" && (
+              <ColorScheme
+                color={color}
+                boardColor={boardColor}
+              />
+            )}
+          </Box>
+        </Modal>
       </Box>
       <Snackbar 
         open={snackbarOpen} 
@@ -1877,7 +1795,7 @@ export default function Play() {
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
           severity={snackbarSeverity}
-          sx={{ width: '100%' }}
+          className={styles.snackbarAlert}
         >
           {snackbarMessage}
         </Alert>

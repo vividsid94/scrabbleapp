@@ -437,3 +437,151 @@
 .bestMoveButton.active {
   background-color: rgba(76, 175, 80, 0.2);
 }
+
+.gameTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gameTitleText {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gameSubtitle {
+  font-size: 16px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.playModeTitle {
+  font-size: 28px;
+  font-weight: bold;
+  background: linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.playModeSubtitle {
+  font-size: 18px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.timeSliderContainer {
+  width: 100%;
+  margin: 16px auto 0;
+  padding: 16px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.timeSliderLabel {
+  color: #6B7280;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.timeSliderWrapper {
+  position: relative;
+  width: calc(100% - 16px);
+  margin: 0 auto;
+  height: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.timeSliderMark {
+  position: absolute;
+  width: 1px;
+  height: 8px;
+  background-color: #bfbfbf;
+  transform: translateX(-50%);
+}
+
+.timeSliderThumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.timerIcon {
+  color: inherit;
+  transform: scale(1);
+  opacity: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timerIcon.active {
+  color: #4CAF50;
+  transform: scale(1.1);
+}
+
+.timerIcon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.botIcon {
+  font-size: 24px;
+  color: inherit;
+  transition: color 0.2s ease;
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.botIcon.active {
+  color: #4CAF50;
+}
+
+.botIcon.thinking {
+  color: #ff4444;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.moveHistoryIcon {
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.moveHistoryIcon.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.container {
+  display: flex;
+}
+
+.page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainBox {
+  flex-grow: 1;
+  padding: 24px;
+}
+
+.snackbarAlert {
+  width: 100%;
+}
