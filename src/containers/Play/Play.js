@@ -94,6 +94,13 @@ export default function Play() {
 
   // Add error handlers for sounds
   useEffect(() => {
+    if (!gameStartSound.current || !playerMoveSound.current || !botMoveSound.current) {
+      const newSounds = initializeSounds();
+      gameStartSound.current = newSounds.gameStartSound;
+      playerMoveSound.current = newSounds.playerMoveSound;
+      botMoveSound.current = newSounds.botMoveSound;
+    }
+
     gameStartSound.current.addEventListener('error', () => 
       handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
     );
@@ -105,25 +112,35 @@ export default function Play() {
     );
 
     return () => {
-      gameStartSound.current.removeEventListener('error', () => 
-        handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
-      playerMoveSound.current.removeEventListener('error', () => 
-        handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
-      botMoveSound.current.removeEventListener('error', () => 
-        handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
+      if (gameStartSound.current) {
+        gameStartSound.current.removeEventListener('error', () => 
+          handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+        );
+      }
+      if (playerMoveSound.current) {
+        playerMoveSound.current.removeEventListener('error', () => 
+          handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+        );
+      }
+      if (botMoveSound.current) {
+        botMoveSound.current.removeEventListener('error', () => 
+          handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+        );
+      }
     };
   }, []);
 
   // Update audio refs when sound type changes
   useEffect(() => {
-    updateSoundType(playerMoveSound, playerMoveSoundType, 'player');
+    if (playerMoveSound.current && playerMoveSoundType) {
+      updateSoundType(playerMoveSound, playerMoveSoundType, 'player');
+    }
   }, [playerMoveSoundType]);
 
   useEffect(() => {
-    updateSoundType(botMoveSound, botMoveSoundType, 'bot');
+    if (botMoveSound.current && botMoveSoundType) {
+      updateSoundType(botMoveSound, botMoveSoundType, 'bot');
+    }
   }, [botMoveSoundType]);
 
   useEffect(() => {

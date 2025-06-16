@@ -14,7 +14,12 @@ export const initializeSounds = () => {
 
 export const updateSoundType = (soundRef, soundType, soundName) => {
   try {
-    soundRef.current = new Audio(`/sounds/${soundName}-move${soundType === 'sword' ? '-sword' : ''}.mp3`);
+    if (!soundRef || !soundType || !soundName) {
+      console.error('Missing required parameters for updateSoundType:', { soundRef, soundType, soundName });
+      return;
+    }
+    const soundPath = `/sounds/${soundName}-move${soundType === 'sword' ? '-sword' : ''}.mp3`;
+    soundRef.current = new Audio(soundPath);
     console.log(`${soundName} move sound updated:`, soundType);
   } catch (error) {
     console.error(`Error updating ${soundName} move sound:`, error);
