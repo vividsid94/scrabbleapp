@@ -34,6 +34,7 @@ import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect } from '../../fu
 import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
 import { handleGameEnd } from '../../functions/play/gameEndFunctions';
+import { formatTime } from '../../functions/play/timeUtils';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -475,13 +476,6 @@ export default function Play() {
     setPlayer2Name(isBotMode ? 'SidBot' : 'Player 2');
   }, [isBotMode]);
 
-  // Format time as MM:SS
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
   // Start timer when game starts or player changes
   useEffect(() => {
     if (gameStarted) {
@@ -579,8 +573,8 @@ export default function Play() {
         setTopMoves,
         isBotMode,
         currentPlayer
-      })
-    });
+        })
+      });
   }, [
     consecutivePasses,
     boardCoords,
@@ -682,11 +676,11 @@ export default function Play() {
     if (result) {
       const { newRack, newPool } = result;
       // Update state with alphabetized rack
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(newRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(newRack));
-      }
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(newRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(newRack));
+    }
       setPool(newPool);
     }
   };
@@ -944,155 +938,155 @@ export default function Play() {
     <Box className={styles.container}>
       <Sidenav/>
       <Box className={styles.page}>
-        <Box className={styles.title}>
-          {gameStarted ? (
+      <Box className={styles.title}>
+        {gameStarted ? (
             <Box className={styles.gameTitle}>
               <Box className={styles.gameTitleText}>
-                {gameTime}/0 • Classic • NWL23
-              </Box>
-              <Box className={styles.gameSubtitle}>
-                Void Challenge • Unrated
-              </Box>
+              {gameTime}/0 • Classic • NWL23
             </Box>
-          ) : (
+              <Box className={styles.gameSubtitle}>
+              Void Challenge • Unrated
+            </Box>
+          </Box>
+        ) : (
             <Box className={styles.gameTitle}>
               <Box className={styles.playModeTitle}>
-                Play Mode
-              </Box>
-              <Box className={styles.playModeSubtitle}>
-                Click the robot to play against SidBot
-              </Box>
+              Play Mode
             </Box>
-          )}
-        </Box>
-        <Box className={styles.mainPanel}>
-          <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-            <Board 
-              board={board}
-              boardMode={theme}
-              onBoardChildClick={(row, col) => handleBoardPositionSelect({
-                row,
-                col,
-                boardCoords,
-                selectedBoardPosition,
-                setSelectedBoardPosition,
-                arrowDirection,
-                setArrowDirection
-              })}
-              onTileDrop={(tile, index, row, col) => handleTileDrop({
-                tile,
-                index,
-                row,
-                col,
-                player1Rack,
-                setPlayer1Rack,
-                player2Rack,
-                setPlayer2Rack,
-                selectedTiles,
-                setSelectedTiles,
-                setSelectedBoardPosition,
-                tempBoardCoords,
-                setTempBoardCoords
-              })}
-              onTileClick={(tile, index) => handleTileClick({
-                tile,
-                index,
-                currentPlayer,
-                player1Rack,
-                player2Rack,
-                selectedTiles,
-                setSelectedTiles,
-                tilesToExchange,
-                setTilesToExchange
-              })}
-              selectedPosition={selectedBoardPosition}
-              arrowDirection={arrowDirection}
-              onArrowDirectionChange={(newDirection) => {
-                  console.log('Play component received direction change:', newDirection);
-                  setArrowDirection(newDirection);
-              }}
-              animate={false}
-              showSlip={false}
-              showDictionary={false}
-              dictionary=""
-              previewScore={previewScore}
-              previewScorePosition={previewScorePosition}
-            />   
+              <Box className={styles.playModeSubtitle}>
+              Click the robot to play against SidBot
+            </Box>
           </Box>
+        )}
+      </Box>
+      <Box className={styles.mainPanel}>
+        <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Board 
+            board={board}
+            boardMode={theme}
+            onBoardChildClick={(row, col) => handleBoardPositionSelect({
+              row,
+              col,
+              boardCoords,
+              selectedBoardPosition,
+              setSelectedBoardPosition,
+              arrowDirection,
+              setArrowDirection
+            })}
+            onTileDrop={(tile, index, row, col) => handleTileDrop({
+              tile,
+              index,
+              row,
+              col,
+              player1Rack,
+              setPlayer1Rack,
+              player2Rack,
+              setPlayer2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              setSelectedBoardPosition,
+              tempBoardCoords,
+              setTempBoardCoords
+            })}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
+            selectedPosition={selectedBoardPosition}
+            arrowDirection={arrowDirection}
+            onArrowDirectionChange={(newDirection) => {
+                console.log('Play component received direction change:', newDirection);
+                setArrowDirection(newDirection);
+            }}
+            animate={false}
+            showSlip={false}
+            showDictionary={false}
+            dictionary=""
+            previewScore={previewScore}
+            previewScorePosition={previewScorePosition}
+          />   
+        </Box>
 
-          <Box className={styles.rightPanel}>
-            <PlayerInfo
-              player1Name={player1Name}
-              player2Name={player2Name}
-              player1Points={player1points}
-              player2Points={player2points}
-              player1Time={formatTime(player1Time)}
-              player2Time={formatTime(player2Time)}
-              currentPlayer={currentPlayer}
-              player1Rack={player1Rack}
-              player2Rack={player2Rack}
-              color={color}
-              onTileClick={(tile, index) => handleTileClick({
-                tile,
-                index,
-                currentPlayer,
-                player1Rack,
-                player2Rack,
-                selectedTiles,
-                setSelectedTiles,
-                tilesToExchange,
-                setTilesToExchange
-              })}
-              selectedTiles={tilesToExchange}
-              isBotMode={isBotMode}
-              gameStarted={gameStarted}
-              isDictionaryLoading={isDictionaryLoading}
-              isLoadingTopMoves={isLoadingTopMoves}
-              onSettingsOpen={handleSettingsOpen}
-              onColorSchemeOpen={handleColorSchemeOpen}
-              onBotModeToggle={handleBotModeToggle}
+        <Box className={styles.rightPanel}>
+          <PlayerInfo
+            player1Name={player1Name}
+            player2Name={player2Name}
+            player1Points={player1points}
+            player2Points={player2points}
+            player1Time={formatTime(player1Time)}
+            player2Time={formatTime(player2Time)}
+            currentPlayer={currentPlayer}
+            player1Rack={player1Rack}
+            player2Rack={player2Rack}
+            color={color}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
+            selectedTiles={tilesToExchange}
+            isBotMode={isBotMode}
+            gameStarted={gameStarted}
+            isDictionaryLoading={isDictionaryLoading}
+            isLoadingTopMoves={isLoadingTopMoves}
+            onSettingsOpen={handleSettingsOpen}
+            onColorSchemeOpen={handleColorSchemeOpen}
+            onBotModeToggle={handleBotModeToggle}
               onGetTopMoves={handleGetTopMovesClick}
               onWordSubmit={handleWordSubmitClick}
               onPass={handlePassClick}
               onExchange={handleExchangeClick}
               onPlayTopMove={handlePlayTopMoveClick}
-              selectedBoardPosition={selectedBoardPosition}
-              tilesToExchange={tilesToExchange}
-              autoPlayBest={autoPlayBest}
-              setAutoPlayBest={setAutoPlayBest}
-              setShowMoveHistory={setShowMoveHistory}
-              isBotThinking={isBotThinking}
-              icons={{
-                settings: <TuneIcon className={styles.keyBtn} />,
-                colorScheme: <PaletteIcon className={styles.keyBtn} />,
-                time: (
-                  <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                    <TimerIcon 
+            selectedBoardPosition={selectedBoardPosition}
+            tilesToExchange={tilesToExchange}
+            autoPlayBest={autoPlayBest}
+            setAutoPlayBest={setAutoPlayBest}
+            setShowMoveHistory={setShowMoveHistory}
+            isBotThinking={isBotThinking}
+            icons={{
+              settings: <TuneIcon className={styles.keyBtn} />,
+              colorScheme: <PaletteIcon className={styles.keyBtn} />,
+              time: (
+                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
+                  <TimerIcon 
                       className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
-                      onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
-                    />
-                  </Tooltip>
-                ),
-                botMode: <SmartToyIcon 
+                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
+                  />
+                </Tooltip>
+              ),
+              botMode: <SmartToyIcon 
                   className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
-                />,
-                topMoves: <LightbulbIcon className={styles.keyBtn} />,
-                moveOrder: (
-                  <Tooltip title="Move History">
-                    <SortIcon 
+              />,
+              topMoves: <LightbulbIcon className={styles.keyBtn} />,
+              moveOrder: (
+                <Tooltip title="Move History">
+                  <SortIcon 
                       className={`${styles.keyBtn} ${styles.moveHistoryIcon} ${!gameStarted ? styles.disabled : ''}`}
-                      onClick={() => setShowMoveHistory(true)}
-                    />
-                  </Tooltip>
-                )
-              }}
-            />
+                    onClick={() => setShowMoveHistory(true)}
+                  />
+                </Tooltip>
+              )
+            }}
+          />
 
-            {showTimeSlider && !gameStarted && (
+          {showTimeSlider && !gameStarted && (
               <Box className={styles.timeSliderContainer}>
                 <Box className={styles.timeSliderLabel}>
-                  Game Time: {gameTime} min
-                </Box>
+                Game Time: {gameTime} min
+              </Box>
                 <Box className={styles.timeSliderWrapper}>
                   {[5, 15, 25, 30].map((value) => (
                     <Box
@@ -1121,70 +1115,70 @@ export default function Play() {
                       document.addEventListener('mouseup', handleMouseUp);
                     }}
                   />
-                </Box>
               </Box>
-            )}
+            </Box>
+          )}
 
-            <Box className={styles.playerPanel}>
-              <Box className={styles.poolBox}>
-                <PlayPool 
-                  pool={pool} 
-                  player1Rack={player1Rack} 
-                  player2Rack={player2Rack}
-                />  
-              </Box>
+          <Box className={styles.playerPanel}>
+            <Box className={styles.poolBox}>
+              <PlayPool 
+                pool={pool} 
+                player1Rack={player1Rack} 
+                player2Rack={player2Rack}
+              />  
             </Box>
           </Box>
         </Box>
+      </Box>
 
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box className={styles.modalContainer}>
-            {modalContent === "settings" && (
-              <Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Board Mode
-                  <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
-                    <option value="STANDARD">Standard</option>
-                    {/* <option value="FULLBOARD">Full Board</option> */}
-                  </select>
-                </Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Player Move Sound
-                  <select
-                    className={styles.styleSelection}
-                    value={playerMoveSoundType}
-                    onChange={e => setPlayerMoveSoundType(e.target.value)}
-                  >
-                    <option value="classic">Classic</option>
-                    <option value="sword">Sword</option>
-                  </select>
-                </Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Bot Move Sound
-                  <select
-                    className={styles.styleSelection}
-                    value={botMoveSoundType}
-                    onChange={e => setBotMoveSoundType(e.target.value)}
-                  >
-                    <option value="classic">Classic</option>
-                    <option value="sword">Sword</option>
-                  </select>
-                </Box>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box className={styles.modalContainer}>
+          {modalContent === "settings" && (
+            <Box>
+              <Box className={styles.modalContainer__dictionary}>
+                Board Mode
+                <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
+                  <option value="STANDARD">Standard</option>
+                  {/* <option value="FULLBOARD">Full Board</option> */}
+                </select>
               </Box>
-            )}
-            {modalContent === "colorScheme" && (
-              <ColorScheme
-                color={color}
-                boardColor={boardColor}
-              />
-            )}
-          </Box>
-        </Modal>
+              <Box className={styles.modalContainer__dictionary}>
+                Player Move Sound
+                <select
+                  className={styles.styleSelection}
+                  value={playerMoveSoundType}
+                  onChange={e => setPlayerMoveSoundType(e.target.value)}
+                >
+                  <option value="classic">Classic</option>
+                  <option value="sword">Sword</option>
+                </select>
+              </Box>
+              <Box className={styles.modalContainer__dictionary}>
+                Bot Move Sound
+                <select
+                  className={styles.styleSelection}
+                  value={botMoveSoundType}
+                  onChange={e => setBotMoveSoundType(e.target.value)}
+                >
+                  <option value="classic">Classic</option>
+                  <option value="sword">Sword</option>
+                </select>
+              </Box>
+            </Box>
+          )}
+          {modalContent === "colorScheme" && (
+            <ColorScheme
+              color={color}
+              boardColor={boardColor}
+            />
+          )}
+        </Box>
+      </Modal>
       </Box>
       <Snackbar 
         open={snackbarOpen} 
