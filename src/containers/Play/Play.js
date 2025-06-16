@@ -600,51 +600,6 @@ export default function Play() {
     }
   };
 
-  const generateExchangeCombinations = (rack) => {
-    const combinations = [];
-    // Generate all possible combinations of 1-7 tiles
-    for (let i = 1; i <= Math.min(rack.length, 7); i++) {
-      const generateCombos = (current, start, remaining) => {
-        if (current.length === i) {
-          combinations.push([...current]);
-          return;
-        }
-        for (let j = start; j < remaining.length; j++) {
-          current.push(remaining[j]);
-          generateCombos(current, j + 1, remaining);
-          current.pop();
-        }
-      };
-      generateCombos([], 0, rack);
-    }
-    return combinations;
-  };
-
-  const fetchBoardControl = async (moves) => {
-    try {
-      const response = await fetch('/.netlify/functions/getBoardControl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCoords,
-          moves: moves
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch board control metrics');
-      }
-
-      const data = await response.json();
-      return data.moveMetrics;
-    } catch (error) {
-      console.error('Error fetching board control:', error);
-      return [];
-    }
-  };
-
   const handleGetTopMovesClick = () => {
     handleGetTopMoves({
       boardCoords,
