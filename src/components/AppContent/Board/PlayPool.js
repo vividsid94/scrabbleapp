@@ -1,7 +1,15 @@
 import React from 'react';
 import styles from './Pool.module.css';
 
-const PlayPool = React.memo(({ pool, player1Rack, player2Rack }) => {
+const PlayPool = React.memo(({ pool, player1Rack, player2Rack, gameStarted }) => {
+  if (!gameStarted) {
+    return (
+      <div className={styles.poolTbl}>
+        Bag is collapsed in a wrinkled heap on the table.
+      </div>
+    );
+  }
+
   // Convert pool to array if it's a string
   const poolTiles = typeof pool === 'string' ? pool.split('') : pool;
   

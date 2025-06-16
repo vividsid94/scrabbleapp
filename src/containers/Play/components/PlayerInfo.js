@@ -123,7 +123,8 @@ export default function PlayerInfo({
   tilesToExchange,
   setShowMoveHistory,
   icons,
-  isBotThinking
+  isBotThinking,
+  isPlayerThinking
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -314,215 +315,119 @@ export default function PlayerInfo({
         </Box>
       </Collapse>
 
-      {currentPlayer === 2 ? (
-        <>
-          <PlayerInfoSection
-            name={isBotMode && isBotThinking ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {player2Name}
-                <Box sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: '12px',
-                  padding: '4px 12px',
-                  fontSize: '0.9em',
-                  fontWeight: 500,
-                  color: 'rgb(255, 255, 255)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
-                    transform: 'translateY(-1px)'
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    height: '2px',
-                    width: '100%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: '-100%',
-                    height: '2px',
-                    width: '50%',
-                    backgroundColor: 'rgb(255, 255, 255)',
-                    animation: 'progress 2s infinite linear',
-                    '@keyframes progress': {
-                      '0%': { left: '-100%' },
-                      '100%': { left: '100%' }
-                    }
-                  }
-                }}>
-                  is thinking
-                </Box>
-              </Box>
-            ) : player2Name}
-            time={player2Time}
-            points={player2Points}
-            rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
-            color={color}
-            onTileClick={onTileClick}
-            selectedTiles={selectedTiles}
-            isBot={isBotMode}
-            currentPlayer={currentPlayer}
-            sx={{
-              '& .rack': {
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
+      {gameStarted && [
+        {
+          name: player1Name,
+          time: player1Time,
+          points: player1Points,
+          rack: player1Rack,
+          isBot: false,
+          isThinking: currentPlayer === 1 && isPlayerThinking
+        },
+        {
+          name: player2Name,
+          time: player2Time,
+          points: player2Points,
+          rack: isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack,
+          isBot: isBotMode,
+          isThinking: isBotMode && isBotThinking
+        }
+      ].sort((a, b) => {
+        // If currentPlayer is 2, bot should be first
+        return currentPlayer === 2 ? (a.isBot ? -1 : 1) : (a.isBot ? 1 : -1);
+      }).map((player, index) => (
+        <PlayerInfoSection
+          key={index}
+          name={player.isThinking ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {player.name}
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
                 borderRadius: '12px',
-                padding: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                '& > div': {
-                  transform: 'scale(1.3)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  animation: 'thinking 2s ease-in-out infinite',
-                  '@keyframes thinking': {
-                    '0%': { 
-                      transform: 'scale(1.3)'
-                    },
-                    '50%': { 
-                      transform: 'scale(1.35)'
-                    },
-                    '100%': { 
-                      transform: 'scale(1.3)'
-                    }
-                  },
-                  '&:hover': {
-                    transform: 'scale(1.5)',
-                    animation: 'none'
+                padding: '4px 12px',
+                fontSize: '0.9em',
+                fontWeight: 500,
+                color: 'rgb(255, 255, 255)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
+                  transform: 'translateY(-1px)'
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  height: '2px',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '-100%',
+                  height: '2px',
+                  width: '50%',
+                  backgroundColor: 'rgb(255, 255, 255)',
+                  animation: 'progress 2s infinite linear',
+                  '@keyframes progress': {
+                    '0%': { left: '-100%' },
+                    '100%': { left: '100%' }
                   }
                 }
-              }
-            }}
-          />
-          <PlayerInfoSection
-            name={player1Name}
-            time={player1Time}
-            points={player1Points}
-            rack={player1Rack}
-            color={color}
-            onTileClick={onTileClick}
-            selectedTiles={selectedTiles}
-            isBot={false}
-            currentPlayer={currentPlayer}
-          />
-        </>
-      ) : (
-        <>
-          <PlayerInfoSection
-            name={player1Name}
-            time={player1Time}
-            points={player1Points}
-            rack={player1Rack}
-            color={color}
-            onTileClick={onTileClick}
-            selectedTiles={selectedTiles}
-            isBot={false}
-            currentPlayer={currentPlayer}
-          />
-          <PlayerInfoSection
-            name={isBotMode && isBotThinking ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {player2Name}
-                <Box sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: '12px',
-                  padding: '4px 12px',
-                  fontSize: '0.9em',
-                  fontWeight: 500,
-                  color: 'rgb(255, 255, 255)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
-                    transform: 'translateY(-1px)'
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    height: '2px',
-                    width: '100%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 0,
-                    left: '-100%',
-                    height: '2px',
-                    width: '50%',
-                    backgroundColor: 'rgb(255, 255, 255)',
-                    animation: 'progress 2s infinite linear',
-                    '@keyframes progress': {
-                      '0%': { left: '-100%' },
-                      '100%': { left: '100%' }
-                    }
-                  }
-                }}>
-                  is thinking
-                </Box>
+              }}>
+                thinking
               </Box>
-            ) : player2Name}
-            time={player2Time}
-            points={player2Points}
-            rack={isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack}
-            color={color}
-            onTileClick={onTileClick}
-            selectedTiles={selectedTiles}
-            isBot={isBotMode}
-            currentPlayer={currentPlayer}
-            sx={{
-              '& .rack': {
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
-                borderRadius: '12px',
-                padding: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                '& > div': {
-                  transform: 'scale(1.3)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  animation: 'thinking 2s ease-in-out infinite',
-                  '@keyframes thinking': {
-                    '0%': { 
-                      transform: 'scale(1.3)'
-                    },
-                    '50%': { 
-                      transform: 'scale(1.35)'
-                    },
-                    '100%': { 
-                      transform: 'scale(1.3)'
-                    }
+            </Box>
+          ) : player.name}
+          time={player.time}
+          points={player.points}
+          rack={player.rack}
+          color={color}
+          onTileClick={onTileClick}
+          selectedTiles={selectedTiles}
+          isBot={player.isBot}
+          currentPlayer={currentPlayer}
+          sx={player.isBot ? {
+            '& .rack': {
+              background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
+              borderRadius: '12px',
+              padding: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              '& > div': {
+                transform: 'scale(1.3)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                animation: 'thinking 2s ease-in-out infinite',
+                '@keyframes thinking': {
+                  '0%': { 
+                    transform: 'scale(1.3)'
                   },
-                  '&:hover': {
-                    transform: 'scale(1.5)',
-                    animation: 'none'
+                  '50%': { 
+                    transform: 'scale(1.35)'
+                  },
+                  '100%': { 
+                    transform: 'scale(1.3)'
                   }
+                },
+                '&:hover': {
+                  transform: 'scale(1.5)',
+                  animation: 'none'
                 }
               }
-            }}
-          />
-        </>
-      )}
+            }
+          } : undefined}
+        />
+      ))}
     </Box>
   );
 } 

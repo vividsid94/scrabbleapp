@@ -62,6 +62,7 @@ export default function Play() {
   const complementaryColor = useRef('#9F7A83');
   const [isBotMode, setIsBotMode] = useState(false);
   const [isBotThinking, setIsBotThinking] = useState(false);
+  const [isPlayerThinking, setIsPlayerThinking] = useState(false);
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
   const [player1Time, setPlayer1Time] = useState(20 * 60); // 20 minutes in seconds
@@ -736,6 +737,7 @@ export default function Play() {
   }, [gameTime]);
 
   const handlePlayTopMoveClick = useCallback(() => {
+    setIsPlayerThinking(true);
     handlePlayTopMove({
       isLoadingTopMoves,
       isDictionaryLoading,
@@ -780,6 +782,8 @@ export default function Play() {
       setIsDictionaryLoading,
       setLeaveValues,
       setArrowDirection
+    }).finally(() => {
+      setIsPlayerThinking(false);
     });
   }, [
     isLoadingTopMoves,
@@ -802,15 +806,15 @@ export default function Play() {
     getBoardDiff
   ]);
 
-  // Add effect to handle auto-play
+  // Update the useEffect for auto-play to use isPlayerThinking
   useEffect(() => {
-    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying) {
+    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying && !isPlayerThinking) {
       setIsAutoPlaying(true);
       handlePlayTopMoveClick().finally(() => {
         setIsAutoPlaying(false);
       });
     }
-  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying]);
+  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying, isPlayerThinking]);
 
   // Add cleanup effect for all temporary states
   useEffect(() => {
@@ -1045,17 +1049,18 @@ export default function Play() {
             onSettingsOpen={handleSettingsOpen}
             onColorSchemeOpen={handleColorSchemeOpen}
             onBotModeToggle={handleBotModeToggle}
-              onGetTopMoves={handleGetTopMovesClick}
-              onWordSubmit={handleWordSubmitClick}
-              onPass={handlePassClick}
-              onExchange={handleExchangeClick}
-              onPlayTopMove={handlePlayTopMoveClick}
+            onGetTopMoves={handleGetTopMovesClick}
+            onWordSubmit={handleWordSubmitClick}
+            onPass={handlePassClick}
+            onExchange={handleExchangeClick}
+            onPlayTopMove={handlePlayTopMoveClick}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
             autoPlayBest={autoPlayBest}
             setAutoPlayBest={setAutoPlayBest}
             setShowMoveHistory={setShowMoveHistory}
             isBotThinking={isBotThinking}
+            isPlayerThinking={isPlayerThinking}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,
@@ -1125,6 +1130,7 @@ export default function Play() {
                 pool={pool} 
                 player1Rack={player1Rack} 
                 player2Rack={player2Rack}
+                gameStarted={gameStarted}
               />  
             </Box>
           </Box>
