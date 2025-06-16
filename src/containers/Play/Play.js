@@ -30,6 +30,7 @@ import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
 import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
+import { handleGetTopMoves } from '../../functions/play/moveFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -670,130 +671,30 @@ export default function Play() {
     }
   };
 
-  // Modify handleGetTopMoves to include board control
-  const handleGetTopMoves = async () => {
-    setIsLoadingTopMoves(true);
-    setShowTopMoves(true);
-    try {
-      // Get the current rack
-      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-      
-      // Get any tiles that are placed on the board but not committed
-      const uncommittedTiles = [];
-      for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
-          if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-            const tileIndex = selectedTiles.findIndex(t => t === '*');
-            if (tileIndex !== -1) {
-              uncommittedTiles.push('*');
-            } else {
-              uncommittedTiles.push(tempBoardCoords[row][col]);
-            }
-          }
-        }
-      }
-      
-      // Return uncommitted tiles to the rack
-      const newRack = [...currentRack, ...uncommittedTiles];
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(newRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(newRack));
-      }
-      
-      // Reset the board state
-      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-      setSelectedTiles([]);
-      setSelectedBoardPosition(null);
-      
-      // Convert any '?' in the rack to '*' for the API
-      const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
-      
-      const response = await fetch('/.netlify/functions/getTopMoves', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCoords,
-          letters: apiRack
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Check if this is the first load (dictionary loading)
-      if (data.message && data.message.includes('Loading dictionary')) {
-        setIsDictionaryLoading(true);
-        // Retry after a short delay
-        setTimeout(() => {
-          handleGetTopMoves();
-        }, 1000);
-        return;
-      }
-      
-      setIsDictionaryLoading(false);
-
-      // Generate exchange moves
-      const exchangeCombinations = generateExchangeCombinations(newRack);
-      const exchangeMoves = exchangeCombinations.map(tiles => {
-        const leave = calculateExchangeLeave(newRack, tiles);
-        return {
-          word: `Exchange ${tiles.join('')}`,
-          score: 0,
-          tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-          direction: 'exchange',
-          startPosition: 'Exchange',
-          leave: leave,
-          isExchange: true,
-          currentRack: newRack // Add currentRack to the move object
-        };
-      });
-
-      // First, fetch leave values for all moves
-      const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-      const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-        fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-        fetchBoardControl(allMoves)
-      ]);
-
-      // Create a map of move words to their control metrics
-      const controlMap = new Map(
-        boardControlMetrics.map(metric => [metric.move, metric])
-      );
-
-      // Then calculate total values and sort
-      const movesWithValues = allMoves
-        .map(move => {
-          const leaveValue = updatedLeaveValues[move.leave] || 0;
-          const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
-          const totalValue = move.isExchange ? 
-            leaveValue : // For exchanges, total value is just the leave value
-            (move.score + leaveValue); // Just points + leave, no control value
-          return {
-            ...move,
-            totalValue,
-            defensiveValue: controlMetrics.defensiveValue,
-            boardControl: controlMetrics.boardControl,
-          };
-        })
-        .sort((a, b) => b.totalValue - a.totalValue)
-        .slice(0, 15); // Show top 15 moves
-
-      setTopMoves(movesWithValues);
-    } catch (error) {
-      console.error('Error getting top moves:', error);
-      setSnackbarMessage('Error getting top moves: ' + error.message);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      setShowTopMoves(false);
-    } finally {
-      setIsLoadingTopMoves(false);
-    }
+  const handleGetTopMovesClick = () => {
+    handleGetTopMoves({
+      boardCoords,
+      tempBoardCoords,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      selectedTiles,
+      pool,
+      leaveValues,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setSelectedBoardPosition,
+      setLeaveValues,
+      setTopMoves,
+      setIsLoadingTopMoves,
+      setShowTopMoves,
+      setIsDictionaryLoading,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen
+    });
   };
 
   const handleExchangeClick = () => {
@@ -1502,7 +1403,7 @@ export default function Play() {
               onSettingsOpen={handleSettingsOpen}
               onColorSchemeOpen={handleColorSchemeOpen}
               onBotModeToggle={handleBotModeToggle}
-              onGetTopMoves={handleGetTopMoves}
+              onGetTopMoves={handleGetTopMovesClick}
               onWordSubmit={handleWordSubmitClick}
               onPass={handlePass}
               onExchange={handleExchangeClick}
