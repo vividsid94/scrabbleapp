@@ -230,6 +230,24 @@ export default function PlayerInfo({
                 }}
               >
                 <CancelIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  1
+                </Box>
               </Box>
             </Tooltip>
             <Tooltip title="Exchange">
@@ -244,6 +262,24 @@ export default function PlayerInfo({
                 }}
               >
                 <SwapHorizIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  2
+                </Box>
               </Box>
             </Tooltip>
           </Box>
