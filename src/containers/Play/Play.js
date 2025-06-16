@@ -33,6 +33,7 @@ import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
 import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect } from '../../functions/play/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
+import { handleGameEnd } from '../../functions/play/gameEndFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -236,36 +237,31 @@ export default function Play() {
     origBoard
   ]);
 
-  const handleGameEnd = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
-    // Calculate sum of loser's remaining tiles
-    const rackSum = loserRack.reduce((sum, tile) => {
-      const value = tile === '?' || tile === '*' ? 0 : 
-        tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
-        tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
-        tile === 'D' || tile === 'G' ? 2 :
-        tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
-        tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
-        tile === 'K' ? 5 :
-        tile === 'J' || tile === 'X' ? 8 :
-        tile === 'Q' || tile === 'Z' ? 10 : 0;
-      return sum + value;
-    }, 0);
-    
-    // Add remaining tiles to loser's score
-    if (winnerRack === player1Rack) {
-      setPlayer2points(loserPoints + rackSum);
-    } else {
-      setPlayer1points(loserPoints + rackSum);
-    }
-    
-    // Show game over message
-    setSnackbarMessage(`Game Over! ${winnerName} played all their tiles!`);
-    setSnackbarSeverity("success");
-    setSnackbarOpen(true);
-    
-    // Disable auto-play
-    setAutoPlayBest(false);
-  }, [player1Rack, player2Rack]);
+  const handleGameEndClick = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
+    handleGameEnd({
+      winnerRack,
+      winnerName,
+      loserRack,
+      loserPoints,
+      player1Rack,
+      player2Rack,
+      player1points,
+      player2points,
+      autoPlayBest,
+      setPlayer1points,
+      setPlayer2points,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen,
+      setAutoPlayBest
+    });
+  }, [
+    player1Rack,
+    player2Rack,
+    player1points,
+    player2points,
+    autoPlayBest
+  ]);
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
@@ -300,7 +296,7 @@ export default function Play() {
       setSnackbarMessage,
       setSnackbarSeverity,
       setSnackbarOpen,
-      handleGameEnd,
+      handleGameEnd: handleGameEndClick,
       getBoardDiff,
       playerMoveSound
     });
@@ -403,7 +399,7 @@ export default function Play() {
         setConsecutivePasses,
         setMoveHistory,
         getBoardDiff,
-        handleGameEnd,
+        handleGameEnd: handleGameEndClick,
         botMoveSound,
         autoPlayBest,
         setIsBotThinking,
@@ -456,7 +452,7 @@ export default function Play() {
         setConsecutivePasses,
         setMoveHistory,
         getBoardDiff,
-        handleGameEnd,
+        handleGameEnd: handleGameEndClick,
         botMoveSound,
         autoPlayBest,
         setIsBotThinking,
@@ -570,7 +566,7 @@ export default function Play() {
         setConsecutivePasses,
         setMoveHistory,
         getBoardDiff,
-        handleGameEnd,
+        handleGameEnd: handleGameEndClick,
         botMoveSound,
         autoPlayBest,
         setIsBotThinking,
@@ -667,7 +663,7 @@ export default function Play() {
         setConsecutivePasses,
         setMoveHistory,
         getBoardDiff,
-        handleGameEnd,
+        handleGameEnd: handleGameEndClick,
         botMoveSound,
         autoPlayBest,
         setIsBotThinking,
@@ -763,7 +759,7 @@ export default function Play() {
       blankTiles,
       moveHistory,
       leaveValues,
-      handleGameEnd,
+      handleGameEnd: handleGameEndClick,
       getBoardDiff,
       setPlayer1Rack,
       setPlayer2Rack,
@@ -808,7 +804,7 @@ export default function Play() {
     blankTiles,
     moveHistory,
     leaveValues,
-    handleGameEnd,
+    handleGameEndClick,
     getBoardDiff
   ]);
 
