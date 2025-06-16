@@ -32,6 +32,7 @@ import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
 import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect } from '../../functions/play/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
+import { handlePass } from '../../functions/play/passFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -523,42 +524,28 @@ export default function Play() {
     };
   }, [timerActive, currentPlayer, gameStarted]);
 
-  const handlePass = () => {
-    setConsecutivePasses(prev => prev + 1);
-    
-    // Check if game should end (six consecutive passes)
-    if (consecutivePasses >= 5) {
-      setSnackbarMessage('Game ended due to six consecutive passes');
-      setSnackbarSeverity('info');
-      setSnackbarOpen(true);
-      // TODO: Add game end logic here
-      return;
-    }
-
-    // Add pass move to history
-    setMoveHistory(prev => [...prev, {
-      beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
-      afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for pass
-      player: currentPlayer === 1 ? player1Name : player2Name,
-      score: 0,
-      rack: currentPlayer === 1 ? alphabetizeRack(player1Rack).join('') : alphabetizeRack(player2Rack).join(''),
-      total: currentPlayer === 1 ? player1points : player2points
-    }]);
-
-    // Switch to next player
-    setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-    setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
-    setSnackbarSeverity('info');
-    setSnackbarOpen(true);
-    
-    // Reset the board state
-    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-    setSelectedTiles([]);
-    setSelectedBoardPosition(null);
-    
-    // If next player is bot, make bot move
-    if (isBotMode && currentPlayer === 2) {
-      makeBotMove({
+  const handlePassClick = useCallback(() => {
+    handlePass({
+      consecutivePasses,
+      boardCoords,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      player1points,
+      player2points,
+      player1Name,
+      player2Name,
+      isBotMode,
+      setConsecutivePasses,
+      setMoveHistory,
+      setCurrentPlayer,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setSelectedBoardPosition,
+      makeBotMove: () => makeBotMove({
         boardCoords,
         player2Rack,
         pool,
@@ -596,9 +583,22 @@ export default function Play() {
         setTopMoves,
         isBotMode,
         currentPlayer
-      });
-    }
-  };
+      })
+    });
+  }, [
+    consecutivePasses,
+    boardCoords,
+    currentPlayer,
+    player1Rack,
+    player2Rack,
+    player1points,
+    player2points,
+    player1Name,
+    player2Name,
+    isBotMode,
+    pool,
+    blankTiles
+  ]);
 
   const handleGetTopMovesClick = () => {
     handleGetTopMoves({
@@ -849,7 +849,7 @@ export default function Play() {
     const handleKeyPressWrapper = (event) => handleKeyPress({
       event,
       gameStarted,
-      handlePass,
+      handlePass: handlePassClick,
       handleExchangeClick,
       handlePlayTopMove: handlePlayTopMoveClick
     });
@@ -858,7 +858,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, handlePass, handleExchangeClick, handlePlayTopMoveClick]);
+  }, [gameStarted, handlePassClick, handleExchangeClick, handlePlayTopMoveClick]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1057,7 +1057,7 @@ export default function Play() {
               onBotModeToggle={handleBotModeToggle}
               onGetTopMoves={handleGetTopMovesClick}
               onWordSubmit={handleWordSubmitClick}
-              onPass={handlePass}
+              onPass={handlePassClick}
               onExchange={handleExchangeClick}
               onPlayTopMove={handlePlayTopMoveClick}
               selectedBoardPosition={selectedBoardPosition}
