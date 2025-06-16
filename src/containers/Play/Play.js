@@ -845,14 +845,16 @@ export default function Play() {
       gameStarted,
       handlePass: handlePassClick,
       handleExchangeClick,
-      handlePlayTopMove: handlePlayTopMoveClick
+      handlePlayTopMove: handlePlayTopMoveClick,
+      isPlayerThinking,
+      isBotThinking
     });
 
     window.addEventListener('keydown', handleKeyPressWrapper);
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, handlePassClick, handleExchangeClick, handlePlayTopMoveClick]);
+  }, [gameStarted, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, isPlayerThinking, isBotThinking]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);

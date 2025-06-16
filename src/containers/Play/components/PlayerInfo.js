@@ -130,6 +130,31 @@ export default function PlayerInfo({
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
   const isExchangeDisabled = !gameStarted || tilesToExchange.length === 0;
 
+  const handlePassClick = () => {
+    if (isPlayerThinking || isBotThinking) return;
+    onPass();
+  };
+
+  const handleExchangeClick = () => {
+    if (isPlayerThinking || isBotThinking) return;
+    onExchange();
+  };
+
+  const handlePlayTopMoveClick = () => {
+    if (isPlayerThinking || isBotThinking) return;
+    onPlayTopMove();
+  };
+
+  const handleWordSubmitClick = () => {
+    if (isPlayerThinking || isBotThinking) return;
+    onWordSubmit();
+  };
+
+  const handleGetTopMovesClick = () => {
+    if (isPlayerThinking || isBotThinking) return;
+    onGetTopMoves();
+  };
+
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
@@ -183,7 +208,7 @@ export default function PlayerInfo({
             <Tooltip title="Play Best Move">
               <Box
                 className={styles.bestMoveButton}
-                onClick={onPlayTopMove}
+                onClick={handlePlayTopMoveClick}
                 sx={{ 
                   opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
                   cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
@@ -209,7 +234,7 @@ export default function PlayerInfo({
             <Tooltip title="View Top Moves">
               <Box
                 className={styles.bestMoveButton}
-                onClick={onGetTopMoves}
+                onClick={handleGetTopMovesClick}
                 sx={{ 
                   opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
                   cursor: !gameStarted ? 'not-allowed' : 'pointer',
@@ -222,7 +247,7 @@ export default function PlayerInfo({
             <Tooltip title="Pass">
               <Box
                 className={styles.bestMoveButton}
-                onClick={onPass}
+                onClick={handlePassClick}
                 sx={{ 
                   opacity: !gameStarted ? 0.3 : 1,
                   cursor: !gameStarted ? 'not-allowed' : 'pointer',
@@ -254,7 +279,7 @@ export default function PlayerInfo({
             <Tooltip title="Exchange">
               <Box
                 className={styles.bestMoveButton}
-                onClick={onExchange}
+                onClick={handleExchangeClick}
                 sx={{ 
                   opacity: !gameStarted ? 0.3 : (isExchangeDisabled ? 0.5 : 1),
                   cursor: !gameStarted ? 'not-allowed' : (isExchangeDisabled ? 'not-allowed' : 'pointer'),
