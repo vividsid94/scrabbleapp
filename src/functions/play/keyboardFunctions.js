@@ -167,6 +167,16 @@ export const handleKeyDown = ({
   }
 };
 
+/**
+ * Handles keyboard shortcuts for game actions
+ * @param {Object} params - The parameters object
+ * @param {KeyboardEvent} params.event - The keyboard event
+ * @param {boolean} params.gameStarted - Whether the game has started
+ * @param {Function} params.handlePass - Function to handle pass action
+ * @param {Function} params.handleExchangeClick - Function to handle exchange action
+ * @param {Function} params.handlePlayTopMove - Function to handle playing top move
+ * @returns {void}
+ */
 export const handleKeyPress = ({
   event,
   gameStarted,
@@ -176,12 +186,14 @@ export const handleKeyPress = ({
 }) => {
   if (!gameStarted) return;
 
-  if (event.key === '1') {
+  const key = event.key.toLowerCase();
+  
+  // Handle number keys for actions
+  if (key === '1') {
     handlePass();
-  } else if (event.key === '2') {
+  } else if (key === '2') {
     handleExchangeClick();
-  } else if (event.key === '3') {
-    // Directly play the best move without showing choices
+  } else if (key === '3') {
     handlePlayTopMove();
   }
 }; 

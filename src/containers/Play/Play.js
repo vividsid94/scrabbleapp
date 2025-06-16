@@ -30,7 +30,7 @@ import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
 import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
-import { handleGetTopMoves } from '../../functions/play/moveFunctions';
+import { handleGetTopMoves, handlePlayTopMove } from '../../functions/play/moveFunctions';
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -855,281 +855,52 @@ export default function Play() {
     setPlayer2Time(gameTime * 60);
   }, [gameTime]);
 
-  const handlePlayTopMove = useCallback(async () => {
-    if (isLoadingTopMoves || isDictionaryLoading) return;
-    
-    try {
-      // Get the current rack
-      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-      
-      // Get any tiles that are placed on the board but not committed
-      const uncommittedTiles = [];
-      for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
-          if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-            const tileIndex = selectedTiles.findIndex(t => t === '*');
-            if (tileIndex !== -1) {
-              uncommittedTiles.push('*');
-            } else {
-              uncommittedTiles.push(tempBoardCoords[row][col]);
-            }
-          }
-        }
-      }
-      
-      // Return uncommitted tiles to the rack
-      const newRack = [...currentRack, ...uncommittedTiles];
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(newRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(newRack));
-      }
-      
-      // Reset the board state
-      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-      setSelectedTiles([]);
-      setSelectedBoardPosition(null);
-      
-      // Convert any '?' in the rack to '*' for the API
-      const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
-      
-      // Make API call for moves
-      const movesResponse = await fetch('/.netlify/functions/getTopMoves', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCoords,
-          letters: apiRack
-        })
-      });
-
-      if (!movesResponse.ok) {
-        throw new Error(`HTTP error! status: ${movesResponse.status}`);
-      }
-
-      const data = await movesResponse.json();
-      
-      // Check if this is the first load (dictionary loading)
-      if (data.message && data.message.includes('Loading dictionary')) {
-        setIsDictionaryLoading(true);
-        // Retry after a short delay
-        setTimeout(() => {
-          handlePlayTopMove();
-        }, 1000);
-        return;
-      }
-      
-      setIsDictionaryLoading(false);
-
-      // Generate exchange moves only if we have enough tiles in the pool
-      const exchangeMoves = pool.length >= 7 ? generateExchangeCombinations(newRack).map(tiles => {
-        const leave = calculateExchangeLeave(newRack, tiles);
-        return {
-          word: `Exchange ${tiles.join('')}`,
-          score: 0,
-          tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-          direction: 'exchange',
-          startPosition: 'Exchange',
-          leave: leave,
-          isExchange: true,
-          currentRack: newRack // Add currentRack to the move object
-        };
-      }) : [];
-
-      // First, fetch leave values and board control for all moves
-      const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-      const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-        fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-        fetchBoardControl(allMoves)
-      ]);
-
-      // Create a map of move words to their control metrics
-      const controlMap = new Map(
-        boardControlMetrics.map(metric => [metric.move, metric])
-      );
-
-      // Then calculate total values and sort
-      const movesWithValues = allMoves
-        .map(move => {
-          const leaveValue = updatedLeaveValues[move.leave] || 0;
-          const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
-          const totalValue = move.isExchange ? 
-            leaveValue : // For exchanges, total value is just the leave value
-            (move.score + leaveValue); // For regular moves, add score and leave value
-          return {
-            ...move,
-            totalValue,
-            defensiveValue: controlMetrics.defensiveValue,
-            boardControl: controlMetrics.boardControl,
-          };
-        })
-        .sort((a, b) => b.totalValue - a.totalValue);
-
-      if (movesWithValues.length > 0) {
-        const bestMove = movesWithValues[0];
-        
-        // Prepare all state updates
-        const stateUpdates = {
-          newBoard: JSON.parse(JSON.stringify(boardCoords)),
-          newRack: [...currentRack],
-          newBlankTiles: [...blankTiles],
-          newPool: [...pool],
-          newMoveHistory: [...moveHistory],
-          runningTotal: currentPlayer === 1 ? player1points : player2points
-        };
-        
-        if (bestMove.isExchange) {
-          // Handle exchange move
-          const tilesToExchange = bestMove.tiles.map(t => t.letter);
-          
-          // Remove exchanged tiles from rack
-          for (const tile of tilesToExchange) {
-            const tileIndex = stateUpdates.newRack.indexOf(tile);
-            if (tileIndex !== -1) {
-              stateUpdates.newRack.splice(tileIndex, 1);
-            }
-          }
-          
-          // Add new tiles from pool
-          for (let i = 0; i < tilesToExchange.length; i++) {
-            if (stateUpdates.newPool.length > 0) {
-              const randomIndex = Math.floor(Math.random() * stateUpdates.newPool.length);
-              stateUpdates.newRack.push(stateUpdates.newPool[randomIndex]);
-              stateUpdates.newPool.splice(randomIndex, 1);
-            }
-          }
-          
-          // Add exchanged tiles back to pool
-          stateUpdates.newPool.push(...tilesToExchange);
-          
-          // Store only the differences in board states
-          const boardDiff = getBoardDiff(boardCoords, stateUpdates.newBoard);
-          const moveHistoryEntry = {
-            boardDiff,
-            player: currentPlayer === 1 ? player1Name : player2Name,
-            score: 0,
-            rack: alphabetizeRack(currentRack).join(''),
-            total: stateUpdates.runningTotal
-          };
-
-          setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
-          
-          // Show toast notification
-          setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
-          setSnackbarSeverity("info");
-          setSnackbarOpen(true);
-        } else {
-          // Handle regular move
-          // Place tiles on board
-          for (const tile of bestMove.tiles) {
-            if (tile.isNew) {
-              stateUpdates.newBoard[tile.row][tile.col] = tile.letter;
-              
-              if (tile.isBlank) {
-                stateUpdates.newBlankTiles.push({ row: tile.row, col: tile.col });
-                const blankIndex = stateUpdates.newRack.indexOf('?');
-                if (blankIndex !== -1) {
-                  stateUpdates.newRack.splice(blankIndex, 1);
-                } else {
-                  const starIndex = stateUpdates.newRack.indexOf('*');
-                  if (starIndex !== -1) {
-                    stateUpdates.newRack.splice(starIndex, 1);
-                  }
-                }
-              } else {
-                const tileIndex = stateUpdates.newRack.indexOf(tile.letter);
-                if (tileIndex !== -1) {
-                  stateUpdates.newRack.splice(tileIndex, 1);
-                }
-              }
-            }
-          }
-          
-          // Draw new tiles
-          while (stateUpdates.newRack.length < 7 && stateUpdates.newPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * stateUpdates.newPool.length);
-            stateUpdates.newRack.push(stateUpdates.newPool[randomIndex]);
-            stateUpdates.newPool.splice(randomIndex, 1);
-          }
-          
-          // Update running total
-          stateUpdates.runningTotal += bestMove.score;
-          
-          // Store only the differences in board states
-          const boardDiff = getBoardDiff(boardCoords, stateUpdates.newBoard);
-          const moveHistoryEntry = {
-            boardDiff,
-            player: currentPlayer === 1 ? player1Name : player2Name,
-            score: bestMove.score,
-            rack: alphabetizeRack(currentRack).join(''),
-            total: stateUpdates.runningTotal
-          };
-
-          setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
-          
-          // Show toast notification
-          setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} played "${bestMove.word}" for ${bestMove.score} points`);
-          setSnackbarSeverity("success");
-          setSnackbarOpen(true);
-        }
-        
-        // Apply all state updates at once
-        setBoardCoords(stateUpdates.newBoard);
-        setTempBoardCoords(JSON.parse(JSON.stringify(stateUpdates.newBoard)));
-        if (currentPlayer === 1) {
-          setPlayer1Rack(alphabetizeRack(stateUpdates.newRack));
-          setPlayer1points(stateUpdates.runningTotal);
-        } else {
-          setPlayer2Rack(alphabetizeRack(stateUpdates.newRack));
-          setPlayer2points(stateUpdates.runningTotal);
-        }
-        setBlankTiles(stateUpdates.newBlankTiles);
-        setPool(stateUpdates.newPool);
-        setMoveHistory(stateUpdates.newMoveHistory);
-        
-        // Check if game should end
-        if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
-          handleGameEnd(
-            stateUpdates.newRack,
-            currentPlayer === 1 ? player1Name : player2Name,
-            currentPlayer === 1 ? player2Rack : player1Rack,
-            currentPlayer === 1 ? player2points : player1points
-          );
-          return;
-        }
-        
-        // Switch to next player
-        setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
-        setSelectedBoardPosition(null);
-        setSelectedTiles([]);
-        setArrowDirection('right');
-
-        // After successful move
-        setSimulatingMove(null);
-        setSimulationResult(null);
-        setSimulationProgress(0);
-        setPreviewBoard(null);
-        setPreviewMove(null);
-        setMoveWithResults(null);
-        setTopMoves([]); // Clear top moves
-      }
-    } catch (error) {
-      console.error('Error playing top move:', error);
-      setSnackbarMessage('Error playing top move: ' + error.message);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    } finally {
-      // Clear states even on error
-      setSimulatingMove(null);
-      setSimulationResult(null);
-      setSimulationProgress(0);
-      setPreviewBoard(null);
-      setPreviewMove(null);
-      setMoveWithResults(null);
-      setTopMoves([]); // Clear top moves
-    }
+  const handlePlayTopMoveClick = useCallback(() => {
+    handlePlayTopMove({
+      isLoadingTopMoves,
+      isDictionaryLoading,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      tempBoardCoords,
+      boardCoords,
+      selectedTiles,
+      pool,
+      player1points,
+      player2points,
+      player1Name,
+      player2Name,
+      blankTiles,
+      moveHistory,
+      leaveValues,
+      handleGameEnd,
+      getBoardDiff,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setSelectedBoardPosition,
+      setBoardCoords,
+      setPlayer1points,
+      setPlayer2points,
+      setBlankTiles,
+      setPool,
+      setMoveHistory,
+      setCurrentPlayer,
+      setSimulatingMove,
+      setSimulationResult,
+      setSimulationProgress,
+      setPreviewBoard,
+      setPreviewMove,
+      setMoveWithResults,
+      setTopMoves,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen,
+      setIsDictionaryLoading,
+      setLeaveValues,
+      setArrowDirection
+    });
   }, [
     isLoadingTopMoves,
     isDictionaryLoading,
@@ -1148,7 +919,6 @@ export default function Play() {
     moveHistory,
     leaveValues,
     handleGameEnd,
-    compressBoardState,
     getBoardDiff
   ]);
 
@@ -1156,19 +926,11 @@ export default function Play() {
   useEffect(() => {
     if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying) {
       setIsAutoPlaying(true);
-      handlePlayTopMove().finally(() => {
+      handlePlayTopMoveClick().finally(() => {
         setIsAutoPlaying(false);
-        // Clear all temporary states
-        setSimulatingMove(null);
-        setSimulationResult(null);
-        setSimulationProgress(0);
-        setPreviewBoard(null);
-        setPreviewMove(null);
-        setMoveWithResults(null);
-        setTopMoves([]); // Clear top moves
       });
     }
-  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMove, isAutoPlaying]);
+  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying]);
 
   // Add cleanup effect for all temporary states
   useEffect(() => {
@@ -1199,14 +961,14 @@ export default function Play() {
       gameStarted,
       handlePass,
       handleExchangeClick,
-      handlePlayTopMove
+      handlePlayTopMove: handlePlayTopMoveClick
     });
 
     window.addEventListener('keydown', handleKeyPressWrapper);
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, handlePass, handleExchangeClick, handlePlayTopMove]);
+  }, [gameStarted, handlePass, handleExchangeClick, handlePlayTopMoveClick]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1407,7 +1169,7 @@ export default function Play() {
               onWordSubmit={handleWordSubmitClick}
               onPass={handlePass}
               onExchange={handleExchangeClick}
-              onPlayTopMove={handlePlayTopMove}
+              onPlayTopMove={handlePlayTopMoveClick}
               selectedBoardPosition={selectedBoardPosition}
               tilesToExchange={tilesToExchange}
               autoPlayBest={autoPlayBest}
