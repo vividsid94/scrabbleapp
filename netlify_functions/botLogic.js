@@ -82,7 +82,6 @@ exports.handler = async function (event) {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    console.log('Received request body:', event.body);
     const { board: rawBoard, letters, pool = [] } = JSON.parse(event.body || '{}');
     
     if (!Array.isArray(rawBoard) || rawBoard.length !== 15 || !Array.isArray(letters) || letters.length > 7) {
