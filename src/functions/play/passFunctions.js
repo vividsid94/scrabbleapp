@@ -70,7 +70,7 @@ export const handlePass = ({
 
   // Switch to next player
   setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-  setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} passed their turn`);
+  setSnackbarMessage(currentPlayer === 1 ? "You passed your turn" : `${player2Name} passed their turn`);
   setSnackbarSeverity('info');
   setSnackbarOpen(true);
   
