@@ -104,7 +104,11 @@ export const makeBotMove = async ({
     }
 
     const data = await response.json();
-    console.log('Bot moves response:', data);
+    console.log('Bot moves response:', {
+      moves: data.moves,
+      poolSize: pool.length,
+      exchangesConsidered: pool.length >= 7
+    });
     
     if (!data.moves || data.moves.length === 0) {
       setSnackbarMessage('Bot could not find a valid move');

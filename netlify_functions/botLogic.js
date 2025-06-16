@@ -133,50 +133,53 @@ exports.handler = async function (event) {
 
     // Generate exchange moves
     const exchangeMoves = [];
-    // Generate all possible combinations of 1-7 tiles
-    for (let i = 1; i <= Math.min(letters.length, 7); i++) {
-      const generateCombos = (current, start, remaining) => {
-        if (current.length === i) {
-          // For exchanges, the leave is what we keep (remaining)
-          // Convert any * to ? for leave lookup
-          const leave = remaining.map(tile => tile === '*' ? '?' : tile).sort().join('');
-          
-          // Calculate the new rack after exchange
-          const newRack = [...remaining];
-          // Draw new tiles from pool if available
-          const tilesToDraw = current.length;
-          let newTiles = [];
-          if (Array.isArray(pool) && pool.length >= tilesToDraw) {
-            // Shuffle pool and take tiles
-            const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
-            newTiles = shuffledPool.slice(0, tilesToDraw);
-            newRack.push(...newTiles);
-            // Sort the new rack
-            newRack.sort();
+    // Only generate exchange moves if there are at least 7 tiles in the pool
+    if (Array.isArray(pool) && pool.length >= 7) {
+      // Generate all possible combinations of 1-7 tiles
+      for (let i = 1; i <= Math.min(letters.length, 7); i++) {
+        const generateCombos = (current, start, remaining) => {
+          if (current.length === i) {
+            // For exchanges, the leave is what we keep (remaining)
+            // Convert any * to ? for leave lookup
+            const leave = remaining.map(tile => tile === '*' ? '?' : tile).sort().join('');
+            
+            // Calculate the new rack after exchange
+            const newRack = [...remaining];
+            // Draw new tiles from pool if available
+            const tilesToDraw = current.length;
+            let newTiles = [];
+            if (Array.isArray(pool) && pool.length >= tilesToDraw) {
+              // Shuffle pool and take tiles
+              const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+              newTiles = shuffledPool.slice(0, tilesToDraw);
+              newRack.push(...newTiles);
+              // Sort the new rack
+              newRack.sort();
+            }
+            
+            exchangeMoves.push({
+              word: `Exchange ${current.join('')}`,
+              score: 0,
+              tiles: current.map(letter => ({ letter: letter === '?' ? '*' : letter, isNew: false })),
+              direction: 'exchange',
+              startPosition: 'Exchange',
+              leave: leave, // The leave is what we keep BEFORE drawing new tiles
+              isExchange: true,
+              newTiles: newTiles, // Store the new tiles to be drawn
+              tilesToExchange: [...current] // Store the tiles being exchanged
+            });
+            return;
           }
-          
-          exchangeMoves.push({
-            word: `Exchange ${current.join('')}`,
-            score: 0,
-            tiles: current.map(letter => ({ letter: letter === '?' ? '*' : letter, isNew: false })),
-            direction: 'exchange',
-            startPosition: 'Exchange',
-            leave: leave, // The leave is what we keep BEFORE drawing new tiles
-            isExchange: true,
-            newTiles: newTiles, // Store the new tiles to be drawn
-            tilesToExchange: [...current] // Store the tiles being exchanged
-          });
-          return;
-        }
-        for (let j = start; j < remaining.length; j++) {
-          const nextRemaining = [...remaining];
-          nextRemaining.splice(j, 1);
-          current.push(remaining[j]);
-          generateCombos(current, j, nextRemaining);
-          current.pop();
-        }
-      };
-      generateCombos([], 0, [...letters]);
+          for (let j = start; j < remaining.length; j++) {
+            const nextRemaining = [...remaining];
+            nextRemaining.splice(j, 1);
+            current.push(remaining[j]);
+            generateCombos(current, j, nextRemaining);
+            current.pop();
+          }
+        };
+        generateCombos([], 0, [...letters]);
+      }
     }
 
     // Combine regular moves and exchange moves

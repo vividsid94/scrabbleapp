@@ -42,6 +42,13 @@ export const handleExchange = ({
     return null;
   }
 
+  if (pool.length < 7) {
+    setSnackbarMessage('Cannot exchange when there are fewer than 7 tiles in the pool');
+    setSnackbarSeverity('error');
+    setSnackbarOpen(true);
+    return null;
+  }
+
   if (pool.length < tilesToExchange.length) {
     setSnackbarMessage('Not enough tiles in pool to exchange');
     setSnackbarSeverity('error');
