@@ -30,7 +30,7 @@ import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
 import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
-import { handleGetTopMoves, handlePlayTopMove } from '../../functions/play/moveFunctions';
+import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect } from '../../functions/play/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
 
 const boardMultipliers = JSON.parse(origBoard);
@@ -740,67 +740,28 @@ export default function Play() {
     }
   };
 
-  const handleMoveSelect = (move) => {
-    // Reset the board to its current state
-    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-    
-    // Set the direction
-    setArrowDirection(move.direction);
-    
-    // Place the tiles on the board
-    const newTempBoard = [...tempBoardCoords];
-    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    const newRack = [...currentRack];
-    const newSelectedTiles = [];
-    
-    // Place each tile using the exact positions from the tiles array
-    for (const tile of move.tiles) {
-      if (tile.isNew) {
-        
-        // Check if the tile is already on the board in the committed state
-        if (typeof boardCoords[tile.row][tile.col] === 'string') {
-          continue;
-        }
-        
-        // For blank tiles, we need to find the blank in the rack
-        const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
-        if (tileIndex !== -1) {
-          // For blank tiles, we need to show the letter it represents
-          newTempBoard[tile.row][tile.col] = tile.letter;
-          newRack.splice(tileIndex, 1);
-          newSelectedTiles.push(tile.isBlank ? '*' : tile.letter);
-        }
-      }
-    }
-    
-    setTempBoardCoords(newTempBoard);
-    setSelectedTiles(newSelectedTiles);
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-
-    // Set the position to the square after the last tile
-    const lastTile = move.tiles[move.tiles.length - 1];
-    if (move.direction === 'right') {
-      let nextCol = lastTile.col + 1;
-      while (nextCol <= 14 && !Number.isInteger(boardCoords[lastTile.row][nextCol])) {
-        nextCol++;
-      }
-      if (nextCol <= 14) {
-        setSelectedBoardPosition({ row: lastTile.row, col: nextCol });
-      }
-    } else {
-      let nextRow = lastTile.row + 1;
-      while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][lastTile.col])) {
-        nextRow++;
-      }
-      if (nextRow <= 14) {
-        setSelectedBoardPosition({ row: nextRow, col: lastTile.col });
-      }
-    }
-  };
+  const handleMoveSelectClick = useCallback((move) => {
+    handleMoveSelect({
+      move,
+      boardCoords,
+      tempBoardCoords,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setSelectedBoardPosition,
+      setArrowDirection
+    });
+  }, [
+    boardCoords,
+    tempBoardCoords,
+    currentPlayer,
+    player1Rack,
+    player2Rack
+  ]);
 
   const board = useMemo(() => {
     return createBoard(
@@ -1307,7 +1268,7 @@ export default function Play() {
         isTopMovesLoading={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
         topMoves={topMoves}
-        onMoveSelect={handleMoveSelect}
+        onMoveSelect={handleMoveSelectClick}
         onSimulateMove={simulateMove}
         simulatingMove={simulatingMove}
         simulationResult={simulationResult}

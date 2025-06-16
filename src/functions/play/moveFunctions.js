@@ -1,5 +1,6 @@
 import { calculateExchangeLeave } from './leaveFunctions';
 import { fetchLeaveValues } from './leaveFunctions';
+import { alphabetizeRack } from './rackFunctions';
 
 /**
  * Generates all possible combinations of tiles for exchange
@@ -662,5 +663,96 @@ export const handlePlayTopMove = async ({
     setPreviewMove(null);
     setMoveWithResults(null);
     setTopMoves([]); // Clear top moves
+  }
+};
+
+/**
+ * Handles selecting a move from the top moves list
+ * @param {Object} params - The parameters object
+ * @param {Object} params.move - The selected move
+ * @param {Array} params.boardCoords - Current board state
+ * @param {Array} params.tempBoardCoords - Temporary board state
+ * @param {number} params.currentPlayer - Current player (1 or 2)
+ * @param {Array} params.player1Rack - Player 1's rack
+ * @param {Array} params.player2Rack - Player 2's rack
+ * @param {Function} params.setTempBoardCoords - Function to update temporary board state
+ * @param {Function} params.setSelectedTiles - Function to update selected tiles
+ * @param {Function} params.setPlayer1Rack - Function to update player 1's rack
+ * @param {Function} params.setPlayer2Rack - Function to update player 2's rack
+ * @param {Function} params.setSelectedBoardPosition - Function to update selected position
+ * @param {Function} params.setArrowDirection - Function to update arrow direction
+ * @returns {void}
+ */
+export const handleMoveSelect = ({
+  move,
+  boardCoords,
+  tempBoardCoords,
+  currentPlayer,
+  player1Rack,
+  player2Rack,
+  setTempBoardCoords,
+  setSelectedTiles,
+  setPlayer1Rack,
+  setPlayer2Rack,
+  setSelectedBoardPosition,
+  setArrowDirection
+}) => {
+  // Reset the board to its current state
+  setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+  
+  // Set the direction
+  setArrowDirection(move.direction);
+  
+  // Place the tiles on the board
+  const newTempBoard = [...tempBoardCoords];
+  const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+  const newRack = [...currentRack];
+  const newSelectedTiles = [];
+  
+  // Place each tile using the exact positions from the tiles array
+  for (const tile of move.tiles) {
+    if (tile.isNew) {
+      // Check if the tile is already on the board in the committed state
+      if (typeof boardCoords[tile.row][tile.col] === 'string') {
+        continue;
+      }
+      
+      // For blank tiles, we need to find the blank in the rack
+      const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
+      if (tileIndex !== -1) {
+        // For blank tiles, we need to show the letter it represents
+        newTempBoard[tile.row][tile.col] = tile.letter;
+        newRack.splice(tileIndex, 1);
+        newSelectedTiles.push(tile.isBlank ? '*' : tile.letter);
+      }
+    }
+  }
+  
+  setTempBoardCoords(newTempBoard);
+  setSelectedTiles(newSelectedTiles);
+  if (currentPlayer === 1) {
+    setPlayer1Rack(alphabetizeRack(newRack));
+  } else {
+    setPlayer2Rack(alphabetizeRack(newRack));
+  }
+
+  // Set the position to the square after the last tile
+  const lastTile = move.tiles[move.tiles.length - 1];
+  if (move.direction === 'right') {
+    let nextCol = lastTile.col + 1;
+    while (nextCol <= 14 && !Number.isInteger(boardCoords[lastTile.row][nextCol])) {
+      nextCol++;
+    }
+    if (nextCol <= 14) {
+      setSelectedBoardPosition({ row: lastTile.row, col: nextCol });
+    }
+  } else {
+    let nextRow = lastTile.row + 1;
+    while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][lastTile.col])) {
+      nextRow++;
+    }
+    if (nextRow <= 14) {
+      setSelectedBoardPosition({ row: nextRow, col: lastTile.col });
+    }
   }
 }; 
