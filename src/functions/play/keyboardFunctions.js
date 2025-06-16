@@ -1,5 +1,9 @@
 import { alphabetizeRack } from './rackFunctions';
 
+// Add debounce mechanism
+let lastKeyPressTime = 0;
+const DEBOUNCE_DELAY = 100; // milliseconds
+
 export const handleKeyDown = ({
   e,
   selectedBoardPosition,
@@ -23,30 +27,46 @@ export const handleKeyDown = ({
   arrowDirection,
   origBoard
 }) => {
+  // Prevent rapid key presses
+  const now = Date.now();
+  if (now - lastKeyPressTime < DEBOUNCE_DELAY) {
+    e.preventDefault();
+    return;
+  }
+  lastKeyPressTime = now;
+
   if (!selectedBoardPosition) return;
 
   const { row, col } = selectedBoardPosition;
   const key = e.key.toUpperCase();
 
-  if (e.altKey || e.shiftKey) {
+  // Prevent modifier keys
+  if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) {
     e.preventDefault();
     return;
   }
 
+  // Handle arrow keys
   if (e.key === 'ArrowRight') {
+    e.preventDefault();
     setArrowDirection('right');
     return;
   } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
     setArrowDirection('down');
     return;
   }
 
+  // Handle enter key
   if (e.key === 'Enter') {
+    e.preventDefault();
     handleWordSubmit();
     return;
   }
 
+  // Handle backspace
   if (e.key === 'Backspace') {
+    e.preventDefault();
     const newTempBoard = [...tempBoardCoords];
     const lastRow = arrowDirection === 'right' ? row : row - 1;
     const lastCol = arrowDirection === 'right' ? col - 1 : col;
@@ -98,16 +118,21 @@ export const handleKeyDown = ({
     return;
   }
 
-  if (!/[A-Z]/.test(key)) return;
+  // Handle letter keys
+  if (!/[A-Z]/.test(key)) {
+    e.preventDefault();
+    return;
+  }
 
-  // Check if there's already a tile at this position (either in boardCoords or tempBoardCoords)
+  e.preventDefault();
+
+  // Check if there's already a tile at this position
   if (typeof boardCoords[row][col] === 'string' || typeof tempBoardCoords[row][col] === 'string') {
     return;
   }
 
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
   const tileIndex = currentRack.indexOf(key);
-  // Check for both '?' and '*' as blank tiles
   const blankIndex = currentRack.indexOf('?') !== -1 ? currentRack.indexOf('?') : currentRack.indexOf('*');
       
   // If we don't have the letter and don't have a blank, return
@@ -125,19 +150,19 @@ export const handleKeyDown = ({
 
   // Always use the actual letter if we have it
   if (tileIndex !== -1) {
-    const tileToPlace = newRack[tileIndex]; // Get the actual tile from the rack
+    const tileToPlace = newRack[tileIndex];
     newRack.splice(tileIndex, 1);
     newTempBoard[row][col] = key;
-    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]); // Store the actual tile with its position
+    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
   } 
   // Only use the blank tile if we don't have the letter
   else if (blankIndex !== -1) {
-    const tileToPlace = newRack[blankIndex]; // Get the actual blank tile from the rack
+    const tileToPlace = newRack[blankIndex];
     newRack.splice(blankIndex, 1);
     newTempBoard[row][col] = key;
     newBlankTiles.push({ row, col });
     setBlankTiles(newBlankTiles);
-    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]); // Store the actual blank tile with its position
+    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
   }
 
   if (currentPlayer === 1) {
@@ -148,6 +173,7 @@ export const handleKeyDown = ({
 
   setTempBoardCoords(newTempBoard);
 
+  // Move to next position
   if (arrowDirection === 'right') {
     let nextCol = col + 1;
     while (nextCol <= 14 && !Number.isInteger(boardCoords[row][nextCol])) {
