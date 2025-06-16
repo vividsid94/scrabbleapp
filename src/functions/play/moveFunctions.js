@@ -588,6 +588,9 @@ export const handlePlayTopMove = async ({
           stateUpdates.newPool.splice(randomIndex, 1);
         }
         
+        // Alphabetize the rack
+        stateUpdates.newRack = alphabetizeRack(stateUpdates.newRack);
+        
         // Update running total
         stateUpdates.runningTotal += bestMove.score;
         
