@@ -21,6 +21,10 @@ import SortIcon from '@mui/icons-material/Sort';
 import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
 import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
 import { calculateScore } from '../../functions/scoreFunctions';
+import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
+import { alphabetizeRack } from '../../functions/play/rackFunctions';
+import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
+import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 
 const boardMultipliers = JSON.parse(origBoard);
 
@@ -81,58 +85,45 @@ export default function Play() {
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
   const [botMoveSoundType, setBotMoveSoundType] = useState('classic');
 
-  // Then add audio refs with error handling
-  const gameStartSound = useRef(new Audio('/sounds/game-start.mp3'));
-  const playerMoveSound = useRef(new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
-  const botMoveSound = useRef(new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`));
+  // Initialize sounds
+  const sounds = useRef(initializeSounds());
+  const gameStartSound = useRef(sounds.current.gameStartSound);
+  const playerMoveSound = useRef(sounds.current.playerMoveSound);
+  const botMoveSound = useRef(sounds.current.botMoveSound);
 
   // Add error handlers for sounds
   useEffect(() => {
-    const handleSoundError = (sound, name) => {
-      console.error(`Error playing ${name} sound:`, sound.error);
-      setSnackbarMessage(`Error playing ${name} sound`);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    };
-
-    gameStartSound.current.addEventListener('error', () => handleSoundError(gameStartSound.current, 'game start'));
-    playerMoveSound.current.addEventListener('error', () => handleSoundError(playerMoveSound.current, 'player move'));
-    botMoveSound.current.addEventListener('error', () => handleSoundError(botMoveSound.current, 'bot move'));
+    gameStartSound.current.addEventListener('error', () => 
+      handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+    );
+    playerMoveSound.current.addEventListener('error', () => 
+      handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+    );
+    botMoveSound.current.addEventListener('error', () => 
+      handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+    );
 
     return () => {
-      gameStartSound.current.removeEventListener('error', () => handleSoundError(gameStartSound.current, 'game start'));
-      playerMoveSound.current.removeEventListener('error', () => handleSoundError(playerMoveSound.current, 'player move'));
-      botMoveSound.current.removeEventListener('error', () => handleSoundError(botMoveSound.current, 'bot move'));
+      gameStartSound.current.removeEventListener('error', () => 
+        handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
+      playerMoveSound.current.removeEventListener('error', () => 
+        handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
+      botMoveSound.current.removeEventListener('error', () => 
+        handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
     };
   }, []);
 
-  // Update audio refs when sound type changes with error handling
+  // Update audio refs when sound type changes
   useEffect(() => {
-    try {
-    playerMoveSound.current = new Audio(`/sounds/player-move${playerMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
-      console.log('Player move sound updated:', playerMoveSoundType);
-    } catch (error) {
-      console.error('Error updating player move sound:', error);
-    }
+    updateSoundType(playerMoveSound, playerMoveSoundType, 'player');
   }, [playerMoveSoundType]);
 
   useEffect(() => {
-    try {
-    botMoveSound.current = new Audio(`/sounds/bot-move${botMoveSoundType === 'sword' ? '-sword' : ''}.mp3`);
-      console.log('Bot move sound updated:', botMoveSoundType);
-    } catch (error) {
-      console.error('Error updating bot move sound:', error);
-    }
+    updateSoundType(botMoveSound, botMoveSoundType, 'bot');
   }, [botMoveSoundType]);
-
-  const alphabetizeRack = (rack) => {
-    return [...rack].sort((a, b) => {
-      // Handle both string tiles and tile objects
-      const tileA = typeof a === 'string' ? a : a.tile;
-      const tileB = typeof b === 'string' ? b : b.tile;
-      return tileA.localeCompare(tileB);
-    });
-  };
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -176,49 +167,6 @@ export default function Play() {
     setSnackbarOpen(true);
     checkDictionary();
   }, []);
-
-  const handleTileClick = (tile, index) => {
-    const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-    
-    // If we're in exchange mode, handle tile selection for exchange
-    if (tilesToExchange.length > 0 || selectedTiles.length === 0) {
-      const tileIndex = tilesToExchange.findIndex(t => t.tile === tile && t.index === index);
-      if (tileIndex === -1) {
-        setTilesToExchange([...tilesToExchange, { tile, index }]);
-      } else {
-        const newTiles = [...tilesToExchange];
-        newTiles.splice(tileIndex, 1);
-        setTilesToExchange(newTiles);
-      }
-      return;
-    }
-    
-    // Otherwise handle normal tile selection for play
-    const tileIndex = selectedTiles.indexOf(tile);
-    if (tileIndex === -1) {
-      setSelectedTiles([...selectedTiles, tile]);
-    } else {
-      const newTiles = [...selectedTiles];
-      newTiles.splice(tileIndex, 1);
-      setSelectedTiles(newTiles);
-    }
-  };
-
-  const handleBoardClick = (row, col) => {
-    if (!boardCoords || !boardCoords[row] || typeof boardCoords[row][col] !== 'number') {
-      console.log('Invalid board position:', { row, col });
-      return;
-    }
-    const isSamePosition =
-      selectedBoardPosition?.row === row &&
-      selectedBoardPosition?.col === col;
-    setSelectedBoardPosition({ row, col });
-    if (isSamePosition) {
-      setArrowDirection(prev =>
-        prev === 'right' ? 'down' : 'right'
-      );
-    }
-  };
 
   const handleKeyDown = (e) => {
     if (!selectedBoardPosition) return;
@@ -371,28 +319,6 @@ export default function Play() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedBoardPosition, arrowDirection]);
-
-  const handleTileDrop = (tile, index, row, col) => {
-    const player1Index = player1Rack.indexOf(tile);
-    const player2Index = player2Rack.indexOf(tile);
-    
-    if (player1Index !== -1) {
-      const newRack = [...player1Rack];
-      newRack.splice(player1Index, 1);
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else if (player2Index !== -1) {
-      const newRack = [...player2Rack];
-      newRack.splice(player2Index, 1);
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-    
-    setSelectedTiles([...selectedTiles, tile]);
-    setSelectedBoardPosition({ row, col });
-
-    const newTempBoard = [...tempBoardCoords];
-    newTempBoard[row][col] = tile;
-    setTempBoardCoords(newTempBoard);
-  };
 
   const handleGameEnd = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
     // Calculate sum of loser's remaining tiles
@@ -1951,11 +1877,41 @@ export default function Play() {
           <Board 
             board={board}
             boardMode={theme}
-            onBoardChildClick={(row, col) => {
-              console.log('Board component received click:', { row, col });
-              handleBoardClick(row, col);
-            }}
-            onTileDrop={handleTileDrop}
+            onBoardChildClick={(row, col) => handleBoardPositionSelect({
+              row,
+              col,
+              boardCoords,
+              selectedBoardPosition,
+              setSelectedBoardPosition,
+              arrowDirection,
+              setArrowDirection
+            })}
+            onTileDrop={(tile, index, row, col) => handleTileDrop({
+              tile,
+              index,
+              row,
+              col,
+              player1Rack,
+              setPlayer1Rack,
+              player2Rack,
+              setPlayer2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              setSelectedBoardPosition,
+              tempBoardCoords,
+              setTempBoardCoords
+            })}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
             selectedPosition={selectedBoardPosition}
             arrowDirection={arrowDirection}
             onArrowDirectionChange={(newDirection) => {
@@ -1983,7 +1939,17 @@ export default function Play() {
             player1Rack={player1Rack}
             player2Rack={player2Rack}
             color={color}
-            onTileClick={handleTileClick}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+              selectedTiles,
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
             selectedTiles={tilesToExchange}
             isBotMode={isBotMode}
             gameStarted={gameStarted}
