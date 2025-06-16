@@ -168,13 +168,13 @@ export default function PlayerInfo({
         <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (isBotMode ? "New Game" : "Play")}>
           <Box
             onClick={() => {
-              if (isDictionaryLoading) return;
+              if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
               onBotModeToggle();
             }}
             sx={{
-              opacity: isDictionaryLoading ? 0.5 : 1,
-              cursor: isDictionaryLoading ? 'not-allowed' : 'pointer',
-              pointerEvents: isDictionaryLoading ? 'none' : 'auto',
+              opacity: isDictionaryLoading || isBotThinking || isPlayerThinking ? 0.5 : 1,
+              cursor: isDictionaryLoading || isBotThinking || isPlayerThinking ? 'not-allowed' : 'pointer',
+              pointerEvents: isDictionaryLoading || isBotThinking || isPlayerThinking ? 'none' : 'auto',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

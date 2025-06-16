@@ -349,6 +349,9 @@ export default function Play() {
       setArrowDirection('right');
     }
     
+    // Clear blank tiles when starting new game
+    setBlankTiles([]);
+    
     // Randomly determine who goes first
     const randomFirst = Math.random() < 0.5;
     setBotGoesFirst(randomFirst);
