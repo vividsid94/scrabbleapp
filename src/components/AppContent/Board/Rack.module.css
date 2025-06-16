@@ -23,12 +23,9 @@
     margin: 2.5px;
     border-radius: 6px;
     font-size: 30px;
-    transition: all 0.2s ease;
 }
 .Tile.selected {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: 2px solid #FFD700;
+    border: 2px solid #4CAF50;
 }
 .Protile{
     width: 42px;
@@ -40,12 +37,9 @@
     border-radius: 4px;
     font-size: 30px;
     filter: brightness(0.85);
-    transition: all 0.2s ease;
 }
 .Protile.selected {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: 2px solid #FFD700;
+    border: 2px solid #4CAF50;
 }
 
 @media screen and (max-width: 676px) {
