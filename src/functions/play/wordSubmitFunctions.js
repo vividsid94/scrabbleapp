@@ -146,9 +146,10 @@ export const handleWordSubmit = async ({
   const moveHistoryEntry = {
     boardDiff,
     player: currentPlayer === 1 ? player1Name : player2Name,
-    score: score,
-    rack: alphabetizeRack(playerRack).join(''),
-    total: runningTotal
+    score,
+    rack: playerRack.join(''),
+    total: runningTotal,
+    word: validationResult.word
   };
 
   setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);

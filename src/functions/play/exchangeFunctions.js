@@ -7,6 +7,9 @@
  * @param {number} params.currentPlayer - Current player number (1 or 2)
  * @param {string} params.playerName - Current player's name
  * @param {boolean} params.isBotMode - Whether the game is in bot mode
+ * @param {Array} params.boardCoords - Current board state
+ * @param {number} params.player1points - Player 1's score
+ * @param {number} params.player2points - Player 2's score
  * @param {Function} params.setPlayer1Rack - Function to update player 1's rack
  * @param {Function} params.setPlayer2Rack - Function to update player 2's rack
  * @param {Function} params.setPool - Function to update the pool
@@ -16,6 +19,7 @@
  * @param {Function} params.setSnackbarSeverity - Function to update snackbar severity
  * @param {Function} params.setSnackbarOpen - Function to update snackbar open state
  * @param {Function} params.makeBotMove - Function to make bot move
+ * @param {Function} params.setMoveHistory - Function to update move history
  * @returns {Object} Object containing the updated rack and pool
  */
 export const handleExchange = ({
@@ -25,6 +29,9 @@ export const handleExchange = ({
   currentPlayer,
   playerName,
   isBotMode,
+  boardCoords,
+  player1points,
+  player2points,
   setPlayer1Rack,
   setPlayer2Rack,
   setPool,
@@ -33,7 +40,8 @@ export const handleExchange = ({
   setSnackbarMessage,
   setSnackbarSeverity,
   setSnackbarOpen,
-  makeBotMove
+  makeBotMove,
+  setMoveHistory
 }) => {
   if (tilesToExchange.length === 0) {
     setSnackbarMessage('Please select tiles to exchange');
@@ -95,6 +103,17 @@ export const handleExchange = ({
   if (isBotMode && currentPlayer === 2) {
     makeBotMove();
   }
+
+  // Add exchange move to history
+  setMoveHistory(prev => [...prev, {
+    beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
+    afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for exchange
+    player: playerName,
+    score: 0,
+    rack: newRack.join(''),
+    total: currentPlayer === 1 ? player1points : player2points,
+    word: 'Exchange'
+  }]);
 
   return { newRack, newPool };
 }; 

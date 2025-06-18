@@ -628,6 +628,9 @@ export default function Play() {
       currentPlayer,
       playerName: currentPlayer === 1 ? player1Name : player2Name,
       isBotMode,
+      boardCoords,
+      player1points,
+      player2points,
       setPlayer1Rack,
       setPlayer2Rack,
       setPool,
@@ -636,6 +639,7 @@ export default function Play() {
       setSnackbarMessage,
       setSnackbarSeverity,
       setSnackbarOpen,
+      setMoveHistory,
       makeBotMove: () => makeBotMove({
         boardCoords,
         player2Rack,

@@ -545,7 +545,8 @@ export const handlePlayTopMove = async ({
           player: currentPlayer === 1 ? player1Name : player2Name,
           score: 0,
           rack: newRack.join(''),
-          total: stateUpdates.runningTotal
+          total: stateUpdates.runningTotal,
+          word: 'Exchange'
         };
 
         setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
@@ -601,7 +602,8 @@ export const handlePlayTopMove = async ({
           player: currentPlayer === 1 ? player1Name : player2Name,
           score: bestMove.score,
           rack: newRack.join(''),
-          total: stateUpdates.runningTotal
+          total: stateUpdates.runningTotal,
+          word: bestMove.word
         };
 
         setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);

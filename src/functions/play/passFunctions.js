@@ -65,7 +65,8 @@ export const handlePass = ({
     player: currentPlayer === 1 ? player1Name : player2Name,
     score: 0,
     rack: currentPlayer === 1 ? alphabetizeRack(player1Rack).join('') : alphabetizeRack(player2Rack).join(''),
-    total: currentPlayer === 1 ? player1points : player2points
+    total: currentPlayer === 1 ? player1points : player2points,
+    word: 'Pass'
   }]);
 
   // Switch to next player

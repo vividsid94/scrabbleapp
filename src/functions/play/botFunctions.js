@@ -209,7 +209,8 @@ export const makeBotMove = async ({
         player: player2Name,
         score: bestMove.score,
         rack: alphabetizeRack(botRack).join(''),
-        total: botRunningTotal
+        total: botRunningTotal,
+        word: bestMove.word
       };
 
       setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);

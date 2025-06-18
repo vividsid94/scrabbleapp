@@ -39,52 +39,21 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     );
   }
 
-  const { score, player, boardDiff } = latestMove;
+  const { score, player, word } = latestMove;
   
-  // Extract word from boardDiff if available
-  let word = '';
-  
-  if (boardDiff && boardDiff.length > 0) {
-    // Get all placed tiles (where value is a string/letter)
-    const placedTiles = boardDiff.filter(tile => typeof tile.value === 'string');
-    
-    if (placedTiles.length > 0) {
-      if (placedTiles.length === 1) {
-        // Single tile
-        word = placedTiles[0].value;
-      } else {
-        // Multiple tiles - determine if horizontal or vertical
-        const rows = [...new Set(placedTiles.map(t => t.row))];
-        const cols = [...new Set(placedTiles.map(t => t.col))];
-        
-        if (rows.length === 1) {
-          // Horizontal word - sort by column
-          const sortedTiles = placedTiles.sort((a, b) => a.col - b.col);
-          word = sortedTiles.map(t => t.value).join('');
-        } else if (cols.length === 1) {
-          // Vertical word - sort by row
-          const sortedTiles = placedTiles.sort((a, b) => a.row - b.row);
-          word = sortedTiles.map(t => t.value).join('');
-        } else {
-          // Single tile (fallback)
-          word = placedTiles[0].value;
-        }
-      }
-    }
-  }
-
   // Handle special cases
+  let displayWord = word;
   if (score === 0 && player.includes('exchanged')) {
-    word = 'Exchange';
-  } else if (score === 0 && (word === '' || !word)) {
-    word = 'Pass';
+    displayWord = 'Exchange';
+  } else if (score === 0 && (!displayWord || displayWord === '')) {
+    displayWord = 'Pass';
   }
 
   return (
     <Box className={styles.latestMovePanel}>
       <Box className={`${styles.latestMoveContent} ${animationClass}`}>
         <HistoryIcon className={styles.moveHistoryIcon} style={{ fontSize: 16 }} onClick={handleHistoryClick} />
-        <Box className={styles.latestMovePlayer}>{word}</Box>
+        <Box className={styles.latestMovePlayer}>{displayWord}</Box>
         <Box className={styles.latestMoveDetails}>
           <Box className={styles.latestMoveScore}>{score} pts</Box>
           <Box className={styles.latestMovePlayer}>{player}</Box>
