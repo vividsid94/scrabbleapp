@@ -9,6 +9,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
   const [animationClass, setAnimationClass] = useState('');
   const [allMoves, setAllMoves] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [displayMove, setDisplayMove] = useState(null);
 
   // Helper function to format move location
   const formatLocation = (boardDiff) => {
@@ -34,28 +35,35 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
 
   useEffect(() => {
     if (latestMove) {
-      // Add the new move to the moves array
-      setAllMoves(prevMoves => {
-        // Add timestamp to make each move unique, even if they're identical
-        const moveWithTimestamp = {
-          ...latestMove,
-          timestamp: Date.now()
-        };
-        
-        return [moveWithTimestamp, ...prevMoves];
-      });
-
-      // Start slide out animation
+      // Start slide out animation with current move
       setIsAnimating(true);
       setAnimationClass(styles.slidingOut);
       
-      // After slide out, change content and slide in
+      // After slide out, update the move and slide in
       const timer = setTimeout(() => {
+        // Add the new move to the moves array
+        setAllMoves(prevMoves => {
+          // Add timestamp to make each move unique, even if they're identical
+          const moveWithTimestamp = {
+            ...latestMove,
+            timestamp: Date.now()
+          };
+          
+          return [moveWithTimestamp, ...prevMoves];
+        });
+        
+        // Update the display move
+        setDisplayMove(latestMove);
+        
+        // Slide in with new move
         setAnimationClass(styles.slidingIn);
         setIsAnimating(false);
       }, 300); // Match the slideOutUp animation duration
       
       return () => clearTimeout(timer);
+    } else if (allMoves.length > 0 && !displayMove) {
+      // Initialize display move if we have moves but no display move
+      setDisplayMove(allMoves[0]);
     }
   }, [latestMove]);
 
@@ -92,7 +100,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     );
   };
 
-  if (!latestMove && allMoves.length === 0) {
+  if (!displayMove && allMoves.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
         <Box className={`${styles.latestMoveContent} ${animationClass}`}>
@@ -102,7 +110,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     );
   }
 
-  const { score, player, word, boardDiff } = latestMove || allMoves[0] || {};
+  const { score, player, word, boardDiff } = displayMove || allMoves[0] || {};
   
   // Handle special cases
   let displayWord = word;
