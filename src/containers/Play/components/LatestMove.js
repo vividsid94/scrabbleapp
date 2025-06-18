@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import PersonIcon from '@mui/icons-material/Person';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import styles from '../Play.module.css';
 
 const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }) => {
@@ -31,6 +33,15 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     const position = isHorizontal ? `${row}${col}` : `${col}${row}`;
     
     return position;
+  };
+
+  // Helper function to get player icon
+  const getPlayerIcon = (playerName) => {
+    if (playerName === 'SidBot' || playerName === 'Bot') {
+      return <SmartToyIcon style={{ fontSize: 16 }} />;
+    } else {
+      return <PersonIcon style={{ fontSize: 16 }} />;
+    }
   };
 
   useEffect(() => {
@@ -94,7 +105,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
           {location && (
             <Box className={styles.moveHistoryLocation}>{location}</Box>
           )}
-          <Box className={styles.moveHistoryPlayer}>{player}</Box>
+          <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
       </Box>
     );
@@ -133,7 +144,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
           {location && (
             <Box className={styles.latestMovePosition}>{location}</Box>
           )}
-          <Box className={styles.latestMovePlayer}>{player}</Box>
+          <Box className={styles.latestMovePlayer}>{getPlayerIcon(player)}</Box>
         </Box>
         {allMoves.length > 1 && (
           <Box className={styles.expandIcon} onClick={handleExpandClick}>

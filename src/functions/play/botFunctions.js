@@ -166,9 +166,9 @@ export const makeBotMove = async ({
       setPool(newPool);
       
       // Show toast notification for bot's exchange
-      setSnackbarMessage(`SidBot exchanged ${tilesToExchange.length} tiles`);
-      setSnackbarSeverity("info");
-      setSnackbarOpen(true);
+      //setSnackbarMessage(`SidBot exchanged ${tilesToExchange.length} tiles`);
+      //setSnackbarSeverity("info");
+      //ssetSnackbarOpen(true);
     } else {
       // Handle regular move
       for (const tile of bestMove.tiles) {
@@ -231,9 +231,9 @@ export const makeBotMove = async ({
       setPool(newPool);
       
       // Show toast notification for bot's move
-      setSnackbarMessage(`SidBot played "${bestMove.word}" for ${bestMove.score} points`);
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      //setSnackbarMessage(`SidBot played "${bestMove.word}" for ${bestMove.score} points`);
+      //setSnackbarSeverity("success");
+      //setSnackbarOpen(true);
       
       // Update bot's score
       setPlayer2points(botRunningTotal);

@@ -682,12 +682,19 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
   font-family: 'Syne', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .latestMovePosition {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'Syne', sans-serif;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -775,6 +782,9 @@
 .moveHistoryPlayer {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .moveHistoryLocation {

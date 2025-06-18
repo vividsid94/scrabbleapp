@@ -550,11 +550,6 @@ export const handlePlayTopMove = async ({
         };
 
         stateUpdates.newMoveHistory.push(moveHistoryEntry);
-        
-        // Show toast notification
-        setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
-        setSnackbarSeverity("info");
-        setSnackbarOpen(true);
       } else {
         // Handle regular move
         // Place tiles on board
@@ -607,11 +602,6 @@ export const handlePlayTopMove = async ({
         };
 
         stateUpdates.newMoveHistory.push(moveHistoryEntry);
-        
-        // Show toast notification
-        setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} played "${bestMove.word}" for ${bestMove.score} points`);
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
       }
       
       // Apply all state updates at once

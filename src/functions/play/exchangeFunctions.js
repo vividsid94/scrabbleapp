@@ -95,9 +95,6 @@ export const handleExchange = ({
 
   // Switch to next player
   setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-  setSnackbarMessage(`${playerName} exchanged ${tilesToExchange.length} tiles`);
-  setSnackbarSeverity('info');
-  setSnackbarOpen(true);
 
   // If next player is bot, make bot move
   if (isBotMode && currentPlayer === 2) {
