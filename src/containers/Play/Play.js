@@ -943,6 +943,9 @@ export default function Play() {
     }
   }, [selectedTiles, tempBoardCoords]);
 
+  // Get the latest move from move history
+  const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -1066,6 +1069,7 @@ export default function Play() {
             setShowMoveHistory={setShowMoveHistory}
             isBotThinking={isBotThinking}
             isPlayerThinking={isPlayerThinking}
+            latestMove={latestMove}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,

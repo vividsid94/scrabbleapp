@@ -11,6 +11,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import HistoryIcon from '@mui/icons-material/History';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import LatestMove from './LatestMove';
 
 const actionButtonStyle = {
   width: '24px',
@@ -124,7 +125,8 @@ export default function PlayerInfo({
   setShowMoveHistory,
   icons,
   isBotThinking,
-  isPlayerThinking
+  isPlayerThinking,
+  latestMove
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -453,6 +455,11 @@ export default function PlayerInfo({
           } : undefined}
         />
       ))}
+
+      <LatestMove 
+        latestMove={latestMove} 
+        onMoveHistoryClick={() => setShowMoveHistory(true)}
+      />
     </Box>
   );
 } 
