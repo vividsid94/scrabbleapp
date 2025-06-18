@@ -36,60 +36,14 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
     >
       {points}
     </Box>
-    {rack && ((!isBot) || (isBot && (BOT_RACK_VISIBILITY.enabled || currentPlayer === 2))) && (
+    {rack && !isBot && (
       <Box className={styles.Rack}>
-        {isBot ? (
-          <Box sx={{ 
-            display: 'flex', 
-            gap: '4px', 
-            justifyContent: 'center',
-            padding: '8px',
-            fontSize: '20px'
-          }}>
-            {rack.map((emoji, index) => (
-              <Box key={index} sx={{ 
-                width: '24px', 
-                height: '24px', 
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: color.current,
-                borderRadius: '4px',
-                border: '1px solid rgba(0,0,0,0.2)',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                fontSize: '16px',
-                color: 'white',
-                transform: 'scale(1.3)',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                animation: 'thinking 2s ease-in-out infinite',
-                '@keyframes thinking': {
-                  '0%': { 
-                    transform: 'scale(1.3)'
-                  },
-                  '50%': { 
-                    transform: 'scale(1.35)'
-                  },
-                  '100%': { 
-                    transform: 'scale(1.3)'
-                  }
-                },
-                '&:hover': {
-                  transform: 'scale(1.5)',
-                  animation: 'none'
-                }
-              }}>
-                {emoji}
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Rack 
-            rack={rack} 
-            color={color.current} 
-            onTileClick={onTileClick}
-            selectedTiles={selectedTiles}
-          />
-        )}
+        <Rack 
+          rack={rack} 
+          color={color.current} 
+          onTileClick={onTileClick}
+          selectedTiles={selectedTiles}
+        />
       </Box>
     )}
   </Box>
