@@ -549,7 +549,7 @@ export const handlePlayTopMove = async ({
           word: 'Exchange'
         };
 
-        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        stateUpdates.newMoveHistory.push(moveHistoryEntry);
         
         // Show toast notification
         setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} exchanged ${tilesToExchange.length} tiles`);
@@ -606,7 +606,7 @@ export const handlePlayTopMove = async ({
           word: bestMove.word
         };
 
-        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        stateUpdates.newMoveHistory.push(moveHistoryEntry);
         
         // Show toast notification
         setSnackbarMessage(`${currentPlayer === 1 ? player1Name : player2Name} played "${bestMove.word}" for ${bestMove.score} points`);
@@ -626,7 +626,7 @@ export const handlePlayTopMove = async ({
       }
       setBlankTiles(stateUpdates.newBlankTiles);
       setPool(stateUpdates.newPool);
-      setMoveHistory(stateUpdates.newMoveHistory);
+      setMoveHistory(stateUpdates.newMoveHistory.slice(-50)); // Keep only last 50 moves
       
       // Check if game should end
       if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
