@@ -1,5 +1,5 @@
 /* =============================================================
-   Fixed Scrabble move generator (GADDAG-based)
+   Optimized Scrabble move generator (GADDAG-based)
    ============================================================= */
 
    const { letterScores, boardMultipliers } = require('./gameLogic');
@@ -21,41 +21,130 @@
        isBlank: l === '?' || l === '*'
      }));
    
-     // Count blank tiles
-     const blankCount = rackArr.filter(t => t.isBlank).length;
-     const logLines = [];
-     logLines.push(`Found ${blankCount} blank tiles in rack`);
-     logLines.push('Rack: ' + rackArr.map(t => t.isBlank ? '?' : t.letter).join(''));
-   
      const moves = [];
-     const moveSet = new Set(); // Track unique moves
-     const crossChecks = computeCrossChecks(board);
+     const moveSet = new Set();
+   
+     // Early termination: if rack is empty, no moves possible
+     if (rackArr.length === 0) {
+       return moves;
+     }
    
      // First move special case - must start at H8 (7,7)
      if (isBoardEmpty(board)) {
-       const centerRow = 7;  // H
-       const centerCol = 7;  // 8
-       generateMovesAt(board, rackArr, centerRow, centerCol, 'horizontal', moves, crossChecks, moveSet);
-       generateMovesAt(board, rackArr, centerRow, centerCol, 'vertical', moves, crossChecks, moveSet);
+       generateMovesAt(board, rackArr, 7, 7, 'horizontal', moves, moveSet);
+       generateMovesAt(board, rackArr, 7, 7, 'vertical', moves, moveSet);
      } else {
-       // Regular moves - check every empty square
-       for (let row = 0; row < 15; row++) {
-         for (let col = 0; col < 15; col++) {
-           if (board[row][col] === null) {
-             // Check if this square can be an anchor (adjacent to existing tiles)
-             if (hasAdjacentTile(board, row, col)) {
-               generateMovesAt(board, rackArr, row, col, 'horizontal', moves, crossChecks, moveSet);
-               generateMovesAt(board, rackArr, row, col, 'vertical', moves, crossChecks, moveSet);
-         }
+       // Find all anchor points efficiently
+       const anchors = findAnchors(board);
+       
+       // Early termination: if no anchors, no moves possible
+       if (anchors.length === 0) {
+         return moves;
+       }
+       
+       for (const anchor of anchors) {
+         generateMovesAt(board, rackArr, anchor.row, anchor.col, 'horizontal', moves, moveSet);
+         generateMovesAt(board, rackArr, anchor.row, anchor.col, 'vertical', moves, moveSet);
        }
      }
-       }
-   }
    
      return moves;
    }
    
-   function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, crossChecks, moveSet) {
+   function findAnchors(board) {
+     const anchors = [];
+     const visited = new Set();
+   
+     for (let row = 0; row < 15; row++) {
+       for (let col = 0; col < 15; col++) {
+         if (board[row][col] !== null) continue;
+   
+         const key = `${row},${col}`;
+         if (visited.has(key)) continue;
+   
+         // Check if this empty square is adjacent to existing tiles
+         if (hasAdjacentTile(board, row, col)) {
+           anchors.push({ row, col });
+           visited.add(key);
+         }
+       }
+     }
+   
+     // Special case: if no anchors found, check for single-tile plays
+     // This handles end-game scenarios where we need to find "hooks"
+     if (anchors.length === 0) {
+       for (let row = 0; row < 15; row++) {
+         for (let col = 0; col < 15; col++) {
+           if (board[row][col] !== null) continue;
+   
+           const key = `${row},${col}`;
+           if (visited.has(key)) continue;
+   
+           // Check if this position can form a word by adding a single tile
+           if (canFormWordAt(board, row, col)) {
+             anchors.push({ row, col });
+             visited.add(key);
+           }
+         }
+       }
+     }
+   
+     return anchors;
+   }
+   
+   function canFormWordAt(board, row, col) {
+     // Check horizontal direction
+     let hasHorizontalWord = false;
+     let leftCol = col - 1;
+     let rightCol = col + 1;
+     
+     // Find the word to the left
+     let leftWord = '';
+     while (leftCol >= 0 && board[row][leftCol] !== null) {
+       leftWord = board[row][leftCol] + leftWord;
+       leftCol--;
+     }
+     
+     // Find the word to the right
+     let rightWord = '';
+     while (rightCol < 15 && board[row][rightCol] !== null) {
+       rightWord += board[row][rightCol];
+       rightCol++;
+     }
+     
+     // If we have tiles on both sides, we can form a word
+     if (leftWord.length > 0 && rightWord.length > 0) {
+       hasHorizontalWord = true;
+     }
+     
+     // Check vertical direction
+     let hasVerticalWord = false;
+     let upRow = row - 1;
+     let downRow = row + 1;
+     
+     // Find the word above
+     let upWord = '';
+     while (upRow >= 0 && board[upRow][col] !== null) {
+       upWord = board[upRow][col] + upWord;
+       upRow--;
+     }
+     
+     // Find the word below
+     let downWord = '';
+     while (downRow < 15 && board[downRow][col] !== null) {
+       downWord += board[downRow][col];
+       downRow++;
+     }
+     
+     // If we have tiles on both sides, we can form a word
+     if (upWord.length > 0 && downWord.length > 0) {
+       hasVerticalWord = true;
+     }
+     
+     return hasHorizontalWord || hasVerticalWord;
+   }
+   
+   function generateMovesAt(board, rack, anchorRow, anchorCol, direction, moves, moveSet) {
      // Find the leftmost/topmost position for potential words through this anchor
      let leftLimit = anchorCol;
      let topLimit = anchorRow;
@@ -75,16 +164,98 @@
      // Try all possible starting positions
      if (direction === 'horizontal') {
        for (let startCol = leftLimit; startCol <= anchorCol; startCol++) {
-         generateWordsFromPosition(board, rack, anchorRow, startCol, direction, moves, crossChecks, moveSet);
-     }
+         generateWordsFromPosition(board, rack, anchorRow, startCol, direction, moves, moveSet);
+       }
      } else {
        for (let startRow = topLimit; startRow <= anchorRow; startRow++) {
-         generateWordsFromPosition(board, rack, startRow, anchorCol, direction, moves, crossChecks, moveSet);
+         generateWordsFromPosition(board, rack, startRow, anchorCol, direction, moves, moveSet);
+       }
      }
-   }
+   
+     // Special case: try single-tile plays directly at the anchor
+     // This is important for end-game scenarios
+     generateSingleTileMoves(board, rack, anchorRow, anchorCol, direction, moves, moveSet);
    }
    
-   function generateWordsFromPosition(board, rack, startRow, startCol, direction, moves, crossChecks, moveSet) {
+   function generateSingleTileMoves(board, rack, row, col, direction, moves, moveSet) {
+     // Try placing each tile from the rack directly at this position
+     for (let i = 0; i < rack.length; i++) {
+       const tile = rack[i];
+       if (!tile) continue;
+   
+       // Try both horizontal and vertical directions
+       for (const direction of ['horizontal', 'vertical']) {
+         if (tile.isBlank) {
+           // For blank tiles, try each letter
+           for (const letter of ALPHA) {
+             const newTile = {
+               row, col,
+               letter,
+               isNew: true,
+               isBlank: true
+             };
+             if (isValidSingleTileMove(board, newTile, direction)) {
+               const move = {
+                 word: getWordAt(board, row, col, direction, new Map([[`${row},${col}`, letter]])),
+                 tiles: [newTile],
+                 direction,
+                 startRow: row,
+                 startCol: col
+               };
+               const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${move.tiles.map(t => t.isBlank ? t.letter : '').join('')}`;
+               if (!moveSet.has(moveKey)) {
+                 move.score = calculateScore(board, move.tiles, boardMultipliers);
+                 moves.push(move);
+                 moveSet.add(moveKey);
+               }
+             }
+           }
+         } else {
+           // Regular tile
+           const newTile = {
+             row, col,
+             letter: tile.letter,
+             isNew: true,
+             isBlank: false
+           };
+           if (isValidSingleTileMove(board, newTile, direction)) {
+             const move = {
+               word: getWordAt(board, row, col, direction, new Map([[`${row},${col}`, tile.letter]])),
+               tiles: [newTile],
+               direction,
+               startRow: row,
+               startCol: col
+             };
+             const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${move.tiles.map(t => t.isBlank ? t.letter : '').join('')}`;
+             if (!moveSet.has(moveKey)) {
+               move.score = calculateScore(board, move.tiles, boardMultipliers);
+               moves.push(move);
+               moveSet.add(moveKey);
+             }
+           }
+         }
+       }
+     }
+   }
+   
+   function isValidSingleTileMove(board, tile, direction) {
+     // Create a map with the tile being placed
+     const placedMap = new Map();
+     placedMap.set(`${tile.row},${tile.col}`, tile.letter);
+     
+     // Check main word in the direction of play
+     const mainWord = getWordAt(board, tile.row, tile.col, direction, placedMap);
+     if (mainWord.length <= 1 || !theGADDAG.contains(mainWord)) return false;
+     
+     // Check cross-word in the perpendicular direction
+     const crossDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
+     const crossWord = getWordAt(board, tile.row, tile.col, crossDirection, placedMap);
+     if (crossWord.length > 1 && !theGADDAG.contains(crossWord)) return false;
+     
+     return true;
+   }
+   
+   function generateWordsFromPosition(board, rack, startRow, startCol, direction, moves, moveSet) {
      // Build the prefix from existing tiles
      let prefix = '';
      let currentRow = startRow;
@@ -112,15 +283,6 @@
        node = node['^'];
      }
    
-     // For each blank tile, we need to try all possible letters
-     // that could form a valid word at this position
-     const validLetters = new Set();
-     for (const letter of ALPHA) {
-       if (node[letter] || (node['^'] && node['^'][letter])) {
-         validLetters.add(letter);
-       }
-     }
-   
      // Generate words from this position
      extendWords(
        node, 
@@ -132,14 +294,16 @@
        currentCol, 
        direction, 
        moves, 
-       crossChecks,
        prefix.length > 0, // isInSuffixMode
-       moveSet,
-       validLetters // Pass valid letters for blank tiles
+       moveSet
      );
    }
    
-   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, crossChecks, isInSuffixMode, moveSet, validLetters) {
+   function extendWords(node, board, rack, wordSoFar, tilesPlaced, row, col, direction, moves, isInSuffixMode, moveSet, depth = 0) {
+     // Limit search depth to prevent excessive recursion
+     const MAX_DEPTH = 15;
+     if (depth > MAX_DEPTH) return;
+   
      // Check if we can form a valid word
      if (node['$'] && tilesPlaced.length > 0) {
        const cleanWord = wordSoFar.replace(/\^/g, '');
@@ -179,20 +343,13 @@
            nextCol, 
            direction, 
            moves, 
-           crossChecks,
            isInSuffixMode,
            moveSet,
-           validLetters
+           depth + 1
          );
        }
        return;
      }
-   
-     // Get cross-check constraints for this position
-     const crossCheckKey = `${row},${col}`;
-     const crossCheck = crossChecks.get(crossCheckKey);
-     const perpDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
-     const perpChecks = crossCheck ? crossCheck[perpDirection] : null;
    
      // Try placing tiles from rack
      for (let i = 0; i < rack.length; i++) {
@@ -203,12 +360,8 @@
        newRack[i] = null;
    
        if (tile.isBlank) {
-         // For blank tiles, try each letter that could form a valid word
-         // and respects cross-check constraints
-         for (const letter of validLetters) {
-           // Skip if this letter doesn't satisfy cross-check constraints
-           if (perpChecks && !perpChecks.has(letter)) continue;
-   
+         // For blank tiles, try each letter
+         for (const letter of ALPHA) {
            if (!isInSuffixMode) {
              // In prefix mode - can continue in prefix or switch to suffix
              if (node[letter]) {
@@ -229,10 +382,9 @@
                  nextCol, 
                  direction, 
                  moves, 
-                 crossChecks,
                  false,
                  moveSet,
-                 validLetters
+                 depth + 1
                );
              }
    
@@ -255,13 +407,12 @@
                  nextCol, 
                  direction, 
                  moves, 
-                 crossChecks,
                  true,
                  moveSet,
-                 validLetters
-           );
-         }
-       } else {
+                 depth + 1
+               );
+             }
+           } else {
              // In suffix mode - can only continue in suffix
              if (node[letter]) {
                const newTile = {
@@ -281,18 +432,15 @@
                  nextCol, 
                  direction, 
                  moves, 
-                 crossChecks,
                  true,
                  moveSet,
-                 validLetters
-         );
-       }
-     }
-   }
+                 depth + 1
+               );
+             }
+           }
+         }
        } else {
-         // Regular tile - check cross-check constraints
-         if (perpChecks && !perpChecks.has(tile.letter)) continue;
-   
+         // Regular tile
          if (!isInSuffixMode) {
            // In prefix mode - can continue in prefix or switch to suffix
            if (node[tile.letter]) {
@@ -313,12 +461,11 @@
                nextCol, 
                direction, 
                moves, 
-               crossChecks,
                false,
                moveSet,
-               validLetters
+               depth + 1
              );
-   }
+           }
    
            // Try switching to suffix mode
            if (node['^'] && node['^'][tile.letter]) {
@@ -339,10 +486,9 @@
                nextCol, 
                direction, 
                moves, 
-               crossChecks,
                true,
                moveSet,
-               validLetters
+               depth + 1
              );
            }
          } else {
@@ -365,10 +511,9 @@
                nextCol, 
                direction, 
                moves, 
-               crossChecks,
                true,
                moveSet,
-               validLetters
+               depth + 1
              );
            }
          }
@@ -407,93 +552,6 @@
      return true;
    }
    
-   function computeCrossChecks(board) {
-     const map = new Map();
-     
-     for (let r = 0; r < 15; r++) {
-       for (let c = 0; c < 15; c++) {
-         if (board[r][c] !== null) continue;
-         
-         const key = `${r},${c}`;
-         const horizontalChecks = getValidLetters(board, r, c, 'horizontal');
-         const verticalChecks = getValidLetters(board, r, c, 'vertical');
-   
-         if (horizontalChecks || verticalChecks) {
-           map.set(key, {
-             horizontal: horizontalChecks,
-             vertical: verticalChecks
-           });
-         }
-       }
-     }
-     
-     return map;
-   }
-   
-   function getValidLetters(board, row, col, direction) {
-     // Check if placing a tile here would form a cross-word
-     const perpDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
-     
-     // Find if there are adjacent tiles in the perpendicular direction
-     let hasPerpendicularTiles = false;
-     if (perpDirection === 'horizontal') {
-       hasPerpendicularTiles = (col > 0 && board[row][col - 1] !== null) || 
-                              (col < 14 && board[row][col + 1] !== null);
-     } else {
-       hasPerpendicularTiles = (row > 0 && board[row - 1][col] !== null) || 
-                              (row < 14 && board[row + 1][col] !== null);
-     }
-   
-     if (!hasPerpendicularTiles) {
-       return null; // No cross-word constraints
-     }
-   
-     // Find valid letters that form valid cross-words
-     const validLetters = new Set();
-     
-     // For cross-checks, we only need uppercase since that's what we use throughout
-     for (const letter of ALPHA) {
-       if (isValidCrossWord(board, row, col, letter, perpDirection)) {
-         validLetters.add(letter);
-       }
-     }
-     
-     return validLetters.size > 0 ? validLetters : null;
-   }
-   
-   function isValidCrossWord(board, row, col, letter, direction) {
-     // Temporarily place the letter and check if it forms a valid word
-     const tempBoard = board.map(row => [...row]);
-     tempBoard[row][col] = letter;
-     
-     // Find the complete word in the given direction
-     let startRow = row, startCol = col;
-     
-     if (direction === 'vertical') {
-       while (startRow > 0 && tempBoard[startRow - 1][col] !== null) {
-         startRow--;
-       }
-       } else {
-       while (startCol > 0 && tempBoard[row][startCol - 1] !== null) {
-         startCol--;
-       }
-     }
-   
-     let word = '';
-     let r = startRow, c = startCol;
-     
-     while (r < 15 && c < 15 && tempBoard[r][c] !== null) {
-       word += tempBoard[r][c];
-       if (direction === 'vertical') r++;
-       else c++;
-     }
-   
-     // Single letters are always valid
-     if (word.length <= 1) return true;
-     
-     return theGADDAG.contains(word);
-   }
-   
    function validateMove(board, tiles) {
      if (!tiles || tiles.length === 0) return false;
      
@@ -528,7 +586,7 @@
      
      if (!mainWord || mainWord.length < 2 || !theGADDAG.contains(mainWord)) {
        return false;
-       }
+     }
      
      // Validate all cross-words
      for (const tile of tiles) {
