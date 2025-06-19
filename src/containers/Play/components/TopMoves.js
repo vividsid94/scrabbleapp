@@ -93,10 +93,10 @@ const TopMoves = ({
         <Box className={styles.topMoveWord}>{move.word}</Box>
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
-          <Tooltip title="Leave Value">
+          <Tooltip title="Leave">
             <Box className={styles.topMoveLeaveValue}>{Math.round(leaveValue)}</Box>
           </Tooltip>
-          <Tooltip title="Defensive Value">
+          <Tooltip title="Board Control Estimate">
             <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
           </Tooltip>
           <Box className={styles.topMoveActions}>
