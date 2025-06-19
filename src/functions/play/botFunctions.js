@@ -302,10 +302,14 @@ export const startBotGame = ({
   setPreviewBoard,
   setPreviewMove,
   setMoveWithResults,
-  setTopMoves
+  setTopMoves,
+  setMoveHistory
 }) => {
   // Play game start sound
   gameStartSound.current.play();
+
+  // Clear move history first
+  setMoveHistory([]);
 
   // Reset game state
   let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));

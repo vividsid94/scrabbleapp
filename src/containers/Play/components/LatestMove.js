@@ -72,6 +72,12 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
       }, 300); // Match the slideOutUp animation duration
       
       return () => clearTimeout(timer);
+    } else if (latestMove === null) {
+      // Clear internal state when latestMove is null (new game started)
+      setAllMoves([]);
+      setDisplayMove(null);
+      setIsExpanded(false);
+      setAnimationClass('');
     } else if (allMoves.length > 0 && !displayMove) {
       // Initialize display move if we have moves but no display move
       setDisplayMove(allMoves[0]);

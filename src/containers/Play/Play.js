@@ -425,7 +425,8 @@ export default function Play() {
       setPreviewBoard,
       setPreviewMove,
       setMoveWithResults,
-      setTopMoves
+      setTopMoves,
+      setMoveHistory
     });
   };
 
