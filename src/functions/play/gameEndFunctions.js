@@ -35,6 +35,16 @@ export const handleGameEnd = ({
   setSnackbarOpen,
   setAutoPlayBest
 }) => {
+  console.log('🏁 handleGameEnd called!', {
+    winnerName,
+    winnerRack,
+    loserRack,
+    loserPoints,
+    player1points,
+    player2points,
+    autoPlayBest
+  });
+
   // Calculate sum of loser's remaining tiles
   const rackSum = loserRack.reduce((sum, tile) => {
     const value = tile === '?' || tile === '*' ? 0 : 

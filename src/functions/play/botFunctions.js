@@ -261,29 +261,37 @@ export const makeBotMove = async ({
       setPlayer2Rack(alphabetizeRack(newRack));
       setBlankTiles(newBlankTiles);
       
-      // Draw new tiles for bot
-      while (newRack.length < 7 && newPool.length > 0) {
-        const randomIndex = Math.floor(Math.random() * newPool.length);
-        newRack.push(newPool[randomIndex]);
-        newPool.splice(randomIndex, 1);
-      }
-      setPlayer2Rack(alphabetizeRack(newRack));
-      setPool(newPool);
-      
-      // Show toast notification for bot's move
-      //setSnackbarMessage(`SidBot played "${bestMove.word}" for ${bestMove.score} points`);
-      //setSnackbarSeverity("success");
-      //setSnackbarOpen(true);
-      
       // Update bot's score
       setPlayer2points(botRunningTotal);
     }
     
-    // Check if game should end
-    if (newRack.length === 0 && pool.length === 0) {
+    // Check if game should end BEFORE drawing new tiles
+    // Game ends if bot played all its tiles and there are no tiles left in the pool
+    if (newRack.length === 0 && newPool.length === 0) {
+      console.log('🎯 GAME END: Bot played all tiles and pool is empty!', {
+        botRack: newRack,
+        poolSize: newPool.length,
+        botScore: player2points + bestMove.score,
+        player1Score: player1points,
+        player1Rack: player1Rack
+      });
       handleGameEnd(newRack, player2Name, player1Rack, player1points);
       return;
     }
+    
+    // Draw new tiles for bot (only if game didn't end)
+    while (newRack.length < 7 && newPool.length > 0) {
+      const randomIndex = Math.floor(Math.random() * newPool.length);
+      newRack.push(newPool[randomIndex]);
+      newPool.splice(randomIndex, 1);
+    }
+    setPlayer2Rack(alphabetizeRack(newRack));
+    setPool(newPool);
+    
+    // Show toast notification for bot's move
+    //setSnackbarMessage(`SidBot played "${bestMove.word}" for ${bestMove.score} points`);
+    //setSnackbarSeverity("success");
+    //setSnackbarOpen(true);
     
     // Reset consecutive passes since bot made a move
     setConsecutivePasses(0);
