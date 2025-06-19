@@ -35,22 +35,45 @@ export const generateExchangeCombinations = (rack) => {
  */
 export const fetchBoardControl = async (boardCoords, moves) => {
   try {
-    const response = await fetch('/.netlify/functions/getBoardControl', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        board: boardCoords,
-        moves: moves
-      })
-    });
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
+    let response;
+    try {
+      response = await fetch('/.netlify/functions/getBoardControl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          moves: moves
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.warn('Board control calculation timed out, continuing without control metrics');
+        return [];
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
       throw new Error('Failed to fetch board control metrics');
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse board control response:', jsonError);
+      return [];
+    }
+    
     return data.moveMetrics;
   } catch (error) {
     console.error('Error fetching board control:', error);
@@ -141,22 +164,43 @@ export const handleGetTopMoves = async ({
     // Convert any '?' in the rack to '*' for the API
     const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
     
-    const response = await fetch('/.netlify/functions/getTopMoves', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        board: boardCoords,
-        letters: apiRack
-      })
-    });
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
+    let response;
+    try {
+      response = await fetch('/.netlify/functions/getTopMoves', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: apiRack
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Move calculation timed out. Please try again.');
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse getTopMoves response:', jsonError);
+      throw new Error('Move calculation returned invalid response. Please try again.');
+    }
     
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {
@@ -379,23 +423,43 @@ export const handlePlayTopMove = async ({
     // Convert any '?' in the rack to '*' for the API
     const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
     
-    // Make API call for moves
-    const movesResponse = await fetch('/.netlify/functions/getTopMoves', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        board: boardCoords,
-        letters: apiRack
-      })
-    });
-
-    if (!movesResponse.ok) {
-      throw new Error(`HTTP error! status: ${movesResponse.status}`);
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
+    let response;
+    try {
+      response = await fetch('/.netlify/functions/getTopMoves', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCoords,
+          letters: apiRack
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Move calculation timed out. Please try again.');
+      }
+      throw fetchError;
     }
 
-    const data = await movesResponse.json();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse getTopMoves response:', jsonError);
+      throw new Error('Move calculation returned invalid response. Please try again.');
+    }
     
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {

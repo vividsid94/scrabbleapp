@@ -4,7 +4,7 @@
     publish = "build"
     include = [
         "netlify_functions/dictionary.gaddag.json",
-        "netlify_functions/leaveValues.json"
+        "netlify_functions/leaves.json"
     ]
 
 [functions]
@@ -15,8 +15,48 @@
     node_bundler = "esbuild"
     external_node_modules = ["aws-sdk"]
 
-[functions.memory]
-    external_node_modules = ["aws-sdk"]
+# Configure specific functions with higher limits
+# Memory options: 1024, 2048, 3008, 10240 MB
+# Timeout options: 10, 30, 60 seconds
+[functions.botLogic]
+    timeout = 30
+    memory = 3008
+
+[functions.getTopMoves]
+    timeout = 30
+    memory = 3008
+
+[functions.generateMoves]
+    timeout = 30
+    memory = 3008
+
+[functions.getBoardControl]
+    timeout = 20
+    memory = 2048
+
+[functions.gameLogic]
+    timeout = 15
+    memory = 2048
+
+[functions.studyLogic]
+    timeout = 20
+    memory = 2048
+
+[functions.loadDictionary]
+    timeout = 10
+    memory = 1024
+
+[functions.getLeaveValues]
+    timeout = 10
+    memory = 1024
+
+[functions.loadBoggleDictionary]
+    timeout = 10
+    memory = 1024
+
+[functions.proxy]
+    timeout = 15
+    memory = 1024
 
 [[redirects]]
   from = "/api/*"

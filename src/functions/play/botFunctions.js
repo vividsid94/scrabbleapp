@@ -64,17 +64,32 @@ export const makeBotMove = async ({
     // Only add delay if auto-play is not enabled
     if (!autoPlayBest) {
       const startTime = Date.now();
-      response = await fetch('/.netlify/functions/botLogic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCopy,
-          letters: apiRack,
-          pool: pool
-        })
-      });
+      
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      
+      try {
+        response = await fetch('/.netlify/functions/botLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCopy,
+            letters: apiRack,
+            pool: pool
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Bot calculation timed out. Please try again.');
+        }
+        throw fetchError;
+      }
 
       // Calculate remaining time to ensure minimum 2 second delay
       const elapsedTime = Date.now() - startTime;
@@ -83,27 +98,52 @@ export const makeBotMove = async ({
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
     } else {
-      // Skip delay when auto-play is enabled
-      response = await fetch('/.netlify/functions/botLogic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          board: boardCopy,
-          letters: apiRack,
-          pool: pool
-        })
-      });
+      // Skip delay when auto-play is enabled, but still add timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      
+      try {
+        response = await fetch('/.netlify/functions/botLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCopy,
+            letters: apiRack,
+            pool: pool
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Bot calculation timed out. Please try again.');
+        }
+        throw fetchError;
+      }
     }
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (jsonError) {
+        errorData = { error: 'Failed to parse error response' };
+      }
       console.error('Bot error details:', errorData);
       throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse bot response:', jsonError);
+      throw new Error('Bot returned invalid response. Please try again.');
+    }
+
     console.log('Bot moves response:', {
       moves: data.moves,
       poolSize: pool.length,
@@ -256,10 +296,71 @@ export const makeBotMove = async ({
     
   } catch (error) {
     console.error('Error making bot move:', error);
-    setSnackbarMessage('Error making bot move: ' + error.message);
-    setSnackbarSeverity('error');
-    setSnackbarOpen(true);
-    setCurrentPlayer(1); // Switch back to player 1 on error
+    
+    // Try fallback strategies
+    try {
+      console.log('Attempting fallback bot move...');
+      
+      // If the bot can't calculate moves, try a simple pass or exchange
+      if (pool.length >= 7) {
+        // Try an exchange if pool has enough tiles
+        const tilesToExchange = player2Rack.slice(0, Math.min(3, player2Rack.length));
+        const newRack = player2Rack.filter(tile => !tilesToExchange.includes(tile));
+        
+        // Draw new tiles
+        for (let i = 0; i < tilesToExchange.length && pool.length > 0; i++) {
+          const randomIndex = Math.floor(Math.random() * pool.length);
+          newRack.push(pool[randomIndex]);
+          pool.splice(randomIndex, 1);
+        }
+        
+        // Update state for exchange
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setPool([...pool, ...tilesToExchange]);
+        
+        // Add exchange to move history
+        const moveHistoryEntry = {
+          boardDiff: [],
+          player: player2Name,
+          score: 0,
+          rack: newRack.join(''),
+          total: player2points,
+          word: 'Exchange'
+        };
+        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        
+        console.log('Bot fallback: Exchange completed');
+      } else {
+        // Pass if no exchange possible
+        const moveHistoryEntry = {
+          boardDiff: [],
+          player: player2Name,
+          score: 0,
+          rack: player2Rack.join(''),
+          total: player2points,
+          word: 'Pass'
+        };
+        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        
+        console.log('Bot fallback: Pass completed');
+      }
+      
+      // Switch back to player 1
+      setCurrentPlayer(1);
+      setConsecutivePasses(prev => prev + 1);
+      
+      // Show user-friendly message
+      setSnackbarMessage('Bot had trouble calculating moves, used fallback strategy');
+      setSnackbarSeverity('warning');
+      setSnackbarOpen(true);
+      
+    } catch (fallbackError) {
+      console.error('Fallback also failed:', fallbackError);
+      setSnackbarMessage('Bot error: ' + error.message);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      setCurrentPlayer(1); // Switch back to player 1 on error
+    }
   } finally {
     // Only clear thinking state if auto-play is not enabled
     if (!autoPlayBest) {
