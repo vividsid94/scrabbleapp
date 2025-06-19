@@ -5,12 +5,199 @@
     font-size: 14px;
     line-height: 28px;
     font-family: 'Syne';
+    position: relative;
+}
+
+.poolTbl.animated{
+    min-height: 120px;
 }
 
 .charGroup {
     margin: 0 0.8em 0 0;
     font-family: 'Syne';
 }
+
+.tileBag {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.2;
+    color: #8B4513;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    animation: bagGlow 3s ease-in-out infinite alternate;
+}
+
+.bagTop {
+    color: #654321;
+    font-weight: bold;
+}
+
+.bagBody {
+    width: 65px;
+    height: 85px;
+    background: linear-gradient(135deg, #8B4513, #A0522D, #8B4513);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid #654321;
+    border-top: none;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2),
+        0 8px 16px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.bagBody::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            transparent 1px,
+            rgba(0, 0, 0, 0.15) 1px,
+            rgba(0, 0, 0, 0.15) 3px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 2px,
+            rgba(0, 0, 0, 0.08) 2px,
+            rgba(0, 0, 0, 0.08) 4px
+        ),
+        radial-gradient(ellipse at 30% 20%, rgba(0, 0, 0, 0.1) 0%, transparent 40%),
+        radial-gradient(ellipse at 70% 60%, rgba(0, 0, 0, 0.08) 0%, transparent 40%);
+    animation: bagShimmer 3s ease-in-out infinite;
+}
+
+.bagBody::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 6px;
+    right: 6px;
+    bottom: 8px;
+    background: 
+        radial-gradient(ellipse at 25% 25%, rgba(0, 0, 0, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse at 75% 75%, rgba(0, 0, 0, 0.2) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 80%, rgba(0, 0, 0, 0.15) 0%, transparent 50%),
+        linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.1) 50%, transparent 100%);
+    border-radius: 6px;
+    pointer-events: none;
+}
+
+.bagRow {
+    padding: 0 2px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    animation: tileShimmer 2s ease-in-out infinite;
+}
+
+.bagRow:nth-child(odd) {
+    animation-delay: 0.5s;
+}
+
+.bagBottom {
+    color: #654321;
+    font-weight: bold;
+}
+
+.bagLabel {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #654321;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    animation: labelPulse 2s ease-in-out infinite;
+}
+
+@keyframes bagGlow {
+    0% {
+        filter: brightness(1) drop-shadow(0 0 5px rgba(139, 69, 19, 0.3));
+    }
+    100% {
+        filter: brightness(1.1) drop-shadow(0 0 10px rgba(139, 69, 19, 0.5));
+    }
+}
+
+@keyframes tileShimmer {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes labelPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.spillTile {
+    position: absolute;
+    top: 0px;
+    font-size: 16px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8);
+    animation: spillDown 2s ease-in forwards;
+    transform-origin: center;
+    z-index: 10;
+    opacity: 0;
+}
+
+.spillText {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Syne';
+    font-style: italic;
+    animation: fadeIn 0.5s ease-in;
+    margin-top: 20px;
+}
+
+@keyframes spillDown {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        transform: translateY(8px) rotate(72deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(25px) rotate(180deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(50px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .red{
     color: orangered;
     font-family: 'Syne';
@@ -29,4 +216,122 @@
     .red{
         font-size: 10px;
     }
-  }
+    .tileBag {
+        font-size: 10px;
+    }
+    .bagLabel {
+        font-size: 8px;
+        letter-spacing: 1px;
+    }
+    .spillTile {
+        font-size: 14px;
+        padding: 1px 3px;
+    }
+    .spillText {
+        font-size: 10px;
+    }
+}
+
+.cssBag {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Syne', sans-serif;
+    animation: bagGlow 3s ease-in-out infinite alternate;
+    transform: perspective(200px) rotateX(15deg) rotateZ(-5deg);
+    transform-origin: center bottom;
+    position: relative;
+}
+
+.cssBag::after {
+    content: '';
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        #8B7355 0%, 
+        #A0522D 25%, 
+        #8B4513 50%, 
+        #654321 75%, 
+        #4A3728 100%);
+    border-radius: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    z-index: -2;
+}
+
+.bagHandle {
+    width: 35px;
+    height: 6px;
+    background: linear-gradient(135deg, #654321, #8B4513);
+    border-radius: 3px;
+    border: 1px solid #4A3728;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 2;
+}
+
+.bagHandle::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 5px;
+    right: 5px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    border-radius: 1px;
+}
+
+.bagLabel {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #654321;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    animation: labelPulse 2s ease-in-out infinite;
+}
+
+@keyframes bagShimmer {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.drawstring {
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, #2F1B14, #4A3728, #2F1B14);
+    border-radius: 2px;
+    position: relative;
+    z-index: 1;
+    margin: 2px 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.drawstring::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    border-radius: 1px;
+}
+
+.drawstring::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.4), transparent);
+    border-radius: 1px;
+}
