@@ -11,6 +11,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import HistoryIcon from '@mui/icons-material/History';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 
 const actionButtonStyle = {
@@ -25,7 +26,28 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
   <Box className={styles.playerPanel} sx={sx}>
     <Box className={styles.playerInfo}>
       <Box className={styles.playerName}>{name}</Box>
-      <Box className={styles.timer}>{time}</Box>
+      <Box 
+        className={styles.timer}
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          padding: '2px 6px',
+          fontSize: '12px',
+          color: '#fff',
+          fontFamily: 'monospace',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            transform: 'translateY(-1px)',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)'
+          }
+        }}
+      >
+        {time}
+      </Box>
     </Box>
     <Box 
       className={styles.points} 
@@ -335,38 +357,41 @@ export default function PlayerInfo({
                 gap: '8px',
                 boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
                 transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'hidden',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
                   transform: 'translateY(-1px)'
-                },
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  height: '2px',
-                  width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                },
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: '-100%',
-                  height: '2px',
-                  width: '50%',
-                  backgroundColor: 'rgb(255, 255, 255)',
-                  animation: 'progress 2s infinite linear',
-                  '@keyframes progress': {
-                    '0%': { left: '-100%' },
-                    '100%': { left: '100%' }
-                  }
                 }
               }}>
-                thinking
+                <Box sx={{
+                  display: 'flex',
+                  gap: '2px',
+                  alignItems: 'center',
+                  '& > div': {
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: 'currentColor',
+                    animation: 'thinking 1.4s infinite ease-in-out',
+                    '&:nth-of-type(1)': { animationDelay: '0s' },
+                    '&:nth-of-type(2)': { animationDelay: '0.2s' },
+                    '&:nth-of-type(3)': { animationDelay: '0.4s' },
+                    '@keyframes thinking': {
+                      '0%, 80%, 100%': {
+                        transform: 'scale(0.8)',
+                        opacity: 0.5
+                      },
+                      '40%': {
+                        transform: 'scale(1.2)',
+                        opacity: 1
+                      }
+                    }
+                  }
+                }}>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </Box>
               </Box>
             </Box>
           ) : player.name}

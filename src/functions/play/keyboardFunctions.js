@@ -2,7 +2,7 @@ import { alphabetizeRack } from './rackFunctions';
 
 // Add debounce mechanism
 let lastKeyPressTime = 0;
-const DEBOUNCE_DELAY = 100; // milliseconds
+const DEBOUNCE_DELAY = 50; // milliseconds
 
 export const handleKeyDown = ({
   e,
