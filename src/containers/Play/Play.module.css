@@ -721,7 +721,7 @@
   align-items: center;
   justify-content: center;
   min-width: 80px;
-  max-width: 120px;
+  max-width: 100px;
 }
 
 .moveHistoryDetails {
@@ -735,10 +735,10 @@
   font-weight: 600;
   color: white;
   background: darkcyan;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 3px;
   border: 1px solid rgba(0, 139, 139, 0.3);
-  width: 25px;
+  width: 22px;
   height: 18px;
   display: flex;
   align-items: center;
