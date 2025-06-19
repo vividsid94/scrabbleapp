@@ -756,8 +756,12 @@ export const handleMoveSelect = ({
   // Reset the board to its current state
   setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
   
-  // Set the direction
-  setArrowDirection(move.direction);
+  // Set the direction - convert from move API format to frontend format
+  const directionMap = {
+    'horizontal': 'right',
+    'vertical': 'down'
+  };
+  setArrowDirection(directionMap[move.direction] || 'right');
   
   // Get the current rack and restore any tiles that were previously placed on the board
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -812,21 +816,10 @@ export const handleMoveSelect = ({
 
   // Set the position to the square after the last tile
   const lastTile = move.tiles[move.tiles.length - 1];
-  if (move.direction === 'right') {
-    let nextCol = lastTile.col + 1;
-    while (nextCol <= 14 && !Number.isInteger(boardCoords[lastTile.row][nextCol])) {
-      nextCol++;
-    }
-    if (nextCol <= 14) {
-      setSelectedBoardPosition({ row: lastTile.row, col: nextCol });
-    }
+  const mappedDirection = directionMap[move.direction] || 'right';
+  if (mappedDirection === 'right') {
+    setSelectedBoardPosition({ row: lastTile.row, col: lastTile.col + 1 });
   } else {
-    let nextRow = lastTile.row + 1;
-    while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][lastTile.col])) {
-      nextRow++;
-    }
-    if (nextRow <= 14) {
-      setSelectedBoardPosition({ row: nextRow, col: lastTile.col });
-    }
+    setSelectedBoardPosition({ row: lastTile.row + 1, col: lastTile.col });
   }
 }; 

@@ -68,52 +68,93 @@ export const handleKeyDown = ({
   if (e.key === 'Backspace') {
     e.preventDefault();
     const newTempBoard = [...tempBoardCoords];
-    const lastRow = arrowDirection === 'right' ? row : row - 1;
-    const lastCol = arrowDirection === 'right' ? col - 1 : col;
     
-    if (lastRow >= 0 && lastCol >= 0 && Number.isInteger(boardCoords[lastRow][lastCol])) {
-      const tileToRemove = newTempBoard[lastRow][lastCol];
+    // Determine the actual direction of the placed tiles
+    let actualDirection = arrowDirection;
+    if (selectedTiles.length > 1) {
+      // Find the actual first and last tiles placed by examining positions
+      let minRow = Infinity, maxRow = -Infinity;
+      let minCol = Infinity, maxCol = -Infinity;
       
-      if (typeof tileToRemove === 'string' && tileToRemove.length === 1) {
-        const originalBoard = JSON.parse(origBoard);
-        newTempBoard[lastRow][lastCol] = originalBoard[lastRow][lastCol];
-        setTempBoardCoords(newTempBoard);
-        
-        const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-        // Find the tile that was placed at this position
-        const placedTile = selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
-        if (placedTile) {
-          const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
-          const newRack = [...currentRack, tileToAdd];
-          if (currentPlayer === 1) {
-            setPlayer1Rack(alphabetizeRack(newRack));
-          } else {
-            setPlayer2Rack(alphabetizeRack(newRack));
-          }
-
-          // Remove from blankTiles if it was a blank
-          if (placedTile.tile === '*') {
-            setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
-          }
-
-          // Update selectedTiles to match what's actually on the board
-          setSelectedTiles(prevTiles => prevTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
-        }
-        
-        // Reset preview score
-        setPreviewScore(null);
-        setPreviewScorePosition(null);
+      selectedTiles.forEach(tile => {
+        minRow = Math.min(minRow, tile.row);
+        maxRow = Math.max(maxRow, tile.row);
+        minCol = Math.min(minCol, tile.col);
+        maxCol = Math.max(maxCol, tile.col);
+      });
+      
+      // Determine direction based on the span of tiles
+      if (minRow === maxRow) {
+        // All tiles in same row = horizontal move
+        actualDirection = 'right';
+      } else if (minCol === maxCol) {
+        // All tiles in same column = vertical move
+        actualDirection = 'down';
       }
     }
     
-    if (arrowDirection === 'right') {
-      if (col > 0) {
-        setSelectedBoardPosition({ row, col: col - 1 });
+    // Find the actual last tile that was placed
+    let lastPlacedTile = null;
+    if (selectedTiles.length > 0) {
+      if (actualDirection === 'right') {
+        // For horizontal moves, find the rightmost tile
+        lastPlacedTile = selectedTiles.reduce((last, current) => 
+          current.col > last.col ? current : last
+        );
+      } else {
+        // For vertical moves, find the bottommost tile
+        lastPlacedTile = selectedTiles.reduce((last, current) => 
+          current.row > last.row ? current : last
+        );
       }
-    } else {
-      if (row > 0) {
-        setSelectedBoardPosition({ row: row - 1, col });
+    }
+    
+    if (lastPlacedTile) {
+      const lastRow = lastPlacedTile.row;
+      const lastCol = lastPlacedTile.col;
+      
+      if (lastRow >= 0 && lastCol >= 0 && Number.isInteger(boardCoords[lastRow][lastCol])) {
+        const tileToRemove = newTempBoard[lastRow][lastCol];
+        
+        if (typeof tileToRemove === 'string' && tileToRemove.length === 1) {
+          const originalBoard = JSON.parse(origBoard);
+          newTempBoard[lastRow][lastCol] = originalBoard[lastRow][lastCol];
+          setTempBoardCoords(newTempBoard);
+          
+          const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+          // Find the tile that was placed at this position
+          const placedTile = selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
+          if (placedTile) {
+            const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
+            const newRack = [...currentRack, tileToAdd];
+            if (currentPlayer === 1) {
+              setPlayer1Rack(alphabetizeRack(newRack));
+            } else {
+              setPlayer2Rack(alphabetizeRack(newRack));
+            }
+
+            // Remove from blankTiles if it was a blank
+            if (placedTile.tile === '*') {
+              setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+            }
+
+            // Update selectedTiles to match what's actually on the board
+            setSelectedTiles(prevTiles => prevTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+          }
+          
+          // Reset preview score
+          setPreviewScore(null);
+          setPreviewScorePosition(null);
+        }
       }
+    }
+    
+    // Always update cursor position to the position of the removed tile
+    if (lastPlacedTile) {
+      const lastRow = lastPlacedTile.row;
+      const lastCol = lastPlacedTile.col;
+      
+      setSelectedBoardPosition({ row: lastRow, col: lastCol });
     }
     return;
   }
