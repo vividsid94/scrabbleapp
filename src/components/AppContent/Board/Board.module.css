@@ -252,6 +252,28 @@ td {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
+.arrowIndicatorWithScore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: #008080;
+  pointer-events: none;
+  z-index: 1;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.arrowIndicatorWithScore:hover {
+  color: #006666;
+}
+
 .scorePreview {
     position: absolute;
     top: -20px;

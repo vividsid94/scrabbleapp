@@ -185,9 +185,10 @@ export default function Board({
                                         >
                                             {col}
                                             {selectedPosition && selectedPosition.row === rowIndex && selectedPosition.col === colIndex && (
-                                                <div className={styles.arrowIndicator}>
+                                                <div className={previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
+                                                    styles.arrowIndicatorWithScore : styles.arrowIndicator}>
                                                     {previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
-                                                        previewScore : 
+                                                        `${previewScore}${arrowDirection === 'right' ? '→' : '↓'}` : 
                                                         arrowDirection === 'right' ? '→' : '↓'
                                                     }
                                                 </div>
