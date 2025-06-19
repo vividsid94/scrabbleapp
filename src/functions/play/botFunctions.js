@@ -67,7 +67,7 @@ export const makeBotMove = async ({
       
       // Add timeout to the fetch request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
       
       try {
         response = await fetch('/.netlify/functions/botLogic', {
@@ -100,7 +100,7 @@ export const makeBotMove = async ({
     } else {
       // Skip delay when auto-play is enabled, but still add timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
       
       try {
         response = await fetch('/.netlify/functions/botLogic', {

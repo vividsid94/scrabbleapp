@@ -51,19 +51,8 @@
        return combinations;
      }
      
-     // For 3+ blanks, only try the most common combinations
-     const commonLetters = 'AEIRSTLNOUD';
-     const combinations = [];
-     for (let i = 0; i < commonLetters.length; i++) {
-       for (let j = i; j < commonLetters.length; j++) {
-         for (let k = j; k < commonLetters.length; k++) {
-           combinations.push([commonLetters[i], commonLetters[j], commonLetters[k]]);
-         }
-       }
-     }
-     
-     BLANK_COMBINATIONS.set(blankCount, combinations);
-     return combinations;
+     // This should never be reached since 3+ blanks is impossible
+     return [];
    }
 
    function generateMoves(board, rack) {
@@ -94,11 +83,7 @@
      // Always generate single-tile plays first (important for end-game)
      generateSingleTilePlays(board, rackArr, moves, moveSet, wordCache);
      
-     // Limit search for high blank counts to prevent timeout
-     if (blankCount > 2) {
-       console.log(`Too many blanks (${blankCount}), limiting search`);
-       return moves;
-     }
+     // No need to limit search for high blank counts since 3+ blanks is impossible
    
      // First move special case - must start at H8 (7,7)
      if (isBoardEmpty(board)) {
@@ -116,23 +101,36 @@
        for (const anchor of anchors) {
          // Check timeout before processing each anchor
          if (Date.now() - startTime > MAX_EXECUTION_TIME) {
-           console.log(`Timeout reached (${Date.now() - startTime}ms), stopping search`);
+           console.log(`Timeout reached (${Date.now() - startTime}ms), returning ${moves.length} moves found so far`);
            break;
          }
          
          generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'horizontal', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
          generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'vertical', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
-         
-         // Limit total moves to prevent timeout
-         if (moves.length > 1000) {
-           console.log(`Too many moves (${moves.length}), stopping search`);
-           break;
-         }
        }
      }
    
      const totalTime = Date.now() - startTime;
-     console.log(`Generated ${moves.length} moves in ${totalTime}ms`);
+     const timeoutReached = totalTime >= MAX_EXECUTION_TIME;
+     
+     // Sort moves by score (highest first) to ensure best moves are returned
+     moves.sort((a, b) => b.score - a.score);
+     
+     if (timeoutReached) {
+       console.log(`⏰ Timeout reached! Generated ${moves.length} moves in ${totalTime}ms`);
+       if (moves.length > 0) {
+         console.log(`🏆 Best move found: ${moves[0].word} (${moves[0].score})`);
+         console.log(`📊 Top 3 moves: ${moves.slice(0, 3).map(m => m.word + '(' + m.score + ')').join(', ')}`);
+       } else {
+         console.log(`❌ No moves found before timeout`);
+       }
+     } else {
+       console.log(`✅ Generated ${moves.length} moves in ${totalTime}ms`);
+       if (moves.length > 0) {
+         console.log(`🏆 Best move: ${moves[0].word} (${moves[0].score})`);
+       }
+     }
+     
      return moves;
    }
    
@@ -424,7 +422,7 @@
      }
    
      // Try blank combinations - limit the number of combinations to try
-     const maxBlankCombos = blankCount === 1 ? 26 : blankCount === 2 ? 50 : 20;
+     const maxBlankCombos = blankCount === 1 ? 26 : blankCount === 2 ? 50 : 0;
      let comboCount = 0;
      
      for (const blankCombo of blankCombinations) {
@@ -711,6 +709,13 @@
      const isHorizontal = tiles.every(t => t.row === first.row);
      const isVertical = tiles.every(t => t.col === first.col);
      if (!isHorizontal && !isVertical) return false;
+     
+     // Check that tiles are not being placed on top of existing tiles
+     for (const tile of tiles) {
+       if (board[tile.row][tile.col] !== null) {
+         return false;
+       }
+     }
      
      // For first move, must pass through center star (H8)
      if (isBoardEmpty(board)) {
