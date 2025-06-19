@@ -138,7 +138,7 @@ export const handleGetTopMoves = async ({
     for (let row = 0; row < 15; row++) {
       for (let col = 0; col < 15; col++) {
         if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-          const tileIndex = selectedTiles.findIndex(t => t === '*');
+          const tileIndex = selectedTiles.findIndex(t => t.tile === '*');
           if (tileIndex !== -1) {
             uncommittedTiles.push('*');
           } else {
@@ -397,7 +397,7 @@ export const handlePlayTopMove = async ({
     for (let row = 0; row < 15; row++) {
       for (let col = 0; col < 15; col++) {
         if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-          const tileIndex = selectedTiles.findIndex(t => t === '*');
+          const tileIndex = selectedTiles.findIndex(t => t.tile === '*');
           if (tileIndex !== -1) {
             uncommittedTiles.push('*');
           } else {
@@ -792,7 +792,12 @@ export const handleMoveSelect = ({
         // For blank tiles, we need to show the letter it represents
         newTempBoard[tile.row][tile.col] = tile.letter;
         newRack.splice(tileIndex, 1);
-        newSelectedTiles.push(tile.isBlank ? '*' : tile.letter);
+        // Store as object with tile, row, col properties for backspace compatibility
+        newSelectedTiles.push({
+          tile: tile.isBlank ? '*' : tile.letter,
+          row: tile.row,
+          col: tile.col
+        });
       }
     }
   }

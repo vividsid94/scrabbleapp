@@ -45,7 +45,7 @@ export function handleTileDrop({
     setPlayer2Rack(newRack.sort());
   }
 
-  setSelectedTiles([...selectedTiles, tile]);
+  setSelectedTiles([...selectedTiles, { tile, row, col }]);
   setSelectedBoardPosition({ row, col });
 
   const newTempBoard = [...tempBoardCoords];
@@ -93,9 +93,9 @@ export function handleTileClick({
   }
   
   // Otherwise handle normal tile selection for play
-  const tileIndex = selectedTiles.indexOf(tile);
+  const tileIndex = selectedTiles.findIndex(t => t.tile === tile && t.index === index);
   if (tileIndex === -1) {
-    setSelectedTiles([...selectedTiles, tile]);
+    setSelectedTiles([...selectedTiles, { tile, index }]);
   } else {
     const newTiles = [...selectedTiles];
     newTiles.splice(tileIndex, 1);

@@ -611,7 +611,7 @@ export default function Play() {
         for (let row = 0; row < 15; row++) {
           for (let col = 0; col < 15; col++) {
             if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-              const tileIndex = selectedTiles.findIndex(t => t === '*');
+              const tileIndex = selectedTiles.findIndex(t => t.tile === '*');
               if (tileIndex !== -1) {
                 uncommittedTiles.push('*');
               } else {

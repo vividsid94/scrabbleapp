@@ -169,7 +169,7 @@ export const handleWordSubmit = async ({
   }
 
   // Remove played tiles from rack
-  const newRack = playerRack.filter(tile => !selectedTiles.includes(tile));
+  const newRack = playerRack.filter(tile => !selectedTiles.some(selectedTile => selectedTile.tile === tile));
   if (currentPlayer === 1) {
     setPlayer1Rack(alphabetizeRack(newRack));
   } else {
