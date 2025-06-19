@@ -24,11 +24,18 @@ const TopMoves = ({
 
   // Auto-expand when moves are loaded
   useEffect(() => {
-    if (topMoves && topMoves.length > 0 && !isExpanded) {
-      setIsExpanded(true);
-      setAnimationClass(styles.slidingIn);
+    if (topMoves && topMoves.length > 0) {
+      // Start slide out animation
+      setAnimationClass(styles.slidingOut);
+      
+      // After slide out, slide in with new moves
+      const timer = setTimeout(() => {
+        setAnimationClass(styles.slidingIn);
+      }, 300); // Match the slideOutUp animation duration
+      
+      return () => clearTimeout(timer);
     }
-  }, [topMoves, isExpanded]);
+  }, [topMoves]);
 
   // Helper function to format move location
   const formatLocation = (move) => {
@@ -54,7 +61,6 @@ const TopMoves = ({
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded);
-    setAnimationClass(isExpanded ? styles.slidingOut : styles.slidingIn);
   };
 
   const handleMoveSelect = (move) => {
@@ -88,10 +94,10 @@ const TopMoves = ({
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
           <Tooltip title="Leave Value">
-            <Box className={styles.topMoveLeaveValue}>{leaveValue.toFixed(1)}</Box>
+            <Box className={styles.topMoveLeaveValue}>{Math.round(leaveValue)}</Box>
           </Tooltip>
           <Tooltip title="Defensive Value">
-            <Box className={styles.topMoveControl}>{defensiveValue.toFixed(1)}</Box>
+            <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
           </Tooltip>
           <Box className={styles.topMoveActions}>
             <Tooltip title="Preview Move">
@@ -120,9 +126,17 @@ const TopMoves = ({
     return (
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
-          <Box className={styles.topMovesTitle}>Top Moves</Box>
+          <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
+            <LightbulbIcon style={{ fontSize: 16 }} />
+          </Box>
           <Box className={styles.loadingText}>
-            {isDictionaryLoading ? 'Loading dictionary...' : 'Finding moves...'}
+            {isDictionaryLoading ? 'Loading dictionary...' : (
+              <Box className={styles.thinkingDots}>
+                <div></div>
+                <div></div>
+                <div></div>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
@@ -133,10 +147,8 @@ const TopMoves = ({
     return (
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
-          <Box className={styles.topMovesTitle}>Top Moves</Box>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <LightbulbIcon style={{ fontSize: 16 }} />
-            <Box>Find Moves</Box>
           </Box>
         </Box>
       </Box>
@@ -146,7 +158,9 @@ const TopMoves = ({
   return (
     <Box className={styles.topMovesPanel}>
       <Box className={`${styles.topMovesContent} ${animationClass}`}>
-        <Box className={styles.topMovesTitle}>Top Moves</Box>
+        <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
+          <LightbulbIcon style={{ fontSize: 16 }} />
+        </Box>
         <Box className={styles.topMovesCount}>{topMoves.length} options</Box>
         {topMoves.length > 0 && (
           <Box className={styles.expandIcon} onClick={handleExpandClick}>
@@ -155,10 +169,18 @@ const TopMoves = ({
         )}
       </Box>
       
-      {isExpanded && topMoves.length > 0 && (
-        <Box className={styles.topMovesList}>
-          {topMoves.map((move, index) => renderMoveItem(move, index))}
-        </Box>
+      {topMoves.length > 0 && (
+        <>
+          {/* Always show the top move */}
+          {renderMoveItem(topMoves[0], 0)}
+          
+          {/* Show additional moves when expanded */}
+          {isExpanded && (
+            <Box className={styles.topMovesList}>
+              {topMoves.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

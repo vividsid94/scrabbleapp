@@ -18,7 +18,6 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
 import SortIcon from '@mui/icons-material/Sort';
-import MoveHistoryModal from '../../components/Modals/MoveHistoryModal';
 import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
 import { calculateScore } from '../../functions/scoreFunctions';
 import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
@@ -79,7 +78,6 @@ export default function Play() {
   const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
   const [gameTime, setGameTime] = useState(20); // in minutes
   const [showTimeSlider, setShowTimeSlider] = useState(false);
-  const [showMoveHistory, setShowMoveHistory] = useState(false);
   const [moveHistory, setMoveHistory] = useState([]);
   const [simulatingMove, setSimulatingMove] = useState(null);
   const [simulationResult, setSimulationResult] = useState(null);
@@ -1195,7 +1193,6 @@ export default function Play() {
             tilesToExchange={tilesToExchange}
             autoPlayBest={autoPlayBest}
             setAutoPlayBest={setAutoPlayBest}
-            setShowMoveHistory={setShowMoveHistory}
             isBotThinking={isBotThinking}
             isPlayerThinking={isPlayerThinking}
             latestMove={latestMove}
@@ -1218,14 +1215,6 @@ export default function Play() {
                   className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
               />,
               topMoves: <LightbulbIcon className={styles.keyBtn} />,
-              moveOrder: (
-                <Tooltip title="Move History">
-                  <SortIcon 
-                      className={`${styles.keyBtn} ${styles.moveHistoryIcon} ${!gameStarted ? styles.disabled : ''}`}
-                    onClick={() => setShowMoveHistory(true)}
-                  />
-                </Tooltip>
-              )
             }}
           />
 
@@ -1342,12 +1331,6 @@ export default function Play() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
-      <MoveHistoryModal
-        open={showMoveHistory}
-        onClose={() => setShowMoveHistory(false)}
-        moves={moveHistory}
-      />
 
       <SimulationModal
         open={showSimulationModal}

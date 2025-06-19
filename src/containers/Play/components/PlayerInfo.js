@@ -9,7 +9,6 @@ import { Tooltip, Collapse } from '@mui/material';
 import { BOT_RACK_VISIBILITY } from '../../../components/AppContent/References/testRacks';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import HistoryIcon from '@mui/icons-material/History';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
@@ -99,15 +98,16 @@ export default function PlayerInfo({
   onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
-  setShowMoveHistory,
-  icons,
+  autoPlayBest,
+  setAutoPlayBest,
   isBotThinking,
   isPlayerThinking,
   latestMove,
   topMoves,
   onMoveSelect,
   onSimulateMove,
-  simulatingMove
+  simulatingMove,
+  icons
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -199,19 +199,6 @@ export default function PlayerInfo({
                 }}
               >
                 <AutoAwesomeIcon sx={{ fontSize: 20 }} />
-              </Box>
-            </Tooltip>
-            <Tooltip title="View Move History">
-              <Box
-                className={styles.bestMoveButton}
-                onClick={() => setShowMoveHistory(true)}
-                sx={{ 
-                  opacity: !gameStarted ? 0.3 : 1,
-                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                  pointerEvents: !gameStarted ? 'none' : 'auto'
-                }}
-              >
-                <HistoryIcon sx={{ fontSize: 20 }} />
               </Box>
             </Tooltip>
             <Tooltip title="Pass">
@@ -355,31 +342,7 @@ export default function PlayerInfo({
                   transform: 'translateY(-1px)'
                 }
               }}>
-                <Box sx={{
-                  display: 'flex',
-                  gap: '2px',
-                  alignItems: 'center',
-                  '& > div': {
-                    width: '4px',
-                    height: '4px',
-                    borderRadius: '50%',
-                    backgroundColor: 'currentColor',
-                    animation: 'thinking 1.4s infinite ease-in-out',
-                    '&:nth-of-type(1)': { animationDelay: '0s' },
-                    '&:nth-of-type(2)': { animationDelay: '0.2s' },
-                    '&:nth-of-type(3)': { animationDelay: '0.4s' },
-                    '@keyframes thinking': {
-                      '0%, 80%, 100%': {
-                        transform: 'scale(0.8)',
-                        opacity: 0.5
-                      },
-                      '40%': {
-                        transform: 'scale(1.2)',
-                        opacity: 1
-                      }
-                    }
-                  }
-                }}>
+                <Box className={styles.thinkingDots}>
                   <div></div>
                   <div></div>
                   <div></div>
@@ -429,7 +392,8 @@ export default function PlayerInfo({
 
       <LatestMove 
         latestMove={latestMove} 
-        onMoveHistoryClick={() => setShowMoveHistory(true)}
+        player1Name={player1Name} 
+        player2Name={player2Name}
       />
 
       <TopMoves 
