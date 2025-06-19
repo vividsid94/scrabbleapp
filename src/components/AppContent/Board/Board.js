@@ -188,7 +188,13 @@ export default function Board({
                                                 <div className={previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
                                                     styles.arrowIndicatorWithScore : styles.arrowIndicator}>
                                                     {previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
-                                                        `${previewScore}${arrowDirection === 'right' ? '→' : '↓'}` : 
+                                                        arrowDirection === 'right' ? 
+                                                            `${previewScore}→` : 
+                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                <span>{previewScore}</span>
+                                                                <span>↓</span>
+                                                            </div>
+                                                        : 
                                                         arrowDirection === 'right' ? '→' : '↓'
                                                     }
                                                 </div>
