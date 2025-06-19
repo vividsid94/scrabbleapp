@@ -9,7 +9,6 @@
 
 const { normalizeBoard } = require('./normalizeBoard');
 const loadDictionary = require('./loadDictionary');
-const { generateMoves } = require('./generateMoves');
 const fs = require('fs');
 const path = require('path');
 
@@ -37,6 +36,49 @@ const getLeaveValue = (leave) => {
   }
   return value;
 };
+
+/**
+ * Call the Go generateMoves function via HTTP
+ */
+async function callGoGenerateMoves(board, letters) {
+  try {
+    // Determine the base URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:8888' 
+      : process.env.URL || 'https://your-site.netlify.app';
+    
+    const url = `${baseUrl}/.netlify/functions/generateMoves`;
+    
+    console.log('🚀 Calling Go generateMoves function at:', url);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        board: board,
+        letters: letters
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log(`✅ Go function returned ${result.moves ? result.moves.length : 0} moves`);
+    return result.moves || [];
+    
+  } catch (error) {
+    console.error('❌ Failed to call Go function:', error.message);
+    console.log('🔄 Falling back to JavaScript implementation...');
+    
+    // Fall back to JavaScript implementation
+    const { generateMoves } = require('./generateMoves');
+    return generateMoves(board, letters);
+  }
+}
 
 /**
  * Netlify serverless function handler for the Scrabble bot.
@@ -90,7 +132,7 @@ exports.handler = async function (event) {
 
     const board = normalizeBoard(rawBoard);
     
-    // Load dictionary
+    // Load dictionary (for validation, though Go will handle the actual move generation)
     console.log('Loading dictionary...');
     try {
       const gaddag = await loadDictionary();
@@ -100,9 +142,9 @@ exports.handler = async function (event) {
       throw new Error(`Dictionary loading failed: ${dictError.message}`);
     }
 
-    // Get all possible moves
-    console.log('Generating moves...');
-    const allMoves = generateMoves(board, letters);
+    // Get all possible moves from Go function
+    console.log('Generating moves with Go...');
+    const allMoves = await callGoGenerateMoves(board, letters);
     console.log(`Generated ${allMoves.length} possible moves`);
 
     // Calculate leave for regular moves

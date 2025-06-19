@@ -6,6 +6,7 @@
    const loadDictionary = require('./loadDictionary');
    const fs = require('fs');
    const path = require('path');
+   const { spawn } = require('child_process');
 
    const theGADDAG = loadDictionary();
    const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -56,6 +57,104 @@
    }
    
    function generateMoves(board, rack) {
+     console.log('🚀 Attempting to use Go generateMoves for maximum performance!');
+     
+     // Check if Go executable exists
+     const goExecutablePath = path.join(__dirname, 'generateMoves');
+     const goExecutableExists = fs.existsSync(goExecutablePath);
+     
+     if (!goExecutableExists) {
+       console.log('⚠️ Go executable not found, using JavaScript implementation');
+       return generateMovesJS(board, rack);
+     }
+     
+     return new Promise((resolve, reject) => {
+       const startTime = Date.now();
+       
+       // Prepare input data for Go
+       const inputData = {
+         board: board,
+         rack: Array.isArray(rack) ? rack : rack.split('')
+       };
+       
+       // Spawn Go process
+       const goProcess = spawn('./generateMoves', [], {
+         cwd: __dirname,
+         stdio: ['pipe', 'pipe', 'pipe']
+       });
+       
+       let stdout = '';
+       let stderr = '';
+       
+       // Handle stdout
+       goProcess.stdout.on('data', (data) => {
+         stdout += data.toString();
+       });
+       
+       // Handle stderr
+       goProcess.stderr.on('data', (data) => {
+         stderr += data.toString();
+       });
+       
+       // Handle process completion
+       goProcess.on('close', (code) => {
+         const totalTime = Date.now() - startTime;
+         
+         if (code !== 0) {
+           console.log(`❌ Go process failed with code ${code}`);
+           console.log(`Error: ${stderr}`);
+           console.log('🔄 Falling back to JavaScript implementation...');
+           
+           // Fall back to JavaScript implementation
+           const jsMoves = generateMovesJS(board, rack);
+           resolve(jsMoves);
+           return;
+         }
+         
+         try {
+           const moves = JSON.parse(stdout);
+           console.log(`✅ Go generated ${moves.length} moves in ${totalTime}ms`);
+           if (moves.length > 0) {
+             console.log(`🏆 Best move: ${moves[0].word} (${moves[0].score})`);
+           }
+           resolve(moves);
+         } catch (error) {
+           console.log(`❌ Failed to parse Go output: ${error.message}`);
+           console.log(`Raw output: ${stdout}`);
+           console.log('🔄 Falling back to JavaScript implementation...');
+           
+           // Fall back to JavaScript implementation
+           const jsMoves = generateMovesJS(board, rack);
+           resolve(jsMoves);
+         }
+       });
+       
+       // Handle process errors
+       goProcess.on('error', (error) => {
+         console.log(`❌ Failed to spawn Go process: ${error.message}`);
+         console.log('🔄 Falling back to JavaScript implementation...');
+         
+         // Fall back to JavaScript implementation
+         const jsMoves = generateMovesJS(board, rack);
+         resolve(jsMoves);
+       });
+       
+       // Send input data to Go process
+       goProcess.stdin.write(JSON.stringify(inputData));
+       goProcess.stdin.end();
+       
+       // Set timeout for Go process
+       setTimeout(() => {
+         goProcess.kill();
+         console.log('⏰ Go process timed out, falling back to JavaScript...');
+         const jsMoves = generateMovesJS(board, rack);
+         resolve(jsMoves);
+       }, 20000); // 20 second timeout
+     });
+   }
+   
+   // JavaScript fallback implementation
+   function generateMovesJS(board, rack) {
      const startTime = Date.now();
      const MAX_EXECUTION_TIME = 25000; // 25 seconds (5s buffer for Netlify's 30s limit)
      
