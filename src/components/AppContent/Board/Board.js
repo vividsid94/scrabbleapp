@@ -21,7 +21,8 @@ export default function Board({
     showSlip = true,
     showDictionary = true,
     previewScore,
-    previewScorePosition
+    previewScorePosition,
+    lastMoveCoordinates = []
 }) {
     const { lightMode } = useContext(ThemeContext);
     let boardTheme = "Board__" + boardMode;

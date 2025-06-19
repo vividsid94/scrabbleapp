@@ -20,7 +20,7 @@ function lightenColor(color) {
  
 preload();  
 
-export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank }) {
+export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank, isLastMove }) {
   function cell(letter) {
     if (letter) {
       const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
@@ -34,15 +34,56 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
             className={styles.Cell}
             style={{
               boxShadow: bonus?.boxShadow,
-              backgroundImage: `url(${modifiedImageUrl})`,
-              backgroundSize: '100%',
-              backgroundColor: isBlank ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color),
+              backgroundColor: isLastMove ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color),
               boxSizing: 'border-box',
               width: type === 'rack' ? '42px' : undefined,
               height: type === 'rack' ? '42px' : undefined,
-              opacity: isBlank ? 0.7 : 1,
+              opacity: isLastMove ? 0.85 : 1,
+              border: 'none',
+              borderRadius: '0',
+              position: isBlank ? 'relative' : 'static',
             }}
-          ></div>
+          >
+            {!isBlank && (
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                bottom: '0',
+                backgroundImage: `url(${modifiedImageUrl})`,
+                backgroundSize: '100%',
+                zIndex: 0
+              }} />
+            )}
+            
+            {isBlank && (
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                bottom: '0',
+                backgroundImage: `url(${modifiedImageUrl})`,
+                backgroundSize: '100%',
+                transform: 'rotate(-15deg)',
+                zIndex: 1
+              }} />
+            )}
+            
+            {isBlank && (
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                bottom: '0',
+                background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.6) 3px, rgba(255,255,255,0.6) 6px)',
+                pointerEvents: 'none',
+                zIndex: 2
+              }} />
+            )}
+          </div>
         );
       } else {
         return null;

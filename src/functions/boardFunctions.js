@@ -59,7 +59,7 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = []) => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = []) => {
   if (blankTiles.length > 0) {
     //console.log('createBoard called with blankTiles:', blankTiles);
   }
@@ -75,6 +75,7 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
             }
             return matches;
           });
+          const isLastMove = lastMoveCoordinates.some(coord => coord.row === rowIndex && coord.col === colIndex);
           return Cell({
             rowIndex,
             colIndex,
@@ -83,7 +84,8 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
             theme,
             tiles,
             color,
-            isBlank
+            isBlank,
+            isLastMove
           });
           })
       ))

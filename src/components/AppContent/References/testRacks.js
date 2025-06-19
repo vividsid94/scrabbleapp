@@ -1,7 +1,7 @@
 // Test rack configurations
 // Set to null to use random racks
 export const TEST_RACKS = {
-  enabled: false, // Set to false to use random racks
+  enabled: true, // Set to false to use random racks
   player1: ['?', 'R', 'A', 'V', 'L', 'O', 'E'], // Example test rack
   player2: ['?', 'R', 'R', 'V', 'T', 'L', 'M']  // Example test rack
 }; 

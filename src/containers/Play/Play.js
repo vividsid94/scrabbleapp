@@ -823,6 +823,22 @@ export default function Play() {
     player2Rack
   ]);
 
+  // Get the latest move from move history
+  const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+
+  // Extract coordinates of the last played move for highlighting
+  const lastMoveCoordinates = useMemo(() => {
+    if (!latestMove || !latestMove.boardDiff) {
+      return [];
+    }
+    
+    // Extract coordinates from boardDiff
+    return latestMove.boardDiff.map(tile => ({
+      row: tile.row,
+      col: tile.col
+    }));
+  }, [latestMove]);
+
   const board = useMemo(() => {
     return createBoard(
       previewBoard || tempBoardCoords.map((row, rowIndex) => 
@@ -840,9 +856,10 @@ export default function Play() {
       theme, 
       color.current, 
       complementaryColor.current, 
-      blankTiles
+      blankTiles,
+      lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard]);
+  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard, lastMoveCoordinates]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -1070,9 +1087,6 @@ export default function Play() {
     }
   }, [selectedTiles, tempBoardCoords]);
 
-  // Get the latest move from move history
-  const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
-
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -1150,6 +1164,7 @@ export default function Play() {
             dictionary=""
             previewScore={previewScore}
             previewScorePosition={previewScorePosition}
+            lastMoveCoordinates={lastMoveCoordinates}
           />   
         </Box>
 
