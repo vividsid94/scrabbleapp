@@ -93,7 +93,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     
     // Handle special cases
     let displayWord = word;
-    if (score === 0 && player.includes('exchanged')) {
+    if (score === 0 && player && player.includes('exchanged')) {
       displayWord = 'Exchange';
     } else if (score === 0 && (!displayWord || displayWord === '')) {
       displayWord = 'Pass';
