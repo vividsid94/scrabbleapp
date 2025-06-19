@@ -49,7 +49,8 @@ async function callGoGenerateMoves(board, letters) {
     
     const url = `${baseUrl}/.netlify/functions/generateMoves`;
     
-    console.log('🚀 Calling Go generateMoves function at:', url);
+    console.log('🚀 ATTEMPTING TO USE GO FUNCTION for move generation...');
+    console.log('📍 Calling URL:', url);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -67,12 +68,14 @@ async function callGoGenerateMoves(board, letters) {
     }
     
     const result = await response.json();
-    console.log(`✅ Go function returned ${result.moves ? result.moves.length : 0} moves`);
+    console.log('✅ SUCCESS: Go function returned', result.moves ? result.moves.length : 0, 'moves');
+    console.log('🏆 Go function is working! This should be much faster with blanks.');
     return result.moves || [];
     
   } catch (error) {
-    console.error('❌ Failed to call Go function:', error.message);
-    console.log('🔄 Falling back to JavaScript implementation...');
+    console.error('❌ FAILED to call Go function:', error.message);
+    console.log('🔄 FALLING BACK to JavaScript implementation...');
+    console.log('⚠️ This means the Go function is not available or failed.');
     
     // Fall back to JavaScript implementation
     const { generateMoves } = require('./generateMoves');

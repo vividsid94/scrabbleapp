@@ -83,8 +83,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("🚀 GO FUNCTION CALLED! This is the Go move generator.")
+	fmt.Println("⚡ Go is much faster for move generation, especially with blanks!")
+
 	var req Request
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		fmt.Printf("❌ Error parsing request: %v\n", err)
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
@@ -93,9 +97,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	board := normalizeBoard(req.Board)
 	
 	// Generate moves
-	fmt.Println("Generating moves with Go...")
+	fmt.Println("🔍 Generating moves with Go...")
 	moves := generateMoves(board, req.Letters)
-	fmt.Printf("Generated %d moves with Go\n", len(moves))
+	fmt.Printf("✅ Go generated %d moves successfully!\n", len(moves))
+	fmt.Println("🏆 Go function completed successfully!")
 
 	response := Response{Moves: moves}
 	
