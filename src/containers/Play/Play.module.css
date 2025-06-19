@@ -821,3 +821,225 @@
   margin-right: 6px;
   flex-shrink: 0;
 }
+
+/* Top Moves Panel Styles */
+.topMovesPanel {
+  padding: 6px;
+  margin: 4px 6px 0 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.topMovesContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+  animation: slideInUp 0.4s ease-out;
+  transform-origin: bottom;
+}
+
+.topMovesTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Syne', sans-serif;
+}
+
+.topMovesCount {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
+.loadingText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
+.noMovesText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
+.topMovesList {
+  max-height: 200px;
+  overflow-y: auto;
+  animation: slideInDown 0.3s ease-out;
+}
+
+.topMoveItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveItem:last-child {
+  border-bottom: none;
+}
+
+.topMoveRank {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  width: 20px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveLocation {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveWord {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.topMoveDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topMoveScore {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: darkcyan;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 139, 139, 0.3);
+  width: 25px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveLeaveValue {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: #9C27B0;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  width: 28px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveControl {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: #FF9800;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  width: 28px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.topMoveActionButton {
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.topMoveActionButton:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.topMoveActionButton.simulating {
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.topMovesButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+}
+
+.topMovesButton:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}

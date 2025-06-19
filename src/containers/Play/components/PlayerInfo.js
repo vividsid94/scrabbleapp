@@ -13,6 +13,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
+import TopMoves from './TopMoves';
 
 const actionButtonStyle = {
   width: '24px',
@@ -102,7 +103,11 @@ export default function PlayerInfo({
   icons,
   isBotThinking,
   isPlayerThinking,
-  latestMove
+  latestMove,
+  topMoves,
+  onMoveSelect,
+  onSimulateMove,
+  simulatingMove
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -207,19 +212,6 @@ export default function PlayerInfo({
                 }}
               >
                 <HistoryIcon sx={{ fontSize: 20 }} />
-              </Box>
-            </Tooltip>
-            <Tooltip title="View Top Moves">
-              <Box
-                className={styles.bestMoveButton}
-                onClick={handleGetTopMovesClick}
-                sx={{ 
-                  opacity: !gameStarted ? 0.3 : (isLoadingTopMoves ? 0.5 : 1),
-                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                  pointerEvents: !gameStarted ? 'none' : 'auto'
-                }}
-              >
-                <LightbulbIcon sx={{ fontSize: 20 }} />
               </Box>
             </Tooltip>
             <Tooltip title="Pass">
@@ -438,6 +430,18 @@ export default function PlayerInfo({
       <LatestMove 
         latestMove={latestMove} 
         onMoveHistoryClick={() => setShowMoveHistory(true)}
+      />
+
+      <TopMoves 
+        topMoves={topMoves}
+        isLoadingTopMoves={isLoadingTopMoves}
+        isDictionaryLoading={isDictionaryLoading}
+        onMoveSelect={onMoveSelect}
+        onSimulateMove={onSimulateMove}
+        onGetTopMoves={onGetTopMoves}
+        simulatingMove={simulatingMove}
+        currentPlayer={currentPlayer}
+        gameStarted={gameStarted}
       />
     </Box>
   );

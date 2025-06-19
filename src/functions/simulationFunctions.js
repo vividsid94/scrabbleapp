@@ -177,11 +177,20 @@ export const simulateMove = async (move, gameState, onProgress) => {
     const avgBotScore = results.reduce((sum, r) => sum + (r.finalBotScore || 0), 0) / results.length;
     const avgMoves = results.reduce((sum, r) => sum + (r.movesPlayed || 0), 0) / results.length;
     
+    // Calculate additional metrics for the modal
+    const scores = results.map(r => r.finalScore || 0);
+    const botScores = results.map(r => r.finalBotScore || 0);
+    
+    // Calculate win rate (percentage of simulations where we win)
+    const wins = results.filter(r => (r.finalScore || 0) > (r.finalBotScore || 0)).length;
+    const winRate = (wins / results.length) * 100;
+    
     return {
       move,
       avgScore,
       avgBotScore,
       avgMoves,
+      winRate,
       results
     };
     

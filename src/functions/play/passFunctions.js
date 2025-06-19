@@ -5,6 +5,7 @@ import { alphabetizeRack } from './rackFunctions';
  * @param {Object} params - The parameters object
  * @param {number} params.consecutivePasses - Current number of consecutive passes
  * @param {Array} params.boardCoords - Current board state
+ * @param {Array} params.tempBoardCoords - Temporary board state
  * @param {number} params.currentPlayer - Current player (1 or 2)
  * @param {Array} params.player1Rack - Player 1's rack
  * @param {Array} params.player2Rack - Player 2's rack
@@ -22,12 +23,15 @@ import { alphabetizeRack } from './rackFunctions';
  * @param {Function} params.setTempBoardCoords - Function to update temporary board state
  * @param {Function} params.setSelectedTiles - Function to update selected tiles
  * @param {Function} params.setSelectedBoardPosition - Function to update selected position
+ * @param {Function} params.setPlayer1Rack - Function to update player 1's rack
+ * @param {Function} params.setPlayer2Rack - Function to update player 2's rack
  * @param {Function} params.makeBotMove - Function to make a bot move
  * @returns {void}
  */
 export const handlePass = ({
   consecutivePasses,
   boardCoords,
+  tempBoardCoords,
   currentPlayer,
   player1Rack,
   player2Rack,
@@ -45,6 +49,8 @@ export const handlePass = ({
   setTempBoardCoords,
   setSelectedTiles,
   setSelectedBoardPosition,
+  setPlayer1Rack,
+  setPlayer2Rack,
   makeBotMove
 }) => {
   setConsecutivePasses(prev => prev + 1);
@@ -58,13 +64,33 @@ export const handlePass = ({
     return;
   }
 
+  // Restore any tiles that were placed on the board but not committed
+  const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+  const restoredRack = [...currentRack];
+  
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+        // This tile was placed on the board but not committed, so restore it to the rack
+        restoredRack.push(tempBoardCoords[row][col]);
+      }
+    }
+  }
+
+  // Update the rack with restored tiles
+  if (currentPlayer === 1) {
+    setPlayer1Rack(alphabetizeRack(restoredRack));
+  } else {
+    setPlayer2Rack(alphabetizeRack(restoredRack));
+  }
+
   // Add pass move to history
   setMoveHistory(prev => [...prev, {
     beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
     afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for pass
     player: currentPlayer === 1 ? player1Name : player2Name,
     score: 0,
-    rack: currentPlayer === 1 ? alphabetizeRack(player1Rack).join('') : alphabetizeRack(player2Rack).join(''),
+    rack: alphabetizeRack(restoredRack).join(''),
     total: currentPlayer === 1 ? player1points : player2points,
     word: 'Pass'
   }]);

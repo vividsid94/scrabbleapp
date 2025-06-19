@@ -7,7 +7,7 @@ import { alphabetizeRack } from './rackFunctions';
  * @param {Array} rack - The current rack of tiles
  * @returns {Array} Array of possible tile combinations
  */
-const generateExchangeCombinations = (rack) => {
+export const generateExchangeCombinations = (rack) => {
   const combinations = [];
   // Generate all possible combinations of 1-7 tiles
   for (let i = 1; i <= Math.min(rack.length, 7); i++) {
@@ -33,7 +33,7 @@ const generateExchangeCombinations = (rack) => {
  * @param {Array} moves - Array of moves to analyze
  * @returns {Promise<Array>} Board control metrics for each move
  */
-const fetchBoardControl = async (boardCoords, moves) => {
+export const fetchBoardControl = async (boardCoords, moves) => {
   try {
     const response = await fetch('/.netlify/functions/getBoardControl', {
       method: 'POST',
@@ -77,7 +77,6 @@ const fetchBoardControl = async (boardCoords, moves) => {
  * @param {Function} params.setLeaveValues - Function to update leave values
  * @param {Function} params.setTopMoves - Function to update top moves
  * @param {Function} params.setIsLoadingTopMoves - Function to update loading state
- * @param {Function} params.setShowTopMoves - Function to update visibility of top moves
  * @param {Function} params.setIsDictionaryLoading - Function to update dictionary loading state
  * @param {Function} params.setSnackbarMessage - Function to update snackbar message
  * @param {Function} params.setSnackbarSeverity - Function to update snackbar severity
@@ -101,14 +100,12 @@ export const handleGetTopMoves = async ({
   setLeaveValues,
   setTopMoves,
   setIsLoadingTopMoves,
-  setShowTopMoves,
   setIsDictionaryLoading,
   setSnackbarMessage,
   setSnackbarSeverity,
   setSnackbarOpen
 }) => {
   setIsLoadingTopMoves(true);
-  setShowTopMoves(true);
   try {
     // Get the current rack
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -183,7 +180,6 @@ export const handleGetTopMoves = async ({
           setLeaveValues,
           setTopMoves,
           setIsLoadingTopMoves,
-          setShowTopMoves,
           setIsDictionaryLoading,
           setSnackbarMessage,
           setSnackbarSeverity,
@@ -234,6 +230,7 @@ export const handleGetTopMoves = async ({
         return {
           ...move,
           totalValue,
+          leaveValue,
           defensiveValue: controlMetrics.defensiveValue,
           boardControl: controlMetrics.boardControl,
         };
@@ -247,7 +244,6 @@ export const handleGetTopMoves = async ({
     setSnackbarMessage('Error getting top moves: ' + error.message);
     setSnackbarSeverity('error');
     setSnackbarOpen(true);
-    setShowTopMoves(false);
   } finally {
     setIsLoadingTopMoves(false);
   }
@@ -495,6 +491,7 @@ export const handlePlayTopMove = async ({
         return {
           ...move,
           totalValue,
+          leaveValue,
           defensiveValue: controlMetrics.defensiveValue,
           boardControl: controlMetrics.boardControl,
         };
@@ -698,10 +695,23 @@ export const handleMoveSelect = ({
   // Set the direction
   setArrowDirection(move.direction);
   
-  // Place the tiles on the board
-  const newTempBoard = [...tempBoardCoords];
+  // Get the current rack and restore any tiles that were previously placed on the board
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-  const newRack = [...currentRack];
+  
+  // First, restore any tiles that were previously placed on the board but not committed
+  const restoredRack = [...currentRack];
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+        // This tile was placed on the board but not committed, so restore it to the rack
+        restoredRack.push(tempBoardCoords[row][col]);
+      }
+    }
+  }
+  
+  // Now place the new move's tiles on the board
+  const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
+  const newRack = [...restoredRack];
   const newSelectedTiles = [];
   
   // Place each tile using the exact positions from the tiles array

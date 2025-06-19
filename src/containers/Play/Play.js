@@ -9,7 +9,7 @@ import { origPool, origBoard, letterLookup } from "../../components/AppContent/R
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
-import ChoicesModal from '../../components/Modals/ChoicesModal';
+import SimulationModal from '../../components/Modals/SimulationModal';
 import PlayerInfo from './components/PlayerInfo';
 import ColorScheme from '../../components/common/ColorScheme';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -30,7 +30,7 @@ import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
 import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
-import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect } from '../../functions/play/moveFunctions';
+import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect, generateExchangeCombinations, fetchBoardControl } from '../../functions/play/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
 import { handleGameEnd } from '../../functions/play/gameEndFunctions';
@@ -71,7 +71,6 @@ export default function Play() {
   const [gameStarted, setGameStarted] = useState(false);
   const timerRef = useRef(null);
   const [consecutivePasses, setConsecutivePasses] = useState(0);
-  const [showTopMoves, setShowTopMoves] = useState(false);
   const [topMoves, setTopMoves] = useState([]);
   const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
@@ -88,9 +87,11 @@ export default function Play() {
   const [previewBoard, setPreviewBoard] = useState(null);
   const [previewMove, setPreviewMove] = useState(null);
   const [moveWithResults, setMoveWithResults] = useState(null);
+  const [simulationBoard, setSimulationBoard] = useState(null);
   const [leaveValues, setLeaveValues] = useState({});
   const [autoPlayBest, setAutoPlayBest] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [showSimulationModal, setShowSimulationModal] = useState(false);
   
   // Add state for move sound selection first
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
@@ -523,6 +524,7 @@ export default function Play() {
     handlePass({
       consecutivePasses,
       boardCoords,
+      tempBoardCoords,
       currentPlayer,
       player1Rack,
       player2Rack,
@@ -540,6 +542,8 @@ export default function Play() {
       setTempBoardCoords,
       setSelectedTiles,
       setSelectedBoardPosition,
+      setPlayer1Rack,
+      setPlayer2Rack,
       makeBotMove: () => makeBotMove({
         boardCoords,
         player2Rack,
@@ -583,6 +587,7 @@ export default function Play() {
   }, [
     consecutivePasses,
     boardCoords,
+    tempBoardCoords,
     currentPlayer,
     player1Rack,
     player2Rack,
@@ -595,30 +600,133 @@ export default function Play() {
     blankTiles
   ]);
 
-  const handleGetTopMovesClick = () => {
-    handleGetTopMoves({
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      selectedTiles,
-      pool,
-      leaveValues,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setSelectedBoardPosition,
-      setLeaveValues,
-      setTopMoves,
-      setIsLoadingTopMoves,
-      setShowTopMoves,
-      setIsDictionaryLoading,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen
-    });
+  const handleGetTopMovesForExpandable = () => {
+    // Create a version of handleGetTopMoves that doesn't open the modal
+    const fetchTopMovesWithoutModal = async () => {
+      setIsLoadingTopMoves(true);
+      try {
+        // Get the current rack
+        const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+        
+        // Get any tiles that are placed on the board but not committed
+        const uncommittedTiles = [];
+        for (let row = 0; row < 15; row++) {
+          for (let col = 0; col < 15; col++) {
+            if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+              const tileIndex = selectedTiles.findIndex(t => t === '*');
+              if (tileIndex !== -1) {
+                uncommittedTiles.push('*');
+              } else {
+                uncommittedTiles.push(tempBoardCoords[row][col]);
+              }
+            }
+          }
+        }
+        
+        // Return uncommitted tiles to the rack
+        const newRack = [...currentRack, ...uncommittedTiles];
+        if (currentPlayer === 1) {
+          setPlayer1Rack(newRack);
+        } else {
+          setPlayer2Rack(newRack);
+        }
+        
+        // Reset the board state
+        setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+        setSelectedTiles([]);
+        setSelectedBoardPosition(null);
+        
+        // Convert any '?' in the rack to '*' for the API
+        const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
+        
+        const response = await fetch('/.netlify/functions/getTopMoves', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            board: boardCoords,
+            letters: apiRack
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Check if this is the first load (dictionary loading)
+        if (data.message && data.message.includes('Loading dictionary')) {
+          setIsDictionaryLoading(true);
+          // Retry after a short delay
+          setTimeout(() => {
+            fetchTopMovesWithoutModal();
+          }, 1000);
+          return;
+        }
+        
+        setIsDictionaryLoading(false);
+
+        // Generate exchange moves
+        const exchangeCombinations = generateExchangeCombinations(newRack);
+        const exchangeMoves = exchangeCombinations.map(tiles => {
+          const leave = calculateExchangeLeave(newRack, tiles);
+          return {
+            word: `Exchange ${tiles.join('')}`,
+            score: 0,
+            tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
+            direction: 'exchange',
+            startPosition: 'Exchange',
+            leave: leave,
+            isExchange: true,
+            currentRack: newRack
+          };
+        });
+
+        // First, fetch leave values for all moves
+        const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
+        const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
+          fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
+          fetchBoardControl(boardCoords, allMoves)
+        ]);
+
+        // Create a map of move words to their control metrics
+        const controlMap = new Map(
+          boardControlMetrics.map(metric => [metric.move, metric])
+        );
+
+        // Then calculate total values and sort
+        const movesWithValues = allMoves
+          .map(move => {
+            const leaveValue = updatedLeaveValues[move.leave] || 0;
+            const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
+            const totalValue = move.isExchange ? 
+              leaveValue : // For exchanges, total value is just the leave value
+              (move.score + leaveValue); // Just points + leave, no control value
+            return {
+              ...move,
+              totalValue,
+              leaveValue, // Add the leave value to the move object
+              defensiveValue: controlMetrics.defensiveValue,
+              boardControl: controlMetrics.boardControl,
+            };
+          })
+          .sort((a, b) => b.totalValue - a.totalValue)
+          .slice(0, 15); // Show top 15 moves
+
+        setTopMoves(movesWithValues);
+      } catch (error) {
+        console.error('Error getting top moves:', error);
+        setSnackbarMessage('Error getting top moves: ' + error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } finally {
+        setIsLoadingTopMoves(false);
+      }
+    };
+
+    fetchTopMovesWithoutModal();
   };
 
   const handleExchangeClick = () => {
@@ -719,7 +827,7 @@ export default function Play() {
 
   const board = useMemo(() => {
     return createBoard(
-      showTopMoves ? boardCoords : (previewBoard || tempBoardCoords.map((row, rowIndex) => 
+      previewBoard || tempBoardCoords.map((row, rowIndex) => 
         row.map((col, colIndex) => {
           // If there's a temporary move, use that
           if (typeof col === 'string') {
@@ -728,7 +836,7 @@ export default function Play() {
           // Otherwise use the committed board state
           return boardCoords[rowIndex][colIndex];
         })
-      )),
+      ),
       [], 
       "PROTILES", 
       theme, 
@@ -736,7 +844,7 @@ export default function Play() {
       complementaryColor.current, 
       blankTiles
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard, showTopMoves]);
+  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -867,12 +975,27 @@ export default function Play() {
   const simulateMove = async (move) => {
     setSimulatingMove(move);
     setSimulationProgress(0);
-    setPreviewBoard(null);
+    setSimulationBoard(null);
     setPreviewMove(null);
+    setShowSimulationModal(true);
     
     try {
+      // Create a completely separate simulation board
+      // Start with the current game board and apply the move
+      const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
+      
+      // Apply the move to the simulation board
+      for (const tile of move.tiles) {
+        if (tile.isNew) {
+          simulationBoardData[tile.row][tile.col] = tile.letter;
+        }
+      }
+      
+      // Update the simulation board to show the simulation starting point
+      setSimulationBoard(simulationBoardData);
+      
       const gameState = {
-        boardCoords,
+        boardCoords: simulationBoardData, // Use the simulation board
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -884,7 +1007,8 @@ export default function Play() {
       const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
         setSimulationProgress(progress);
         if (previewData) {
-          setPreviewBoard(previewData.board);
+          // Update the simulation board with the simulation progress
+          setSimulationBoard(previewData.board);
           setPreviewMove(previewData.move);
         }
       });
@@ -898,7 +1022,7 @@ export default function Play() {
     } finally {
       setSimulatingMove(null);
       setSimulationProgress(0);
-      // Don't clear previewBoard and previewMove here
+      // Don't clear simulationBoard and previewMove here - keep showing the simulation results
     }
   };
 
@@ -1062,7 +1186,7 @@ export default function Play() {
             onSettingsOpen={handleSettingsOpen}
             onColorSchemeOpen={handleColorSchemeOpen}
             onBotModeToggle={handleBotModeToggle}
-            onGetTopMoves={handleGetTopMovesClick}
+            onGetTopMoves={handleGetTopMovesForExpandable}
             onWordSubmit={handleWordSubmitClick}
             onPass={handlePassClick}
             onExchange={handleExchangeClick}
@@ -1075,6 +1199,10 @@ export default function Play() {
             isBotThinking={isBotThinking}
             isPlayerThinking={isPlayerThinking}
             latestMove={latestMove}
+            topMoves={topMoves}
+            onMoveSelect={handleMoveSelectClick}
+            onSimulateMove={simulateMove}
+            simulatingMove={simulatingMove}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,
@@ -1215,43 +1343,32 @@ export default function Play() {
         </Alert>
       </Snackbar>
 
-      <ChoicesModal
-        open={showTopMoves}
-        onClose={() => {
-          setShowTopMoves(false);
-          setIsLoadingTopMoves(false);
-          setIsDictionaryLoading(false);
-          setSimulatingMove(null);
-          setSimulationResult(null);
-          setSimulationProgress(0);
-          setMoveWithResults(null);
-          setPreviewBoard(null);
-          setPreviewMove(null);
-          // Don't clear leave values when modal closes
-          // setLeaveValues({});
-        }}
-        isTopMovesLoading={isLoadingTopMoves}
-        isDictionaryLoading={isDictionaryLoading}
-        topMoves={topMoves}
-        onMoveSelect={handleMoveSelectClick}
-        onSimulateMove={simulateMove}
-        simulatingMove={simulatingMove}
-        simulationResult={simulationResult}
-        simulationProgress={simulationProgress}
-        moveWithResults={moveWithResults}
-        previewBoard={previewBoard}
-        boardCoords={boardCoords}
-        theme={theme}
-        color={color}
-        complementaryColor={complementaryColor}
-        blankTiles={blankTiles}
-        leaveValues={leaveValues}
-      />
-
       <MoveHistoryModal
         open={showMoveHistory}
         onClose={() => setShowMoveHistory(false)}
         moves={moveHistory}
+      />
+
+      <SimulationModal
+        open={showSimulationModal}
+        onClose={() => {
+          setShowSimulationModal(false);
+          setSimulationBoard(null);
+          setPreviewMove(null);
+          setSimulatingMove(null);
+          setSimulationResult(null);
+          setSimulationProgress(0);
+          setMoveWithResults(null);
+        }}
+        simulationBoard={simulationBoard}
+        theme={theme}
+        color={color}
+        complementaryColor={complementaryColor}
+        blankTiles={blankTiles}
+        simulatingMove={simulatingMove}
+        simulationProgress={simulationProgress}
+        simulationResult={simulationResult}
+        moveWithResults={moveWithResults}
       />
     </Box>
   );
