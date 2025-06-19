@@ -101,10 +101,8 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
         <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
         <Box className={styles.moveHistoryWord}>{displayWord}</Box>
         <Box className={styles.moveHistoryDetails}>
-          <Box className={styles.moveHistoryScore}>{score} pts</Box>
-          {location && (
-            <Box className={styles.moveHistoryLocation}>{location}</Box>
-          )}
+          <Box className={styles.moveHistoryScore}>{score}</Box>
+          <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
       </Box>
@@ -137,14 +135,12 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
   return (
     <Box className={styles.latestMovePanel}>
       <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-        <Box className={styles.turnNumber}>{turnNumber}</Box>
-        <Box className={styles.latestMovePlayer}>{displayWord}</Box>
-        <Box className={styles.latestMoveDetails}>
-          <Box className={styles.latestMoveScore}>{score} pts</Box>
-          {location && (
-            <Box className={styles.latestMovePosition}>{location}</Box>
-          )}
-          <Box className={styles.latestMovePlayer}>{getPlayerIcon(player)}</Box>
+        <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
+        <Box className={styles.moveHistoryWord}>{displayWord}</Box>
+        <Box className={styles.moveHistoryDetails}>
+          <Box className={styles.moveHistoryScore}>{score}</Box>
+          <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
+          <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
         {allMoves.length > 1 && (
           <Box className={styles.expandIcon} onClick={handleExpandClick}>

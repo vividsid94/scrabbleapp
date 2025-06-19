@@ -607,9 +607,11 @@
 
 .latestMoveContent {
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
   animation: slideInUp 0.4s ease-out;
   transform-origin: bottom;
 }
@@ -652,41 +654,6 @@
   animation: slideInUp 0.4s ease-out forwards;
 }
 
-.latestMoveWord {
-  font-size: 14px;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  font-family: 'Syne', sans-serif;
-  flex: 1;
-}
-
-.latestMoveDetails {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.latestMoveScore {
-  font-size: 14px;
-  font-weight: 600;
-  color: #FF6B35;
-  background: rgba(255, 107, 53, 0.1);
-  padding: 1px 4px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 107, 53, 0.3);
-  font-family: 'Syne', sans-serif;
-}
-
-.latestMovePlayer {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Syne', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .latestMovePosition {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
@@ -695,9 +662,12 @@
   padding: 1px 3px;
   border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
   display: flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .noMoveText {
@@ -724,7 +694,6 @@
 }
 
 .moveHistoryList {
-  margin-top: 8px;
   max-height: 200px;
   overflow-y: auto;
   animation: slideInDown 0.3s ease-out;
@@ -761,6 +730,11 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  max-width: 120px;
 }
 
 .moveHistoryDetails {
@@ -772,11 +746,17 @@
 .moveHistoryScore {
   font-size: 12px;
   font-weight: 600;
-  color: #FF6B35;
-  background: rgba(255, 107, 53, 0.1);
+  color: white;
+  background: darkcyan;
   padding: 1px 4px;
   border-radius: 3px;
-  border: 1px solid rgba(255, 107, 53, 0.3);
+  border: 1px solid rgba(0, 139, 139, 0.3);
+  width: 25px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .moveHistoryPlayer {
@@ -785,6 +765,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
 }
 
 .moveHistoryLocation {
@@ -795,6 +777,12 @@
   padding: 1px 3px;
   border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .turnNumber {
