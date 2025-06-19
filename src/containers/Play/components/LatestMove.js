@@ -44,6 +44,24 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     }
   };
 
+  // Helper function to extract word from boardDiff
+  const extractWordFromBoardDiff = (boardDiff) => {
+    if (!boardDiff || boardDiff.length === 0) {
+      return null;
+    }
+
+    // Sort tiles by position to reconstruct the word
+    const sortedTiles = [...boardDiff].sort((a, b) => {
+      if (a.row !== b.row) {
+        return a.row - b.row; // Sort by row first
+      }
+      return a.col - b.col; // Then by column
+    });
+
+    // Extract the letters and join them - use 'value' property
+    return sortedTiles.map(tile => tile.value).join('');
+  };
+
   useEffect(() => {
     if (latestMove) {
       // Start slide out animation with current move
@@ -63,8 +81,12 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
           return [moveWithTimestamp, ...prevMoves];
         });
         
-        // Update the display move
-        setDisplayMove(latestMove);
+        // Update the display move with the same structure (including timestamp)
+        const moveWithTimestamp = {
+          ...latestMove,
+          timestamp: Date.now()
+        };
+        setDisplayMove(moveWithTimestamp);
         
         // Slide in with new move
         setAnimationClass(styles.slidingIn);
@@ -93,6 +115,14 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     
     // Handle special cases
     let displayWord = word;
+    
+    if (!displayWord && boardDiff) {
+      try {
+        displayWord = extractWordFromBoardDiff(boardDiff);
+      } catch (error) {
+        displayWord = 'Error';
+      }
+    }
     if (score === 0 && player && player.includes('exchanged')) {
       displayWord = 'Exchange';
     } else if (score === 0 && (!displayWord || displayWord === '')) {
@@ -129,6 +159,14 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
   
   // Handle special cases
   let displayWord = word;
+  
+  if (!displayWord && boardDiff) {
+    try {
+      displayWord = extractWordFromBoardDiff(boardDiff);
+    } catch (error) {
+      displayWord = 'Error';
+    }
+  }
   if (score === 0 && player && player.includes('exchanged')) {
     displayWord = 'Exchange';
   } else if (score === 0 && (!displayWord || displayWord === '')) {
