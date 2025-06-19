@@ -54,10 +54,13 @@
      // This should never be reached since 3+ blanks is impossible
      return [];
    }
-
+   
    function generateMoves(board, rack) {
      const startTime = Date.now();
      const MAX_EXECUTION_TIME = 25000; // 25 seconds (5s buffer for Netlify's 30s limit)
+     
+     // Precompute cross-checks for the board
+     const crossChecks = computeCrossChecks(board);
      
      // Convert rack to array of objects with isBlank flag
      const rackArr = Array.isArray(rack) ? rack.map(l => ({
@@ -87,8 +90,8 @@
    
      // First move special case - must start at H8 (7,7)
      if (isBoardEmpty(board)) {
-       generateMovesAt(board, regularTiles, blankCount, 7, 7, 'horizontal', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
-       generateMovesAt(board, regularTiles, blankCount, 7, 7, 'vertical', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
+       generateMovesAt(board, regularTiles, blankCount, 7, 7, 'horizontal', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
+       generateMovesAt(board, regularTiles, blankCount, 7, 7, 'vertical', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
      } else {
        // Find all anchor points efficiently
        const anchors = findAnchors(board);
@@ -105,8 +108,8 @@
            break;
          }
          
-         generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'horizontal', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
-         generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'vertical', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
+         generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'horizontal', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
+         generateMovesAt(board, regularTiles, blankCount, anchor.row, anchor.col, 'vertical', moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
        }
      }
    
@@ -212,18 +215,18 @@
              
              for (const direction of ['horizontal', 'vertical']) {
                if (isValidSingleTileMove(board, newTile, direction, wordCache)) {
-                 const move = {
+               const move = {
                    word: getWordAt(board, position.row, position.col, direction, new Map([[`${position.row},${position.col}`, letter]])),
-                   tiles: [newTile],
-                   direction,
+                 tiles: [newTile],
+                 direction,
                    startRow: position.row,
                    startCol: position.col
-                 };
+               };
                  const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${letter}`;
                  if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
-                   move.score = calculateScore(board, move.tiles, boardMultipliers);
-                   moves.push(move);
-                   moveSet.add(moveKey);
+                 move.score = calculateScore(board, move.tiles, boardMultipliers);
+                 moves.push(move);
+                 moveSet.add(moveKey);
                  }
                }
              }
@@ -237,18 +240,18 @@
            
            for (const direction of ['horizontal', 'vertical']) {
              if (isValidSingleTileMove(board, newTile, direction, wordCache)) {
-               const move = {
+             const move = {
                  word: getWordAt(board, position.row, position.col, direction, new Map([[`${position.row},${position.col}`, tile.letter]])),
-                 tiles: [newTile],
-                 direction,
+               tiles: [newTile],
+               direction,
                  startRow: position.row,
                  startCol: position.col
-               };
+             };
                const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}`;
                if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
-                 move.score = calculateScore(board, move.tiles, boardMultipliers);
-                 moves.push(move);
-                 moveSet.add(moveKey);
+               move.score = calculateScore(board, move.tiles, boardMultipliers);
+               moves.push(move);
+               moveSet.add(moveKey);
                }
              }
            }
@@ -257,7 +260,7 @@
      }
    }
    
-   function generateMovesAt(board, regularTiles, blankCount, anchorRow, anchorCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME) {
+   function generateMovesAt(board, regularTiles, blankCount, anchorRow, anchorCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks) {
      // Find the leftmost/topmost position for potential words through this anchor
      let leftLimit = anchorCol;
      let topLimit = anchorRow;
@@ -275,16 +278,16 @@
      // Try all possible starting positions
      if (direction === 'horizontal') {
        for (let startCol = leftLimit; startCol <= anchorCol; startCol++) {
-         generateWordsFromPosition(board, regularTiles, blankCount, anchorRow, startCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
+         generateWordsFromPosition(board, regularTiles, blankCount, anchorRow, startCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
        }
      } else {
        for (let startRow = topLimit; startRow <= anchorRow; startRow++) {
-         generateWordsFromPosition(board, regularTiles, blankCount, startRow, anchorCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME);
+         generateWordsFromPosition(board, regularTiles, blankCount, startRow, anchorCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks);
        }
      }
    }
    
-   function generateWordsFromPosition(board, regularTiles, blankCount, startRow, startCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME) {
+   function generateWordsFromPosition(board, regularTiles, blankCount, startRow, startCol, direction, moves, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks) {
      // Build the prefix from existing tiles
      let prefix = '';
      let currentRow = startRow;
@@ -328,18 +331,19 @@
        moveSet,
        wordCache,
        startTime,
-       MAX_EXECUTION_TIME
+       MAX_EXECUTION_TIME,
+       crossChecks
      );
    }
    
-   function extendWordsOptimized(node, board, regularTiles, blankCount, wordSoFar, tilesPlaced, row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, depth = 0) {
+   function extendWordsOptimized(node, board, regularTiles, blankCount, wordSoFar, tilesPlaced, row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks, depth = 0) {
      // Check timeout first
      if (Date.now() - startTime > MAX_EXECUTION_TIME) return;
      
      // Aggressive depth limiting - even more aggressive with blanks
      const MAX_DEPTH = blankCount > 0 ? 6 : 8; // Reduced depth when blanks present
      if (depth > MAX_DEPTH) return;
-
+   
      // Check if we can form a valid word
      if (node['$'] && tilesPlaced.length > 0) {
        const cleanWord = wordSoFar.replace(/\^/g, '');
@@ -350,21 +354,21 @@
        }
        
        if (wordCache.get(cleanWord)) {
-         const move = {
-           word: cleanWord,
-           tiles: [...tilesPlaced],
-           direction,
-           startRow: tilesPlaced[0].row,
-           startCol: tilesPlaced[0].col
-         };
-         
-         const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${move.tiles.map(t => t.isBlank ? t.letter : '').join('')}`;
-         
+       const move = {
+         word: cleanWord,
+         tiles: [...tilesPlaced],
+         direction,
+         startRow: tilesPlaced[0].row,
+         startCol: tilesPlaced[0].col
+       };
+       
+       const moveKey = `${move.word}-${move.startRow},${move.startCol}-${move.direction}-${move.tiles.map(t => t.isBlank ? t.letter : '').join('')}`;
+       
          // CRITICAL: Validate the move before adding it
-         if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
-           move.score = calculateScore(board, move.tiles, boardMultipliers);
-           moves.push(move);
-           moveSet.add(moveKey);
+       if (validateMove(board, move.tiles) && !moveSet.has(moveKey)) {
+         move.score = calculateScore(board, move.tiles, boardMultipliers);
+         moves.push(move);
+         moveSet.add(moveKey);
          }
        }
      }
@@ -393,6 +397,7 @@
            wordCache,
            startTime,
            MAX_EXECUTION_TIME,
+           crossChecks,
            depth + 1
          );
        }
@@ -401,180 +406,168 @@
    
      // Try placing tiles from rack - optimized for blanks
      const availableTiles = [...regularTiles];
-     const blankCombinations = getBlankCombinations(blankCount);
      
      // Try regular tiles first
      for (let i = 0; i < availableTiles.length; i++) {
        const letter = availableTiles[i];
        if (!letter) continue;
-   
+       
+       // Check cross-checks for regular tiles
+       if (!crossChecks[row][col] || !crossChecks[row][col].has(letter)) continue;
+
        const newTiles = availableTiles.slice();
        newTiles[i] = null;
-   
+
        const newTile = {
          row, col,
          letter,
          isNew: true,
          isBlank: false
        };
-   
-       tryPlaceTile(node, board, newTiles, blankCount, wordSoFar, [...tilesPlaced, newTile], row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, depth);
+
+       tryPlaceTile(node, board, newTiles, blankCount, wordSoFar, [...tilesPlaced, newTile], row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks, depth);
      }
    
-     // Try blank combinations - limit the number of combinations to try
-     const maxBlankCombos = blankCount === 1 ? 26 : blankCount === 2 ? 50 : 0;
-     let comboCount = 0;
-     
-     for (const blankCombo of blankCombinations) {
-       if (blankCombo.length > blankCount || comboCount >= maxBlankCombos) continue;
-       comboCount++;
-       
-       // Try placing this combination
-       const newTiles = [...availableTiles];
-       const newTilesPlaced = [...tilesPlaced];
-       let currentRow = row;
-       let currentNode = node;
-       let currentWordSoFar = wordSoFar;
-       let currentDepth = depth;
-       
-       for (const blankLetter of blankCombo) {
-         if (!inBounds(currentRow, col)) break;
-         
+     // Try blank tiles - only if there are valid cross-checks for this position
+     if (blankCount > 0 && crossChecks[row][col] && crossChecks[row][col].size > 0) {
+       // For blanks, try all letters that are valid at this position
+       for (const letter of crossChecks[row][col]) {
          const newTile = {
-           row: currentRow, col,
-           letter: blankLetter,
+           row, col,
+           letter,
            isNew: true,
            isBlank: true
          };
+
+         const newTiles = [...availableTiles];
          
-         newTilesPlaced.push(newTile);
-         
-         // Try to continue the word
-         if (currentNode[blankLetter]) {
-           const [nextRow, nextCol] = step(currentRow, col, direction);
+         // Try to continue the word with this blank
+         if (node[letter]) {
+           const [nextRow, nextCol] = step(row, col, direction);
            extendWordsOptimized(
-             currentNode[blankLetter],
-             board,
+             node[letter],
+             board, 
              newTiles,
-             blankCount - blankCombo.length,
-             currentWordSoFar + blankLetter,
-             newTilesPlaced,
-             nextRow,
-             nextCol,
-             direction,
-             moves,
+             blankCount - 1,
+             wordSoFar + letter,
+             [...tilesPlaced, newTile],
+             nextRow, 
+             nextCol, 
+             direction, 
+             moves, 
              isInSuffixMode,
              moveSet,
              wordCache,
              startTime,
              MAX_EXECUTION_TIME,
-             currentDepth + 1
+             crossChecks,
+             depth + 1
            );
          }
          
          // Try switching to suffix mode
-         if (currentNode['^'] && currentNode['^'][blankLetter]) {
-           const [nextRow, nextCol] = step(currentRow, col, direction);
+         if (node['^'] && node['^'][letter]) {
+           const [nextRow, nextCol] = step(row, col, direction);
            extendWordsOptimized(
-             currentNode['^'][blankLetter],
-             board,
+             node['^'][letter],
+             board, 
              newTiles,
-             blankCount - blankCombo.length,
-             currentWordSoFar + '^' + blankLetter,
-             newTilesPlaced,
-             nextRow,
-             nextCol,
-             direction,
-             moves,
+             blankCount - 1,
+             wordSoFar + '^' + letter,
+             [...tilesPlaced, newTile],
+             nextRow, 
+             nextCol, 
+             direction, 
+             moves, 
              true,
              moveSet,
              wordCache,
              startTime,
              MAX_EXECUTION_TIME,
-             currentDepth + 1
+             crossChecks,
+             depth + 1
            );
          }
-         
-         currentRow = step(currentRow, col, direction)[0];
-         currentWordSoFar += blankLetter;
-         currentDepth++;
        }
      }
    }
    
-   function tryPlaceTile(node, board, availableTiles, blankCount, wordSoFar, tilesPlaced, row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, depth) {
+   function tryPlaceTile(node, board, availableTiles, blankCount, wordSoFar, tilesPlaced, row, col, direction, moves, isInSuffixMode, moveSet, wordCache, startTime, MAX_EXECUTION_TIME, crossChecks, depth) {
      const tile = tilesPlaced[tilesPlaced.length - 1];
      
-     if (!isInSuffixMode) {
-       // In prefix mode - can continue in prefix or switch to suffix
-       if (node[tile.letter]) {
-         const [nextRow, nextCol] = step(row, col, direction);
+         if (!isInSuffixMode) {
+           // In prefix mode - can continue in prefix or switch to suffix
+           if (node[tile.letter]) {
+             const [nextRow, nextCol] = step(row, col, direction);
          extendWordsOptimized(
-           node[tile.letter], 
-           board, 
+               node[tile.letter], 
+               board, 
            availableTiles, 
            blankCount,
-           wordSoFar + tile.letter, 
+               wordSoFar + tile.letter, 
            tilesPlaced, 
-           nextRow, 
-           nextCol, 
-           direction, 
-           moves, 
-           false,
-           moveSet,
+               nextRow, 
+               nextCol, 
+               direction, 
+               moves, 
+               false,
+               moveSet,
            wordCache,
            startTime,
            MAX_EXECUTION_TIME,
-           depth + 1
-         );
-       }
+           crossChecks,
+               depth + 1
+             );
+           }
    
-       // Try switching to suffix mode
-       if (node['^'] && node['^'][tile.letter]) {
-         const [nextRow, nextCol] = step(row, col, direction);
+           // Try switching to suffix mode
+           if (node['^'] && node['^'][tile.letter]) {
+             const [nextRow, nextCol] = step(row, col, direction);
          extendWordsOptimized(
-           node['^'][tile.letter], 
-           board, 
+               node['^'][tile.letter], 
+               board, 
            availableTiles, 
            blankCount,
-           wordSoFar + '^' + tile.letter, 
+               wordSoFar + '^' + tile.letter, 
            tilesPlaced, 
-           nextRow, 
-           nextCol, 
-           direction, 
-           moves, 
-           true,
-           moveSet,
+               nextRow, 
+               nextCol, 
+               direction, 
+               moves, 
+               true,
+               moveSet,
            wordCache,
            startTime,
            MAX_EXECUTION_TIME,
-           depth + 1
-         );
-       }
-     } else {
-       // In suffix mode - can only continue in suffix
-       if (node[tile.letter]) {
-         const [nextRow, nextCol] = step(row, col, direction);
+           crossChecks,
+               depth + 1
+             );
+           }
+         } else {
+           // In suffix mode - can only continue in suffix
+           if (node[tile.letter]) {
+             const [nextRow, nextCol] = step(row, col, direction);
          extendWordsOptimized(
-           node[tile.letter], 
-           board, 
+               node[tile.letter], 
+               board, 
            availableTiles, 
            blankCount,
-           wordSoFar + tile.letter, 
+               wordSoFar + tile.letter, 
            tilesPlaced, 
-           nextRow, 
-           nextCol, 
-           direction, 
-           moves, 
-           true,
-           moveSet,
+               nextRow, 
+               nextCol, 
+               direction, 
+               moves, 
+               true,
+               moveSet,
            wordCache,
            startTime,
            MAX_EXECUTION_TIME,
-           depth + 1
-         );
-       }
-     }
+           crossChecks,
+               depth + 1
+             );
+           }
+         }
    }
    
    function findAnchors(board) {
@@ -957,6 +950,84 @@
      }
      
      return true;
+   }
+   
+   // --- Cross-Check Precomputation ---
+   function computeCrossChecks(board) {
+     const crossChecks = Array.from({ length: 15 }, () => Array(15).fill(null));
+     for (let row = 0; row < 15; row++) {
+       for (let col = 0; col < 15; col++) {
+         if (board[row][col] !== null) continue;
+         
+         // If not adjacent to any tile, all letters are allowed (no cross-word)
+         if (!hasAdjacentTile(board, row, col)) {
+           crossChecks[row][col] = new Set(ALPHA);
+           continue;
+         }
+         
+         // Check both horizontal and vertical cross-words
+         const horizontalCrossChecks = getCrossChecksForDirection(board, row, col, 'horizontal');
+         const verticalCrossChecks = getCrossChecksForDirection(board, row, col, 'vertical');
+         
+         // A position is valid if it works in BOTH directions
+         const validLetters = new Set();
+         for (const letter of ALPHA) {
+           if (horizontalCrossChecks.has(letter) && verticalCrossChecks.has(letter)) {
+             validLetters.add(letter);
+           }
+         }
+         
+         crossChecks[row][col] = validLetters;
+       }
+     }
+     return crossChecks;
+   }
+   
+   function getCrossChecksForDirection(board, row, col, direction) {
+     const crossDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
+     const legal = new Set();
+     
+     // Build the cross-word pattern
+     let prefix = '', suffix = '';
+     
+     if (crossDirection === 'vertical') {
+       // Check vertical cross-word (for horizontal plays)
+       let up = row - 1, down = row + 1;
+       while (up >= 0 && board[up][col] !== null) { 
+         prefix = board[up][col] + prefix; 
+         up--; 
+       }
+       while (down < 15 && board[down][col] !== null) { 
+         suffix += board[down][col]; 
+         down++; 
+       }
+     } else {
+       // Check horizontal cross-word (for vertical plays)
+       let left = col - 1, right = col + 1;
+       while (left >= 0 && board[row][left] !== null) { 
+         prefix = board[row][left] + prefix; 
+         left--; 
+       }
+       while (right < 15 && board[row][right] !== null) { 
+         suffix += board[row][right]; 
+         right++; 
+       }
+     }
+     
+     // If no cross-word exists, all letters are valid
+     if (prefix.length === 0 && suffix.length === 0) {
+       return new Set(ALPHA);
+     }
+     
+     // Try all letters in the alphabet
+     for (const letter of ALPHA) {
+       const word = prefix + letter + suffix;
+       if (word.length === 1 || theGADDAG.contains(word)) {
+         legal.add(letter);
+       }
+     }
+     
+     return legal;
    }
    
    module.exports = {
