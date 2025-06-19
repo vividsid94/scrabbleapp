@@ -105,10 +105,10 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     return (
       <Box key={index} className={styles.moveHistoryItem}>
         <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
+        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
         <Box className={styles.moveHistoryWord}>{displayWord}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score}</Box>
-          <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
       </Box>
@@ -142,10 +142,10 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     <Box className={styles.latestMovePanel}>
       <Box className={`${styles.latestMoveContent} ${animationClass}`}>
         <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
+        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
         <Box className={styles.moveHistoryWord}>{displayWord}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score}</Box>
-          <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
         {allMoves.length > 1 && (
