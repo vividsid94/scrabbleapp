@@ -4,6 +4,9 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 let lastKeyPressTime = 0;
 const DEBOUNCE_DELAY = 50; // milliseconds
 
+// Add submission guard using ref to prevent double-submission
+let isSubmittingRef = { current: false };
+
 export const handleKeyDown = ({
   e,
   selectedBoardPosition,
@@ -57,10 +60,27 @@ export const handleKeyDown = ({
     return;
   }
 
-  // Handle enter key
+  // Handle enter key with ref-based submission guard
   if (e.key === 'Enter') {
     e.preventDefault();
-    handleWordSubmit();
+    
+    // Prevent double-submission using ref
+    if (isSubmittingRef.current) {
+      return;
+    }
+    
+    // Only submit if there are tiles placed
+    if (selectedTiles.length === 0) {
+      return;
+    }
+    
+    isSubmittingRef.current = true;
+    
+    // Call handleWordSubmit and reset the ref when done
+    handleWordSubmit().finally(() => {
+      isSubmittingRef.current = false;
+    });
+    
     return;
   }
 
