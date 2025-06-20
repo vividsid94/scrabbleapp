@@ -1166,25 +1166,11 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        {gameStarted ? (
-            <Box className={styles.gameTitle}>
-              <Box className={styles.gameTitleText}>
-              {gameTime}/0 • Classic • NWL23
-            </Box>
-              <Box className={styles.gameSubtitle}>
-              Void Challenge • Unrated
-            </Box>
-          </Box>
-        ) : (
-            <Box className={styles.gameTitle}>
-              <Box className={styles.playModeTitle}>
-              Play Mode
-            </Box>
-              <Box className={styles.playModeSubtitle}>
-              Click the robot to play against SidBot
-            </Box>
-          </Box>
-        )}
+        <Box className={styles.gameTitle}>
+          <Box className={styles.playModeTitle}>
+          Playground+
+        </Box>
+        </Box>
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>

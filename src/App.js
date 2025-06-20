@@ -41,6 +41,7 @@ function App() {
               <Route path="/memory" element={<Memory/>} />
               <Route path="/words" element={<WordTable/>}/>
               <Route path="/series" element={<Series/>}/>
+              <Route path="/playground" element={<Play/>}/>
               <Route path="/play" element={<Play/>}/>
               <Route path="/changelog" element={<Changelog/>}/>
               <Route path="/study" element={<Study/>}/>

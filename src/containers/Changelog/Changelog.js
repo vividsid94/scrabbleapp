@@ -16,7 +16,7 @@ export default function Changelog() {
           <h5>Dramatically changed overall UI and Game Viewer performance</h5>
           <h2>Beta Features</h2>
           <div className={styles.betaSection}>
-            <h5>The <Link to="/play" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Play</Link> page is currently in beta! Play against SidBot while I complete development!</h5>
+            <h5>The <Link to="/playground" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Playground+</Link> page is currently in beta! Play against SidBot while I complete development!</h5>
           </div>
           <div className={styles.footer}>
             <p>Last updated: {new Date().toLocaleDateString()}</p>
