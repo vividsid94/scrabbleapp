@@ -1051,6 +1051,17 @@
   animation-delay: 0.4s;
 }
 
+@keyframes thinking {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .topMovesButton {
   display: flex;
   align-items: center;
