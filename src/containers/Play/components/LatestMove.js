@@ -269,7 +269,23 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
           )}
           {moveHistory.length > 0 && (
             <Box className={styles.downloadIcon} onClick={handleDownloadGCG} title="Download .gcg file">
-              <DownloadIcon style={{ fontSize: 16 }} />
+              <Box sx={{
+                fontSize: '10px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.7)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                fontFamily: 'monospace',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <DownloadIcon style={{ fontSize: 14 }} />
+                GCG
+              </Box>
             </Box>
           )}
         </Box>
