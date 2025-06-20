@@ -66,11 +66,6 @@ export const handleGameEnd = ({
     setPlayer1points(loserPoints + rackSum);
   }
   
-  // Show game over message
-  setSnackbarMessage(`Game Over!`);
-  setSnackbarSeverity("success");
-  setSnackbarOpen(true);
-  
   // Disable auto-play
   setAutoPlayBest(false);
 }; 

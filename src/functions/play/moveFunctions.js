@@ -386,7 +386,9 @@ export const handlePlayTopMove = async ({
   setLeaveValues,
   setArrowDirection
 }) => {
-  if (isLoadingTopMoves || isDictionaryLoading) return;
+  if (isLoadingTopMoves || isDictionaryLoading) {
+    return Promise.resolve();
+  }
   
   try {
     // Get the current rack
@@ -465,54 +467,60 @@ export const handlePlayTopMove = async ({
     if (data.message && data.message.includes('Loading dictionary')) {
       setIsDictionaryLoading(true);
       // Retry after a short delay
-      setTimeout(() => {
-        handlePlayTopMove({
-          isLoadingTopMoves,
-          isDictionaryLoading,
-          currentPlayer,
-          player1Rack,
-          player2Rack,
-          tempBoardCoords,
-          boardCoords,
-          selectedTiles,
-          pool,
-          player1points,
-          player2points,
-          player1Name,
-          player2Name,
-          blankTiles,
-          moveHistory,
-          leaveValues,
-          handleGameEnd,
-          getBoardDiff,
-          setPlayer1Rack,
-          setPlayer2Rack,
-          setTempBoardCoords,
-          setSelectedTiles,
-          setSelectedBoardPosition,
-          setBoardCoords,
-          setPlayer1points,
-          setPlayer2points,
-          setBlankTiles,
-          setPool,
-          setMoveHistory,
-          setCurrentPlayer,
-          setSimulatingMove,
-          setSimulationResult,
-          setSimulationProgress,
-          setPreviewBoard,
-          setPreviewMove,
-          setMoveWithResults,
-          setTopMoves,
-          setSnackbarMessage,
-          setSnackbarSeverity,
-          setSnackbarOpen,
-          setIsDictionaryLoading,
-          setLeaveValues,
-          setArrowDirection
-        });
-      }, 1000);
-      return;
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          try {
+            await handlePlayTopMove({
+              isLoadingTopMoves,
+              isDictionaryLoading,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+              tempBoardCoords,
+              boardCoords,
+              selectedTiles,
+              pool,
+              player1points,
+              player2points,
+              player1Name,
+              player2Name,
+              blankTiles,
+              moveHistory,
+              leaveValues,
+              handleGameEnd,
+              getBoardDiff,
+              setPlayer1Rack,
+              setPlayer2Rack,
+              setTempBoardCoords,
+              setSelectedTiles,
+              setSelectedBoardPosition,
+              setBoardCoords,
+              setPlayer1points,
+              setPlayer2points,
+              setBlankTiles,
+              setPool,
+              setMoveHistory,
+              setCurrentPlayer,
+              setSimulatingMove,
+              setSimulationResult,
+              setSimulationProgress,
+              setPreviewBoard,
+              setPreviewMove,
+              setMoveWithResults,
+              setTopMoves,
+              setSnackbarMessage,
+              setSnackbarSeverity,
+              setSnackbarOpen,
+              setIsDictionaryLoading,
+              setLeaveValues,
+              setArrowDirection
+            });
+            resolve();
+          } catch (error) {
+            resolve(); // Resolve even on error to prevent hanging
+          }
+        }, 1000);
+      });
     }
     
     setIsDictionaryLoading(false);

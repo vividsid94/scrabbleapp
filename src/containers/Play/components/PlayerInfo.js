@@ -8,6 +8,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Tooltip, Collapse } from '@mui/material';
 import { BOT_RACK_VISIBILITY } from '../../../components/AppContent/References/testRacks';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SyncIcon from '@mui/icons-material/Sync';
@@ -195,10 +196,64 @@ export default function PlayerInfo({
                 sx={{ 
                   opacity: !gameStarted ? 0.3 : (isLoadingTopMoves || isDictionaryLoading ? 0.5 : 1),
                   cursor: !gameStarted ? 'not-allowed' : (isLoadingTopMoves || isDictionaryLoading ? 'not-allowed' : 'pointer'),
-                  pointerEvents: !gameStarted ? 'none' : 'auto'
+                  pointerEvents: !gameStarted ? 'none' : 'auto',
+                  position: 'relative'
                 }}
               >
                 <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  3
+                </Box>
+              </Box>
+            </Tooltip>
+            <Tooltip title="Auto-Play Whole Game">
+              <Box
+                className={styles.bestMoveButton}
+                onClick={() => setAutoPlayBest(!autoPlayBest)}
+                sx={{ 
+                  opacity: !gameStarted ? 0.3 : 1,
+                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                  pointerEvents: !gameStarted ? 'none' : 'auto',
+                  position: 'relative',
+                  backgroundColor: autoPlayBest ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
+                  border: autoPlayBest ? '1px solid #4CAF50' : 'none',
+                  borderRadius: '4px'
+                }}
+              >
+                <PlayArrowIcon sx={{ fontSize: 20 }} />
+                <Box sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  4
+                </Box>
               </Box>
             </Tooltip>
             <Tooltip title="Pass">

@@ -12,6 +12,7 @@ import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import PlayerInfo from './components/PlayerInfo';
 import ColorScheme from '../../components/common/ColorScheme';
+import Confetti from '../../components/Confetti/Confetti';
 import TuneIcon from '@mui/icons-material/Tune';
 import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -91,6 +92,9 @@ export default function Play() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [showSimulationModal, setShowSimulationModal] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
+  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [winner, setWinner] = useState(null);
   
   // Add state for move sound selection first
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
@@ -241,6 +245,23 @@ export default function Play() {
 
   const handleGameEndClick = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
     setGameEnded(true); // Set game as ended
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setTimerActive(false);
+    
+    // Determine winner based on winnerName
+    const isPlayerWinner = winnerName === player1Name;
+    const winner = isPlayerWinner ? 'player' : 'bot';
+    setWinner(winner);
+    
+    // Trigger victory celebration
+    setShowConfetti(true);
+    setShowVictoryOverlay(true);
+    
     handleGameEnd({
       winnerRack,
       winnerName,
@@ -259,12 +280,40 @@ export default function Play() {
       setAutoPlayBest
     });
   }, [
-    player1Rack,
-    player2Rack,
+    player1Name,
+    player2Name,
     player1points,
     player2points,
     autoPlayBest
   ]);
+
+  // Victory celebration handlers
+  const handleConfettiComplete = useCallback(() => {
+    setShowConfetti(false);
+  }, []);
+
+  const handleVictoryOverlayClose = useCallback(() => {
+    setShowVictoryOverlay(false);
+  }, []);
+
+  const handleNewGame = useCallback(() => {
+    setShowVictoryOverlay(false);
+    setShowConfetti(false);
+    setGameEnded(false);
+    setWinner(null);
+    
+    // Reset timer
+    setPlayer1Time(gameTime * 60);
+    setPlayer2Time(gameTime * 60);
+    setTimerActive(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Reset game state
+    handleBotModeToggle();
+  }, [gameTime]);
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
@@ -323,6 +372,9 @@ export default function Play() {
     
     // Reset game ended state for new game
     setGameEnded(false);
+    setShowVictoryOverlay(false);
+    setShowConfetti(false);
+    setWinner(null);
     
     // If there are tiles on the board, return them to the rack first
     if (selectedTiles.length > 0) {
@@ -355,6 +407,14 @@ export default function Play() {
     
     // Clear blank tiles when starting new game
     setBlankTiles([]);
+    
+    // Reset timer for new game
+    setPlayer1Time(gameTime * 60);
+    setPlayer2Time(gameTime * 60);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     
     // Randomly determine who goes first
     const randomFirst = Math.random() < 0.5;
@@ -877,9 +937,9 @@ export default function Play() {
   }, [gameTime]);
 
   const handlePlayTopMoveClick = useCallback(() => {
-    if (gameEnded) return; // Don't allow playing top move after game has ended
+    if (gameEnded) return Promise.resolve(); // Don't allow playing top move after game has ended
     setIsPlayerThinking(true);
-    handlePlayTopMove({
+    return handlePlayTopMove({
       isLoadingTopMoves,
       isDictionaryLoading,
       currentPlayer,
@@ -990,6 +1050,7 @@ export default function Play() {
       handlePass: handlePassClick,
       handleExchangeClick,
       handlePlayTopMove: handlePlayTopMoveClick,
+      toggleAutoPlayBest: () => setAutoPlayBest(!autoPlayBest),
       isPlayerThinking,
       isBotThinking
     });
@@ -998,7 +1059,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, isPlayerThinking, isBotThinking]);
+  }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, autoPlayBest, isPlayerThinking, isBotThinking]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
@@ -1381,6 +1442,112 @@ export default function Play() {
         simulationResult={simulationResult}
         moveWithResults={moveWithResults}
       />
+
+      {/* Victory Celebration Components */}
+      <Confetti
+        winner={winner}
+        isVisible={showConfetti}
+        onComplete={handleConfettiComplete}
+      />
+      
+      {/* Floating Victory Message */}
+      {showVictoryOverlay && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 10001,
+            textAlign: 'center',
+            pointerEvents: 'auto',
+          }}
+        >
+          <Box
+            sx={{
+              background: winner === 'player' 
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png")'
+                : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png")',
+              color: 'white',
+              padding: '15px 20px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(15px)',
+              minWidth: '220px',
+              position: 'relative',
+            }}
+          >
+            {/* Close X button */}
+            <Box
+              onClick={handleVictoryOverlayClose}
+              sx={{
+                position: 'absolute',
+                top: '10px',
+                right: '15px',
+                fontSize: '18px',
+                cursor: 'pointer',
+                opacity: 0.8,
+                transition: 'opacity 0.3s ease',
+                '&:hover': {
+                  opacity: 1,
+                },
+              }}
+            >
+              ✕
+            </Box>
+            
+            <Box sx={{ fontSize: '28px', mb: 1 }}>
+              {winner === 'player' ? '🏆' : '🤖'}
+            </Box>
+            <Box sx={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              mb: 1,
+              textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+              letterSpacing: '0.5px'
+            }}>
+              {winner === 'player' ? 'It\'s a huge, huge win!' : 'The bot got the best of you!'}
+            </Box>
+            <Box sx={{ 
+              fontSize: '11px', 
+              opacity: 0.9,
+              mb: 1
+            }}>
+              {winner === 'player' ? '' : ''}
+            </Box>
+            <Box sx={{ 
+              fontSize: '14px', 
+              fontWeight: 'bold',
+              color: winner === 'player' ? '#FFD700' : '#C0C0C0',
+              mb: 2
+            }}>
+              {winner === 'player' ? '' : ''}
+            </Box>
+            
+            {/* Rematch Button */}
+            <Box
+              onClick={handleNewGame}
+              sx={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                color: 'white',
+                padding: '6px 16px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '11px',
+                backdropFilter: 'blur(10px)',
+                display: 'inline-block',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
+                },
+              }}
+            >
+              Rematch
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 } 
