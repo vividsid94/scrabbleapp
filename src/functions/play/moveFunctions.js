@@ -202,6 +202,12 @@ export const handleGetTopMoves = async ({
       throw new Error('Move calculation returned invalid response. Please try again.');
     }
     
+    // Log the full array of moves from the API response
+    console.log('👤 Player Move Response - Full Moves Array:', {
+      movesCount: data.moves ? data.moves.length : 0,
+      moves: data.moves || []
+    });
+    
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {
       setIsDictionaryLoading(true);
@@ -463,6 +469,12 @@ export const handlePlayTopMove = async ({
       throw new Error('Move calculation returned invalid response. Please try again.');
     }
     
+    // Log the full array of moves from the API response
+    console.log('👤 Player Move Response - Full Moves Array:', {
+      movesCount: data.moves ? data.moves.length : 0,
+      moves: data.moves || []
+    });
+    
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {
       setIsDictionaryLoading(true);
@@ -572,6 +584,16 @@ export const handlePlayTopMove = async ({
 
     if (movesWithValues.length > 0) {
       const bestMove = movesWithValues[0];
+      
+      // Log the player move response
+      console.log('👤 Player Move Response:', {
+        word: bestMove.word,
+        score: bestMove.score,
+        leaveValue: bestMove.leaveValue || 0,
+        totalValue: bestMove.totalValue,
+        direction: bestMove.direction,
+        isExchange: bestMove.isExchange
+      });
       
       // Prepare all state updates
       const stateUpdates = {

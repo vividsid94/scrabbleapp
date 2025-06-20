@@ -974,6 +974,12 @@ export default function Play() {
 
   const handlePlayTopMoveClick = useCallback(() => {
     if (gameEnded) return Promise.resolve(); // Don't allow playing top move after game has ended
+    
+    console.log('👤 Player Move Request:', {
+      rack: player1Rack.join(''),
+      autoPlay: autoPlayBest
+    });
+    
     setIsPlayerThinking(true);
     return handlePlayTopMove({
       isLoadingTopMoves,
