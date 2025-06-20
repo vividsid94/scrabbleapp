@@ -1,5 +1,4 @@
-import { alphabetizeRack } from './rackFunctions';
-import { removeTilesByCount } from './rackFunctions';
+import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
 
 /**
  * Handles the submission of a word to the board
