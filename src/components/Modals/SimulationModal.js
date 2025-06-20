@@ -25,7 +25,10 @@ const SimulationModal = ({
   simulationSettings,
   onSimulationSettingsChange,
   topMoves,
-  onMoveSelect
+  onMoveSelect,
+  onRunAllMovesSimulation,
+  allMoveResults,
+  isSimulatingAllMoves
 }) => {
   if (!open || !simulationBoard) {
     return null;
@@ -150,6 +153,7 @@ const SimulationModal = ({
                 const isSelected = moveWithResults && moveWithResults.word === move.word;
                 const leaveValue = move.leaveValue || 0;
                 const defensiveValue = move.defensiveValue || 0;
+                const moveResult = allMoveResults[move.word];
                 
                 return (
                   <Box 
@@ -225,6 +229,46 @@ const SimulationModal = ({
                     }}>
                       {Math.round(defensiveValue)}
                     </Box>
+                    {/* Simulation Results */}
+                    {moveResult && !moveResult.error && (
+                      <>
+                        <Box sx={{ 
+                          color: 'white',
+                          background: '#4CAF50',
+                          padding: '1px 2px',
+                          borderRadius: '2px',
+                          minWidth: '20px',
+                          textAlign: 'center',
+                          fontSize: '8px'
+                        }}>
+                          {formatScore(moveResult.winRate)}%
+                        </Box>
+                        <Box sx={{ 
+                          color: 'white',
+                          background: '#2196F3',
+                          padding: '1px 2px',
+                          borderRadius: '2px',
+                          minWidth: '20px',
+                          textAlign: 'center',
+                          fontSize: '8px'
+                        }}>
+                          {formatScore(moveResult.avgScore)}
+                        </Box>
+                      </>
+                    )}
+                    {moveResult && moveResult.error && (
+                      <Box sx={{ 
+                        color: 'white',
+                        background: '#f44336',
+                        padding: '1px 2px',
+                        borderRadius: '2px',
+                        minWidth: '16px',
+                        textAlign: 'center',
+                        fontSize: '8px'
+                      }}>
+                        ERR
+                      </Box>
+                    )}
                   </Box>
                 );
               })}
@@ -259,7 +303,7 @@ const SimulationModal = ({
                     const intensity = Math.min(heatValue / maxSimulations, 1); // Normalize to 0-1
                     
                     if (intensity === 0) {
-                      bg = 'rgba(150, 200, 255, 0.3)'; // Lighter ice cold blue
+                      bg = 'rgba(140, 180, 255, 0.8)'; // Vibrant ice cold blue with full opacity
                     } else if (intensity < 0.5) {
                       // Blue to purple transition
                       const blueIntensity = 1 - (intensity * 2);
@@ -456,6 +500,32 @@ const SimulationModal = ({
               }}>
                 <Box
                   onClick={() => {
+                    if (onRunAllMovesSimulation) {
+                      onRunAllMovesSimulation();
+                    }
+                  }}
+                  sx={{
+                    background: 'rgba(76, 175, 80, 0.2)',
+                    color: 'white',
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '9px',
+                    backdropFilter: 'blur(10px)',
+                    display: 'inline-block',
+                    transition: 'all 0.3s ease',
+                    textAlign: 'center',
+                    '&:hover': {
+                      backgroundColor: 'rgba(76, 175, 80, 0.3)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 3px 8px rgba(76, 175, 80, 0.2)',
+                    },
+                  }}
+                >
+                  Sim All Moves
+                </Box>
+                <Box
+                  onClick={() => {
                     if (onStartSimulation) {
                       onStartSimulation(moveWithResults);
                     }
@@ -508,14 +578,15 @@ const SimulationModal = ({
                 </Box>
 
                 {/* Progress Bar - Always show when simulating */}
-                {(simulatingMove || simulationProgress > 0) && (
+                {(simulatingMove || simulationProgress > 0 || isSimulatingAllMoves) && (
                   <Box sx={{ mt: 1 }}>
                     <Box sx={{ 
                       fontSize: '10px', 
                       opacity: 0.9,
                       mb: 0.5
                     }}>
-                      {simulatingMove ? `${simulatingMove.word} (${simulatingMove.score} pts)` : 'Simulating...'}
+                      {isSimulatingAllMoves ? 'Simulating all moves...' : 
+                       simulatingMove ? `${simulatingMove.word} (${simulatingMove.score} pts)` : 'Simulating...'}
                     </Box>
                     <Box sx={{ 
                       width: '100%', 
@@ -541,6 +612,8 @@ const SimulationModal = ({
                     }}>
                       {isHeatMapMode ? 
                         `${Math.round(simulationProgress / 100 * (simulationSettings?.numSimulations || 5))}/${simulationSettings?.numSimulations || 5} simulations` :
+                        isSimulatingAllMoves ?
+                        `${Math.round(simulationProgress / 100 * (topMoves?.length || 15))}/${topMoves?.length || 15} moves` :
                         `${Math.round(simulationProgress)}% complete`
                       }
                     </Box>

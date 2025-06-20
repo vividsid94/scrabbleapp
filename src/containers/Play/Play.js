@@ -1129,6 +1129,7 @@ export default function Play() {
 
   const stopSimulation = () => {
     setShouldStopSimulation(true);
+    shouldStopSimulationRef.current = true;
     setSimulatingMove(null);
     setSimulationProgress(0);
   };
@@ -1137,112 +1138,6 @@ export default function Play() {
     setIsHeatMapMode(false);
   };
 
-  const runSimulation = async (move) => {
-    // Reset heat map mode when starting normal simulation
-    resetHeatMapMode();
-    
-    // Reset stop flag
-    setShouldStopSimulation(false);
-    
-    setSimulatingMove(move);
-    setSimulationProgress(0);
-    
-    try {
-      const gameState = {
-        boardCoords: simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool
-      };
-      
-      const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
-        // Check if simulation should be stopped
-        if (shouldStopSimulation) {
-          throw new Error('Simulation stopped by user');
-        }
-        setSimulationProgress(progress * 100);
-      }, simulationSettings);
-      
-      setSimulationResult(result);
-      
-    } catch (error) {
-      if (error.message === 'Simulation stopped by user') {
-        console.log('Simulation stopped by user');
-      } else {
-        console.error('Error running simulation:', error);
-        setSnackbarMessage('Error running simulation: ' + error.message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
-    } finally {
-      setSimulatingMove(null);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-    }
-  };
-
-  const simulateMove = async (move) => {
-    openSimulationModal(move);
-    await runSimulation(move);
-  };
-
-  // Modify the existing code that sets topMoves to also fetch leave values
-  useEffect(() => {
-    if (topMoves.length > 0) {
-      console.log('Top moves updated, fetching leave values');
-      fetchLeaveValues(topMoves);
-    }
-  }, [topMoves]);
-
-  // Add effect to limit move history size more aggressively
-  useEffect(() => {
-    if (moveHistory.length > 50) { // Reduce to last 50 moves instead of 100
-      setMoveHistory(prev => prev.slice(-50));
-    }
-  }, [moveHistory]);
-
-  const [previewScore, setPreviewScore] = useState(null);
-  const [previewScorePosition, setPreviewScorePosition] = useState(null);
-
-  // Add this function to calculate preview score
-  const calculatePreviewScore = () => {
-    if (selectedTiles.length === 0) {
-      setPreviewScore(null);
-      setPreviewScorePosition(null);
-      return;
-    }
-
-    const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
-    setPreviewScore(score);
-    
-    // Calculate position for score preview
-    if (selectedBoardPosition) {
-      const { row, col } = selectedBoardPosition;
-      setPreviewScorePosition({ row, col });
-    }
-  };
-
-  // Add effect to calculate preview score when tiles are placed
-  useEffect(() => {
-    if (selectedTiles.length > 0) {
-      calculatePreviewScore();
-    } else {
-      setPreviewScore(null);
-      setPreviewScorePosition(null);
-    }
-  }, [selectedTiles, tempBoardCoords]);
-
-  const [heatMapData, setHeatMapData] = useState(null);
-  const [isHeatMapMode, setIsHeatMapMode] = useState(false);
-  const [simulationSettings, setSimulationSettings] = useState({
-    numSimulations: 5,
-    turnsPerSim: 2
-  });
-  const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
-
   const runHeatMapSimulation = async (move) => {
     setSimulatingMove(move);
     setSimulationProgress(0);
@@ -1250,6 +1145,7 @@ export default function Play() {
     
     // Reset stop flag
     setShouldStopSimulation(false);
+    shouldStopSimulationRef.current = false;
     
     // Initialize heat map data (15x15 grid)
     const heatMap = Array(15).fill(null).map(() => Array(15).fill(0));
@@ -1259,7 +1155,7 @@ export default function Play() {
       
       for (let i = 0; i < iterations; i++) {
         // Check if simulation should be stopped
-        if (shouldStopSimulation) {
+        if (shouldStopSimulationRef.current) {
           throw new Error('Simulation stopped by user');
         }
         
@@ -1292,7 +1188,7 @@ export default function Play() {
         for (let turn = 0; turn < simulationSettings.turnsPerSim; turn++) {
           try {
             // Check if simulation should be stopped
-            if (shouldStopSimulation) {
+            if (shouldStopSimulationRef.current) {
               throw new Error('Simulation stopped by user');
             }
             
@@ -1375,6 +1271,7 @@ export default function Play() {
       setSimulatingMove(null);
       setSimulationProgress(0);
       setShouldStopSimulation(false);
+      shouldStopSimulationRef.current = false;
     }
   };
 
@@ -1387,6 +1284,189 @@ export default function Play() {
       }
     }
   };
+
+  const runSimulation = async (move) => {
+    // Reset heat map mode when starting normal simulation
+    resetHeatMapMode();
+    
+    // Reset stop flag
+    setShouldStopSimulation(false);
+    shouldStopSimulationRef.current = false;
+    
+    setSimulatingMove(move);
+    setSimulationProgress(0);
+    
+    try {
+      const gameState = {
+        boardCoords: simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool
+      };
+      
+      const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
+        // Check if simulation should be stopped
+        if (shouldStopSimulationRef.current) {
+          throw new Error('Simulation stopped by user');
+        }
+        setSimulationProgress(progress * 100);
+      }, simulationSettings);
+      
+      setSimulationResult(result);
+      
+    } catch (error) {
+      if (error.message === 'Simulation stopped by user') {
+        console.log('Simulation stopped by user');
+      } else {
+        console.error('Error running simulation:', error);
+        setSnackbarMessage('Error running simulation: ' + error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } finally {
+      setSimulatingMove(null);
+      setSimulationProgress(0);
+      setShouldStopSimulation(false);
+      shouldStopSimulationRef.current = false;
+    }
+  };
+
+  const runAllMovesSimulation = async () => {
+    if (!topMoves || topMoves.length === 0) return;
+    
+    setIsSimulatingAllMoves(true);
+    setSimulationProgress(0);
+    setShouldStopSimulation(false);
+    shouldStopSimulationRef.current = false;
+    
+    const results = {};
+    
+    try {
+      for (let i = 0; i < topMoves.length; i++) {
+        // Check if simulation should be stopped
+        if (shouldStopSimulationRef.current) {
+          throw new Error('Simulation stopped by user');
+        }
+        
+        const move = topMoves[i];
+        
+        // Update progress
+        setSimulationProgress((i / topMoves.length) * 100);
+        
+        const gameState = {
+          boardCoords: simulationBoard,
+          currentPlayer,
+          player1Rack,
+          player2Rack,
+          player1points,
+          player2points,
+          pool
+        };
+        
+        try {
+          const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
+            // Check if simulation should be stopped during individual move simulation
+            if (shouldStopSimulationRef.current) {
+              throw new Error('Simulation stopped by user');
+            }
+          }, simulationSettings);
+          results[move.word] = result;
+        } catch (error) {
+          if (error.message === 'Simulation stopped by user') {
+            throw error; // Re-throw to stop the entire process
+          }
+          console.error(`Error simulating move ${move.word}:`, error);
+          results[move.word] = { winRate: 0, avgScore: 0, error: true };
+        }
+        
+        // Small delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      setAllMoveResults(results);
+      
+    } catch (error) {
+      if (error.message === 'Simulation stopped by user') {
+        console.log('All moves simulation stopped by user');
+      } else {
+        console.error('Error running all moves simulation:', error);
+        setSnackbarMessage('Error running all moves simulation: ' + error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } finally {
+      setIsSimulatingAllMoves(false);
+      setSimulationProgress(0);
+      setShouldStopSimulation(false);
+      shouldStopSimulationRef.current = false;
+    }
+  };
+
+  const simulateMove = async (move) => {
+    openSimulationModal(move);
+    await runSimulation(move);
+  };
+
+  const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
+  const [allMoveResults, setAllMoveResults] = useState({}); // Store results for all moves
+  const [isSimulatingAllMoves, setIsSimulatingAllMoves] = useState(false);
+  const shouldStopSimulationRef = useRef(false);
+
+  // Modify the existing code that sets topMoves to also fetch leave values
+  useEffect(() => {
+    if (topMoves.length > 0) {
+      console.log('Top moves updated, fetching leave values');
+      fetchLeaveValues(topMoves);
+    }
+  }, [topMoves]);
+
+  // Add effect to limit move history size more aggressively
+  useEffect(() => {
+    if (moveHistory.length > 50) { // Reduce to last 50 moves instead of 100
+      setMoveHistory(prev => prev.slice(-50));
+    }
+  }, [moveHistory]);
+
+  const [previewScore, setPreviewScore] = useState(null);
+  const [previewScorePosition, setPreviewScorePosition] = useState(null);
+
+  // Add this function to calculate preview score
+  const calculatePreviewScore = () => {
+    if (selectedTiles.length === 0) {
+      setPreviewScore(null);
+      setPreviewScorePosition(null);
+      return;
+    }
+
+    const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
+    setPreviewScore(score);
+    
+    // Calculate position for score preview
+    if (selectedBoardPosition) {
+      const { row, col } = selectedBoardPosition;
+      setPreviewScorePosition({ row, col });
+    }
+  };
+
+  // Add effect to calculate preview score when tiles are placed
+  useEffect(() => {
+    if (selectedTiles.length > 0) {
+      calculatePreviewScore();
+    } else {
+      setPreviewScore(null);
+      setPreviewScorePosition(null);
+    }
+  }, [selectedTiles, tempBoardCoords]);
+
+  const [heatMapData, setHeatMapData] = useState(null);
+  const [isHeatMapMode, setIsHeatMapMode] = useState(false);
+  const [simulationSettings, setSimulationSettings] = useState({
+    numSimulations: 5,
+    turnsPerSim: 2
+  });
 
   return (
     <Box className={styles.container}>
@@ -1663,6 +1743,9 @@ export default function Play() {
         onSimulationSettingsChange={setSimulationSettings}
         topMoves={topMoves}
         onMoveSelect={handleMoveSelectClick}
+        onRunAllMovesSimulation={runAllMovesSimulation}
+        allMoveResults={allMoveResults}
+        isSimulatingAllMoves={isSimulatingAllMoves}
       />
 
       {/* Victory Celebration Components */}
