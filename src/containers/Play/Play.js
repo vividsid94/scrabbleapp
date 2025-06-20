@@ -1321,236 +1321,238 @@ export default function Play() {
     <Box className={styles.container}>
       <Sidenav/>
       <Box className={styles.page}>
-      <Box className={styles.title}>
+        <Box className={styles.mainPanel}>
+          <Box className={styles.title}>
             <Box className={styles.gameTitle}>
               <Box className={styles.playModeTitle}>
-          Playground+
-            </Box>
-            </Box>
-      </Box>
-      <Box className={styles.mainPanel}>
-        <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Board 
-            board={board}
-            boardMode={theme}
-            onBoardChildClick={(row, col) => handleBoardPositionSelect({
-              row,
-              col,
-              boardCoords,
-              selectedBoardPosition,
-              setSelectedBoardPosition,
-              arrowDirection,
-              setArrowDirection
-            })}
-            onTileDrop={(tile, index, row, col) => handleTileDrop({
-              tile,
-              index,
-              row,
-              col,
-              player1Rack,
-              setPlayer1Rack,
-              player2Rack,
-              setPlayer2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              setSelectedBoardPosition,
-              tempBoardCoords,
-              setTempBoardCoords
-            })}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange
-            })}
-            selectedPosition={selectedBoardPosition}
-            arrowDirection={arrowDirection}
-            onArrowDirectionChange={(newDirection) => {
-                console.log('Play component received direction change:', newDirection);
-                setArrowDirection(newDirection);
-            }}
-            animate={false}
-            showSlip={false}
-            showDictionary={false}
-            dictionary=""
-            previewScore={previewScore}
-            previewScorePosition={previewScorePosition}
-            lastMoveCoordinates={lastMoveCoordinates}
-          />   
-        </Box>
-
-        <Box className={styles.rightPanel}>
-          <PlayerInfo
-            player1Name={player1Name}
-            player2Name={player2Name}
-            player1Points={player1points}
-            player2Points={player2points}
-            player1Time={formatTime(player1Time)}
-            player2Time={formatTime(player2Time)}
-            currentPlayer={currentPlayer}
-            player1Rack={player1Rack}
-            player2Rack={player2Rack}
-            color={color}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              selectedTiles,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange
-            })}
-            selectedTiles={tilesToExchange}
-            isBotMode={isBotMode}
-            gameStarted={gameStarted}
-            isDictionaryLoading={isDictionaryLoading}
-            isLoadingTopMoves={isLoadingTopMoves}
-            onSettingsOpen={handleSettingsOpen}
-            onColorSchemeOpen={handleColorSchemeOpen}
-            onBotModeToggle={handleBotModeToggle}
-            onGetTopMoves={handleGetTopMovesForExpandable}
-            onWordSubmit={handleWordSubmitClick}
-            onPass={handlePassClick}
-            onExchange={handleExchangeClick}
-            onPlayTopMove={handlePlayTopMoveClick}
-            selectedBoardPosition={selectedBoardPosition}
-            tilesToExchange={tilesToExchange}
-            autoPlayBest={autoPlayBest}
-            setAutoPlayBest={setAutoPlayBest}
-            isBotThinking={isBotThinking}
-            isPlayerThinking={isPlayerThinking}
-            latestMove={latestMove}
-            moveHistory={moveHistory}
-            topMoves={topMoves}
-            onMoveSelect={handleMoveSelectClick}
-            onSimulateMove={simulateMove}
-            onOpenSimulationModal={openSimulationModal}
-            simulatingMove={simulatingMove}
-            boardCoords={boardCoords}
-            pool={pool}
-            icons={{
-              settings: <TuneIcon className={styles.keyBtn} />,
-              colorScheme: <PaletteIcon className={styles.keyBtn} />,
-              time: (
-                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                  <TimerIcon 
-                      className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
-                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
-                  />
-                </Tooltip>
-              ),
-              botMode: <SmartToyIcon 
-                  className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
-              />,
-              topMoves: <LightbulbIcon className={styles.keyBtn} />,
-            }}
-          />
-
-          {showTimeSlider && !gameStarted && (
-              <Box className={styles.timeSliderContainer}>
-                <Box className={styles.timeSliderLabel}>
-                Game Time: {gameTime} min
+                Playground+
               </Box>
-                <Box className={styles.timeSliderWrapper}>
-                  {[5, 15, 25, 30].map((value) => (
-                    <Box
-                      key={value}
-                      className={styles.timeSliderMark}
-                      style={{ left: `${((value - 5) / 25) * 100}%` }}
+            </Box>
+          </Box>
+          <Box className={styles.leftContainer}>
+            <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
+              <Board 
+                board={board}
+                boardMode={theme}
+                onBoardChildClick={(row, col) => handleBoardPositionSelect({
+                  row,
+                  col,
+                  boardCoords,
+                  selectedBoardPosition,
+                  setSelectedBoardPosition,
+                  arrowDirection,
+                  setArrowDirection
+                })}
+                onTileDrop={(tile, index, row, col) => handleTileDrop({
+                  tile,
+                  index,
+                  row,
+                  col,
+                  player1Rack,
+                  setPlayer1Rack,
+                  player2Rack,
+                  setPlayer2Rack,
+                  selectedTiles,
+                  setSelectedTiles,
+                  setSelectedBoardPosition,
+                  tempBoardCoords,
+                  setTempBoardCoords
+                })}
+                onTileClick={(tile, index) => handleTileClick({
+                  tile,
+                  index,
+                  currentPlayer,
+                  player1Rack,
+                  player2Rack,
+                  selectedTiles,
+                  setSelectedTiles,
+                  tilesToExchange,
+                  setTilesToExchange
+                })}
+                selectedPosition={selectedBoardPosition}
+                arrowDirection={arrowDirection}
+                onArrowDirectionChange={(newDirection) => {
+                    console.log('Play component received direction change:', newDirection);
+                    setArrowDirection(newDirection);
+                }}
+                animate={false}
+                showSlip={false}
+                showDictionary={false}
+                dictionary=""
+                previewScore={previewScore}
+                previewScorePosition={previewScorePosition}
+                lastMoveCoordinates={lastMoveCoordinates}
+              />   
+            </Box>
+          </Box>
+
+          <Box className={styles.rightPanel}>
+            <PlayerInfo
+              player1Name={player1Name}
+              player2Name={player2Name}
+              player1Points={player1points}
+              player2Points={player2points}
+              player1Time={formatTime(player1Time)}
+              player2Time={formatTime(player2Time)}
+              currentPlayer={currentPlayer}
+              player1Rack={player1Rack}
+              player2Rack={player2Rack}
+              color={color}
+              onTileClick={(tile, index) => handleTileClick({
+                tile,
+                index,
+                currentPlayer,
+                player1Rack,
+                player2Rack,
+                selectedTiles,
+                setSelectedTiles,
+                tilesToExchange,
+                setTilesToExchange
+              })}
+              selectedTiles={tilesToExchange}
+              isBotMode={isBotMode}
+              gameStarted={gameStarted}
+              isDictionaryLoading={isDictionaryLoading}
+              isLoadingTopMoves={isLoadingTopMoves}
+              onSettingsOpen={handleSettingsOpen}
+              onColorSchemeOpen={handleColorSchemeOpen}
+              onBotModeToggle={handleBotModeToggle}
+              onGetTopMoves={handleGetTopMovesForExpandable}
+              onWordSubmit={handleWordSubmitClick}
+              onPass={handlePassClick}
+              onExchange={handleExchangeClick}
+              onPlayTopMove={handlePlayTopMoveClick}
+              selectedBoardPosition={selectedBoardPosition}
+              tilesToExchange={tilesToExchange}
+              autoPlayBest={autoPlayBest}
+              setAutoPlayBest={setAutoPlayBest}
+              isBotThinking={isBotThinking}
+              isPlayerThinking={isPlayerThinking}
+              latestMove={latestMove}
+              moveHistory={moveHistory}
+              topMoves={topMoves}
+              onMoveSelect={handleMoveSelectClick}
+              onSimulateMove={simulateMove}
+              onOpenSimulationModal={openSimulationModal}
+              simulatingMove={simulatingMove}
+              boardCoords={boardCoords}
+              pool={pool}
+              icons={{
+                settings: <TuneIcon className={styles.keyBtn} />,
+                colorScheme: <PaletteIcon className={styles.keyBtn} />,
+                time: (
+                  <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
+                    <TimerIcon 
+                        className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                      onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
                     />
-                  ))}
-                  <Box
-                    className={styles.timeSliderThumb}
-                    style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
-                    onMouseDown={(e) => {
-                      const slider = e.currentTarget.parentElement;
-                      const rect = slider.getBoundingClientRect();
-                      const handleMouseMove = (e) => {
-                        const x = e.clientX - rect.left;
-                        const percentage = Math.max(0, Math.min(1, x / rect.width));
-                        const value = Math.round(5 + percentage * 25);
-                        setGameTime(value);
-                      };
-                      const handleMouseUp = () => {
-                        document.removeEventListener('mousemove', handleMouseMove);
-                        document.removeEventListener('mouseup', handleMouseUp);
-                      };
-                      document.addEventListener('mousemove', handleMouseMove);
-                      document.addEventListener('mouseup', handleMouseUp);
-                    }}
-                  />
-              </Box>
-            </Box>
-          )}
+                  </Tooltip>
+                ),
+                botMode: <SmartToyIcon 
+                    className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+                />,
+                topMoves: <LightbulbIcon className={styles.keyBtn} />,
+              }}
+            />
 
-          <Box className={styles.playerPanel}>
-            <Box className={styles.poolBox}>
-              <PlayPool 
-                pool={pool} 
-                player1Rack={player1Rack} 
-                player2Rack={player2Rack}
-                gameStarted={gameStarted}
-              />  
+            {showTimeSlider && !gameStarted && (
+                <Box className={styles.timeSliderContainer}>
+                  <Box className={styles.timeSliderLabel}>
+                  Game Time: {gameTime} min
+                </Box>
+                  <Box className={styles.timeSliderWrapper}>
+                    {[5, 15, 25, 30].map((value) => (
+                      <Box
+                        key={value}
+                        className={styles.timeSliderMark}
+                        style={{ left: `${((value - 5) / 25) * 100}%` }}
+                      />
+                    ))}
+                    <Box
+                      className={styles.timeSliderThumb}
+                      style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
+                      onMouseDown={(e) => {
+                        const slider = e.currentTarget.parentElement;
+                        const rect = slider.getBoundingClientRect();
+                        const handleMouseMove = (e) => {
+                          const x = e.clientX - rect.left;
+                          const percentage = Math.max(0, Math.min(1, x / rect.width));
+                          const value = Math.round(5 + percentage * 25);
+                          setGameTime(value);
+                        };
+                        const handleMouseUp = () => {
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                      }}
+                    />
+                </Box>
+              </Box>
+            )}
+
+            <Box className={styles.playerPanel}>
+              <Box className={styles.poolBox}>
+                <PlayPool 
+                  pool={pool} 
+                  player1Rack={player1Rack} 
+                  player2Rack={player2Rack}
+                  gameStarted={gameStarted}
+                />  
+              </Box>
             </Box>
           </Box>
         </Box>
-      </Box>
 
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box className={styles.modalContainer}>
-          {modalContent === "settings" && (
-            <Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Board Mode
-                <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
-                  <option value="STANDARD">Standard</option>
-                  {/* <option value="FULLBOARD">Full Board</option> */}
-                </select>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box className={styles.modalContainer}>
+            {modalContent === "settings" && (
+              <Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Board Mode
+                  <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
+                    <option value="STANDARD">Standard</option>
+                    {/* <option value="FULLBOARD">Full Board</option> */}
+                  </select>
+                </Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Player Move Sound
+                  <select
+                    className={styles.styleSelection}
+                    value={playerMoveSoundType}
+                    onChange={e => setPlayerMoveSoundType(e.target.value)}
+                  >
+                    <option value="classic">Classic</option>
+                    <option value="sword">Sword</option>
+                  </select>
+                </Box>
+                <Box className={styles.modalContainer__dictionary}>
+                  Bot Move Sound
+                  <select
+                    className={styles.styleSelection}
+                    value={botMoveSoundType}
+                    onChange={e => setBotMoveSoundType(e.target.value)}
+                  >
+                    <option value="classic">Classic</option>
+                    <option value="sword">Sword</option>
+                  </select>
+                </Box>
               </Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Player Move Sound
-                <select
-                  className={styles.styleSelection}
-                  value={playerMoveSoundType}
-                  onChange={e => setPlayerMoveSoundType(e.target.value)}
-                >
-                  <option value="classic">Classic</option>
-                  <option value="sword">Sword</option>
-                </select>
-              </Box>
-              <Box className={styles.modalContainer__dictionary}>
-                Bot Move Sound
-                <select
-                  className={styles.styleSelection}
-                  value={botMoveSoundType}
-                  onChange={e => setBotMoveSoundType(e.target.value)}
-                >
-                  <option value="classic">Classic</option>
-                  <option value="sword">Sword</option>
-                </select>
-              </Box>
-            </Box>
-          )}
-          {modalContent === "colorScheme" && (
-            <ColorScheme
-              color={color}
-              boardColor={boardColor}
-            />
-          )}
-        </Box>
-      </Modal>
+            )}
+            {modalContent === "colorScheme" && (
+              <ColorScheme
+                color={color}
+                boardColor={boardColor}
+              />
+            )}
+          </Box>
+        </Modal>
       </Box>
       <Snackbar 
         open={snackbarOpen} 
