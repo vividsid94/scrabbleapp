@@ -1,4 +1,6 @@
-export const simulateMove = async (move, gameState, onProgress) => {
+import { generateRandomRack } from './moveFunctions.js';
+
+export const simulateMove = async (move, gameState, onProgress, settings = {}) => {
   const {
     boardCoords,
     currentPlayer,
@@ -9,21 +11,26 @@ export const simulateMove = async (move, gameState, onProgress) => {
     pool
   } = gameState;
 
+  // Use settings or defaults
+  const numSimulations = settings.numSimulations || 5;
+  const turnsPerSim = settings.turnsPerSim || 2;
+
   try {
     // Create copies of initial state
     let board = JSON.parse(JSON.stringify(boardCoords));
     let ourRack = [...(currentPlayer === 1 ? player1Rack : player2Rack)];
-    let botRack = [...(currentPlayer === 1 ? player2Rack : player1Rack)];
+    // Use a random rack for the opponent instead of the current game state's rack
+    let botRack = generateRandomRack(7);
     let ourScore = currentPlayer === 1 ? player1points : player2points;
     let botScore = currentPlayer === 1 ? player2points : player1points;
     ourScore += (move.score || 0);
     let moves = 1;
     const results = [];
     
-    // Run 5 simulations
-    for (let sim = 0; sim < 5; sim++) {
+    // Run simulations
+    for (let sim = 0; sim < numSimulations; sim++) {
       // Report progress at the start of each simulation
-      onProgress?.(sim / 5);
+      onProgress?.(sim / numSimulations);
       
       // Reset state for this simulation
       let simBoard = JSON.parse(JSON.stringify(board));
@@ -45,15 +52,21 @@ export const simulateMove = async (move, gameState, onProgress) => {
       }
       
       // Store the board after initial move
-      onProgress?.(sim / 5, {
+      onProgress?.(sim / numSimulations, {
         board: JSON.parse(JSON.stringify(simBoard)),
         move: 'initial'
       });
       
-      // Simulate 4 more moves (2 turns each)
-      for (let turn = 0; turn < 2; turn++) {
+      // Simulate additional moves based on turnsPerSim
+      // turnsPerSim now represents total turns starting with opponent
+      for (let turn = 0; turn < turnsPerSim; turn++) {
         try {
-          // Get bot's response
+          // Determine whose turn it is (opponent goes first)
+          const isOpponentTurn = turn % 2 === 0;
+          const currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
+          const currentTurnScore = isOpponentTurn ? simBotScore : simOurScore;
+          
+          // Get moves for current player
           const response = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
@@ -61,7 +74,7 @@ export const simulateMove = async (move, gameState, onProgress) => {
             },
             body: JSON.stringify({
               board: simBoard,
-              letters: simBotRack
+              letters: currentTurnRack
             })
           });
           
@@ -69,90 +82,46 @@ export const simulateMove = async (move, gameState, onProgress) => {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           
-          const botMoves = await response.json();
+          const moves = await response.json();
           
-          if (!botMoves || !botMoves.moves || botMoves.moves.length === 0) {
-            break;
-          }
-
-          // Select the highest scoring move for bot
-          const botMove = botMoves.moves[0];  // Moves are already sorted by score
-          
-          // Apply bot's move
-          for (const tile of botMove.tiles) {
-            if (tile.isNew) {
-              simBoard[tile.row][tile.col] = tile.letter;
-              const tileIndex = simBotRack.indexOf(tile.letter);
-              if (tileIndex !== -1) {
-                simBotRack.splice(tileIndex, 1);
-              }
-            }
-          }
-          
-          simBotScore += (botMove.score || 0);
-          simMoves++;
-          
-          // Store the board after bot's move
-          onProgress?.(sim / 5, {
-            board: JSON.parse(JSON.stringify(simBoard)),
-            move: 'bot'
-          });
-          
-          // Get our next move
-          const ourResponse = await fetch('/.netlify/functions/getTopMoves', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              board: simBoard,
-              letters: simOurRack
-            })
-          });
-          
-          if (!ourResponse.ok) {
-            throw new Error(`HTTP error! status: ${ourResponse.status}`);
-          }
-          
-          const ourMoves = await ourResponse.json();
-          
-          if (!ourMoves || !ourMoves.moves || ourMoves.moves.length === 0) {
+          if (!moves || !moves.moves || moves.moves.length === 0) {
             break;
           }
 
           // Select the highest scoring move
-          const ourMove = ourMoves.moves[0];  // Moves are already sorted by score
+          const bestMove = moves.moves[0];  // Moves are already sorted by score
           
-          // Apply our move
-          for (const tile of ourMove.tiles) {
+          // Apply the move
+          for (const tile of bestMove.tiles) {
             if (tile.isNew) {
               simBoard[tile.row][tile.col] = tile.letter;
-              const tileIndex = simOurRack.indexOf(tile.letter);
+              const tileIndex = currentTurnRack.indexOf(tile.letter);
               if (tileIndex !== -1) {
-                simOurRack.splice(tileIndex, 1);
+                currentTurnRack.splice(tileIndex, 1);
               }
             }
           }
           
-          simOurScore += (ourMove.score || 0);
+          // Update score for current player
+          if (isOpponentTurn) {
+            simBotScore += (bestMove.score || 0);
+          } else {
+            simOurScore += (bestMove.score || 0);
+          }
+          
           simMoves++;
           
-          // Store the board after our move
-          onProgress?.(sim / 5, {
+          // Store the board after the move
+          onProgress?.(sim / numSimulations, {
             board: JSON.parse(JSON.stringify(simBoard)),
-            move: 'player'
+            move: isOpponentTurn ? 'bot' : 'player'
           });
           
-          // Draw new tiles for both players
+          // Draw new tiles for the current player
           const newPool = [...pool];
-          while (simOurRack.length < 7 && newPool.length > 0) {
+          while (currentTurnRack.length < 7 && newPool.length > 0) {
             const randomIndex = Math.floor(Math.random() * newPool.length);
-            simOurRack.push(newPool[randomIndex]);
-            newPool.splice(randomIndex, 1);
-          }
-          while (simBotRack.length < 7 && newPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * newPool.length);
-            simBotRack.push(newPool[randomIndex]);
+            currentTurnRack.push(newPool[randomIndex]);
             newPool.splice(randomIndex, 1);
           }
           

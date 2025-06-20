@@ -31,6 +31,7 @@ import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
 import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect, generateExchangeCombinations, fetchBoardControl } from '../../functions/play/moveFunctions';
+import { generateRandomRack } from '../../functions/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
 import { handleGameEnd } from '../../functions/play/gameEndFunctions';
@@ -870,21 +871,46 @@ export default function Play() {
   };
 
   const handleMoveSelectClick = useCallback((move) => {
-    handleMoveSelect({
-      move,
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setSelectedBoardPosition,
-      setArrowDirection
-    });
+    // Validate move structure
+    if (!move || !move.tiles || !Array.isArray(move.tiles)) {
+      console.error('Invalid move structure:', move);
+      return;
+    }
+    
+    // If the simulation modal is open, update the selected move and board
+    if (showSimulationModal) {
+      setMoveWithResults(move);
+      
+      // Update the simulation board with the new move
+      const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
+      
+      // Apply the move to the simulation board
+      for (const tile of move.tiles) {
+        if (tile.isNew) {
+          simulationBoardData[tile.row][tile.col] = tile.letter;
+        }
+      }
+      
+      setSimulationBoard(simulationBoardData);
+    } else {
+      // Normal move selection for the game board
+      handleMoveSelect({
+        move,
+        boardCoords,
+        tempBoardCoords,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        setTempBoardCoords,
+        setSelectedTiles,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setSelectedBoardPosition,
+        setArrowDirection
+      });
+    }
   }, [
+    showSimulationModal,
     boardCoords,
     tempBoardCoords,
     currentPlayer,
@@ -1061,8 +1087,22 @@ export default function Play() {
     };
   }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, autoPlayBest, isPlayerThinking, isBotThinking]);
 
-  const openSimulationModal = (move) => {
-    setMoveWithResults(move);
+  const openSimulationModal = (move = null) => {
+    // If no move is provided, use the first move from topMoves
+    const selectedMove = move || (topMoves && topMoves.length > 0 ? topMoves[0] : null);
+    
+    if (!selectedMove) {
+      console.error('No move available for simulation modal');
+      return;
+    }
+    
+    // Ensure the move has the required structure
+    if (!selectedMove.tiles || !Array.isArray(selectedMove.tiles)) {
+      console.error('Selected move does not have valid tiles array:', selectedMove);
+      return;
+    }
+    
+    setMoveWithResults(selectedMove);
     setSimulationBoard(null);
     setPreviewMove(null);
     setShowSimulationModal(true);
@@ -1072,7 +1112,7 @@ export default function Play() {
     const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
     
     // Apply the move to the simulation board
-    for (const tile of move.tiles) {
+    for (const tile of selectedMove.tiles) {
       if (tile.isNew) {
         simulationBoardData[tile.row][tile.col] = tile.letter;
       }
@@ -1082,13 +1122,34 @@ export default function Play() {
     setSimulationBoard(simulationBoardData);
   };
 
+  const resetHeatMapMode = () => {
+    setIsHeatMapMode(false);
+    setHeatMapData(null);
+  };
+
+  const stopSimulation = () => {
+    setShouldStopSimulation(true);
+    setSimulatingMove(null);
+    setSimulationProgress(0);
+  };
+
+  const switchToMetrics = () => {
+    setIsHeatMapMode(false);
+  };
+
   const runSimulation = async (move) => {
+    // Reset heat map mode when starting normal simulation
+    resetHeatMapMode();
+    
+    // Reset stop flag
+    setShouldStopSimulation(false);
+    
     setSimulatingMove(move);
     setSimulationProgress(0);
     
     try {
       const gameState = {
-        boardCoords: simulationBoard, // Use the existing simulation board
+        boardCoords: simulationBoard,
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -1098,23 +1159,28 @@ export default function Play() {
       };
       
       const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
-        setSimulationProgress(progress);
-        if (previewData) {
-          // Update the simulation board with the simulation progress
-          setSimulationBoard(previewData.board);
-          setPreviewMove(previewData.move);
+        // Check if simulation should be stopped
+        if (shouldStopSimulation) {
+          throw new Error('Simulation stopped by user');
         }
-      });
+        setSimulationProgress(progress * 100);
+      }, simulationSettings);
+      
       setSimulationResult(result);
+      
     } catch (error) {
-      console.error('Error simulating move:', error);
-      setSnackbarMessage('Error simulating move: ' + error.message);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      if (error.message === 'Simulation stopped by user') {
+        console.log('Simulation stopped by user');
+      } else {
+        console.error('Error running simulation:', error);
+        setSnackbarMessage('Error running simulation: ' + error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
     } finally {
       setSimulatingMove(null);
       setSimulationProgress(0);
-      // Don't clear simulationBoard and previewMove here - keep showing the simulation results
+      setShouldStopSimulation(false);
     }
   };
 
@@ -1168,6 +1234,159 @@ export default function Play() {
       setPreviewScorePosition(null);
     }
   }, [selectedTiles, tempBoardCoords]);
+
+  const [heatMapData, setHeatMapData] = useState(null);
+  const [isHeatMapMode, setIsHeatMapMode] = useState(false);
+  const [simulationSettings, setSimulationSettings] = useState({
+    numSimulations: 5,
+    turnsPerSim: 2
+  });
+  const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
+
+  const runHeatMapSimulation = async (move) => {
+    setSimulatingMove(move);
+    setSimulationProgress(0);
+    setIsHeatMapMode(true);
+    
+    // Reset stop flag
+    setShouldStopSimulation(false);
+    
+    // Initialize heat map data (15x15 grid)
+    const heatMap = Array(15).fill(null).map(() => Array(15).fill(0));
+    
+    try {
+      const iterations = simulationSettings.numSimulations;
+      
+      for (let i = 0; i < iterations; i++) {
+        // Check if simulation should be stopped
+        if (shouldStopSimulation) {
+          throw new Error('Simulation stopped by user');
+        }
+        
+        // Update progress
+        setSimulationProgress((i / iterations) * 100);
+        
+        // Create copies of initial state for this iteration
+        let board = JSON.parse(JSON.stringify(simulationBoard));
+        let ourRack = [...(currentPlayer === 1 ? player1Rack : player2Rack)];
+        // Use a random rack for the opponent instead of the current game state's rack
+        let botRack = generateRandomRack(7);
+        let currentPool = [...pool];
+        
+        // Apply the initial move
+        for (const tile of move.tiles) {
+          if (tile.isNew) {
+            board[tile.row][tile.col] = tile.letter;
+            const tileIndex = ourRack.indexOf(tile.letter);
+            if (tileIndex !== -1) {
+              ourRack.splice(tileIndex, 1);
+            }
+          }
+        }
+        
+        // Track the board after initial move
+        trackBoardOccupancy(board, heatMap);
+        
+        // Simulate additional moves based on turnsPerSim
+        // turnsPerSim now represents total turns starting with opponent
+        for (let turn = 0; turn < simulationSettings.turnsPerSim; turn++) {
+          try {
+            // Check if simulation should be stopped
+            if (shouldStopSimulation) {
+              throw new Error('Simulation stopped by user');
+            }
+            
+            // Determine whose turn it is (opponent goes first)
+            const isOpponentTurn = turn % 2 === 0;
+            const currentTurnRack = isOpponentTurn ? botRack : ourRack;
+            
+            // Get moves for current player
+            const response = await fetch('/.netlify/functions/getTopMoves', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                board: board,
+                letters: currentTurnRack
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const moves = await response.json();
+            
+            if (!moves || !moves.moves || moves.moves.length === 0) {
+              break;
+            }
+
+            // Select the highest scoring move
+            const bestMove = moves.moves[0];
+            
+            // Apply the move
+            for (const tile of bestMove.tiles) {
+              if (tile.isNew) {
+                board[tile.row][tile.col] = tile.letter;
+                const tileIndex = currentTurnRack.indexOf(tile.letter);
+                if (tileIndex !== -1) {
+                  currentTurnRack.splice(tileIndex, 1);
+                }
+              }
+            }
+            
+            // Track the board after the move
+            trackBoardOccupancy(board, heatMap);
+            
+            // Draw new tiles for the current player
+            while (currentTurnRack.length < 7 && currentPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              currentTurnRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
+            
+          } catch (error) {
+            console.error('Error in heat map iteration:', error);
+            break;
+          }
+        }
+        
+        // Update heat map data after each iteration
+        setHeatMapData([...heatMap]);
+        
+        // Small delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      // Final update
+      setHeatMapData([...heatMap]);
+      
+    } catch (error) {
+      if (error.message === 'Simulation stopped by user') {
+        console.log('Heat map simulation stopped by user');
+      } else {
+        console.error('Error running heat map simulation:', error);
+        setSnackbarMessage('Error running heat map simulation: ' + error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } finally {
+      setSimulatingMove(null);
+      setSimulationProgress(0);
+      setShouldStopSimulation(false);
+    }
+  };
+
+  const trackBoardOccupancy = (board, heatMap) => {
+    for (let row = 0; row < 15; row++) {
+      for (let col = 0; col < 15; col++) {
+        if (typeof board[row][col] === 'string') {
+          heatMap[row][col]++;
+        }
+      }
+    }
+  };
 
   return (
     <Box className={styles.container}>
@@ -1422,10 +1641,8 @@ export default function Play() {
           setShowSimulationModal(false);
           setSimulationBoard(null);
           setPreviewMove(null);
-          setSimulatingMove(null);
-          setSimulationResult(null);
-          setSimulationProgress(0);
           setMoveWithResults(null);
+          resetHeatMapMode();
         }}
         simulationBoard={simulationBoard}
         theme={theme}
@@ -1436,7 +1653,16 @@ export default function Play() {
         simulationProgress={simulationProgress}
         simulationResult={simulationResult}
         moveWithResults={moveWithResults}
-        onStartSimulation={(move) => runSimulation(move)}
+        onStartSimulation={runSimulation}
+        onStartHeatMap={runHeatMapSimulation}
+        onStopSimulation={stopSimulation}
+        onSwitchToMetrics={switchToMetrics}
+        heatMapData={heatMapData}
+        isHeatMapMode={isHeatMapMode}
+        simulationSettings={simulationSettings}
+        onSimulationSettingsChange={setSimulationSettings}
+        topMoves={topMoves}
+        onMoveSelect={handleMoveSelectClick}
       />
 
       {/* Victory Celebration Components */}

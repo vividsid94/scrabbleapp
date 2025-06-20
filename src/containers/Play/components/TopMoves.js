@@ -104,19 +104,6 @@ const TopMoves = ({
           <Tooltip title="Board Control Estimate">
             <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
           </Tooltip>
-          <Box className={styles.topMoveActions}>
-            <Tooltip title="Metrics">
-              <Box 
-                className={`${styles.topMoveActionButton} ${isSimulating ? styles.simulating : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenSimulationModal(move);
-                }}
-              >
-                🧠
-              </Box>
-            </Tooltip>
-          </Box>
         </Box>
       </Box>
     );
@@ -128,6 +115,7 @@ const TopMoves = ({
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <LightbulbIcon style={{ fontSize: 16 }} />
+            <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
           <Box className={styles.loadingText}>
             {isDictionaryLoading ? 'Loading dictionary...' : (
@@ -149,6 +137,7 @@ const TopMoves = ({
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <LightbulbIcon style={{ fontSize: 16 }} />
+            <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
         </Box>
       </Box>
@@ -160,8 +149,24 @@ const TopMoves = ({
       <Box className={`${styles.topMovesContent} ${animationClass}`}>
         <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
           <LightbulbIcon style={{ fontSize: 16 }} />
+          <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
         </Box>
-        <Box className={styles.topMovesCount}>{topMoves.length} options</Box>
+        {topMoves.length >= 15 && (
+          <Box 
+            className={styles.topMovesButton} 
+            onClick={() => onOpenSimulationModal()}
+            sx={{
+              height: '16px', // Keep height fixed
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingRight: 0 // Remove right padding
+            }}
+          >
+            <Box sx={{ fontSize: '11px' }}>Metrics</Box>
+            <Box sx={{ fontSize: '10px' }}></Box>
+          </Box>
+        )}
         {topMoves.length > 0 && (
           <Box className={styles.expandIcon} onClick={handleExpandClick}>
             {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
