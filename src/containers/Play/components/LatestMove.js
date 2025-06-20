@@ -77,99 +77,57 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   };
 
   useEffect(() => {
-    if (latestMove) {
-      // Start slide out animation with current move
-      setIsAnimating(true);
-      setAnimationClass(styles.slidingOut);
-      
-      // After slide out, update the move and slide in
-      const timer = setTimeout(() => {
-        // Add the new move to the moves array
-        setAllMovesInternal(prevMoves => {
-          // Add timestamp to make each move unique, even if they're identical
-          const moveWithTimestamp = {
-            ...latestMove,
-            timestamp: Date.now()
-          };
-          
-          return [moveWithTimestamp, ...prevMoves];
-        });
-        
-        // Update the display move with the same structure (including timestamp)
-        const moveWithTimestamp = {
-          ...latestMove,
-          timestamp: Date.now()
-        };
-        setDisplayMove(moveWithTimestamp);
-        
-        // Slide in with new move
-        setAnimationClass(styles.slidingIn);
-        setIsAnimating(false);
-      }, 300); // Match the slideOutUp animation duration
-      
-      return () => clearTimeout(timer);
-    } else if (latestMove === null) {
-      // Clear internal state when latestMove is null (new game started)
+    // Handle new game (clear state)
+    if (latestMove === null) {
       setAllMovesInternal([]);
       setDisplayMove(null);
       setIsExpanded(false);
       setAnimationClass('');
-    } else if (allMovesInternal.length > 0 && !displayMove) {
-      // Initialize display move if we have moves but no display move
-      setDisplayMove(allMovesInternal[0]);
+      return;
     }
-  }, [latestMove]);
 
-  // Add a separate effect to handle moveHistory changes (for autoplay scenarios)
-  useEffect(() => {
+    // If we have external allMoves, use those as the source of truth
     if (allMoves && allMoves.length > 0) {
-      // If we have external moveHistory, use it instead of internal state
-      // This handles cases where moves are added rapidly (like during autoplay)
       const latestExternalMove = allMoves[allMoves.length - 1];
       
-      // Only update if this is a new move (not already in our internal state)
+      // Check if this is a new move by comparing with our internal state
       const isNewMove = !allMovesInternal.some(move => 
         move.score === latestExternalMove.score && 
         move.player === latestExternalMove.player && 
-        move.word === latestExternalMove.word
+        move.word === latestExternalMove.word &&
+        move.boardDiff && latestExternalMove.boardDiff &&
+        JSON.stringify(move.boardDiff) === JSON.stringify(latestExternalMove.boardDiff)
       );
       
       if (isNewMove) {
-        // For autoplay, we might want to skip animations to avoid overwhelming the UI
+        // Determine if this is autoplay (multiple moves at once)
         const isAutoplay = allMoves.length > allMovesInternal.length + 1;
         
         if (isAutoplay) {
           // During autoplay, update immediately without animations
-          // Convert allMoves to internal format with newest moves first (for display)
           const movesWithTimestamps = allMoves.map((move, index) => ({
             ...move,
-            timestamp: Date.now() + (allMoves.length - index) // Reverse order for display
+            timestamp: Date.now() + (allMoves.length - index)
           }));
           
-          // Reverse the array so newest moves are first (for display)
           setAllMovesInternal(movesWithTimestamps.reverse());
           setDisplayMove({
             ...latestExternalMove,
             timestamp: Date.now()
           });
         } else {
-          // Normal single move - use animation
+          // Single move - use animation
           setIsAnimating(true);
           setAnimationClass(styles.slidingOut);
           
           const timer = setTimeout(() => {
-            // For single moves, add to the beginning (newest first for display)
-            setAllMovesInternal(prevMoves => {
-              const moveWithTimestamp = {
-                ...latestExternalMove,
-                timestamp: Date.now()
-              };
-              return [moveWithTimestamp, ...prevMoves];
-            });
-            setDisplayMove({
+            const moveWithTimestamp = {
               ...latestExternalMove,
               timestamp: Date.now()
-            });
+            };
+            
+            setAllMovesInternal(prevMoves => [moveWithTimestamp, ...prevMoves]);
+            setDisplayMove(moveWithTimestamp);
             setAnimationClass(styles.slidingIn);
             setIsAnimating(false);
           }, 300);
@@ -177,8 +135,39 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
           return () => clearTimeout(timer);
         }
       }
+    } else if (latestMove) {
+      // Fallback to latestMove if no allMoves available
+      const isNewMove = !allMovesInternal.some(move => 
+        move.score === latestMove.score && 
+        move.player === latestMove.player && 
+        move.word === latestMove.word &&
+        move.boardDiff && latestMove.boardDiff &&
+        JSON.stringify(move.boardDiff) === JSON.stringify(latestMove.boardDiff)
+      );
+      
+      if (isNewMove) {
+        setIsAnimating(true);
+        setAnimationClass(styles.slidingOut);
+        
+        const timer = setTimeout(() => {
+          const moveWithTimestamp = {
+            ...latestMove,
+            timestamp: Date.now()
+          };
+          
+          setAllMovesInternal(prevMoves => [moveWithTimestamp, ...prevMoves]);
+          setDisplayMove(moveWithTimestamp);
+          setAnimationClass(styles.slidingIn);
+          setIsAnimating(false);
+        }, 300);
+        
+        return () => clearTimeout(timer);
+      }
+    } else if (allMovesInternal.length > 0 && !displayMove) {
+      // Initialize display move if we have moves but no display move
+      setDisplayMove(allMovesInternal[0]);
     }
-  }, [allMoves, allMovesInternal.length]);
+  }, [latestMove, allMoves, allMovesInternal.length, displayMove]);
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded);
