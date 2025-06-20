@@ -1,3 +1,5 @@
+import { removeTilesByCount } from './rackFunctions';
+
 /**
  * Calculates the leave (remaining tiles) after a move
  * @param {Object} move - The move object containing tiles to be played
@@ -8,18 +10,16 @@ export const calculateLeave = (move, currentRack) => {
   // Create a copy of the current rack
   const rackCopy = [...currentRack];
   
-  // Remove tiles used in the move
-  for (const tile of move.tiles) {
-    if (tile.isNew) {
-      // For blank tiles, we need to find the blank in the rack
-      const tileIndex = tile.isBlank ? rackCopy.indexOf('?') : rackCopy.indexOf(tile.letter);
-      if (tileIndex !== -1) {
-        rackCopy.splice(tileIndex, 1);
-      }
-    }
-  }
+  // Get tiles to remove from the move
+  const tilesToRemove = move.tiles
+    .filter(tile => tile.isNew)
+    .map(tile => tile.isBlank ? '?' : tile.letter);
+  
+  // Remove tiles using count method
+  const remainingRack = removeTilesByCount(rackCopy, tilesToRemove);
+  
   // Sort the remaining tiles to create the leave
-  return rackCopy.sort().join('');
+  return remainingRack.sort().join('');
 };
 
 /**
@@ -100,13 +100,11 @@ export const fetchLeaveValues = async (moves, leaveValues = {}, setLeaveValues) 
  * @returns {string} The sorted leave string
  */
 export const calculateExchangeLeave = (rack, tilesToExchange) => {
-  const rackCopy = [...rack];
-  // Remove tiles that would be exchanged
-  for (const tile of tilesToExchange) {
-    const index = rackCopy.indexOf(tile === '*' ? '?' : tile);
-    if (index !== -1) {
-      rackCopy.splice(index, 1);
-    }
-  }
-  return rackCopy.sort().join('');
+  // Convert any '*' to '?' for consistency
+  const tilesToRemove = tilesToExchange.map(tile => tile === '*' ? '?' : tile);
+  
+  // Remove tiles using count method
+  const remainingRack = removeTilesByCount(rack, tilesToRemove);
+  
+  return remainingRack.sort().join('');
 }; 

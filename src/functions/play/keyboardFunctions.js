@@ -1,4 +1,4 @@
-import { alphabetizeRack } from './rackFunctions';
+import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 
 // Add debounce mechanism
 let lastKeyPressTime = 0;
@@ -185,21 +185,23 @@ export const handleKeyDown = ({
     return;
   }
 
-  const newRack = [...currentRack];
   const newTempBoard = [...tempBoardCoords];
   const newBlankTiles = [...blankTiles];
+  let newRack = [...currentRack];
 
   // Always use the actual letter if we have it
   if (tileIndex !== -1) {
     const tileToPlace = newRack[tileIndex];
-    newRack.splice(tileIndex, 1);
+    // Don't remove tiles from rack immediately - just track them in selectedTiles
+    // Tiles will be removed during word submission
     newTempBoard[row][col] = key;
     setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
   } 
   // Only use the blank tile if we don't have the letter
   else if (blankIndex !== -1) {
     const tileToPlace = newRack[blankIndex];
-    newRack.splice(blankIndex, 1);
+    // Don't remove tiles from rack immediately - just track them in selectedTiles
+    // Tiles will be removed during word submission
     newTempBoard[row][col] = key;
     newBlankTiles.push({ row, col });
     setBlankTiles(newBlankTiles);
@@ -207,9 +209,9 @@ export const handleKeyDown = ({
   }
 
   if (currentPlayer === 1) {
-    setPlayer1Rack(alphabetizeRack(newRack));
+    // Don't update rack since tiles aren't removed until word submission
   } else {
-    setPlayer2Rack(alphabetizeRack(newRack));
+    // Don't update rack since tiles aren't removed until word submission
   }
 
   setTempBoardCoords(newTempBoard);

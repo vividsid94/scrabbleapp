@@ -1,4 +1,5 @@
 import { alphabetizeRack } from './rackFunctions';
+import { removeTilesByCount } from './rackFunctions';
 
 /**
  * Handles the submission of a word to the board
@@ -169,7 +170,22 @@ export const handleWordSubmit = async ({
   }
 
   // Remove played tiles from rack
-  const newRack = playerRack.filter(tile => !selectedTiles.some(selectedTile => selectedTile.tile === tile));
+  const tilesToRemove = selectedTiles.map(tile => tile.tile);
+  console.log('🔍 DEBUG - Tile removal:', {
+    playerRack: playerRack,
+    selectedTiles: selectedTiles,
+    tilesToRemove: tilesToRemove,
+    rackLength: playerRack.length
+  });
+  
+  const newRack = removeTilesByCount(playerRack, tilesToRemove);
+  
+  console.log('🔍 DEBUG - After removal:', {
+    newRack: newRack,
+    newRackLength: newRack.length,
+    removedCount: playerRack.length - newRack.length
+  });
+
   if (currentPlayer === 1) {
     setPlayer1Rack(alphabetizeRack(newRack));
   } else {

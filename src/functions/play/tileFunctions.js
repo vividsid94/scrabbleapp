@@ -1,5 +1,7 @@
 // Utility functions for tile management in Play.js
 
+import { removeTilesByCount } from './rackFunctions';
+
 /**
  * Handles dropping a tile onto the board, updating racks, selected tiles, and temp board.
  * @param {Object} params - All necessary state and setters.
@@ -32,20 +34,16 @@ export function handleTileDrop({
   tempBoardCoords,
   setTempBoardCoords
 }) {
-  const player1Index = player1Rack.indexOf(tile);
-  const player2Index = player2Rack.indexOf(tile);
-
-  if (player1Index !== -1) {
-    const newRack = [...player1Rack];
-    newRack.splice(player1Index, 1);
-    setPlayer1Rack(newRack.sort());
-  } else if (player2Index !== -1) {
-    const newRack = [...player2Rack];
-    newRack.splice(player2Index, 1);
-    setPlayer2Rack(newRack.sort());
-  }
-
+  // Don't remove tiles from rack immediately - just track them in selectedTiles
+  // Tiles will be removed during word submission
+  
   setSelectedTiles([...selectedTiles, { tile, row, col }]);
+  console.log('🔍 DEBUG - Tile dropped:', {
+    tile: tile,
+    row: row,
+    col: col,
+    selectedTilesAfter: [...selectedTiles, { tile, row, col }]
+  });
   setSelectedBoardPosition({ row, col });
 
   const newTempBoard = [...tempBoardCoords];

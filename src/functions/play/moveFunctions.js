@@ -1,6 +1,6 @@
 import { calculateExchangeLeave } from './leaveFunctions';
 import { fetchLeaveValues } from './leaveFunctions';
-import { alphabetizeRack } from './rackFunctions';
+import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 
 /**
  * Generates all possible combinations of tiles for exchange
@@ -619,13 +619,8 @@ export const handlePlayTopMove = async ({
         // Handle exchange move
         const tilesToExchange = bestMove.tiles.map(t => t.letter);
         
-        // Remove exchanged tiles from rack
-        for (const tile of tilesToExchange) {
-          const tileIndex = stateUpdates.newRack.indexOf(tile);
-          if (tileIndex !== -1) {
-            stateUpdates.newRack.splice(tileIndex, 1);
-          }
-        }
+        // Remove exchanged tiles from rack using count method
+        stateUpdates.newRack = removeTilesByCount(stateUpdates.newRack, tilesToExchange);
         
         // Add new tiles from pool
         for (let i = 0; i < tilesToExchange.length; i++) {
@@ -654,28 +649,24 @@ export const handlePlayTopMove = async ({
       } else {
         // Handle regular move
         // Place tiles on board
+        const tilesToRemove = [];
+        
         for (const tile of bestMove.tiles) {
           if (tile.isNew) {
             stateUpdates.newBoard[tile.row][tile.col] = tile.letter;
             
             if (tile.isBlank) {
               stateUpdates.newBlankTiles.push({ row: tile.row, col: tile.col });
-              const blankIndex = stateUpdates.newRack.indexOf('?');
-              if (blankIndex !== -1) {
-                stateUpdates.newRack.splice(blankIndex, 1);
-              } else {
-                const starIndex = stateUpdates.newRack.indexOf('*');
-                if (starIndex !== -1) {
-                  stateUpdates.newRack.splice(starIndex, 1);
-                }
-              }
+              tilesToRemove.push('?');
             } else {
-              const tileIndex = stateUpdates.newRack.indexOf(tile.letter);
-              if (tileIndex !== -1) {
-                stateUpdates.newRack.splice(tileIndex, 1);
-              }
+              tilesToRemove.push(tile.letter);
             }
           }
+        }
+        
+        // Remove all tiles at once using count method
+        if (tilesToRemove.length > 0) {
+          stateUpdates.newRack = removeTilesByCount(stateUpdates.newRack, tilesToRemove);
         }
         
         // Draw new tiles
@@ -840,6 +831,7 @@ export const handleMoveSelect = ({
   const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
   const newRack = [...restoredRack];
   const newSelectedTiles = [];
+  const tilesToRemove = [];
   
   // Place each tile using the exact positions from the tiles array
   for (const tile of move.tiles) {
@@ -850,11 +842,12 @@ export const handleMoveSelect = ({
       }
       
       // For blank tiles, we need to find the blank in the rack
-      const tileIndex = tile.isBlank ? newRack.indexOf('*') : newRack.indexOf(tile.letter);
+      const tileToRemove = tile.isBlank ? '*' : tile.letter;
+      const tileIndex = newRack.indexOf(tileToRemove);
       if (tileIndex !== -1) {
         // For blank tiles, we need to show the letter it represents
         newTempBoard[tile.row][tile.col] = tile.letter;
-        newRack.splice(tileIndex, 1);
+        tilesToRemove.push(tileToRemove);
         // Store as object with tile, row, col properties for backspace compatibility
         newSelectedTiles.push({
           tile: tile.isBlank ? '*' : tile.letter,
@@ -863,6 +856,11 @@ export const handleMoveSelect = ({
         });
       }
     }
+  }
+  
+  // Remove all tiles at once using count method
+  if (tilesToRemove.length > 0) {
+    newRack = removeTilesByCount(newRack, tilesToRemove);
   }
   
   setTempBoardCoords(newTempBoard);

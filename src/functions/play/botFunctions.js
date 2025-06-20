@@ -1,4 +1,4 @@
-import { alphabetizeRack } from './rackFunctions';
+import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 
 export const makeBotMove = async ({
   boardCoords,
@@ -175,22 +175,17 @@ export const makeBotMove = async ({
     
     // Create a copy of the board with the bot's move
     const newBoard = JSON.parse(JSON.stringify(boardCoords));
-    const newRack = [...player2Rack];
+    let newRack = [...player2Rack];
     const newBlankTiles = [...blankTiles];
-    const newPool = [...pool];
+    let newPool = [...pool];
     
     if (bestMove.isExchange) {
       // Handle exchange move
       const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
       const newTiles = bestMove.newTiles || [];
       
-      // Remove exchanged tiles from rack
-      for (const tile of tilesToExchange) {
-        const tileIndex = newRack.indexOf(tile);
-        if (tileIndex !== -1) {
-          newRack.splice(tileIndex, 1);
-        }
-      }
+      // Remove exchanged tiles from rack using count method
+      newRack = removeTilesByCount(newRack, tilesToExchange);
       
       // Add new tiles to rack
       newRack.push(...newTiles);
@@ -216,6 +211,8 @@ export const makeBotMove = async ({
       //ssetSnackbarOpen(true);
     } else {
       // Handle regular move
+      const tilesToRemove = [];
+      
       for (const tile of bestMove.tiles) {
         if (tile.isNew) {
           newBoard[tile.row][tile.col] = tile.letter;
@@ -223,25 +220,17 @@ export const makeBotMove = async ({
           // For blank tiles, we need to find the blank in the rack
           if (tile.isBlank) {
             newBlankTiles.push({ row: tile.row, col: tile.col });
-            
-            // Remove the blank tile from the rack - look for both '?' and '*'
-            const blankIndex = newRack.indexOf('?');
-            if (blankIndex !== -1) {
-              newRack.splice(blankIndex, 1);
-            } else {
-              const starIndex = newRack.indexOf('*');
-              if (starIndex !== -1) {
-                newRack.splice(starIndex, 1);
-              }
-            }
+            tilesToRemove.push('?');
           } else {
-            // For non-blank tiles, find and remove the letter
-            const tileIndex = newRack.indexOf(tile.letter);
-            if (tileIndex !== -1) {
-              newRack.splice(tileIndex, 1);
-            }
+            // For non-blank tiles, add the letter to tiles to remove
+            tilesToRemove.push(tile.letter);
           }
         }
+      }
+      
+      // Remove all tiles at once using count method
+      if (tilesToRemove.length > 0) {
+        newRack = removeTilesByCount(newRack, tilesToRemove);
       }
       
       // Calculate running total
@@ -336,7 +325,7 @@ export const makeBotMove = async ({
       if (pool.length >= 7) {
         // Try an exchange if pool has enough tiles
         const tilesToExchange = player2Rack.slice(0, Math.min(3, player2Rack.length));
-        const newRack = player2Rack.filter(tile => !tilesToExchange.includes(tile));
+        let newRack = player2Rack.filter(tile => !tilesToExchange.includes(tile));
         
         // Draw new tiles
         for (let i = 0; i < tilesToExchange.length && pool.length > 0; i++) {

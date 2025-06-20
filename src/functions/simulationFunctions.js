@@ -1,4 +1,5 @@
 import { generateRandomRack } from './moveFunctions.js';
+import { removeTilesByCount } from './play/rackFunctions';
 
 // Helper function to track board occupancy for heat maps
 const trackBoardOccupancy = (board, heatMap) => {
@@ -62,10 +63,8 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       for (const tile of move.tiles) {
         if (tile.isNew) {
           simBoard[tile.row][tile.col] = tile.letter;
-          const tileIndex = simOurRack.indexOf(tile.letter);
-          if (tileIndex !== -1) {
-            simOurRack.splice(tileIndex, 1);
-          }
+          // Remove the tile from the current player's rack using count method
+          simOurRack = removeTilesByCount(simOurRack, [tile.letter]);
         }
       }
       
@@ -146,11 +145,8 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           for (const tile of bestMove.tiles) {
             if (tile.isNew) {
               simBoard[tile.row][tile.col] = tile.letter;
-              // Remove the tile from the current player's rack
-              const tileIndex = currentTurnRack.indexOf(tile.letter);
-              if (tileIndex !== -1) {
-                currentTurnRack.splice(tileIndex, 1);
-              }
+              // Remove the tile from the current player's rack using count method
+              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
             }
           }
           
@@ -294,10 +290,8 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
       for (const tile of move.tiles) {
         if (tile.isNew) {
           board[tile.row][tile.col] = tile.letter;
-          const tileIndex = ourRack.indexOf(tile.letter);
-          if (tileIndex !== -1) {
-            ourRack.splice(tileIndex, 1);
-          }
+          // Remove the tile from the current player's rack using count method
+          ourRack = removeTilesByCount(ourRack, [tile.letter]);
         }
       }
       
@@ -345,10 +339,8 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
           for (const tile of bestMove.tiles) {
             if (tile.isNew) {
               board[tile.row][tile.col] = tile.letter;
-              const tileIndex = currentTurnRack.indexOf(tile.letter);
-              if (tileIndex !== -1) {
-                currentTurnRack.splice(tileIndex, 1);
-              }
+              // Remove the tile from the current player's rack using count method
+              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
             }
           }
           
