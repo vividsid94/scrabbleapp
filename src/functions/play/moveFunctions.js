@@ -208,6 +208,11 @@ export const handleGetTopMoves = async ({
       moves: data.moves || []
     });
     
+    // Filter out moves with empty words
+    if (data.moves) {
+      data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+    }
+    
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {
       setIsDictionaryLoading(true);
@@ -474,6 +479,11 @@ export const handlePlayTopMove = async ({
       movesCount: data.moves ? data.moves.length : 0,
       moves: data.moves || []
     });
+    
+    // Filter out moves with empty words
+    if (data.moves) {
+      data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+    }
     
     // Check if this is the first load (dictionary loading)
     if (data.message && data.message.includes('Loading dictionary')) {

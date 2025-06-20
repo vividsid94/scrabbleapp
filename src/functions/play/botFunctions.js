@@ -144,6 +144,11 @@ export const makeBotMove = async ({
       throw new Error('Bot returned invalid response. Please try again.');
     }
 
+    // Filter out moves with empty words
+    if (data.moves) {
+      data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+    }
+
     console.log('Bot moves response:', {
       moves: data.moves,
       poolSize: pool.length,
