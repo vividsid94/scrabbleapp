@@ -882,6 +882,11 @@ export default function Play() {
     if (showSimulationModal) {
       setMoveWithResults(move);
       
+      // Clear preview board so the new move shows up
+      setPreviewBoard(null);
+      setPreviewMove(null);
+      setPreviewTileOwnership(null);
+      
       // Update the simulation board with the new move
       const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
       

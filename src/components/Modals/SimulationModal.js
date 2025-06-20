@@ -314,7 +314,7 @@ const SimulationModal = ({
                     }}
                   >
                     <CalculateIcon sx={{ fontSize: '10px' }} />
-                    Responses
+                    Opp Responses
                   </Box>
                 </Box>
                 
