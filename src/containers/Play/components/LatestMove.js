@@ -4,12 +4,14 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import DownloadIcon from '@mui/icons-material/Download';
 import styles from '../Play.module.css';
+import { generateGCGContent, downloadGCGFile } from '../../../functions/gcgUtils';
 
-const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }) => {
+const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, allMoves = [] }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
-  const [allMoves, setAllMoves] = useState([]);
+  const [allMovesInternal, setAllMovesInternal] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [displayMove, setDisplayMove] = useState(null);
 
@@ -62,6 +64,18 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     return sortedTiles.map(tile => tile.value).join('');
   };
 
+  // Handle download .gcg file
+  const handleDownloadGCG = () => {
+    const moveHistory = allMoves.length > 0 ? allMoves : allMovesInternal;
+    if (moveHistory.length === 0) {
+      return;
+    }
+    
+    const gcgContent = generateGCGContent(moveHistory, player1Name, player2Name);
+    const filename = `scrabble_game_${new Date().toISOString().split('T')[0]}.gcg`;
+    downloadGCGFile(gcgContent, filename);
+  };
+
   useEffect(() => {
     if (latestMove) {
       // Start slide out animation with current move
@@ -71,7 +85,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
       // After slide out, update the move and slide in
       const timer = setTimeout(() => {
         // Add the new move to the moves array
-        setAllMoves(prevMoves => {
+        setAllMovesInternal(prevMoves => {
           // Add timestamp to make each move unique, even if they're identical
           const moveWithTimestamp = {
             ...latestMove,
@@ -96,15 +110,75 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
       return () => clearTimeout(timer);
     } else if (latestMove === null) {
       // Clear internal state when latestMove is null (new game started)
-      setAllMoves([]);
+      setAllMovesInternal([]);
       setDisplayMove(null);
       setIsExpanded(false);
       setAnimationClass('');
-    } else if (allMoves.length > 0 && !displayMove) {
+    } else if (allMovesInternal.length > 0 && !displayMove) {
       // Initialize display move if we have moves but no display move
-      setDisplayMove(allMoves[0]);
+      setDisplayMove(allMovesInternal[0]);
     }
   }, [latestMove]);
+
+  // Add a separate effect to handle moveHistory changes (for autoplay scenarios)
+  useEffect(() => {
+    if (allMoves && allMoves.length > 0) {
+      // If we have external moveHistory, use it instead of internal state
+      // This handles cases where moves are added rapidly (like during autoplay)
+      const latestExternalMove = allMoves[allMoves.length - 1];
+      
+      // Only update if this is a new move (not already in our internal state)
+      const isNewMove = !allMovesInternal.some(move => 
+        move.score === latestExternalMove.score && 
+        move.player === latestExternalMove.player && 
+        move.word === latestExternalMove.word
+      );
+      
+      if (isNewMove) {
+        // For autoplay, we might want to skip animations to avoid overwhelming the UI
+        const isAutoplay = allMoves.length > allMovesInternal.length + 1;
+        
+        if (isAutoplay) {
+          // During autoplay, update immediately without animations
+          // Convert allMoves to internal format with newest moves first (for display)
+          const movesWithTimestamps = allMoves.map((move, index) => ({
+            ...move,
+            timestamp: Date.now() + (allMoves.length - index) // Reverse order for display
+          }));
+          
+          // Reverse the array so newest moves are first (for display)
+          setAllMovesInternal(movesWithTimestamps.reverse());
+          setDisplayMove({
+            ...latestExternalMove,
+            timestamp: Date.now()
+          });
+        } else {
+          // Normal single move - use animation
+          setIsAnimating(true);
+          setAnimationClass(styles.slidingOut);
+          
+          const timer = setTimeout(() => {
+            // For single moves, add to the beginning (newest first for display)
+            setAllMovesInternal(prevMoves => {
+              const moveWithTimestamp = {
+                ...latestExternalMove,
+                timestamp: Date.now()
+              };
+              return [moveWithTimestamp, ...prevMoves];
+            });
+            setDisplayMove({
+              ...latestExternalMove,
+              timestamp: Date.now()
+            });
+            setAnimationClass(styles.slidingIn);
+            setIsAnimating(false);
+          }, 300);
+          
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+  }, [allMoves, allMovesInternal.length]);
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded);
@@ -130,7 +204,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     }
 
     const location = formatLocation(boardDiff);
-    const turnNumber = allMoves.length - index; // Start from 1, not 0
+    const turnNumber = allMovesInternal.length - index; // Start from 1, not 0
 
     return (
       <Box key={index} className={styles.moveHistoryItem}>
@@ -145,7 +219,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     );
   };
 
-  if (!displayMove && allMoves.length === 0) {
+  if (!displayMove && allMovesInternal.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
         <Box className={`${styles.latestMoveContent} ${animationClass}`}>
@@ -155,7 +229,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
     );
   }
 
-  const { score, player, word, boardDiff } = displayMove || allMoves[0] || {};
+  const { score, player, word, boardDiff } = displayMove || allMovesInternal[0] || {};
   
   // Handle special cases
   let displayWord = word;
@@ -174,7 +248,8 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
   }
 
   const location = formatLocation(boardDiff);
-  const turnNumber = allMoves.length;
+  const turnNumber = allMovesInternal.length;
+  const moveHistory = allMoves.length > 0 ? allMoves : allMovesInternal;
 
   return (
     <Box className={styles.latestMovePanel}>
@@ -186,16 +261,23 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick }
           <Box className={styles.moveHistoryScore}>{score}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
-        {allMoves.length > 1 && (
-          <Box className={styles.expandIcon} onClick={handleExpandClick}>
-            {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
-          </Box>
-        )}
+        <Box className={styles.moveHistoryActions}>
+          {moveHistory.length > 1 && (
+            <Box className={styles.expandIcon} onClick={handleExpandClick}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
+            </Box>
+          )}
+          {moveHistory.length > 0 && (
+            <Box className={styles.downloadIcon} onClick={handleDownloadGCG} title="Download .gcg file">
+              <DownloadIcon style={{ fontSize: 16 }} />
+            </Box>
+          )}
+        </Box>
       </Box>
       
-      {isExpanded && allMoves.length > 1 && (
+      {isExpanded && allMovesInternal.length > 1 && (
         <Box className={styles.moveHistoryList}>
-          {allMoves.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
+          {allMovesInternal.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
         </Box>
       )}
     </Box>

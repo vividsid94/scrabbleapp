@@ -1421,6 +1421,7 @@ export default function Play() {
             isBotThinking={isBotThinking}
             isPlayerThinking={isPlayerThinking}
             latestMove={latestMove}
+            moveHistory={moveHistory}
             topMoves={topMoves}
             onMoveSelect={handleMoveSelectClick}
             onSimulateMove={simulateMove}

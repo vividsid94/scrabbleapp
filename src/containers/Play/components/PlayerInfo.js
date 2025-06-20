@@ -104,6 +104,7 @@ export default function PlayerInfo({
   isBotThinking,
   isPlayerThinking,
   latestMove,
+  moveHistory,
   topMoves,
   onMoveSelect,
   onSimulateMove,
@@ -450,6 +451,7 @@ export default function PlayerInfo({
         latestMove={latestMove} 
         player1Name={player1Name} 
         player2Name={player2Name}
+        allMoves={moveHistory}
       />
 
       <TopMoves 
