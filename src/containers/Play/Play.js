@@ -19,7 +19,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
 import SortIcon from '@mui/icons-material/Sort';
-import { simulateMove as simulateMoveFunction } from '../../functions/simulationFunctions';
+import { simulateMove as simulateMoveFunction, runHeatMapSimulation as runHeatMapSimulationFunction, runAllMovesSimulation as runAllMovesSimulationFunction, runSimulation as runSimulationFunction, openSimulationModal as openSimulationModalFunction, stopSimulation as stopSimulationFunction, resetHeatMapMode as resetHeatMapModeFunction, switchToMetrics as switchToMetricsFunction } from '../../functions/simulationFunctions';
 import { calculateScore } from '../../functions/scoreFunctions';
 import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
 import { alphabetizeRack } from '../../functions/play/rackFunctions';
@@ -86,6 +86,7 @@ export default function Play() {
   const [simulationProgress, setSimulationProgress] = useState(0);
   const [previewBoard, setPreviewBoard] = useState(null);
   const [previewMove, setPreviewMove] = useState(null);
+  const [previewTileOwnership, setPreviewTileOwnership] = useState(null);
   const [moveWithResults, setMoveWithResults] = useState(null);
   const [simulationBoard, setSimulationBoard] = useState(null);
   const [leaveValues, setLeaveValues] = useState({});
@@ -894,20 +895,20 @@ export default function Play() {
       setSimulationBoard(simulationBoardData);
     } else {
       // Normal move selection for the game board
-      handleMoveSelect({
-        move,
-        boardCoords,
-        tempBoardCoords,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        setTempBoardCoords,
-        setSelectedTiles,
-        setPlayer1Rack,
-        setPlayer2Rack,
-        setSelectedBoardPosition,
-        setArrowDirection
-      });
+    handleMoveSelect({
+      move,
+      boardCoords,
+      tempBoardCoords,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      setTempBoardCoords,
+      setSelectedTiles,
+      setPlayer1Rack,
+      setPlayer2Rack,
+      setSelectedBoardPosition,
+      setArrowDirection
+    });
     }
   }, [
     showSimulationModal,
@@ -1088,56 +1089,37 @@ export default function Play() {
   }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, autoPlayBest, isPlayerThinking, isBotThinking]);
 
   const openSimulationModal = (move = null) => {
-    // If no move is provided, use the first move from topMoves
-    const selectedMove = move || (topMoves && topMoves.length > 0 ? topMoves[0] : null);
-    
-    if (!selectedMove) {
-      console.error('No move available for simulation modal');
-      return;
-    }
-    
-    // Ensure the move has the required structure
-    if (!selectedMove.tiles || !Array.isArray(selectedMove.tiles)) {
-      console.error('Selected move does not have valid tiles array:', selectedMove);
-      return;
-    }
-    
-    setMoveWithResults(selectedMove);
-    setSimulationBoard(null);
-    setPreviewMove(null);
-    setShowSimulationModal(true);
-    
-    // Create a completely separate simulation board
-    // Start with the current game board and apply the move
-    const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
-    
-    // Apply the move to the simulation board
-    for (const tile of selectedMove.tiles) {
-      if (tile.isNew) {
-        simulationBoardData[tile.row][tile.col] = tile.letter;
-      }
-    }
-    
-    // Update the simulation board to show the simulation starting point
-    setSimulationBoard(simulationBoardData);
+    openSimulationModalFunction(move, topMoves, boardCoords, {
+      setMoveWithResults,
+      setSimulationBoard,
+      setPreviewBoard,
+      setPreviewMove,
+      setShowSimulationModal
+    });
   };
 
   const resetHeatMapMode = () => {
-    setIsHeatMapMode(false);
-    setHeatMapData(null);
+    resetHeatMapModeFunction({
+      setIsHeatMapMode,
+      setHeatMapData
+    });
   };
 
   const stopSimulation = () => {
-    setShouldStopSimulation(true);
-    shouldStopSimulationRef.current = true;
-    setSimulatingMove(null);
-    setSimulationProgress(0);
-    setPreviewBoard(null);
-    setPreviewMove(null);
+    stopSimulationFunction({
+      setShouldStopSimulation,
+      shouldStopRef: shouldStopSimulationRef,
+      setSimulatingMove,
+      setSimulationProgress,
+      setPreviewMove,
+      setPreviewTileOwnership
+    });
   };
 
   const switchToMetrics = () => {
-    setIsHeatMapMode(false);
+    switchToMetricsFunction({
+      setIsHeatMapMode
+    });
   };
 
   const runHeatMapSimulation = async (move) => {
@@ -1149,217 +1131,76 @@ export default function Play() {
     setShouldStopSimulation(false);
     shouldStopSimulationRef.current = false;
     
-    // Initialize heat map data (15x15 grid)
-    const heatMap = Array(15).fill(null).map(() => Array(15).fill(0));
+    const gameState = {
+      boardCoords: simulationBoard,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      player1points,
+      player2points,
+      pool
+    };
     
-    try {
-      const iterations = simulationSettings.numSimulations;
-      
-      for (let i = 0; i < iterations; i++) {
-        // Check if simulation should be stopped
-        if (shouldStopSimulationRef.current) {
-          throw new Error('Simulation stopped by user');
-        }
-        
-        // Update progress
-        setSimulationProgress((i / iterations) * 100);
-        
-        // Create copies of initial state for this iteration
-        let board = JSON.parse(JSON.stringify(simulationBoard));
-        let ourRack = [...(currentPlayer === 1 ? player1Rack : player2Rack)];
-        // Use a random rack for the opponent instead of the current game state's rack
-        let botRack = generateRandomRack(7);
-        let currentPool = [...pool];
-        
-        // Apply the initial move
-        for (const tile of move.tiles) {
-          if (tile.isNew) {
-            board[tile.row][tile.col] = tile.letter;
-            const tileIndex = ourRack.indexOf(tile.letter);
-            if (tileIndex !== -1) {
-              ourRack.splice(tileIndex, 1);
-            }
-          }
-        }
-        
-        // Track the board after initial move
-        trackBoardOccupancy(board, heatMap);
-        
-        // Simulate additional moves based on turnsPerSim
-        // turnsPerSim now represents total turns starting with opponent
-        for (let turn = 0; turn < simulationSettings.turnsPerSim; turn++) {
-          try {
-            // Check if simulation should be stopped
-            if (shouldStopSimulationRef.current) {
-              throw new Error('Simulation stopped by user');
-            }
-            
-            // Determine whose turn it is (opponent goes first)
-            const isOpponentTurn = turn % 2 === 0;
-            const currentTurnRack = isOpponentTurn ? botRack : ourRack;
-            
-            // Get moves for current player
-            const response = await fetch('/.netlify/functions/getTopMoves', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                board: board,
-                letters: currentTurnRack
-              })
-            });
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const moves = await response.json();
-            
-            if (!moves || !moves.moves || moves.moves.length === 0) {
-              break;
-            }
-
-            // Select the highest scoring move
-            const bestMove = moves.moves[0];
-            
-            // Apply the move
-            for (const tile of bestMove.tiles) {
-              if (tile.isNew) {
-                board[tile.row][tile.col] = tile.letter;
-                const tileIndex = currentTurnRack.indexOf(tile.letter);
-                if (tileIndex !== -1) {
-                  currentTurnRack.splice(tileIndex, 1);
-                }
-              }
-            }
-            
-            // Track the board after the move
-            trackBoardOccupancy(board, heatMap);
-            
-            // Draw new tiles for the current player
-            while (currentTurnRack.length < 7 && currentPool.length > 0) {
-              const randomIndex = Math.floor(Math.random() * currentPool.length);
-              currentTurnRack.push(currentPool[randomIndex]);
-              currentPool.splice(randomIndex, 1);
-            }
-            
-          } catch (error) {
-            console.error('Error in heat map iteration:', error);
-            break;
-          }
-        }
-        
-        // Update heat map data after each iteration
-        setHeatMapData([...heatMap]);
-        
-        // Small delay to show progress
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-      
-      // Final update
-      setHeatMapData([...heatMap]);
-      
-    } catch (error) {
-      if (error.message === 'Simulation stopped by user') {
-        console.log('Heat map simulation stopped by user');
-      } else {
-        console.error('Error running heat map simulation:', error);
-        setSnackbarMessage('Error running heat map simulation: ' + error.message);
+    await runHeatMapSimulationFunction(move, gameState, simulationSettings, {
+      onProgress: setSimulationProgress,
+      onHeatMapUpdate: setHeatMapData,
+      onError: (message) => {
+        setSnackbarMessage(message);
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-      }
-    } finally {
-      setSimulatingMove(null);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-      shouldStopSimulationRef.current = false;
-    }
-  };
-
-  const trackBoardOccupancy = (board, heatMap) => {
-    for (let row = 0; row < 15; row++) {
-      for (let col = 0; col < 15; col++) {
-        if (typeof board[row][col] === 'string') {
-          heatMap[row][col]++;
-        }
-      }
-    }
+      },
+      onComplete: () => {
+        setSimulatingMove(null);
+        setSimulationProgress(0);
+        setShouldStopSimulation(false);
+        shouldStopSimulationRef.current = false;
+      },
+      shouldStopRef: shouldStopSimulationRef
+    });
   };
 
   const runSimulation = async (move) => {
-    // Reset heat map mode when starting normal simulation
-    resetHeatMapMode();
+    setSimulatingMove(move);
+    setSimulationProgress(0);
     
     // Reset stop flag
     setShouldStopSimulation(false);
     shouldStopSimulationRef.current = false;
     
-    setSimulatingMove(move);
-    setSimulationProgress(0);
+    const gameState = {
+      boardCoords: simulationBoard,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      player1points,
+      player2points,
+      pool
+    };
     
-    try {
-      // Ensure simulation board is properly initialized
-      if (!simulationBoard) {
-        console.error('Simulation board not initialized');
-        setSnackbarMessage('Error: Simulation board not initialized');
+    await runSimulationFunction(move, gameState, simulationSettings, {
+      onProgress: setSimulationProgress,
+      onPreviewUpdate: (previewData) => {
+        setPreviewBoard(previewData.board);
+        setPreviewMove(previewData.move);
+        setPreviewTileOwnership(previewData.tileOwnership);
+      },
+      onError: (message) => {
+        setSnackbarMessage(message);
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-        return;
+      },
+      onComplete: () => {
+        setSimulatingMove(null);
+        setSimulationProgress(0);
+        setShouldStopSimulation(false);
+        shouldStopSimulationRef.current = false;
+      },
+      shouldStopRef: shouldStopSimulationRef,
+      resetHeatMapMode: () => {
+        setIsHeatMapMode(false);
+        setHeatMapData(null);
       }
-      
-      const gameState = {
-        boardCoords: simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool
-      };
-      
-      console.log('Starting simulation with game state:', {
-        boardCoords: simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        move: move.word,
-        moveTiles: move.tiles
-      });
-      
-      const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
-        // Check if simulation should be stopped
-        if (shouldStopSimulationRef.current) {
-          throw new Error('Simulation stopped by user');
-        }
-        setSimulationProgress(progress * 100);
-        
-        // Handle board preview updates
-        if (previewData && previewData.board) {
-          setPreviewBoard(previewData.board);
-          setPreviewMove(previewData.move);
-        }
-      }, simulationSettings);
-      
-      setSimulationResult(result);
-      
-    } catch (error) {
-      if (error.message === 'Simulation stopped by user') {
-        console.log('Simulation stopped by user');
-      } else {
-        console.error('Error running simulation:', error);
-        setSnackbarMessage('Error running simulation: ' + error.message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
-    } finally {
-      setSimulatingMove(null);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-      shouldStopSimulationRef.current = false;
-      setPreviewBoard(null);
-      setPreviewMove(null);
-    }
+    });
   };
 
   const runAllMovesSimulation = async () => {
@@ -1370,67 +1211,32 @@ export default function Play() {
     setShouldStopSimulation(false);
     shouldStopSimulationRef.current = false;
     
-    const results = {};
+    const gameState = {
+      boardCoords: simulationBoard,
+      currentPlayer,
+      player1Rack,
+      player2Rack,
+      player1points,
+      player2points,
+      pool
+    };
     
-    try {
-      for (let i = 0; i < topMoves.length; i++) {
-        // Check if simulation should be stopped
-        if (shouldStopSimulationRef.current) {
-          throw new Error('Simulation stopped by user');
-        }
-        
-        const move = topMoves[i];
-        
-        // Update progress
-        setSimulationProgress((i / topMoves.length) * 100);
-        
-        const gameState = {
-          boardCoords: simulationBoard,
-          currentPlayer,
-          player1Rack,
-          player2Rack,
-          player1points,
-          player2points,
-          pool
-        };
-        
-        try {
-          const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
-            // Check if simulation should be stopped during individual move simulation
-            if (shouldStopSimulationRef.current) {
-              throw new Error('Simulation stopped by user');
-            }
-          }, simulationSettings);
-          results[move.word] = result;
-        } catch (error) {
-          if (error.message === 'Simulation stopped by user') {
-            throw error; // Re-throw to stop the entire process
-          }
-          console.error(`Error simulating move ${move.word}:`, error);
-          results[move.word] = { winRate: 0, avgFirstTurnOpponentScore: 0, error: true };
-        }
-        
-        // Small delay to show progress
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      setAllMoveResults(results);
-      
-    } catch (error) {
-      if (error.message === 'Simulation stopped by user') {
-        console.log('All moves simulation stopped by user');
-      } else {
-        console.error('Error running all moves simulation:', error);
-        setSnackbarMessage('Error running all moves simulation: ' + error.message);
+    await runAllMovesSimulationFunction(topMoves, gameState, simulationSettings, {
+      onProgress: setSimulationProgress,
+      onResultsUpdate: setAllMoveResults,
+      onError: (message) => {
+        setSnackbarMessage(message);
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-      }
-    } finally {
-      setIsSimulatingAllMoves(false);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-      shouldStopSimulationRef.current = false;
-    }
+      },
+      onComplete: () => {
+        setIsSimulatingAllMoves(false);
+        setSimulationProgress(0);
+        setShouldStopSimulation(false);
+        shouldStopSimulationRef.current = false;
+      },
+      shouldStopRef: shouldStopSimulationRef
+    });
   };
 
   const simulateMove = async (move) => {
@@ -1493,7 +1299,7 @@ export default function Play() {
   const [isHeatMapMode, setIsHeatMapMode] = useState(false);
   const [simulationSettings, setSimulationSettings] = useState({
     numSimulations: 5,
-    turnsPerSim: 2
+    turnsPerSim: 1
   });
 
   return (
@@ -1501,11 +1307,11 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
       <Box className={styles.title}>
-        <Box className={styles.gameTitle}>
-          <Box className={styles.playModeTitle}>
+            <Box className={styles.gameTitle}>
+              <Box className={styles.playModeTitle}>
           Playground+
-        </Box>
-        </Box>
+            </Box>
+            </Box>
       </Box>
       <Box className={styles.mainPanel}>
         <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -1749,10 +1555,12 @@ export default function Play() {
           setShowSimulationModal(false);
           setSimulationBoard(null);
           setPreviewMove(null);
+          setPreviewTileOwnership(null);
           setMoveWithResults(null);
           resetHeatMapMode();
         }}
         simulationBoard={previewBoard || simulationBoard}
+        previewTileOwnership={previewTileOwnership}
         theme={theme}
         color={color}
         complementaryColor={complementaryColor}
