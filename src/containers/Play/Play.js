@@ -936,7 +936,7 @@ export default function Play() {
 
   const board = useMemo(() => {
     return createBoard(
-      previewBoard || tempBoardCoords.map((row, rowIndex) => 
+      tempBoardCoords.map((row, rowIndex) => 
         row.map((col, colIndex) => {
           // If there's a temporary move, use that
           if (typeof col === 'string') {
@@ -954,7 +954,7 @@ export default function Play() {
       blankTiles,
       lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles, previewBoard, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, blankTiles, lastMoveCoordinates]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -1132,6 +1132,8 @@ export default function Play() {
     shouldStopSimulationRef.current = true;
     setSimulatingMove(null);
     setSimulationProgress(0);
+    setPreviewBoard(null);
+    setPreviewMove(null);
   };
 
   const switchToMetrics = () => {
@@ -1297,6 +1299,15 @@ export default function Play() {
     setSimulationProgress(0);
     
     try {
+      // Ensure simulation board is properly initialized
+      if (!simulationBoard) {
+        console.error('Simulation board not initialized');
+        setSnackbarMessage('Error: Simulation board not initialized');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        return;
+      }
+      
       const gameState = {
         boardCoords: simulationBoard,
         currentPlayer,
@@ -1307,12 +1318,27 @@ export default function Play() {
         pool
       };
       
+      console.log('Starting simulation with game state:', {
+        boardCoords: simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        move: move.word,
+        moveTiles: move.tiles
+      });
+      
       const result = await simulateMoveFunction(move, gameState, (progress, previewData) => {
         // Check if simulation should be stopped
         if (shouldStopSimulationRef.current) {
           throw new Error('Simulation stopped by user');
         }
         setSimulationProgress(progress * 100);
+        
+        // Handle board preview updates
+        if (previewData && previewData.board) {
+          setPreviewBoard(previewData.board);
+          setPreviewMove(previewData.move);
+        }
       }, simulationSettings);
       
       setSimulationResult(result);
@@ -1331,6 +1357,8 @@ export default function Play() {
       setSimulationProgress(0);
       setShouldStopSimulation(false);
       shouldStopSimulationRef.current = false;
+      setPreviewBoard(null);
+      setPreviewMove(null);
     }
   };
 
@@ -1379,7 +1407,7 @@ export default function Play() {
             throw error; // Re-throw to stop the entire process
           }
           console.error(`Error simulating move ${move.word}:`, error);
-          results[move.word] = { winRate: 0, avgScore: 0, error: true };
+          results[move.word] = { winRate: 0, avgFirstTurnOpponentScore: 0, error: true };
         }
         
         // Small delay to show progress
@@ -1724,7 +1752,7 @@ export default function Play() {
           setMoveWithResults(null);
           resetHeatMapMode();
         }}
-        simulationBoard={simulationBoard}
+        simulationBoard={previewBoard || simulationBoard}
         theme={theme}
         color={color}
         complementaryColor={complementaryColor}

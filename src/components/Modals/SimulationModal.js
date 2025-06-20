@@ -117,7 +117,7 @@ const SimulationModal = ({
           fontWeight: 'bold', 
           mb: 2,
           textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
-          letterSpacing: '0.5px'
+              letterSpacing: '0.5px'
         }}>
           Metrics
         </Box>
@@ -159,7 +159,7 @@ const SimulationModal = ({
                   <Box 
                     key={index}
                     onClick={() => onMoveSelect && onMoveSelect(move)}
-                    sx={{
+            sx={{ 
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
@@ -169,7 +169,7 @@ const SimulationModal = ({
                       borderRadius: '2px',
                       transition: 'all 0.2s ease',
                       fontSize: '9px',
-                      '&:hover': {
+              '&:hover': {
                         background: 'rgba(255, 255, 255, 0.1)',
                       },
                     }}
@@ -252,7 +252,7 @@ const SimulationModal = ({
                           textAlign: 'center',
                           fontSize: '8px'
                         }}>
-                          {formatScore(moveResult.avgScore)}
+                          {formatScore(moveResult.avgFirstTurnOpponentScore)}
                         </Box>
                       </>
                     )}
@@ -272,7 +272,7 @@ const SimulationModal = ({
                   </Box>
                 );
               })}
-            </Box>
+        </Box>
           )}
 
           {/* Simulation Board */}
@@ -479,9 +479,9 @@ const SimulationModal = ({
                         </Box>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px' }}>
-                        <Box sx={{ opacity: 0.9 }}>Avg Score:</Box>
+                        <Box sx={{ opacity: 0.9 }}>Avg Opponent Score:</Box>
                         <Box sx={{ fontWeight: 'bold', color: '#2196F3' }}>
-                          {formatScore(simulationResult.avgScore)}
+                          {formatScore(simulationResult.avgFirstTurnOpponentScore)}
                         </Box>
                       </Box>
                     </Box>
@@ -588,23 +588,23 @@ const SimulationModal = ({
                       {isSimulatingAllMoves ? 'Simulating all moves...' : 
                        simulatingMove ? `${simulatingMove.word} (${simulatingMove.score} pts)` : 'Simulating...'}
                     </Box>
-                    <Box sx={{ 
-                      width: '100%', 
-                      height: 4, 
+              <Box sx={{ 
+                width: '100%', 
+                height: 4, 
                       backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      borderRadius: 2,
+                borderRadius: 2,
                       overflow: 'hidden',
                       border: '1px solid rgba(255, 255, 255, 0.3)'
-                    }}>
-                      <Box sx={{
-                        width: `${simulationProgress}%`,
-                        height: '100%',
+              }}>
+                <Box sx={{
+                  width: `${simulationProgress}%`,
+                  height: '100%',
                         background: 'linear-gradient(90deg, #4CAF50 0%, #45a049 100%)',
-                        transition: 'width 0.3s ease'
-                      }} />
-                    </Box>
+                  transition: 'width 0.3s ease'
+                }} />
+              </Box>
                     {/* Progress Text */}
-                    <Box sx={{ 
+            <Box sx={{ 
                       fontSize: '8px', 
                       opacity: 0.7,
                       textAlign: 'center',
@@ -646,8 +646,8 @@ const SimulationModal = ({
                       }}
                     >
                       Stop
-                    </Box>
-                  </Box>
+                </Box>
+                </Box>
                 )}
               </Box>
             </Box>

@@ -34,11 +34,14 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       
       // Reset state for this simulation
       let simBoard = JSON.parse(JSON.stringify(board));
-      let simOurRack = [...ourRack];
-      let simBotRack = [...botRack];
+      let simOurRack = [...ourRack]; // Fresh copy of our rack for each simulation
+      let simBotRack = generateRandomRack(7); // Fresh random rack for opponent for each simulation
       let simOurScore = ourScore;
       let simBotScore = botScore;
       let simMoves = moves;
+      let simPool = [...pool]; // Fresh copy of pool for each simulation
+      
+      console.log(`Simulation ${sim + 1}: Starting with our rack:`, simOurRack, 'bot rack:', simBotRack);
       
       // Apply the initial move
       for (const tile of move.tiles) {
@@ -59,14 +62,30 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       
       // Simulate additional moves based on turnsPerSim
       // turnsPerSim now represents total turns starting with opponent
+      let firstTurnOpponentScore = 0; // Track opponent's first turn score
       for (let turn = 0; turn < turnsPerSim; turn++) {
+        // Determine whose turn it is (opponent goes first) - moved outside try block
+        const isOpponentTurn = turn % 2 === 0;
+        const currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
+        const currentTurnScore = isOpponentTurn ? simBotScore : simOurScore;
+        
         try {
-          // Determine whose turn it is (opponent goes first)
-          const isOpponentTurn = turn % 2 === 0;
-          const currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
-          const currentTurnScore = isOpponentTurn ? simBotScore : simOurScore;
+          // Validate board state before making API call
+          if (!simBoard || !Array.isArray(simBoard) || simBoard.length !== 15) {
+            console.error('Invalid board state in simulation:', simBoard);
+            break;
+          }
+          
+          // Validate rack before making API call
+          if (!currentTurnRack || !Array.isArray(currentTurnRack) || currentTurnRack.length === 0) {
+            console.error('Invalid rack in simulation:', currentTurnRack);
+            break;
+          }
           
           // Get moves for current player
+          console.log(`Simulation turn ${turn}: Getting moves for ${isOpponentTurn ? 'opponent' : 'player'} with rack:`, currentTurnRack);
+          console.log('Board state:', simBoard);
+          
           const response = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
@@ -79,12 +98,15 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           });
           
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`API Error: Status ${response.status}, Response:`, errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
           }
           
           const moves = await response.json();
           
           if (!moves || !moves.moves || moves.moves.length === 0) {
+            console.log(`No moves available for ${isOpponentTurn ? 'opponent' : 'player'} on turn ${turn}`);
             break;
           }
 
@@ -105,6 +127,10 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           // Update score for current player
           if (isOpponentTurn) {
             simBotScore += (bestMove.score || 0);
+            // Track opponent's first turn score
+            if (turn === 0) {
+              firstTurnOpponentScore = bestMove.score || 0;
+            }
           } else {
             simOurScore += (bestMove.score || 0);
           }
@@ -118,7 +144,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           });
           
           // Draw new tiles for the current player
-          const newPool = [...pool];
+          const newPool = [...simPool];
           while (currentTurnRack.length < 7 && newPool.length > 0) {
             const randomIndex = Math.floor(Math.random() * newPool.length);
             currentTurnRack.push(newPool[randomIndex]);
@@ -127,14 +153,27 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           
         } catch (error) {
           console.error('Error in simulation:', error);
-          break;
+          // Instead of breaking, continue with a pass move
+          console.log(`Continuing simulation with pass move for ${isOpponentTurn ? 'opponent' : 'player'} on turn ${turn}`);
+          
+          // Draw new tiles for the current player even on pass
+          const newPool = [...simPool];
+          while (currentTurnRack.length < 7 && newPool.length > 0) {
+            const randomIndex = Math.floor(Math.random() * newPool.length);
+            currentTurnRack.push(newPool[randomIndex]);
+            newPool.splice(randomIndex, 1);
+          }
+          
+          // Continue to next turn instead of breaking
+          continue;
         }
       }
       
       results.push({
         finalScore: simOurScore,
         finalBotScore: simBotScore,
-        movesPlayed: simMoves
+        movesPlayed: simMoves,
+        firstTurnOpponentScore: firstTurnOpponentScore
       });
     }
     
@@ -144,6 +183,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
     // Calculate average results
     const avgScore = results.reduce((sum, r) => sum + (r.finalScore || 0), 0) / results.length;
     const avgBotScore = results.reduce((sum, r) => sum + (r.finalBotScore || 0), 0) / results.length;
+    const avgFirstTurnOpponentScore = results.reduce((sum, r) => sum + (r.firstTurnOpponentScore || 0), 0) / results.length;
     const avgMoves = results.reduce((sum, r) => sum + (r.movesPlayed || 0), 0) / results.length;
     
     // Calculate additional metrics for the modal
@@ -158,6 +198,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       move,
       avgScore,
       avgBotScore,
+      avgFirstTurnOpponentScore,
       avgMoves,
       winRate,
       results
