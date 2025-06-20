@@ -581,29 +581,6 @@ const SimulationModal = ({
           )}
         </Box>
 
-        {/* Heat Map Legend */}
-        {isHeatMapMode && heatMapData && (
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 2,
-            mb: 3,
-            fontSize: '11px',
-            color: 'rgba(255, 255, 255, 0.9)'
-          }}>
-            <Box>❄️</Box>
-            <Box sx={{
-              width: '100px',
-              height: '12px',
-              background: 'linear-gradient(to right, rgba(150,200,255,0.3), rgba(255,100,100,1))',
-              borderRadius: '6px',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
-            }}></Box>
-            <Box>🔥</Box>
-          </Box>
-        )}
-
         {/* Close Button */}
         <Box
           onClick={handleClose}
