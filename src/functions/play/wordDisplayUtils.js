@@ -55,5 +55,15 @@ export function convertWordWithDots(word, board, startRow, startCol, direction) 
     wordIndex++;
   }
   
+  // Post-process to fix ")(" patterns
+  // This happens when two new tiles are adjacent and both are connected to existing tiles
+  // Example: "A.B" where A and B are new tiles, and there's an existing tile between them
+  // This would result in "A(B)" which is correct, but "A)B(" would be wrong
+  
+  // Find and fix ")(" patterns that occur when two new tiles are adjacent
+  // Look for patterns like "A)B(" where A and B are letters (new tiles) and there's a )(
+  // The regex looks for: letter + closing parenthesis + optional whitespace + opening parenthesis + letter
+  result = result.replace(/([A-Z])\)\s*\(([A-Z])/g, '$1$2');
+  
   return result;
 } 
