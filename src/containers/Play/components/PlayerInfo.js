@@ -107,6 +107,7 @@ export default function PlayerInfo({
   topMoves,
   onMoveSelect,
   onSimulateMove,
+  onOpenSimulationModal,
   simulatingMove,
   icons
 }) {
@@ -458,6 +459,7 @@ export default function PlayerInfo({
         onMoveSelect={onMoveSelect}
         onSimulateMove={onSimulateMove}
         onGetTopMoves={onGetTopMoves}
+        onOpenSimulationModal={onOpenSimulationModal}
         simulatingMove={simulatingMove}
         currentPlayer={currentPlayer}
         gameStarted={gameStarted}

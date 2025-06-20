@@ -1061,30 +1061,34 @@ export default function Play() {
     };
   }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, autoPlayBest, isPlayerThinking, isBotThinking]);
 
-  const simulateMove = async (move) => {
-    setSimulatingMove(move);
-    setSimulationProgress(0);
+  const openSimulationModal = (move) => {
+    setMoveWithResults(move);
     setSimulationBoard(null);
     setPreviewMove(null);
     setShowSimulationModal(true);
     
-    try {
-      // Create a completely separate simulation board
-      // Start with the current game board and apply the move
-      const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
-      
-      // Apply the move to the simulation board
-      for (const tile of move.tiles) {
-        if (tile.isNew) {
-          simulationBoardData[tile.row][tile.col] = tile.letter;
-        }
+    // Create a completely separate simulation board
+    // Start with the current game board and apply the move
+    const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
+    
+    // Apply the move to the simulation board
+    for (const tile of move.tiles) {
+      if (tile.isNew) {
+        simulationBoardData[tile.row][tile.col] = tile.letter;
       }
-      
-      // Update the simulation board to show the simulation starting point
-      setSimulationBoard(simulationBoardData);
-      
+    }
+    
+    // Update the simulation board to show the simulation starting point
+    setSimulationBoard(simulationBoardData);
+  };
+
+  const runSimulation = async (move) => {
+    setSimulatingMove(move);
+    setSimulationProgress(0);
+    
+    try {
       const gameState = {
-        boardCoords: simulationBoardData, // Use the simulation board
+        boardCoords: simulationBoard, // Use the existing simulation board
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -1102,7 +1106,6 @@ export default function Play() {
         }
       });
       setSimulationResult(result);
-      setMoveWithResults(move);
     } catch (error) {
       console.error('Error simulating move:', error);
       setSnackbarMessage('Error simulating move: ' + error.message);
@@ -1113,6 +1116,11 @@ export default function Play() {
       setSimulationProgress(0);
       // Don't clear simulationBoard and previewMove here - keep showing the simulation results
     }
+  };
+
+  const simulateMove = async (move) => {
+    openSimulationModal(move);
+    await runSimulation(move);
   };
 
   // Modify the existing code that sets topMoves to also fetch leave values
@@ -1274,6 +1282,7 @@ export default function Play() {
             topMoves={topMoves}
             onMoveSelect={handleMoveSelectClick}
             onSimulateMove={simulateMove}
+            onOpenSimulationModal={openSimulationModal}
             simulatingMove={simulatingMove}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
@@ -1427,6 +1436,7 @@ export default function Play() {
         simulationProgress={simulationProgress}
         simulationResult={simulationResult}
         moveWithResults={moveWithResults}
+        onStartSimulation={(move) => runSimulation(move)}
       />
 
       {/* Victory Celebration Components */}

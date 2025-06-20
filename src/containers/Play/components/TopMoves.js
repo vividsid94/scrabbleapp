@@ -3,7 +3,6 @@ import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import styles from '../Play.module.css';
@@ -17,7 +16,8 @@ const TopMoves = ({
   onGetTopMoves,
   simulatingMove,
   currentPlayer,
-  gameStarted
+  gameStarted,
+  onOpenSimulationModal
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
@@ -105,15 +105,15 @@ const TopMoves = ({
             <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
           </Tooltip>
           <Box className={styles.topMoveActions}>
-            <Tooltip title="Simulate Move">
+            <Tooltip title="Metrics">
               <Box 
                 className={`${styles.topMoveActionButton} ${isSimulating ? styles.simulating : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleSimulateMove(move);
+                  onOpenSimulationModal(move);
                 }}
               >
-                <PlayArrowIcon style={{ fontSize: 14 }} />
+                🧠
               </Box>
             </Tooltip>
           </Box>
