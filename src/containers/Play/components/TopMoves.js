@@ -87,7 +87,12 @@ const TopMoves = ({
     const boardControl = move.boardControl || 0;
 
     return (
-      <Box key={index} className={styles.topMoveItem}>
+      <Box 
+        key={index} 
+        className={styles.topMoveItem}
+        onClick={() => handleMoveSelect(move)}
+        style={{ cursor: 'pointer' }}
+      >
         <Box className={styles.topMoveRank}>{index + 1}</Box>
         <Box className={styles.topMoveLocation}>{location || ''}</Box>
         <Box className={styles.topMoveWord}>{move.word}</Box>
@@ -100,18 +105,13 @@ const TopMoves = ({
             <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
           </Tooltip>
           <Box className={styles.topMoveActions}>
-            <Tooltip title="Preview Move">
-              <Box 
-                className={styles.topMoveActionButton}
-                onClick={() => handleMoveSelect(move)}
-              >
-                <VisibilityIcon style={{ fontSize: 14 }} />
-              </Box>
-            </Tooltip>
             <Tooltip title="Simulate Move">
               <Box 
                 className={`${styles.topMoveActionButton} ${isSimulating ? styles.simulating : ''}`}
-                onClick={() => handleSimulateMove(move)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSimulateMove(move);
+                }}
               >
                 <PlayArrowIcon style={{ fontSize: 14 }} />
               </Box>
