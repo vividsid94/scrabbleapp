@@ -14,6 +14,9 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 
+// Import the common word display utility
+const { convertWordWithDots } = require('../src/functions/play/wordDisplayUtils');
+
 // Cache for leave values
 let leaveValues = {};
 try {
@@ -174,6 +177,9 @@ async function callGoGenerateMoves(board, letters) {
                   }
                 }
                 
+                // Convert dots to actual letters in parentheses
+                const displayWord = convertWordWithDots(actualWord, board, row, col, direction);
+                
                 // Create tiles array - for now, we'll create a simple representation
                 // since the Go service doesn't provide detailed tile placement info
                 const tiles = [];
@@ -212,7 +218,7 @@ async function callGoGenerateMoves(board, letters) {
                 }
                 
                 return {
-                  word: actualWord,
+                  word: displayWord,
                   score: goMove.score || 0,
                   tiles: tiles,
                   direction: direction,
