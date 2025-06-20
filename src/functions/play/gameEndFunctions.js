@@ -67,7 +67,7 @@ export const handleGameEnd = ({
   }
   
   // Show game over message
-  setSnackbarMessage(`Game Over! ${winnerName} played all their tiles!`);
+  setSnackbarMessage(`Game Over!`);
   setSnackbarSeverity("success");
   setSnackbarOpen(true);
   

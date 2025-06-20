@@ -753,6 +753,12 @@ export const handleMoveSelect = ({
   setSelectedBoardPosition,
   setArrowDirection
 }) => {
+  // Validate move object
+  if (!move || !move.tiles || !Array.isArray(move.tiles)) {
+    console.error('Invalid move object:', move);
+    return;
+  }
+
   // Reset the board to its current state
   setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
   
@@ -815,11 +821,13 @@ export const handleMoveSelect = ({
   }
 
   // Set the position to the square after the last tile
-  const lastTile = move.tiles[move.tiles.length - 1];
-  const mappedDirection = directionMap[move.direction] || 'right';
-  if (mappedDirection === 'right') {
-    setSelectedBoardPosition({ row: lastTile.row, col: lastTile.col + 1 });
-  } else {
-    setSelectedBoardPosition({ row: lastTile.row + 1, col: lastTile.col });
+  if (move.tiles && move.tiles.length > 0) {
+    const lastTile = move.tiles[move.tiles.length - 1];
+    const mappedDirection = directionMap[move.direction] || 'right';
+    if (mappedDirection === 'right') {
+      setSelectedBoardPosition({ row: lastTile.row, col: lastTile.col + 1 });
+    } else {
+      setSelectedBoardPosition({ row: lastTile.row + 1, col: lastTile.col });
+    }
   }
 }; 

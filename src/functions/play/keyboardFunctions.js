@@ -239,6 +239,7 @@ export const handleKeyDown = ({
  * @param {Object} params - The parameters object
  * @param {KeyboardEvent} params.event - The keyboard event
  * @param {boolean} params.gameStarted - Whether the game has started
+ * @param {boolean} params.gameEnded - Whether the game has ended
  * @param {Function} params.handlePass - Function to handle pass action
  * @param {Function} params.handleExchangeClick - Function to handle exchange action
  * @param {Function} params.handlePlayTopMove - Function to handle playing top move
@@ -249,13 +250,14 @@ export const handleKeyDown = ({
 export const handleKeyPress = ({
   event,
   gameStarted,
+  gameEnded,
   handlePass,
   handleExchangeClick,
   handlePlayTopMove,
   isPlayerThinking,
   isBotThinking
 }) => {
-  if (!gameStarted || isPlayerThinking || isBotThinking) return;
+  if (!gameStarted || gameEnded || isPlayerThinking || isBotThinking) return;
 
   const key = event.key.toLowerCase();
   

@@ -100,6 +100,17 @@ async function callGoGenerateMoves(board, letters) {
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
             try {
+              // Log the raw response for debugging
+              console.log('🔍 Raw response from Go service:', data);
+              console.log('🔍 Response length:', data.length);
+              
+              // Check if response is empty
+              if (!data || data.trim() === '') {
+                console.log('⚠️ Empty response from Go service');
+                reject(new Error('Empty response from Go service'));
+                return;
+              }
+              
               const result = JSON.parse(data);
               console.log(result);
               console.log('✅ SUCCESS: Go service returned', result.moves ? result.moves.length : 0, 'moves');
@@ -230,6 +241,20 @@ async function callGoGenerateMoves(board, letters) {
               
               resolve(convertedMoves);
             } catch (error) {
+              console.error('❌ JSON parsing error:', error.message);
+              console.error('🔍 Raw response that failed to parse:', data);
+              console.error('🔍 Response length:', data ? data.length : 'undefined');
+              
+              // Try to identify the problematic part of the JSON
+              if (data && error.message.includes('position')) {
+                const positionMatch = error.message.match(/position (\d+)/);
+                if (positionMatch) {
+                  const position = parseInt(positionMatch[1]);
+                  console.error('🔍 Character at position', position, ':', data[position]);
+                  console.error('🔍 Context around position:', data.substring(Math.max(0, position - 20), position + 20));
+                }
+              }
+              
               reject(new Error(`Failed to parse response: ${error.message}`));
             }
           } else {

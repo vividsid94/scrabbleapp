@@ -90,6 +90,7 @@ export default function Play() {
   const [autoPlayBest, setAutoPlayBest] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [showSimulationModal, setShowSimulationModal] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
   
   // Add state for move sound selection first
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
@@ -239,6 +240,7 @@ export default function Play() {
   ]);
 
   const handleGameEndClick = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
+    setGameEnded(true); // Set game as ended
     handleGameEnd({
       winnerRack,
       winnerName,
@@ -318,6 +320,9 @@ export default function Play() {
   // Update the handleBotModeToggle function to use the new startBotGame
   const handleBotModeToggle = () => {
     if (isDictionaryLoading) return;
+    
+    // Reset game ended state for new game
+    setGameEnded(false);
     
     // If there are tiles on the board, return them to the rack first
     if (selectedTiles.length > 0) {
@@ -431,7 +436,7 @@ export default function Play() {
 
   // Update the useEffect for bot turns to use the new makeBotMove
   useEffect(() => {
-    if (isBotMode && currentPlayer === 2 && !isBotThinking) {
+    if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded) {
       makeBotMove({
         boardCoords,
         player2Rack,
@@ -472,7 +477,7 @@ export default function Play() {
         currentPlayer
       });
     }
-  }, [currentPlayer, isBotMode, isBotThinking]);
+  }, [currentPlayer, isBotMode, isBotThinking, gameEnded]);
 
   // Update player2Name when isBotMode changes
   useEffect(() => {
@@ -519,6 +524,7 @@ export default function Play() {
   }, [timerActive, currentPlayer, gameStarted]);
 
   const handlePassClick = useCallback(() => {
+    if (gameEnded) return; // Don't allow passes after game has ended
     handlePass({
       consecutivePasses,
       boardCoords,
@@ -542,7 +548,7 @@ export default function Play() {
       setSelectedBoardPosition,
       setPlayer1Rack,
       setPlayer2Rack,
-      makeBotMove: () => makeBotMove({
+      makeBotMove: () => !gameEnded && makeBotMove({
         boardCoords,
         player2Rack,
         pool,
@@ -595,10 +601,12 @@ export default function Play() {
     player2Name,
     isBotMode,
     pool,
-    blankTiles
+    blankTiles,
+    gameEnded
   ]);
 
   const handleGetTopMovesForExpandable = () => {
+    if (gameEnded) return; // Don't allow getting top moves after game has ended
     // Create a version of handleGetTopMoves that doesn't open the modal
     const fetchTopMovesWithoutModal = async () => {
       setIsLoadingTopMoves(true);
@@ -728,6 +736,7 @@ export default function Play() {
   };
 
   const handleExchangeClick = () => {
+    if (gameEnded) return; // Don't allow exchanges after game has ended
     const result = handleExchange({
       tilesToExchange,
       currentRack: currentPlayer === 1 ? player1Rack : player2Rack,
@@ -747,7 +756,7 @@ export default function Play() {
       setSnackbarSeverity,
       setSnackbarOpen,
       setMoveHistory,
-      makeBotMove: () => makeBotMove({
+      makeBotMove: () => !gameEnded && makeBotMove({
         boardCoords,
         player2Rack,
         pool,
@@ -868,6 +877,7 @@ export default function Play() {
   }, [gameTime]);
 
   const handlePlayTopMoveClick = useCallback(() => {
+    if (gameEnded) return; // Don't allow playing top move after game has ended
     setIsPlayerThinking(true);
     handlePlayTopMove({
       isLoadingTopMoves,
@@ -934,18 +944,19 @@ export default function Play() {
     moveHistory,
     leaveValues,
     handleGameEndClick,
-    getBoardDiff
+    getBoardDiff,
+    gameEnded
   ]);
 
   // Update the useEffect for auto-play to use isPlayerThinking
   useEffect(() => {
-    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying && !isPlayerThinking) {
+    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying && !isPlayerThinking && !gameEnded) {
       setIsAutoPlaying(true);
       handlePlayTopMoveClick().finally(() => {
         setIsAutoPlaying(false);
       });
     }
-  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying, isPlayerThinking]);
+  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying, isPlayerThinking, gameEnded]);
 
   // Add cleanup effect for all temporary states
   useEffect(() => {
@@ -966,6 +977,7 @@ export default function Play() {
       setSelectedTiles([]);
       setSelectedBoardPosition(null);
       setArrowDirection('right');
+      setGameEnded(false); // Reset game ended state
     };
   }, []);
 
@@ -974,6 +986,7 @@ export default function Play() {
     const handleKeyPressWrapper = (event) => handleKeyPress({
       event,
       gameStarted,
+      gameEnded,
       handlePass: handlePassClick,
       handleExchangeClick,
       handlePlayTopMove: handlePlayTopMoveClick,
@@ -985,7 +998,7 @@ export default function Play() {
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapper);
     };
-  }, [gameStarted, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, isPlayerThinking, isBotThinking]);
+  }, [gameStarted, gameEnded, handlePassClick, handleExchangeClick, handlePlayTopMoveClick, isPlayerThinking, isBotThinking]);
 
   const simulateMove = async (move) => {
     setSimulatingMove(move);
