@@ -829,7 +829,7 @@ export const handleMoveSelect = ({
   
   // Now place the new move's tiles on the board
   const newTempBoard = JSON.parse(JSON.stringify(boardCoords));
-  const newRack = [...restoredRack];
+  let newRack = [...restoredRack];
   const newSelectedTiles = [];
   const tilesToRemove = [];
   
