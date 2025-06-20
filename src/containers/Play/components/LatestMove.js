@@ -8,7 +8,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import styles from '../Play.module.css';
 import { generateGCGContent, downloadGCGFile } from '../../../functions/gcgUtils';
 
-const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, allMoves = [] }) => {
+const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, allMoves = [], boardCoords, player1Rack = [], player2Rack = [], pool = [] }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [allMovesInternal, setAllMovesInternal] = useState([]);
@@ -71,7 +71,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
       return;
     }
     
-    const gcgContent = generateGCGContent(moveHistory, player1Name, player2Name);
+    const gcgContent = generateGCGContent(moveHistory, player1Name, player2Name, boardCoords, player1Rack, player2Rack, pool);
     const filename = `scrabble_game_${new Date().toISOString().split('T')[0]}.gcg`;
     downloadGCGFile(gcgContent, filename);
   };

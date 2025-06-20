@@ -110,6 +110,8 @@ export default function PlayerInfo({
   onSimulateMove,
   onOpenSimulationModal,
   simulatingMove,
+  boardCoords,
+  pool,
   icons
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
@@ -452,6 +454,8 @@ export default function PlayerInfo({
         player1Name={player1Name} 
         player2Name={player2Name}
         allMoves={moveHistory}
+        boardCoords={boardCoords}
+        pool={pool}
       />
 
       <TopMoves 

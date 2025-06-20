@@ -721,12 +721,25 @@ export const handlePlayTopMove = async ({
       
       // Check if game should end
       if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
-        handleGameEnd(
-          stateUpdates.newRack,
-          currentPlayer === 1 ? player1Name : player2Name,
-          currentPlayer === 1 ? player2Rack : player1Rack,
-          currentPlayer === 1 ? player2points : player1points
-        );
+        handleGameEnd({
+          winnerRack: stateUpdates.newRack,
+          winnerName: currentPlayer === 1 ? player1Name : player2Name,
+          loserRack: currentPlayer === 1 ? player2Rack : player1Rack,
+          loserPoints: currentPlayer === 1 ? player2points : player1points,
+          player1Rack,
+          player2Rack,
+          player1points,
+          player2points,
+          player1Name,
+          player2Name,
+          autoPlayBest: false,
+          setPlayer1points,
+          setPlayer2points,
+          setSnackbarMessage,
+          setSnackbarSeverity,
+          setSnackbarOpen,
+          setAutoPlayBest: () => {}
+        });
         return;
       }
       

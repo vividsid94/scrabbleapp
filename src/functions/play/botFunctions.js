@@ -280,7 +280,25 @@ export const makeBotMove = async ({
         player1Score: player1points,
         player1Rack: player1Rack
       });
-      handleGameEnd(newRack, player2Name, player1Rack, player1points);
+      handleGameEnd({
+        winnerRack: newRack,
+        winnerName: player2Name,
+        loserRack: player1Rack || [],
+        loserPoints: player1points,
+        player1Rack: player1Rack || [],
+        player2Rack: player2Rack || [],
+        player1points,
+        player2points,
+        player1Name: 'You',
+        player2Name: 'SidBot',
+        autoPlayBest,
+        setPlayer1points: () => {},
+        setPlayer2points,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen,
+        setAutoPlayBest: () => {}
+      });
       return;
     }
     

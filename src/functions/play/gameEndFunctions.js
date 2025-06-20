@@ -9,6 +9,8 @@
  * @param {Array} params.player2Rack - Player 2's rack
  * @param {number} params.player1points - Player 1's score
  * @param {number} params.player2points - Player 2's score
+ * @param {string} params.player1Name - Player 1's name
+ * @param {string} params.player2Name - Player 2's name
  * @param {boolean} params.autoPlayBest - Whether auto-play is enabled
  * @param {Function} params.setPlayer1points - Function to update player 1's score
  * @param {Function} params.setPlayer2points - Function to update player 2's score
@@ -27,6 +29,8 @@ export const handleGameEnd = ({
   player2Rack,
   player1points,
   player2points,
+  player1Name,
+  player2Name,
   autoPlayBest,
   setPlayer1points,
   setPlayer2points,
@@ -46,7 +50,7 @@ export const handleGameEnd = ({
   });
 
   // Calculate sum of loser's remaining tiles
-  const rackSum = loserRack.reduce((sum, tile) => {
+  const rackSum = (loserRack || []).reduce((sum, tile) => {
     const value = tile === '?' || tile === '*' ? 0 : 
       tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
       tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
@@ -60,9 +64,11 @@ export const handleGameEnd = ({
   }, 0);
   
   // Add remaining tiles to loser's score
-  if (winnerRack === player1Rack) {
+  if (winnerName === player1Name) {
+    // Player 1 is the winner, so add remaining tiles to Player 2's score
     setPlayer2points(loserPoints + rackSum);
   } else {
+    // Player 2 is the winner, so add remaining tiles to Player 1's score
     setPlayer1points(loserPoints + rackSum);
   }
   

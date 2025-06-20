@@ -1433,6 +1433,8 @@ export default function Play() {
             onSimulateMove={simulateMove}
             onOpenSimulationModal={openSimulationModal}
             simulatingMove={simulatingMove}
+            boardCoords={boardCoords}
+            pool={pool}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
               colorScheme: <PaletteIcon className={styles.keyBtn} />,

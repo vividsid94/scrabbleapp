@@ -4,9 +4,10 @@
  * Formats a move location from board coordinates to .gcg format
  * @param {Array} boardDiff - Array of tile changes
  * @param {string} word - The word being played (to check if it starts with a dot)
+ * @param {Array} boardState - The current board state to check for existing tiles
  * @returns {string} Location in .gcg format (e.g., "8G", "A7")
  */
-export const formatGCGLocation = (boardDiff, word = '') => {
+export const formatGCGLocation = (boardDiff, word = '', boardState = null) => {
   if (!boardDiff || boardDiff.length === 0) {
     return '';
   }
@@ -36,8 +37,8 @@ export const formatGCGLocation = (boardDiff, word = '') => {
       // If tiles span more columns than rows, it's likely horizontal
       isHorizontal = colSpan > rowSpan;
     }
-  } else if (boardDiff.length === 1 && word && word.includes('.')) {
-    // Single tile with dots - analyze word structure
+  } else {
+    // Single tile - analyze word structure and boardDiff to determine direction
     const dotPositions = [];
     for (let i = 0; i < word.length; i++) {
       if (word[i] === '.') {
@@ -45,56 +46,63 @@ export const formatGCGLocation = (boardDiff, word = '') => {
       }
     }
     
-    // If dots are consecutive, it's likely horizontal
-    if (dotPositions.length > 1) {
-      const isConsecutive = dotPositions.every((pos, index) => 
-        index === 0 || pos === dotPositions[index - 1] + 1
-      );
-      if (isConsecutive) {
+    // If the word starts with dots, we need to look at the boardDiff more carefully
+    if (word && word.startsWith('.')) {
+      // For words starting with dots, check if the new tile is placed in a way that suggests direction
+      // Look at the position of the new tile relative to existing tiles
+      
+      // If we have a single tile placed and the word starts with dots,
+      // we need to determine if it's extending horizontally or vertically
+      
+      // For now, let's use a heuristic: if the word has more dots than letters, it's likely vertical
+      // because vertical words often connect to existing horizontal words
+      const newTileCount = word.length - dotPositions.length;
+      if (newTileCount === 1 && dotPositions.length > 0) {
+        // Single new tile with existing tiles - likely vertical (connecting to horizontal word)
+        isHorizontal = false;
+      } else {
+        // Default to horizontal for other cases
         isHorizontal = true;
       }
-    }
-    
-    // If we still can't determine, check if the word has more letters than dots
-    // and if the new tile is at the beginning or end
-    if (dotPositions.length === 0) {
-      // No dots, can't determine from word structure
-      isHorizontal = true; // Default assumption
     } else {
-      // Check if the new tile is at the beginning or end of the word
-      const newTilePositions = [];
-      for (let i = 0; i < word.length; i++) {
-        if (word[i] !== '.') {
-          newTilePositions.push(i);
-        }
-      }
-      
-      // If new tiles are at the beginning or end, it's likely horizontal
-      if (newTilePositions.length > 0) {
-        const firstNewTile = newTilePositions[0];
-        const lastNewTile = newTilePositions[newTilePositions.length - 1];
-        
-        if (firstNewTile === 0 || lastNewTile === word.length - 1) {
-          isHorizontal = true;
-        }
-      }
+      // No dots at start - can't determine direction from this alone
+      isHorizontal = true; // Default assumption
     }
-  } else {
-    // Single tile, no dots - can't determine direction from this alone
-    isHorizontal = true; // Default assumption
   }
   
-  // If the word starts with dots (existing letters), adjust the starting position
+  // If the word starts with dots (existing letters), check both possible positions
   if (word && word.startsWith('.')) {
     // Count the number of leading dots
     const leadingDots = word.match(/^\.+/)[0].length;
     
     if (isHorizontal) {
-      // For horizontal words, move the starting column back by the number of dots
-      firstCol = Math.max(0, firstCol - leadingDots);
+      // For horizontal words, check if there's a tile one column back
+      if (boardState && firstCol > 0) {
+        const hasTileOneBack = boardState[firstRow] && boardState[firstRow][firstCol - 1] && 
+                              typeof boardState[firstRow][firstCol - 1] === 'string';
+        if (hasTileOneBack) {
+          // There's a tile one column back, so adjust the position
+          firstCol = Math.max(0, firstCol - leadingDots);
+        }
+        // If no tile one back, keep the original position
+      } else {
+        // No board state available, assume adjustment is needed
+        firstCol = Math.max(0, firstCol - leadingDots);
+      }
     } else {
-      // For vertical words, move the starting row back by the number of dots
-      firstRow = Math.max(0, firstRow - leadingDots);
+      // For vertical words, check if there's a tile one row back
+      if (boardState && firstRow > 0) {
+        const hasTileOneBack = boardState[firstRow - 1] && boardState[firstRow - 1][firstCol] && 
+                              typeof boardState[firstRow - 1][firstCol] === 'string';
+        if (hasTileOneBack) {
+          // There's a tile one row back, so adjust the position
+          firstRow = Math.max(0, firstRow - leadingDots);
+        }
+        // If no tile one back, keep the original position
+      } else {
+        // No board state available, assume adjustment is needed
+        firstRow = Math.max(0, firstRow - leadingDots);
+      }
     }
   }
   
@@ -158,9 +166,13 @@ export const formatPlayerName = (playerName) => {
  * @param {Array} moveHistory - Array of moves in the game
  * @param {string} player1Name - Name of player 1
  * @param {string} player2Name - Name of player 2
+ * @param {Array} boardState - The current board state to check for existing tiles
+ * @param {Array} player1Rack - Player 1's current rack
+ * @param {Array} player2Rack - Player 2's current rack
+ * @param {Array} pool - Current tile pool
  * @returns {string} .gcg file content
  */
-export const generateGCGContent = (moveHistory, player1Name, player2Name) => {
+export const generateGCGContent = (moveHistory, player1Name, player2Name, boardState = null, player1Rack = [], player2Rack = [], pool = []) => {
   let gcgContent = '#character-encoding UTF-8\n';
   
   // Add player information
@@ -200,7 +212,25 @@ export const generateGCGContent = (moveHistory, player1Name, player2Name) => {
     displayWord = convertWordToGCGFormat(displayWord);
     
     // Get location
-    const location = formatGCGLocation(boardDiff, displayWord);
+    const location = formatGCGLocation(boardDiff, displayWord, boardState);
+    
+    // Check if this move caused the player to go out (rack is empty)
+    const isGoingOut = rack && rack.length === 0;
+    
+    // If player is going out, we need to handle the opponent's remaining tiles
+    if (isGoingOut) {
+      // Find the opponent's rack from the next move or calculate it
+      // For now, we'll assume the opponent's rack is available in the move data
+      // This might need to be enhanced based on how the move history is structured
+      
+      // If this is the last move and the player went out, we need to show opponent's tiles
+      if (index === moveHistory.length - 1) {
+        // This is the final move where someone went out
+        // We need to show the opponent's remaining tiles in parentheses
+        // For now, we'll add a placeholder - this would need to be calculated from the game state
+        displayWord = displayWord || 'OUT';
+      }
+    }
     
     // Update running totals
     if (isPlayer1) {
@@ -218,9 +248,54 @@ export const generateGCGContent = (moveHistory, player1Name, player2Name) => {
     const totalDisplay = isPlayer1 ? player1Total : player2Total;
     
     gcgContent += `>${playerName}: ${rackDisplay} ${locationDisplay} ${wordDisplay} ${scoreDisplay} ${totalDisplay}\n`;
+    
+    // If this move caused the player to go out, add the opponent's remaining tiles
+    if (isGoingOut && index === moveHistory.length - 1) {
+      // This is the final move where someone went out
+      // Calculate opponent's remaining tiles and their value
+      const opponentRack = isPlayer1 ? player2Rack : player1Rack;
+      const opponentName = isPlayer1 ? player2Name : player1Name;
+      const opponentPlayerName = formatPlayerName(opponentName);
+      
+      if (opponentRack && opponentRack.length > 0) {
+        // Calculate the value of opponent's remaining tiles
+        const tileValue = calculateTileValue(opponentRack);
+        
+        // Add the tile value to the opponent's score
+        if (isPlayer1) {
+          player2Total += tileValue;
+        } else {
+          player1Total += tileValue;
+        }
+        
+        // Format: >OpponentName: (REMAINING_TILES) +TILE_VALUE FINAL_TOTAL
+        const remainingTiles = opponentRack.join('');
+        gcgContent += `>${opponentPlayerName}: (${remainingTiles}) +${tileValue} ${isPlayer1 ? player2Total : player1Total}\n`;
+      }
+    }
   });
   
   return gcgContent;
+};
+
+/**
+ * Calculates the total value of tiles in a rack
+ * @param {Array} rack - Array of tile letters
+ * @returns {number} Total value of the tiles
+ */
+const calculateTileValue = (rack) => {
+  return rack.reduce((sum, tile) => {
+    const value = tile === '?' || tile === '*' ? 0 : 
+      tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
+      tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
+      tile === 'D' || tile === 'G' ? 2 :
+      tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
+      tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
+      tile === 'K' ? 5 :
+      tile === 'J' || tile === 'X' ? 8 :
+      tile === 'Q' || tile === 'Z' ? 10 : 0;
+    return sum + value;
+  }, 0);
 };
 
 /**
