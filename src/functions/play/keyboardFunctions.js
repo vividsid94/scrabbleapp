@@ -192,26 +192,27 @@ export const handleKeyDown = ({
   // Always use the actual letter if we have it
   if (tileIndex !== -1) {
     const tileToPlace = newRack[tileIndex];
-    // Don't remove tiles from rack immediately - just track them in selectedTiles
-    // Tiles will be removed during word submission
+    // Remove the tile from the rack immediately when typing
+    newRack.splice(tileIndex, 1);
     newTempBoard[row][col] = key;
     setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
   } 
   // Only use the blank tile if we don't have the letter
   else if (blankIndex !== -1) {
     const tileToPlace = newRack[blankIndex];
-    // Don't remove tiles from rack immediately - just track them in selectedTiles
-    // Tiles will be removed during word submission
+    // Remove the blank tile from the rack immediately when typing
+    newRack.splice(blankIndex, 1);
     newTempBoard[row][col] = key;
     newBlankTiles.push({ row, col });
     setBlankTiles(newBlankTiles);
     setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
   }
 
+  // Update the rack immediately when typing
   if (currentPlayer === 1) {
-    // Don't update rack since tiles aren't removed until word submission
+    setPlayer1Rack(alphabetizeRack(newRack));
   } else {
-    // Don't update rack since tiles aren't removed until word submission
+    setPlayer2Rack(alphabetizeRack(newRack));
   }
 
   setTempBoardCoords(newTempBoard);

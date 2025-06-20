@@ -169,21 +169,15 @@ export const handleWordSubmit = async ({
     setPlayer2points(runningTotal);
   }
 
-  // Remove played tiles from rack
-  const tilesToRemove = selectedTiles.map(tile => tile.tile);
-  console.log('🔍 DEBUG - Tile removal:', {
+  // Tiles are already removed from rack when typing, so no need to remove them again
+  // Just use the current rack as is
+  const newRack = [...playerRack];
+  
+  console.log('🔍 DEBUG - Word submission:', {
     playerRack: playerRack,
     selectedTiles: selectedTiles,
-    tilesToRemove: tilesToRemove,
-    rackLength: playerRack.length
-  });
-  
-  const newRack = removeTilesByCount(playerRack, tilesToRemove);
-  
-  console.log('🔍 DEBUG - After removal:', {
     newRack: newRack,
-    newRackLength: newRack.length,
-    removedCount: playerRack.length - newRack.length
+    rackLength: playerRack.length
   });
 
   if (currentPlayer === 1) {
