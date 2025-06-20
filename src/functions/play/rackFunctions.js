@@ -38,7 +38,6 @@ export const removeTilesByCount = (rack, tilesToRemove) => {
       if (index !== -1) {
         rackCopy.splice(index, 1);
         removed++;
-        console.log(`🔧 Removed ${tile} (${removed}/${count})`);
       }
     }
   });
