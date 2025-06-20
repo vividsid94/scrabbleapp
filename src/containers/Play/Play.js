@@ -887,6 +887,10 @@ export default function Play() {
       setPreviewMove(null);
       setPreviewTileOwnership(null);
       
+      // Clear heat map data when selecting a new move
+      setHeatMapData(null);
+      setIsHeatMapMode(false);
+      
       // Update the simulation board with the new move
       const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
       
