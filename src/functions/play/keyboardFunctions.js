@@ -4,8 +4,8 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 let lastKeyPressTime = 0;
 const DEBOUNCE_DELAY = 50; // milliseconds
 
-// Add submission guard using ref to prevent double-submission
-let isSubmittingRef = { current: false };
+// Add submission guard using timeout to prevent double-submission
+let submissionTimeout = null;
 
 export const handleKeyDown = ({
   e,
@@ -60,12 +60,12 @@ export const handleKeyDown = ({
     return;
   }
 
-  // Handle enter key with ref-based submission guard
+  // Handle enter key with timeout-based submission guard
   if (e.key === 'Enter') {
     e.preventDefault();
     
-    // Prevent double-submission using ref
-    if (isSubmittingRef.current) {
+    // Prevent double-submission using timeout
+    if (submissionTimeout) {
       return;
     }
     
@@ -74,12 +74,13 @@ export const handleKeyDown = ({
       return;
     }
     
-    isSubmittingRef.current = true;
+    // Set timeout to block submissions for 3 seconds
+    submissionTimeout = setTimeout(() => {
+      submissionTimeout = null;
+    }, 3000);
     
-    // Call handleWordSubmit and reset the ref when done
-    handleWordSubmit().finally(() => {
-      isSubmittingRef.current = false;
-    });
+    // Submit the word
+    handleWordSubmit();
     
     return;
   }
