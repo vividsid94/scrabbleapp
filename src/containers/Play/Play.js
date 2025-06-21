@@ -202,6 +202,17 @@ export default function Play() {
     
     // Utility functions
     getBoardDiff,
+    
+    // New store actions
+    initializeGame,
+    startBotGame,
+    handleVictory,
+    handleNewGame,
+    startTimer,
+    handlePass,
+    handleExchange,
+    handleWordSubmit,
+    handlePlayTopMove,
   } = useGameStore();
 
   // Refs (keep these local)
@@ -267,6 +278,11 @@ export default function Play() {
       updateSoundType(botMoveSound, botMoveSoundType, 'bot');
     }
   }, [botMoveSoundType]);
+
+  // Initialize game using store action
+  useEffect(() => {
+    initializeGame(origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound);
+  }, []);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -355,27 +371,6 @@ export default function Play() {
     origBoard
   ]);
 
-  const handleNewGame = () => {
-    setShowVictoryOverlay(false);
-    setShowConfetti(false);
-    setGameEnded(false);
-    setWinner(null);
-    setFinalPlayer1Score(0);
-    setFinalPlayer2Score(0);
-    
-    // Reset timer
-    setPlayer1Time(gameTime * 60);
-    setPlayer2Time(gameTime * 60);
-    setTimerActive(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    
-    // Reset game state
-    handleBotModeToggle();
-  };
-
   // Victory celebration handlers
   const handleConfettiComplete = () => {
     setShowConfetti(false);
@@ -399,65 +394,9 @@ export default function Play() {
 
   const handleClose = () => setOpen(false);
 
-  // Update the handleBotModeToggle function to use the new startBotGame
+  // Update the handleBotModeToggle function to use the store's startBotGame
   const handleBotModeToggle = () => {
     if (isDictionaryLoading) return;
-    
-    // Reset game ended state for new game
-    setGameEnded(false);
-    setShowVictoryOverlay(false);
-    setShowConfetti(false);
-    setWinner(null);
-    
-    // If there are tiles on the board, return them to the rack first
-    if (selectedTiles.length > 0) {
-      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-      const newRack = [...currentRack, ...selectedTiles];
-      
-      if (currentPlayer === 1) {
-        setPlayer1Rack(alphabetizeRack(newRack));
-      } else {
-        setPlayer2Rack(alphabetizeRack(newRack));
-      }
-      
-      // Reset the board state by rebuilding from origBoardCoords
-      const newBoard = JSON.parse(JSON.stringify(origBoardCoords));
-      
-      // Copy over any committed tiles from boardCoords
-      for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
-          if (typeof boardCoords[row][col] === 'string') {
-            newBoard[row][col] = boardCoords[row][col];
-          }
-        }
-      }
-      
-      setTempBoardCoords(newBoard);
-      setSelectedTiles([]);
-      setSelectedBoardPosition(null);
-      setArrowDirection('right');
-    }
-    
-    // Clear blank tiles when starting new game
-    setBlankTiles([]);
-    
-    // Reset timer for new game
-    setPlayer1Time(gameTime * 60);
-    setPlayer2Time(gameTime * 60);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    
-    // Randomly determine who goes first
-    const randomFirst = Math.random() < 0.5;
-    setBotGoesFirst(randomFirst);
-    
-    // Set game started state
-    setGameStarted(true);
-    setTimerActive(true);
-    
-    // Start the game using the new startBotGame function
     startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound });
   };
 
@@ -483,33 +422,7 @@ export default function Play() {
 
   // Start timer when it's a player's turn
   useEffect(() => {
-    if (timerActive && gameStarted) {
-      timerRef.current = setInterval(() => {
-        if (currentPlayer === 1) {
-          const currentTime = useGameStore.getState().player1Time;
-          if (currentTime <= 0 || isNaN(currentTime)) {
-            clearInterval(timerRef.current);
-            setPlayer1Time(0);
-          } else {
-            setPlayer1Time(currentTime - 1);
-          }
-        } else {
-          const currentTime = useGameStore.getState().player2Time;
-          if (currentTime <= 0 || isNaN(currentTime)) {
-            clearInterval(timerRef.current);
-            setPlayer2Time(0);
-          } else {
-            setPlayer2Time(currentTime - 1);
-          }
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
+    return startTimer(timerRef);
   }, [timerActive, currentPlayer, gameStarted]);
 
   const handlePassClick = () => {
