@@ -4,21 +4,19 @@ import Box from '@mui/material/Box';
 import styles from './Play.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
-import Modal from '@mui/material/Modal';
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Slider, Tooltip } from "@mui/material";
+import { Snackbar, Alert, Tooltip } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
+import GameModal from '../../components/Modals/GameModal';
 import PlayerInfo from './components/PlayerInfo';
-import ColorScheme from '../../components/common/ColorScheme';
 import Confetti from '../../components/Confetti/Confetti';
 import TuneIcon from '@mui/icons-material/Tune';
 import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
-import SortIcon from '@mui/icons-material/Sort';
 import { simulateMove as simulateMoveFunction, runHeatMapSimulation as runHeatMapSimulationFunction, runAllMovesSimulation as runAllMovesSimulationFunction, runSimulation as runSimulationFunction, openSimulationModal as openSimulationModalFunction, stopSimulation as stopSimulationFunction, resetHeatMapMode as resetHeatMapModeFunction, switchToMetrics as switchToMetricsFunction } from '../../functions/simulationFunctions';
 import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
 import { alphabetizeRack } from '../../functions/play/rackFunctions';
@@ -168,8 +166,6 @@ export default function Play() {
     
     // UI state
     theme,
-    open,
-    modalContent,
     snackbarOpen,
     snackbarMessage,
     snackbarSeverity,
@@ -177,8 +173,6 @@ export default function Play() {
     showConfetti,
     showVictoryOverlay,
     setTheme,
-    setOpen,
-    setModalContent,
     setSnackbarOpen,
     setSnackbarMessage,
     setSnackbarSeverity,
@@ -222,7 +216,6 @@ export default function Play() {
     // UI handler functions
     handleSettingsOpen,
     handleColorSchemeOpen,
-    handleClose,
     handleWordSubmitClick,
     handlePassClick,
     handleExchangeClick,
@@ -487,7 +480,7 @@ export default function Play() {
             </Box>
           </Box>
           <Box className={styles.leftContainer}>
-            <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
+            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
               <Board 
                 board={board}
                 boardMode={theme}
@@ -647,196 +640,98 @@ export default function Play() {
           </Box>
         </Box>
 
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box className={styles.modalContainer}>
-            {modalContent === "settings" && (
-              <Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Board Mode
-                  <select className={styles.styleSelection} value={theme} onChange={(e) => setTheme(e.target.value)}>
-                    <option value="STANDARD">Standard</option>
-                    {/* <option value="FULLBOARD">Full Board</option> */}
-                  </select>
-                </Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Player Move Sound
-                  <select
-                    className={styles.styleSelection}
-                    value={playerMoveSoundType}
-                    onChange={e => setPlayerMoveSoundType(e.target.value)}
-                  >
-                    <option value="classic">Classic</option>
-                    <option value="sword">Sword</option>
-                  </select>
-                </Box>
-                <Box className={styles.modalContainer__dictionary}>
-                  Bot Move Sound
-                  <select
-                    className={styles.styleSelection}
-                    value={botMoveSoundType}
-                    onChange={e => setBotMoveSoundType(e.target.value)}
-                  >
-                    <option value="classic">Classic</option>
-                    <option value="sword">Sword</option>
-                  </select>
-                </Box>
-              </Box>
-            )}
-            {modalContent === "colorScheme" && (
-              <ColorScheme
-                color={color}
-                boardColor={boardColor}
-              />
-            )}
-          </Box>
-        </Modal>
-      </Box>
-      <Snackbar 
-        open={snackbarOpen} 
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
-      >
-        <Alert 
-          onClose={() => setSnackbarOpen(false)} 
-          severity={snackbarSeverity}
-          className={styles.snackbarAlert}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        <GameModal />
 
-      <SimulationModal
-        open={showSimulationModal}
-        onClose={() => {
-          setShowSimulationModal(false);
-          setSimulationBoard(null);
-          setPreviewMove(null);
-          setPreviewTileOwnership(null);
-          setMoveWithResults(null);
-          resetHeatMapMode();
-        }}
-        simulationBoard={previewBoard || simulationBoard}
-        previewTileOwnership={previewTileOwnership}
-        theme={theme}
-        color={color}
-        complementaryColor={complementaryColor}
-        blankTiles={blankTiles}
-        simulatingMove={simulatingMove}
-        simulationProgress={simulationProgress}
-        simulationResult={simulationResult}
-        moveWithResults={moveWithResults}
-        onStartSimulation={runSimulation}
-        onStartHeatMap={runHeatMapSimulation}
-        onStopSimulation={stopSimulation}
-        onSwitchToMetrics={() => {}}
-        heatMapData={simulationBoard}
-        isHeatMapMode={!!simulationBoard}
-        simulationSettings={{
-          numSimulations: 5,
-          turnsPerSim: 1
-        }}
-        onSimulationSettingsChange={(newSettings) => {
-          // This function is now empty as the state is managed by the simulation store
-        }}
-        topMoves={topMoves}
-        onMoveSelect={handleMoveSelectClick}
-        onRunAllMovesSimulation={runAllMovesSimulation}
-        allMoveResults={allMoveResults}
-        isSimulatingAllMoves={isSimulatingAllMoves}
-      />
-
-      {/* Victory Celebration Components */}
-      <Confetti
-        winner={winner}
-        isVisible={showConfetti}
-        onComplete={handleConfettiComplete}
-      />
-      
-      {/* Floating Victory Message */}
-      {showVictoryOverlay && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 10001,
-            textAlign: 'center',
-            pointerEvents: 'auto',
-          }}
+        <Snackbar 
+          open={snackbarOpen} 
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
         >
-          <Box
-            sx={{
-              background: winner === 'player' 
-                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png")'
-                : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png")',
-              color: 'white',
-              padding: '15px 20px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(15px)',
-              minWidth: '220px',
-              position: 'relative',
-            }}
+          <Alert 
+            onClose={() => setSnackbarOpen(false)} 
+            severity={snackbarSeverity}
+            className={styles.snackbarAlert}
           >
-            <Box sx={{ fontSize: '28px', mb: 1 }}>
-              {winner === 'player' ? '🏆' : '🤖'}
-            </Box>
-            <Box sx={{ 
-              fontSize: '18px', 
-              fontWeight: 'bold', 
-              mb: 1,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
-              letterSpacing: '0.5px'
-            }}>
-              {winner === 'player' ? 'It\'s a huge, huge win!' : 'The bot got the best of you!'}
-            </Box>
-            <Box sx={{ 
-              fontSize: '11px', 
-              opacity: 0.9,
-              mb: 1
-            }}>
-              {winner === 'player' ? '' : ''}
-            </Box>
-            <Box sx={{ 
-              fontSize: '14px', 
-              fontWeight: 'bold',
-              color: winner === 'player' ? '#FFD700' : '#C0C0C0',
-              mb: 2
-            }}>
-              {winner === 'player' ? '' : ''}
-            </Box>
-            
-            {/* Rematch Button */}
-            <Box
-              onClick={handleNewGame}
-              sx={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                color: 'white',
-                padding: '6px 16px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '11px',
-                backdropFilter: 'blur(10px)',
-                display: 'inline-block',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
-                },
-              }}
-            >
-              Rematch
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+
+        <SimulationModal
+          open={showSimulationModal}
+          onClose={() => {
+            setShowSimulationModal(false);
+            setSimulationBoard(null);
+            setPreviewMove(null);
+            setPreviewTileOwnership(null);
+            setMoveWithResults(null);
+            resetHeatMapMode();
+          }}
+          simulationBoard={previewBoard || simulationBoard}
+          previewTileOwnership={previewTileOwnership}
+          theme={theme}
+          color={color}
+          complementaryColor={complementaryColor}
+          blankTiles={blankTiles}
+          simulatingMove={simulatingMove}
+          simulationProgress={simulationProgress}
+          simulationResult={simulationResult}
+          moveWithResults={moveWithResults}
+          onStartSimulation={runSimulation}
+          onStartHeatMap={runHeatMapSimulation}
+          onStopSimulation={stopSimulation}
+          onSwitchToMetrics={() => {}}
+          heatMapData={simulationBoard}
+          isHeatMapMode={!!simulationBoard}
+          simulationSettings={{
+            numSimulations: 5,
+            turnsPerSim: 1
+          }}
+          onSimulationSettingsChange={(newSettings) => {
+            // This function is now empty as the state is managed by the simulation store
+          }}
+          topMoves={topMoves}
+          onMoveSelect={handleMoveSelectClick}
+          onRunAllMovesSimulation={runAllMovesSimulation}
+          allMoveResults={allMoveResults}
+          isSimulatingAllMoves={isSimulatingAllMoves}
+        />
+
+        {/* Victory Celebration Components */}
+        <Confetti
+          winner={winner}
+          isVisible={showConfetti}
+          onComplete={handleConfettiComplete}
+        />
+        
+        {/* Floating Victory Message */}
+        {showVictoryOverlay && (
+          <Box className={styles.victoryOverlay}>
+            <Box className={`${styles.victoryCard} ${winner === 'player' ? styles.victoryCardPlayer : styles.victoryCardBot}`}>
+              <Box className={styles.victoryIcon}>
+                {winner === 'player' ? '🏆' : '🤖'}
+              </Box>
+              <Box className={styles.victoryTitle}>
+                {winner === 'player' ? 'It\'s a huge, huge win!' : 'The bot got the best of you!'}
+              </Box>
+              <Box className={styles.victorySubtitle}>
+                {winner === 'player' ? '' : ''}
+              </Box>
+              <Box className={`${styles.victoryScore} ${winner === 'player' ? styles.victoryScorePlayer : styles.victoryScoreBot}`}>
+                {winner === 'player' ? '' : ''}
+              </Box>
+              
+              {/* Rematch Button */}
+              <Box
+                onClick={handleNewGame}
+                className={styles.rematchButton}
+              >
+                Rematch
+              </Box>
             </Box>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 } 
