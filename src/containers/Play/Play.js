@@ -94,9 +94,11 @@ export default function Play() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [showSimulationModal, setShowSimulationModal] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
-  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [winner, setWinner] = useState(null);
+  const [finalPlayer1Score, setFinalPlayer1Score] = useState(0);
+  const [finalPlayer2Score, setFinalPlayer2Score] = useState(0);
+  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
   
   // Add state for move sound selection first
   const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
@@ -260,27 +262,55 @@ export default function Play() {
     const winner = isPlayerWinner ? 'player' : 'bot';
     setWinner(winner);
     
+    // Calculate final scores
+    let finalPlayer1Score = player1points;
+    let finalPlayer2Score = player2points;
+    
+    if (isPlayerWinner) {
+      // Player won, bot gets remaining tiles added to their score
+      const rackSum = (loserRack || []).reduce((sum, tile) => {
+        const value = tile === '?' || tile === '*' ? 0 : 
+          tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
+          tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
+          tile === 'D' || tile === 'G' ? 2 :
+          tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
+          tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
+          tile === 'K' ? 5 :
+          tile === 'J' || tile === 'X' ? 8 :
+          tile === 'Q' || tile === 'Z' ? 10 : 0;
+        return sum + value;
+      }, 0);
+      finalPlayer2Score = loserPoints + rackSum;
+    } else {
+      // Bot won, player gets remaining tiles added to their score
+      const rackSum = (loserRack || []).reduce((sum, tile) => {
+        const value = tile === '?' || tile === '*' ? 0 : 
+          tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
+          tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
+          tile === 'D' || tile === 'G' ? 2 :
+          tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
+          tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
+          tile === 'K' ? 5 :
+          tile === 'J' || tile === 'X' ? 8 :
+          tile === 'Q' || tile === 'Z' ? 10 : 0;
+        return sum + value;
+      }, 0);
+      finalPlayer1Score = loserPoints + rackSum;
+    }
+    
+    // Set final scores in state
+    //setFinalPlayer1Score(finalPlayer1Score);
+    //setFinalPlayer2Score(finalPlayer2Score);
+
+    setFinalPlayer1Score(player1points);
+    setFinalPlayer2Score(player2points);
+    
     // Trigger victory celebration
     setShowConfetti(true);
     setShowVictoryOverlay(true);
     
-    handleGameEnd({
-      winnerRack,
-      winnerName,
-      loserRack,
-      loserPoints,
-      player1Rack,
-      player2Rack,
-      player1points,
-      player2points,
-      autoPlayBest,
-      setPlayer1points,
-      setPlayer2points,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen,
-      setAutoPlayBest
-    });
+    // Note: Score calculation and state updates are now handled in handleGameEndClick
+    // No need to call the utility handleGameEnd function here
   }, [
     player1Name,
     player2Name,
@@ -292,10 +322,7 @@ export default function Play() {
   // Victory celebration handlers
   const handleConfettiComplete = useCallback(() => {
     setShowConfetti(false);
-  }, []);
-
-  const handleVictoryOverlayClose = useCallback(() => {
-    setShowVictoryOverlay(false);
+    // Don't hide the victory card - let it stay open until user clicks rematch
   }, []);
 
   const handleNewGame = useCallback(() => {
@@ -303,6 +330,8 @@ export default function Play() {
     setShowConfetti(false);
     setGameEnded(false);
     setWinner(null);
+    setFinalPlayer1Score(0);
+    setFinalPlayer2Score(0);
     
     // Reset timer
     setPlayer1Time(gameTime * 60);
@@ -1637,25 +1666,6 @@ export default function Play() {
               position: 'relative',
             }}
           >
-            {/* Close X button */}
-            <Box
-              onClick={handleVictoryOverlayClose}
-              sx={{
-                position: 'absolute',
-                top: '10px',
-                right: '15px',
-                fontSize: '18px',
-                cursor: 'pointer',
-                opacity: 0.8,
-                transition: 'opacity 0.3s ease',
-                '&:hover': {
-                  opacity: 1,
-                },
-              }}
-            >
-              ✕
-            </Box>
-            
             <Box sx={{ fontSize: '28px', mb: 1 }}>
               {winner === 'player' ? '🏆' : '🤖'}
             </Box>

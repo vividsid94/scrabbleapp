@@ -179,6 +179,9 @@ export const makeBotMove = async ({
     const newBlankTiles = [...blankTiles];
     let newPool = [...pool];
     
+    // Initialize botRunningTotal for game end check
+    let botRunningTotal = player2points;
+    
     if (bestMove.isExchange) {
       // Handle exchange move
       const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
@@ -233,8 +236,8 @@ export const makeBotMove = async ({
         newRack = removeTilesByCount(newRack, tilesToRemove);
       }
       
-      // Calculate running total
-      const botRunningTotal = player2points + bestMove.score;
+      // Calculate running total for regular moves
+      botRunningTotal = player2points + bestMove.score;
 
       // Store only the differences in board states
       const boardDiff = getBoardDiff(boardCoords, newBoard);
@@ -265,29 +268,16 @@ export const makeBotMove = async ({
       console.log('🎯 GAME END: Bot played all tiles and pool is empty!', {
         botRack: newRack,
         poolSize: newPool.length,
-        botScore: player2points + bestMove.score,
+        botScore: botRunningTotal,
         player1Score: player1points,
         player1Rack: player1Rack
       });
-      handleGameEnd({
-        winnerRack: newRack,
-        winnerName: player2Name,
-        loserRack: player1Rack || [],
-        loserPoints: player1points,
-        player1Rack: player1Rack || [],
-        player2Rack: player2Rack || [],
-        player1points,
-        player2points,
-        player1Name: 'You',
-        player2Name: 'SidBot',
-        autoPlayBest,
-        setPlayer1points: () => {},
-        setPlayer2points,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setAutoPlayBest: () => {}
-      });
+      handleGameEnd(
+        newRack,           // winnerRack
+        player2Name,       // winnerName
+        player1Rack || [], // loserRack
+        player1points      // loserPoints
+      );
       return;
     }
     
