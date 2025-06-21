@@ -229,44 +229,50 @@ export default function Play() {
   const timerRef = useRef(null);
 
   // Initialize sounds
-  const sounds = useRef(initializeSounds());
-  const gameStartSound = useRef(sounds.current.gameStartSound);
-  const playerMoveSound = useRef(sounds.current.playerMoveSound);
-  const botMoveSound = useRef(sounds.current.botMoveSound);
+  const { gameStartSound, playerMoveSound, botMoveSound } = initializeSounds() || {};
+  const gameStartSoundRef = useRef(gameStartSound);
+  const playerMoveSoundRef = useRef(playerMoveSound);
+  const botMoveSoundRef = useRef(botMoveSound);
 
   // Add error handlers for sounds
   useEffect(() => {
-    if (!gameStartSound.current || !playerMoveSound.current || !botMoveSound.current) {
-      const newSounds = initializeSounds();
-      gameStartSound.current = newSounds.gameStartSound;
-      playerMoveSound.current = newSounds.playerMoveSound;
-      botMoveSound.current = newSounds.botMoveSound;
+    if (!gameStartSoundRef.current || !playerMoveSoundRef.current || !botMoveSoundRef.current) {
+      const newSounds = initializeSounds() || {};
+      gameStartSoundRef.current = newSounds.gameStartSound;
+      playerMoveSoundRef.current = newSounds.playerMoveSound;
+      botMoveSoundRef.current = newSounds.botMoveSound;
     }
 
-    gameStartSound.current.addEventListener('error', () => 
-      handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-    );
-    playerMoveSound.current.addEventListener('error', () => 
-      handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-    );
-    botMoveSound.current.addEventListener('error', () => 
-      handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-    );
+    if (gameStartSoundRef.current) {
+      gameStartSoundRef.current.addEventListener('error', () => 
+        handleSoundError(gameStartSoundRef.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
+    }
+    if (playerMoveSoundRef.current) {
+      playerMoveSoundRef.current.addEventListener('error', () => 
+        handleSoundError(playerMoveSoundRef.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
+    }
+    if (botMoveSoundRef.current) {
+      botMoveSoundRef.current.addEventListener('error', () => 
+        handleSoundError(botMoveSoundRef.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      );
+    }
 
     return () => {
-      if (gameStartSound.current) {
-        gameStartSound.current.removeEventListener('error', () => 
-          handleSoundError(gameStartSound.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      if (gameStartSoundRef.current) {
+        gameStartSoundRef.current.removeEventListener('error', () => 
+          handleSoundError(gameStartSoundRef.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
         );
       }
-      if (playerMoveSound.current) {
-        playerMoveSound.current.removeEventListener('error', () => 
-          handleSoundError(playerMoveSound.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      if (playerMoveSoundRef.current) {
+        playerMoveSoundRef.current.removeEventListener('error', () => 
+          handleSoundError(playerMoveSoundRef.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
         );
       }
-      if (botMoveSound.current) {
-        botMoveSound.current.removeEventListener('error', () => 
-          handleSoundError(botMoveSound.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
+      if (botMoveSoundRef.current) {
+        botMoveSoundRef.current.removeEventListener('error', () => 
+          handleSoundError(botMoveSoundRef.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
         );
       }
     };
@@ -274,20 +280,20 @@ export default function Play() {
 
   // Update audio refs when sound type changes
   useEffect(() => {
-    if (playerMoveSound.current && playerMoveSoundType) {
-      updateSoundType(playerMoveSound, playerMoveSoundType, 'player');
+    if (playerMoveSoundRef.current && playerMoveSoundType) {
+      updateSoundType(playerMoveSoundRef, playerMoveSoundType, 'player');
     }
   }, [playerMoveSoundType]);
 
   useEffect(() => {
-    if (botMoveSound.current && botMoveSoundType) {
-      updateSoundType(botMoveSound, botMoveSoundType, 'bot');
+    if (botMoveSoundRef.current && botMoveSoundType) {
+      updateSoundType(botMoveSoundRef, botMoveSoundType, 'bot');
     }
   }, [botMoveSoundType]);
 
   // Initialize game using store action
   useEffect(() => {
-    initializeGame(origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound);
+    initializeGame(origBoard, origPool, TEST_RACKS, gameStartSoundRef, botMoveSoundRef);
   }, []);
 
   useEffect(() => {
@@ -303,33 +309,33 @@ export default function Play() {
   // Update useEffect to handle keyboard events
   useEffect(() => {
     const handleKeyDownWrapperWithParams = (e) => {
-      handleKeyDownWrapper(e, playerMoveSound, origBoard);
+      handleKeyDownWrapper(e, playerMoveSoundRef, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyDownWrapperWithParams);
     return () => {
       window.removeEventListener('keydown', handleKeyDownWrapperWithParams);
     };
-  }, [handleKeyDownWrapper, playerMoveSound, origBoard]);
+  }, [handleKeyDownWrapper, playerMoveSoundRef, origBoard]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPressWrapperWithParams = (event) => {
-      handleKeyPressWrapper(event, playerMoveSound, origBoard);
+      handleKeyPressWrapper(event, playerMoveSoundRef, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyPressWrapperWithParams);
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapperWithParams);
     };
-  }, [handleKeyPressWrapper, playerMoveSound, origBoard]);
+  }, [handleKeyPressWrapper, playerMoveSoundRef, origBoard]);
 
   // Update the useEffect for bot turns to use the new makeBotMove
   useEffect(() => {
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded) {
-      makeBotMove(botMoveSound);
+      makeBotMove(botMoveSoundRef);
     }
-  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, makeBotMove, botMoveSound]);
+  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, makeBotMove, botMoveSoundRef]);
 
   // Update player2Name when isBotMode changes
   useEffect(() => {
