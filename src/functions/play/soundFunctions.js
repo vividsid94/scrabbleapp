@@ -29,10 +29,7 @@ const playerMoveSoundSword = new SimpleSoundPlayer('/sounds/player-move-sword.mp
 const botMoveSoundClassic = new SimpleSoundPlayer('/sounds/bot-move.mp3');
 const botMoveSoundSword = new SimpleSoundPlayer('/sounds/bot-move-sword.mp3');
 
-console.log('🎵 Sound players created');
-
 export const initializeSounds = () => {
-  console.log('🎵 initializeSounds called');
   // Return simple objects that just wrap the sound players
   const sounds = {
     gameStartSound: { play: () => gameStartSound.play() },
