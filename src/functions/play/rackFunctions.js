@@ -24,12 +24,6 @@ export const removeTilesByCount = (rack, tilesToRemove) => {
     tilesToRemoveCount[tile] = (tilesToRemoveCount[tile] || 0) + 1;
   });
   
-  console.log('🔧 removeTilesByCount:', {
-    originalRack: rack,
-    tilesToRemove: tilesToRemove,
-    tilesToRemoveCount: tilesToRemoveCount
-  });
-  
   // Remove tiles by count
   Object.entries(tilesToRemoveCount).forEach(([tile, count]) => {
     let removed = 0;
@@ -42,7 +36,6 @@ export const removeTilesByCount = (rack, tilesToRemove) => {
     }
   });
   
-  console.log('🔧 Final rack:', rackCopy);
   return rackCopy;
 };
 

@@ -1,3 +1,5 @@
+import { useGameStore } from '../../stores/gameStore';
+
 /**
  * Handles the end of a game when a player plays all their tiles
  * @param {Object} params - The parameters object
@@ -49,6 +51,17 @@ export const handleGameEnd = ({
     autoPlayBest
   });
 
+  // Get the Zustand store state and setters
+  const {
+    setGameEnded,
+    setWinner,
+    setFinalPlayer1Score,
+    setFinalPlayer2Score,
+    setShowConfetti,
+    setShowVictoryOverlay,
+    setTimerActive
+  } = useGameStore.getState();
+
   // Calculate sum of loser's remaining tiles
   const rackSum = (loserRack || []).reduce((sum, tile) => {
     const value = tile === '?' || tile === '*' ? 0 : 
@@ -64,13 +77,37 @@ export const handleGameEnd = ({
   }, 0);
   
   // Add remaining tiles to loser's score
+  let finalPlayer1Score = player1points;
+  let finalPlayer2Score = player2points;
+  
   if (winnerName === player1Name) {
     // Player 1 is the winner, so add remaining tiles to Player 2's score
-    setPlayer2points(loserPoints + rackSum);
+    finalPlayer2Score = loserPoints + rackSum;
+    setPlayer2points(finalPlayer2Score);
   } else {
     // Player 2 is the winner, so add remaining tiles to Player 1's score
-    setPlayer1points(loserPoints + rackSum);
+    finalPlayer1Score = loserPoints + rackSum;
+    setPlayer1points(finalPlayer1Score);
   }
+  
+  // Set game as ended
+  setGameEnded(true);
+  
+  // Stop the timer
+  setTimerActive(false);
+  
+  // Determine winner based on winnerName
+  const isPlayerWinner = winnerName === player1Name;
+  const winner = isPlayerWinner ? 'player' : 'bot';
+  setWinner(winner);
+  
+  // Set final scores
+  setFinalPlayer1Score(finalPlayer1Score);
+  setFinalPlayer2Score(finalPlayer2Score);
+  
+  // Trigger victory celebration
+  setShowConfetti(true);
+  setShowVictoryOverlay(true);
   
   // Disable auto-play
   setAutoPlayBest(false);

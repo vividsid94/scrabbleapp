@@ -34,7 +34,7 @@ function App() {
           backgroundColor: getHeaderBackgroundColor(),
           color: lightMode === 'dark' ? '#fff' : '#000'
         }}>
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
               <Route path="/" element={<Home/>} />

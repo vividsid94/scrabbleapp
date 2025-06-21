@@ -3,7 +3,28 @@ import { removeTilesByCount } from './play/rackFunctions';
 
 // Helper function to track board occupancy for heat maps
 const trackBoardOccupancy = (board, heatMap) => {
+  // Safety checks
+  if (!board || !Array.isArray(board) || board.length !== 15) {
+    console.error('Invalid board in trackBoardOccupancy:', board);
+    return;
+  }
+  
+  if (!heatMap || !Array.isArray(heatMap) || heatMap.length !== 15) {
+    console.error('Invalid heatMap in trackBoardOccupancy:', heatMap);
+    return;
+  }
+  
   for (let row = 0; row < 15; row++) {
+    if (!board[row] || !Array.isArray(board[row]) || board[row].length !== 15) {
+      console.error(`Invalid board row ${row}:`, board[row]);
+      continue;
+    }
+    
+    if (!heatMap[row] || !Array.isArray(heatMap[row]) || heatMap[row].length !== 15) {
+      console.error(`Invalid heatMap row ${row}:`, heatMap[row]);
+      continue;
+    }
+    
     for (let col = 0; col < 15; col++) {
       if (typeof board[row][col] === 'string') {
         heatMap[row][col]++;
@@ -98,7 +119,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       for (let turn = 0; turn < turnsPerSim; turn++) {
         // Determine whose turn it is (opponent goes first after our selected move)
         const isOpponentTurn = turn % 2 === 0;
-        const currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
+        let currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
         const currentTurnScore = isOpponentTurn ? simBotScore : simOurScore;
         
         try {
@@ -146,7 +167,19 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
             if (tile.isNew) {
               simBoard[tile.row][tile.col] = tile.letter;
               // Remove the tile from the current player's rack using count method
-              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
+              if (isOpponentTurn) {
+                // Modify botRack directly
+                const index = simBotRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  simBotRack.splice(index, 1);
+                }
+              } else {
+                // Modify ourRack directly
+                const index = simOurRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  simOurRack.splice(index, 1);
+                }
+              }
             }
           }
           
@@ -163,11 +196,19 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           
           simMoves++;
           
-          // Draw new tiles for the current player BEFORE storing the board
-          while (currentTurnRack.length < 7 && simPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * simPool.length);
-            currentTurnRack.push(simPool[randomIndex]);
-            simPool.splice(randomIndex, 1);
+          // Draw new tiles for the current player
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              botRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              ourRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
           }
           
           // Store the board after the move
@@ -199,10 +240,18 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           // Instead of breaking, continue with a pass move
           
           // Draw new tiles for the current player even on pass
-          while (currentTurnRack.length < 7 && simPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * simPool.length);
-            currentTurnRack.push(simPool[randomIndex]);
-            simPool.splice(randomIndex, 1);
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              botRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              ourRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
           }
           
           // Continue to next turn instead of breaking
@@ -282,6 +331,22 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
       
       // Create copies of initial state for this iteration
       let board = JSON.parse(JSON.stringify(gameState.boardCoords));
+      
+      // Safety check for board initialization
+      if (!board || !Array.isArray(board) || board.length !== 15) {
+        console.error('Invalid board state in heat map simulation:', board);
+        throw new Error('Invalid board state in heat map simulation');
+      }
+      
+      // Ensure each row is properly initialized
+      for (let row = 0; row < 15; row++) {
+        if (!board[row] || !Array.isArray(board[row]) || board[row].length !== 15) {
+          console.error(`Invalid board row ${row} in heat map simulation:`, board[row]);
+          // Initialize the row if it's invalid
+          board[row] = Array(15).fill(0);
+        }
+      }
+      
       let ourRack = [...(gameState.currentPlayer === 1 ? gameState.player1Rack : gameState.player2Rack)];
       let botRack = generateRandomRack(7);
       let currentPool = [...gameState.pool];
@@ -340,7 +405,19 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
             if (tile.isNew) {
               board[tile.row][tile.col] = tile.letter;
               // Remove the tile from the current player's rack using count method
-              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
+              if (isOpponentTurn) {
+                // Modify botRack directly
+                const index = botRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  botRack.splice(index, 1);
+                }
+              } else {
+                // Modify ourRack directly
+                const index = ourRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  ourRack.splice(index, 1);
+                }
+              }
             }
           }
           
@@ -348,10 +425,18 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
           trackBoardOccupancy(board, heatMap);
           
           // Draw new tiles for the current player
-          while (currentTurnRack.length < 7 && currentPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * currentPool.length);
-            currentTurnRack.push(currentPool[randomIndex]);
-            currentPool.splice(randomIndex, 1);
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && currentPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              botRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && currentPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              ourRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
           }
           
         } catch (error) {

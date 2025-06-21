@@ -27,6 +27,7 @@ export const handleKeyDown = ({
   setPreviewScore,
   setPreviewScorePosition,
   handleWordSubmit,
+  playerMoveSound,
   arrowDirection,
   origBoard
 }) => {
@@ -70,7 +71,7 @@ export const handleKeyDown = ({
     }
     
     // Only submit if there are tiles placed
-    if (selectedTiles.length === 0) {
+    if (!selectedTiles || !Array.isArray(selectedTiles) || selectedTiles.length === 0) {
       return;
     }
     
@@ -80,7 +81,7 @@ export const handleKeyDown = ({
     }, 3000);
     
     // Submit the word
-    handleWordSubmit();
+    handleWordSubmit(playerMoveSound);
     
     return;
   }
@@ -90,9 +91,12 @@ export const handleKeyDown = ({
     e.preventDefault();
     const newTempBoard = [...tempBoardCoords];
     
+    // Debug: Log what selectedTiles is
+    console.log('selectedTiles in handleKeyDown:', selectedTiles, typeof selectedTiles);
+    
     // Determine the actual direction of the placed tiles
     let actualDirection = arrowDirection;
-    if (selectedTiles.length > 1) {
+    if (selectedTiles && Array.isArray(selectedTiles) && selectedTiles.length > 1) {
       // Find the actual first and last tiles placed by examining positions
       let minRow = Infinity, maxRow = -Infinity;
       let minCol = Infinity, maxCol = -Infinity;
@@ -116,7 +120,7 @@ export const handleKeyDown = ({
     
     // Find the actual last tile that was placed
     let lastPlacedTile = null;
-    if (selectedTiles.length > 0) {
+    if (selectedTiles && Array.isArray(selectedTiles) && selectedTiles.length > 0) {
       if (actualDirection === 'right') {
         // For horizontal moves, find the rightmost tile
         lastPlacedTile = selectedTiles.reduce((last, current) => 
@@ -144,7 +148,7 @@ export const handleKeyDown = ({
           
           const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
           // Find the tile that was placed at this position
-          const placedTile = selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
+          const placedTile = selectedTiles && selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
           if (placedTile) {
             const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
             const newRack = [...currentRack, tileToAdd];
@@ -160,7 +164,9 @@ export const handleKeyDown = ({
             }
 
             // Update selectedTiles to match what's actually on the board
-            setSelectedTiles(prevTiles => prevTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+            const currentSelectedTiles = selectedTiles || [];
+            const newSelectedTiles = currentSelectedTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol));
+            setSelectedTiles(newSelectedTiles);
           }
           
           // Reset preview score
@@ -216,7 +222,8 @@ export const handleKeyDown = ({
     // Remove the tile from the rack immediately when typing
     newRack.splice(tileIndex, 1);
     newTempBoard[row][col] = key;
-    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
+    const currentSelectedTiles = selectedTiles || [];
+    setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
   } 
   // Only use the blank tile if we don't have the letter
   else if (blankIndex !== -1) {
@@ -226,7 +233,8 @@ export const handleKeyDown = ({
     newTempBoard[row][col] = key;
     newBlankTiles.push({ row, col });
     setBlankTiles(newBlankTiles);
-    setSelectedTiles(prevTiles => [...prevTiles, { tile: tileToPlace, row, col }]);
+    const currentSelectedTiles = selectedTiles || [];
+    setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
   }
 
   // Update the rack immediately when typing

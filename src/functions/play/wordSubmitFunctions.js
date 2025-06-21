@@ -1,4 +1,6 @@
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
+import { useGameStore } from '../../stores/gameStore';
+import { handleGameEnd } from './gameEndFunctions';
 
 /**
  * Handles the submission of a word to the board
@@ -38,41 +40,41 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
  * @param {Object} params.playerMoveSound - Reference to player move sound
  * @returns {Promise<void>}
  */
-export const handleWordSubmit = async ({
-  boardCoords,
-  tempBoardCoords,
-  currentPlayer,
-  player1Rack,
-  player2Rack,
-  selectedTiles,
-  pool,
-  player1points,
-  player2points,
-  player1Name,
-  player2Name,
-  blankTiles,
-  moveHistory,
-  selectedBoardPosition,
-  arrowDirection,
-  setBoardCoords,
-  setTempBoardCoords,
-  setSelectedTiles,
-  setSelectedBoardPosition,
-  setArrowDirection,
-  setPlayer1points,
-  setPlayer2points,
-  setPlayer1Rack,
-  setPlayer2Rack,
-  setPool,
-  setCurrentPlayer,
-  setMoveHistory,
-  setSnackbarMessage,
-  setSnackbarSeverity,
-  setSnackbarOpen,
-  handleGameEnd,
-  getBoardDiff,
-  playerMoveSound
-}) => {
+export const handleWordSubmit = async (playerMoveSound) => {
+  const {
+    boardCoords,
+    tempBoardCoords,
+    currentPlayer,
+    player1Rack,
+    player2Rack,
+    selectedTiles,
+    pool,
+    player1points,
+    player2points,
+    player1Name,
+    player2Name,
+    blankTiles,
+    moveHistory,
+    selectedBoardPosition,
+    arrowDirection,
+    setBoardCoords,
+    setTempBoardCoords,
+    setSelectedTiles,
+    setSelectedBoardPosition,
+    setArrowDirection,
+    setPlayer1points,
+    setPlayer2points,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setPool,
+    setCurrentPlayer,
+    setMoveHistory,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setSnackbarOpen,
+    getBoardDiff
+  } = useGameStore.getState();
+
   // Validate the move
   const response = await fetch('/.netlify/functions/gameLogic', {
     method: 'POST',
@@ -134,7 +136,9 @@ export const handleWordSubmit = async ({
   const score = await scoreResponse.json();
 
   // Play player move sound
-  playerMoveSound.current.play();
+  if (playerMoveSound && playerMoveSound.play) {
+    playerMoveSound.play();
+  }
 
   // Get the current player's rack before making any changes
   const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -152,7 +156,9 @@ export const handleWordSubmit = async ({
     word: validationResult.word
   };
 
-  setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+  // Add move to history
+  const currentHistory = useGameStore.getState().moveHistory || [];
+  setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
 
   // Update the board state
   setBoardCoords(tempBoardCoords);
@@ -187,12 +193,25 @@ export const handleWordSubmit = async ({
 
   // Check if game should end
   if (newRack.length === 0 && pool.length === 0) {
-    handleGameEnd(
-      newRack,                                    // winnerRack
-      currentPlayer === 1 ? player1Name : player2Name,  // winnerName
-      currentPlayer === 1 ? player2Rack : player1Rack,  // loserRack
-      currentPlayer === 1 ? player2points : player1points  // loserPoints
-    );
+    handleGameEnd({
+      winnerRack: newRack,
+      winnerName: currentPlayer === 1 ? player1Name : player2Name,
+      loserRack: currentPlayer === 1 ? player2Rack : player1Rack,
+      loserPoints: currentPlayer === 1 ? player2points : player1points,
+      player1Rack: player1Rack,
+      player2Rack: player2Rack,
+      player1points: player1points,
+      player2points: player2points,
+      player1Name: player1Name,
+      player2Name: player2Name,
+      autoPlayBest: false, // We don't have access to autoPlayBest here, but it's not critical
+      setPlayer1points: setPlayer1points,
+      setPlayer2points: setPlayer2points,
+      setSnackbarMessage: setSnackbarMessage,
+      setSnackbarSeverity: setSnackbarSeverity,
+      setSnackbarOpen: setSnackbarOpen,
+      setAutoPlayBest: () => {} // We don't have access to setAutoPlayBest here, but it's not critical
+    });
     return;
   }
 

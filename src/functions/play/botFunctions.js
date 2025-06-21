@@ -1,44 +1,49 @@
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
+import { useGameStore } from '../../stores/gameStore';
+import { handleGameEnd } from './gameEndFunctions';
 
-export const makeBotMove = async ({
-  boardCoords,
-  player2Rack,
-  pool,
-  player2points,
-  player2Name,
-  player1Rack,
-  player1points,
-  blankTiles,
-  setBoardCoords,
-  setTempBoardCoords,
-  setPlayer2Rack,
-  setBlankTiles,
-  setPool,
-  setPlayer2points,
-  setCurrentPlayer,
-  setSelectedBoardPosition,
-  setSelectedTiles,
-  setArrowDirection,
-  setSnackbarMessage,
-  setSnackbarSeverity,
-  setSnackbarOpen,
-  setConsecutivePasses,
-  setMoveHistory,
-  getBoardDiff,
-  handleGameEnd,
-  botMoveSound,
-  autoPlayBest,
-  setIsBotThinking,
-  setSimulatingMove,
-  setSimulationResult,
-  setSimulationProgress,
-  setPreviewBoard,
-  setPreviewMove,
-  setMoveWithResults,
-  setTopMoves,
-  isBotMode,
-  currentPlayer
-}) => {
+export const makeBotMove = async (botMoveSound) => {
+  const {
+    boardCoords,
+    player2Rack,
+    pool,
+    player2points,
+    player2Name,
+    player1Rack,
+    player1points,
+    player1Name,
+    blankTiles,
+    isBotMode,
+    currentPlayer,
+    autoPlayBest,
+    setIsBotThinking,
+    setBoardCoords,
+    setTempBoardCoords,
+    setPlayer2Rack,
+    setBlankTiles,
+    setPool,
+    setPlayer2points,
+    setPlayer1points,
+    setCurrentPlayer,
+    setSelectedBoardPosition,
+    setSelectedTiles,
+    setArrowDirection,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setSnackbarOpen,
+    setConsecutivePasses,
+    setMoveHistory,
+    setAutoPlayBest,
+    getBoardDiff,
+    setSimulatingMove,
+    setSimulationResult,
+    setSimulationProgress,
+    setPreviewBoard,
+    setPreviewMove,
+    setMoveWithResults,
+    setTopMoves
+  } = useGameStore.getState();
+
   if (!isBotMode || currentPlayer !== 2) {
     return;
   }
@@ -168,7 +173,9 @@ export const makeBotMove = async ({
     const bestMove = sortedMoves[0];
 
     // Play bot move sound after the delay
-    botMoveSound.current.play();
+    if (botMoveSound && botMoveSound.play) {
+      botMoveSound.play();
+    }
 
     // Get the current rack before making the move
     const botRack = player2Rack;
@@ -250,7 +257,9 @@ export const makeBotMove = async ({
         word: bestMove.word
       };
 
-      setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+      // Add move to history
+      const currentHistory = useGameStore.getState().moveHistory || [];
+      setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
 
       // Update the board state
       setBoardCoords(newBoard);
@@ -272,12 +281,25 @@ export const makeBotMove = async ({
         player1Score: player1points,
         player1Rack: player1Rack
       });
-      handleGameEnd(
-        newRack,           // winnerRack
-        player2Name,       // winnerName
-        player1Rack || [], // loserRack
-        player1points      // loserPoints
-      );
+      handleGameEnd({
+        winnerRack: newRack,
+        winnerName: player2Name,
+        loserRack: player1Rack || [],
+        loserPoints: player1points,
+        player1Rack: player1Rack,
+        player2Rack: player2Rack,
+        player1points: player1points,
+        player2points: player2points,
+        player1Name: player1Name,
+        player2Name: player2Name,
+        autoPlayBest: autoPlayBest,
+        setPlayer1points: setPlayer1points,
+        setPlayer2points: setPlayer2points,
+        setSnackbarMessage: setSnackbarMessage,
+        setSnackbarSeverity: setSnackbarSeverity,
+        setSnackbarOpen: setSnackbarOpen,
+        setAutoPlayBest: setAutoPlayBest
+      });
       return;
     }
     
@@ -337,7 +359,9 @@ export const makeBotMove = async ({
           total: player2points,
           word: 'Exchange'
         };
-        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        // Add move to history
+        const currentHistory = useGameStore.getState().moveHistory || [];
+        setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
         
         console.log('Bot fallback: Exchange completed');
       } else {
@@ -350,7 +374,9 @@ export const makeBotMove = async ({
           total: player2points,
           word: 'Pass'
         };
-        setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+        // Add move to history
+        const currentHistory = useGameStore.getState().moveHistory || [];
+        setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
         
         console.log('Bot fallback: Pass completed');
       }
@@ -387,37 +413,39 @@ export const makeBotMove = async ({
   }
 };
 
-export const startBotGame = ({
-  origBoard,
-  origPool,
-  TEST_RACKS,
-  setOrigBoardCoords,
-  setBoardCoords,
-  setTempBoardCoords,
-  setPlayer1points,
-  setPlayer2points,
-  setPool,
-  botGoesFirst,
-  setCurrentPlayer,
-  setConsecutivePasses,
-  setPlayer1Rack,
-  setPlayer2Rack,
-  setIsBotMode,
-  setPlayer1Name,
-  setPlayer2Name,
-  makeBotMove,
-  gameStartSound,
-  setSimulatingMove,
-  setSimulationResult,
-  setSimulationProgress,
-  setPreviewBoard,
-  setPreviewMove,
-  setMoveWithResults,
-  setTopMoves,
-  setMoveHistory
-}) => {
+export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound }) => {
+  const {
+    setOrigBoardCoords,
+    setBoardCoords,
+    setTempBoardCoords,
+    setPlayer1points,
+    setPlayer2points,
+    setPool,
+    setCurrentPlayer,
+    setConsecutivePasses,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setIsBotMode,
+    setPlayer1Name,
+    setPlayer2Name,
+    setSimulatingMove,
+    setSimulationResult,
+    setSimulationProgress,
+    setPreviewBoard,
+    setPreviewMove,
+    setMoveWithResults,
+    setTopMoves,
+    setMoveHistory
+  } = useGameStore.getState();
+
   // Play game start sound
-  gameStartSound.current.play();
+  console.log('🎮 startBotGame called, gameStartSound:', gameStartSound);
+  if (gameStartSound && gameStartSound.play) {
+    console.log('🔊 Playing game start sound');
+    gameStartSound.play();
+  } else {
+    console.log('❌ Game start sound not available');
+  }
 
   // Clear move history first
   setMoveHistory([]);
@@ -432,6 +460,7 @@ export const startBotGame = ({
   setPool(origPool);
   
   // Set current player based on who goes first
+  const botGoesFirst = Math.random() < 0.5;
   setCurrentPlayer(botGoesFirst ? 2 : 1);
   setConsecutivePasses(0);
   
@@ -465,8 +494,8 @@ export const startBotGame = ({
     }
   }
   
-  setPlayer1Rack(alphabetizeRack(rack1));
-  setPlayer2Rack(alphabetizeRack(rack2));
+  setPlayer1Rack(rack1);
+  setPlayer2Rack(rack2);
   setPool(newPool);
   
   // Set bot mode and names
@@ -483,8 +512,5 @@ export const startBotGame = ({
   setMoveWithResults(null);
   setTopMoves([]);
   
-  // If bot goes first, make its move
-  if (botGoesFirst) {
-    makeBotMove();
-  }
+  // Note: Bot move will be handled by the useEffect in Play.js when currentPlayer becomes 2
 }; 
