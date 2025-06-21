@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import Play from '../Play';
 import { useGameStore } from '../../../stores/gameStore';
+import { handleTileClick, handleTileDrop } from '../../../functions/play/tileFunctions';
 
 // Mock the Zustand store
 jest.mock('../../../stores/gameStore', () => ({
@@ -123,6 +124,12 @@ jest.mock('../../../components/AppContent/References/staticData.js', () => ({
 
 jest.mock('../../../components/AppContent/References/testRacks.js', () => ({
   TEST_RACKS: [['A', 'B', 'C'], ['D', 'E', 'F']]
+}));
+
+// Mock tile functions
+jest.mock('../../../functions/play/tileFunctions', () => ({
+  handleTileDrop: jest.fn(),
+  handleTileClick: jest.fn()
 }));
 
 // Mock board functions
@@ -303,7 +310,7 @@ describe('Play Component', () => {
       handleWordSubmitClick: jest.fn(),
       handlePassClick: jest.fn(),
       handleExchangeClick: jest.fn(),
-      handlePlayTopMoveClick: jest.fn(),
+      handlePlayTopMoveClick: jest.fn(() => Promise.resolve()),
       handleBotModeToggle: jest.fn(),
       
       // Simulation handler functions
@@ -443,15 +450,38 @@ describe('Play Component', () => {
       render(<Play />);
       
       await userEvent.click(screen.getByTestId('tile-drop'));
-      expect(mockStore.setPlayer1Rack).toHaveBeenCalled();
-      expect(mockStore.setSelectedTiles).toHaveBeenCalled();
+      expect(handleTileDrop).toHaveBeenCalledWith({
+        tile: 'A',
+        index: 0,
+        row: 0,
+        col: 0,
+        player1Rack: ['A', 'B', 'C'],
+        setPlayer1Rack: expect.any(Function),
+        player2Rack: ['D', 'E', 'F'],
+        setPlayer2Rack: expect.any(Function),
+        selectedTilesArray: [],
+        setSelectedTiles: expect.any(Function),
+        setSelectedBoardPosition: expect.any(Function),
+        tempBoardCoords: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+        setTempBoardCoords: expect.any(Function)
+      });
     });
 
     test('calls handleTileClick when tile is clicked', async () => {
       render(<Play />);
       
       await userEvent.click(screen.getByTestId('tile-click'));
-      expect(mockStore.setSelectedTiles).toHaveBeenCalled();
+      expect(handleTileClick).toHaveBeenCalledWith({
+        tile: 'A',
+        index: 0,
+        currentPlayer: 1,
+        player1Rack: ['A', 'B', 'C'],
+        player2Rack: ['D', 'E', 'F'],
+        selectedTilesArray: [],
+        setSelectedTiles: expect.any(Function),
+        tilesToExchange: [],
+        setTilesToExchange: expect.any(Function)
+      });
     });
 
     test('calls handleNewGame when rematch button is clicked', async () => {

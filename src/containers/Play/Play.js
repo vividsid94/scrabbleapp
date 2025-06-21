@@ -363,6 +363,11 @@ export default function Play() {
   }, [latestMove]);
 
   const board = useMemo(() => {
+    // Safety check for null/undefined board coordinates
+    if (!tempBoardCoords || !boardCoords) {
+      return [];
+    }
+    
     return createBoard(
       tempBoardCoords.map((row, rowIndex) => 
         row.map((col, colIndex) => {
