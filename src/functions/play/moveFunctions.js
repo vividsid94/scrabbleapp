@@ -554,16 +554,6 @@ export const handlePlayTopMove = async () => {
     if (movesWithValues.length > 0) {
       const bestMove = movesWithValues[0];
       
-      // Log the player move response
-      console.log('👤 Player Move Response:', {
-        word: bestMove.word,
-        score: bestMove.score,
-        leaveValue: bestMove.leaveValue || 0,
-        totalValue: bestMove.totalValue,
-        direction: bestMove.direction,
-        isExchange: bestMove.isExchange
-      });
-      
       // Prepare all state updates
       const stateUpdates = {
         newBoard: JSON.parse(JSON.stringify(boardCoords)),

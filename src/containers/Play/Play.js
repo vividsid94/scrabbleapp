@@ -281,17 +281,8 @@ export default function Play() {
   }, [handleKeyPressWrapper, playerMoveSound, origBoard]);
 
   // Update the useEffect for bot turns to use the new makeBotMove
-  useEffect(() => {
-    console.log('🔍 Bot move useEffect triggered:', {
-      isBotMode,
-      currentPlayer,
-      isBotThinking,
-      gameEnded,
-      botMoveMade: botMoveMadeRef.current
-    });
-    
+  useEffect(() => { 
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
-      console.log('🎯 Calling makeBotMove');
       botMoveMadeRef.current = true;
       makeBotMove(botMoveSound);
     }

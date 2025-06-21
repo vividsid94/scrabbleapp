@@ -3,8 +3,6 @@ import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
 
 export const makeBotMove = async (botMoveSound) => {
-  console.log('🤖 makeBotMove called');
-
   const {
     boardCoords,
     player2Rack,
@@ -176,7 +174,6 @@ export const makeBotMove = async (botMoveSound) => {
 
     // Play bot move sound after the delay
     if (botMoveSound && botMoveSound.play) {
-      console.log('🔊 Playing bot move sound');
       botMoveSound.play();
     }
 
