@@ -27,6 +27,7 @@ export const handleKeyDown = ({
   setPreviewScore,
   setPreviewScorePosition,
   handleWordSubmit,
+  playerMoveSound,
   arrowDirection,
   origBoard
 }) => {
@@ -80,7 +81,7 @@ export const handleKeyDown = ({
     }, 3000);
     
     // Submit the word
-    handleWordSubmit();
+    handleWordSubmit(playerMoveSound);
     
     return;
   }

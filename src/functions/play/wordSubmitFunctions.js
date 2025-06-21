@@ -1,4 +1,6 @@
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
+import { useGameStore } from '../../stores/gameStore';
+import { handleGameEnd } from './gameEndFunctions';
 
 /**
  * Handles the submission of a word to the board
@@ -38,41 +40,41 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
  * @param {Object} params.playerMoveSound - Reference to player move sound
  * @returns {Promise<void>}
  */
-export const handleWordSubmit = async ({
-  boardCoords,
-  tempBoardCoords,
-  currentPlayer,
-  player1Rack,
-  player2Rack,
-  selectedTiles,
-  pool,
-  player1points,
-  player2points,
-  player1Name,
-  player2Name,
-  blankTiles,
-  moveHistory,
-  selectedBoardPosition,
-  arrowDirection,
-  setBoardCoords,
-  setTempBoardCoords,
-  setSelectedTiles,
-  setSelectedBoardPosition,
-  setArrowDirection,
-  setPlayer1points,
-  setPlayer2points,
-  setPlayer1Rack,
-  setPlayer2Rack,
-  setPool,
-  setCurrentPlayer,
-  setMoveHistory,
-  setSnackbarMessage,
-  setSnackbarSeverity,
-  setSnackbarOpen,
-  handleGameEnd,
-  getBoardDiff,
-  playerMoveSound
-}) => {
+export const handleWordSubmit = async (playerMoveSound) => {
+  const {
+    boardCoords,
+    tempBoardCoords,
+    currentPlayer,
+    player1Rack,
+    player2Rack,
+    selectedTiles,
+    pool,
+    player1points,
+    player2points,
+    player1Name,
+    player2Name,
+    blankTiles,
+    moveHistory,
+    selectedBoardPosition,
+    arrowDirection,
+    setBoardCoords,
+    setTempBoardCoords,
+    setSelectedTiles,
+    setSelectedBoardPosition,
+    setArrowDirection,
+    setPlayer1points,
+    setPlayer2points,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setPool,
+    setCurrentPlayer,
+    setMoveHistory,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setSnackbarOpen,
+    getBoardDiff
+  } = useGameStore.getState();
+
   // Validate the move
   const response = await fetch('/.netlify/functions/gameLogic', {
     method: 'POST',
@@ -152,7 +154,9 @@ export const handleWordSubmit = async ({
     word: validationResult.word
   };
 
-  setMoveHistory(prev => [...prev.slice(-49), moveHistoryEntry]);
+  // Add move to history
+  const currentHistory = useGameStore.getState().moveHistory || [];
+  setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
 
   // Update the board state
   setBoardCoords(tempBoardCoords);

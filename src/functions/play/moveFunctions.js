@@ -1,6 +1,7 @@
 import { calculateExchangeLeave } from './leaveFunctions';
 import { fetchLeaveValues } from './leaveFunctions';
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
+import { useGameStore } from '../../stores/gameStore';
 
 /**
  * Generates all possible combinations of tiles for exchange
@@ -352,51 +353,53 @@ export const handleGetTopMoves = async ({
  * @param {Function} params.setArrowDirection - Function to update arrow direction
  * @returns {Promise<void>}
  */
-export const handlePlayTopMove = async ({
-  isLoadingTopMoves,
-  isDictionaryLoading,
-  currentPlayer,
-  player1Rack,
-  player2Rack,
-  tempBoardCoords,
-  boardCoords,
-  selectedTiles,
-  pool,
-  player1points,
-  player2points,
-  player1Name,
-  player2Name,
-  blankTiles,
-  moveHistory,
-  leaveValues,
-  handleGameEnd,
-  getBoardDiff,
-  setPlayer1Rack,
-  setPlayer2Rack,
-  setTempBoardCoords,
-  setSelectedTiles,
-  setSelectedBoardPosition,
-  setBoardCoords,
-  setPlayer1points,
-  setPlayer2points,
-  setBlankTiles,
-  setPool,
-  setMoveHistory,
-  setCurrentPlayer,
-  setSimulatingMove,
-  setSimulationResult,
-  setSimulationProgress,
-  setPreviewBoard,
-  setPreviewMove,
-  setMoveWithResults,
-  setTopMoves,
-  setSnackbarMessage,
-  setSnackbarSeverity,
-  setSnackbarOpen,
-  setIsDictionaryLoading,
-  setLeaveValues,
-  setArrowDirection
-}) => {
+export const handlePlayTopMove = async () => {
+  const {
+    isLoadingTopMoves,
+    isDictionaryLoading,
+    currentPlayer,
+    player1Rack,
+    player2Rack,
+    tempBoardCoords,
+    boardCoords,
+    selectedTiles,
+    pool,
+    player1points,
+    player2points,
+    player1Name,
+    player2Name,
+    blankTiles,
+    moveHistory,
+    leaveValues,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setTempBoardCoords,
+    setSelectedTiles,
+    setSelectedBoardPosition,
+    setBoardCoords,
+    setPlayer1points,
+    setPlayer2points,
+    setBlankTiles,
+    setPool,
+    setMoveHistory,
+    setCurrentPlayer,
+    setSimulatingMove,
+    setSimulationResult,
+    setSimulationProgress,
+    setPreviewBoard,
+    setPreviewMove,
+    setMoveWithResults,
+    setTopMoves,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setSnackbarOpen,
+    setIsDictionaryLoading,
+    setLeaveValues,
+    setArrowDirection,
+    getBoardDiff,
+    handleGameEnd
+  } = useGameStore.getState();
+
   if (isLoadingTopMoves || isDictionaryLoading) {
     return Promise.resolve();
   }
@@ -492,51 +495,7 @@ export const handlePlayTopMove = async ({
       return new Promise((resolve) => {
         setTimeout(async () => {
           try {
-            await handlePlayTopMove({
-              isLoadingTopMoves,
-              isDictionaryLoading,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              tempBoardCoords,
-              boardCoords,
-              selectedTiles,
-              pool,
-              player1points,
-              player2points,
-              player1Name,
-              player2Name,
-              blankTiles,
-              moveHistory,
-              leaveValues,
-              handleGameEnd,
-              getBoardDiff,
-              setPlayer1Rack,
-              setPlayer2Rack,
-              setTempBoardCoords,
-              setSelectedTiles,
-              setSelectedBoardPosition,
-              setBoardCoords,
-              setPlayer1points,
-              setPlayer2points,
-              setBlankTiles,
-              setPool,
-              setMoveHistory,
-              setCurrentPlayer,
-              setSimulatingMove,
-              setSimulationResult,
-              setSimulationProgress,
-              setPreviewBoard,
-              setPreviewMove,
-              setMoveWithResults,
-              setTopMoves,
-              setSnackbarMessage,
-              setSnackbarSeverity,
-              setSnackbarOpen,
-              setIsDictionaryLoading,
-              setLeaveValues,
-              setArrowDirection
-            });
+            await handlePlayTopMove();
             resolve();
           } catch (error) {
             resolve(); // Resolve even on error to prevent hanging
@@ -611,7 +570,7 @@ export const handlePlayTopMove = async ({
         newRack: [...currentRack],
         newBlankTiles: [...blankTiles],
         newPool: [...pool],
-        newMoveHistory: [...moveHistory],
+        newMoveHistory: Array.isArray(moveHistory) ? [...moveHistory] : [],
         runningTotal: currentPlayer === 1 ? player1points : player2points
       };
       
@@ -708,7 +667,8 @@ export const handlePlayTopMove = async ({
       }
       setBlankTiles(stateUpdates.newBlankTiles);
       setPool(stateUpdates.newPool);
-      setMoveHistory(stateUpdates.newMoveHistory.slice(-50)); // Keep only last 50 moves
+      // Keep only last 50 moves
+      setMoveHistory(stateUpdates.newMoveHistory.slice(-50));
       
       // Check if game should end
       if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {

@@ -1,3 +1,5 @@
+import { useGameStore } from '../../stores/gameStore';
+
 /**
  * Handles the exchange of tiles between a player's rack and the pool
  * @param {Object} params - The parameters object
@@ -22,28 +24,45 @@
  * @param {Function} params.setMoveHistory - Function to update move history
  * @returns {Object} Object containing the updated rack and pool
  */
-export const handleExchange = ({
-  tilesToExchange,
-  currentRack,
-  pool,
-  currentPlayer,
-  playerName,
-  isBotMode,
-  boardCoords,
-  player1points,
-  player2points,
-  setPlayer1Rack,
-  setPlayer2Rack,
-  setPool,
-  setTilesToExchange,
-  setCurrentPlayer,
-  setSnackbarMessage,
-  setSnackbarSeverity,
-  setSnackbarOpen,
-  makeBotMove,
-  setMoveHistory
-}) => {
+export const handleExchange = () => {
+  console.log('handleExchange called');
+  
+  const storeState = useGameStore.getState();
+  console.log('Full store state keys:', Object.keys(storeState));
+  
+  const {
+    tilesToExchange,
+    currentPlayer,
+    player1Rack,
+    player2Rack,
+    pool,
+    player1Name,
+    player2Name,
+    isBotMode,
+    boardCoords,
+    player1points,
+    player2points,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setPool,
+    setTilesToExchange,
+    setCurrentPlayer,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setSnackbarOpen,
+    setMoveHistory
+  } = storeState;
+
+  console.log('Exchange function state:', { currentPlayer, tilesToExchange, pool: pool.length, isBotMode });
+  console.log('Exchange function setters:', { 
+    setPlayer1Rack: typeof setPlayer1Rack, 
+    setPlayer2Rack: typeof setPlayer2Rack,
+    setMoveHistory: typeof setMoveHistory,
+    setCurrentPlayer: typeof setCurrentPlayer 
+  });
+
   if (tilesToExchange.length === 0) {
+    console.log('No tiles selected for exchange');
     setSnackbarMessage('Please select tiles to exchange');
     setSnackbarSeverity('error');
     setSnackbarOpen(true);
@@ -64,6 +83,7 @@ export const handleExchange = ({
     return null;
   }
 
+  const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
   const newRack = [...currentRack];
   const newPool = [...pool];
 
@@ -94,18 +114,16 @@ export const handleExchange = ({
   setTilesToExchange([]);
 
   // Switch to next player
-  setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-
-  // If next player is bot, make bot move
-  if (isBotMode && currentPlayer === 2) {
-    makeBotMove();
-  }
+  const currentPlayerNum = useGameStore.getState().currentPlayer || 1;
+  const newPlayer = currentPlayerNum === 1 ? 2 : 1;
+  setCurrentPlayer(newPlayer);
 
   // Add exchange move to history
-  setMoveHistory(prev => [...prev, {
+  const currentHistory = useGameStore.getState().moveHistory || [];
+  setMoveHistory([...currentHistory, {
     beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
     afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for exchange
-    player: playerName,
+    player: currentPlayer === 1 ? player1Name : player2Name,
     score: 0,
     rack: newRack.join(''),
     total: currentPlayer === 1 ? player1points : player2points,

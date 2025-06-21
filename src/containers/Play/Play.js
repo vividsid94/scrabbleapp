@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
@@ -36,73 +36,180 @@ import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
 import { handleGameEnd } from '../../functions/play/gameEndFunctions';
 import { formatTime } from '../../functions/play/timeUtils';
+import { useGameStore } from '../../stores/gameStore';
 
 const boardMultipliers = JSON.parse(origBoard);
 
 export default function Play() {
-  const [boardCoords, setBoardCoords] = useState([]);
-  const [tempBoardCoords, setTempBoardCoords] = useState([]);
-  const [origBoardCoords, setOrigBoardCoords] = useState([]);
-  const [player1points, setPlayer1points] = useState(0);
-  const [player2points, setPlayer2points] = useState(0);
-  const [pool, setPool] = useState(origPool);
-  const [theme, setTheme] = useState("STANDARD");
-  const [open, setOpen] = useState(false);
-  const [modalContent, setModalContent] = useState("settings");
-  const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [player1Rack, setPlayer1Rack] = useState([]);
-  const [player2Rack, setPlayer2Rack] = useState([]);
-  const [selectedTiles, setSelectedTiles] = useState([]); 
-  const [selectedBoardPosition, setSelectedBoardPosition] = useState(null);
-  const [arrowDirection, setArrowDirection] = useState('right');
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
+  // Use Zustand Game Store
+  const {
+    // Board state
+    boardCoords,
+    tempBoardCoords,
+    origBoardCoords,
+    setBoardCoords,
+    setTempBoardCoords,
+    setOrigBoardCoords,
+    
+    // Player state
+    player1points,
+    player2points,
+    player1Rack,
+    player2Rack,
+    player1Name,
+    player2Name,
+    currentPlayer,
+    setPlayer1points,
+    setPlayer2points,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setPlayer1Name,
+    setPlayer2Name,
+    setCurrentPlayer,
+    
+    // Game state
+    pool,
+    gameStarted,
+    gameEnded,
+    isBotMode,
+    consecutivePasses,
+    setPool,
+    setGameStarted,
+    setGameEnded,
+    setIsBotMode,
+    setConsecutivePasses,
+    
+    // Tile and selection state
+    selectedTiles,
+    selectedBoardPosition,
+    arrowDirection,
+    tilesToExchange,
+    blankTiles,
+    setSelectedTiles,
+    setSelectedBoardPosition,
+    setArrowDirection,
+    setTilesToExchange,
+    setBlankTiles,
+    
+    // Bot state
+    isBotThinking,
+    isPlayerThinking,
+    botGoesFirst,
+    setIsBotThinking,
+    setIsPlayerThinking,
+    setBotGoesFirst,
+    
+    // Timer state
+    player1Time,
+    player2Time,
+    timerActive,
+    gameTime,
+    setPlayer1Time,
+    setPlayer2Time,
+    setTimerActive,
+    setGameTime,
+    
+    // Move history
+    moveHistory,
+    topMoves,
+    isLoadingTopMoves,
+    setMoveHistory,
+    setTopMoves,
+    setIsLoadingTopMoves,
+    
+    // Dictionary loading
+    isDictionaryLoading,
+    setIsDictionaryLoading,
+    
+    // Auto-play
+    autoPlayBest,
+    isAutoPlaying,
+    setAutoPlayBest,
+    setIsAutoPlaying,
+    
+    // Victory state
+    winner,
+    finalPlayer1Score,
+    finalPlayer2Score,
+    setWinner,
+    setFinalPlayer1Score,
+    setFinalPlayer2Score,
+    
+    // Simulation state
+    simulatingMove,
+    simulationResult,
+    simulationProgress,
+    previewBoard,
+    previewMove,
+    previewTileOwnership,
+    moveWithResults,
+    simulationBoard,
+    leaveValues,
+    showSimulationModal,
+    shouldStopSimulation,
+    allMoveResults,
+    isSimulatingAllMoves,
+    previewScore,
+    previewScorePosition,
+    setSimulatingMove,
+    setSimulationResult,
+    setSimulationProgress,
+    setPreviewBoard,
+    setPreviewMove,
+    setPreviewTileOwnership,
+    setMoveWithResults,
+    setSimulationBoard,
+    setLeaveValues,
+    setShowSimulationModal,
+    setShouldStopSimulation,
+    setAllMoveResults,
+    setIsSimulatingAllMoves,
+    setPreviewScore,
+    setPreviewScorePosition,
+    
+    // UI state
+    theme,
+    open,
+    modalContent,
+    snackbarOpen,
+    snackbarMessage,
+    snackbarSeverity,
+    showTimeSlider,
+    showConfetti,
+    showVictoryOverlay,
+    setTheme,
+    setOpen,
+    setModalContent,
+    setSnackbarOpen,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    setShowTimeSlider,
+    setShowConfetti,
+    setShowVictoryOverlay,
+    
+    // Settings state
+    playerMoveSoundType,
+    botMoveSoundType,
+    setPlayerMoveSoundType,
+    setBotMoveSoundType,
+    
+    // Computed values
+    getCurrentRack,
+    getCurrentPlayerName,
+    getCurrentPlayerPoints,
+    setCurrentPlayerPoints,
+    setCurrentPlayerRack,
+    
+    // Utility functions
+    getBoardDiff,
+  } = useGameStore();
+
+  // Refs (keep these local)
   const color = useRef('#b064af');
   const boardColor = useRef('#ffffff');
   const complementaryColor = useRef('#9F7A83');
-  const [isBotMode, setIsBotMode] = useState(false);
-  const [isBotThinking, setIsBotThinking] = useState(false);
-  const [isPlayerThinking, setIsPlayerThinking] = useState(false);
-  const [player1Name, setPlayer1Name] = useState('Player 1');
-  const [player2Name, setPlayer2Name] = useState('Player 2');
-  const [player1Time, setPlayer1Time] = useState(20 * 60); // 20 minutes in seconds
-  const [player2Time, setPlayer2Time] = useState(20 * 60); // 20 minutes in seconds
-  const [timerActive, setTimerActive] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
   const timerRef = useRef(null);
-  const [consecutivePasses, setConsecutivePasses] = useState(0);
-  const [topMoves, setTopMoves] = useState([]);
-  const [isLoadingTopMoves, setIsLoadingTopMoves] = useState(false);
-  const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
-  const [botGoesFirst, setBotGoesFirst] = useState(false);
-  const [tilesToExchange, setTilesToExchange] = useState([]);
-  const [blankTiles, setBlankTiles] = useState([]); // Track positions of blank tiles
-  const [gameTime, setGameTime] = useState(20); // in minutes
-  const [showTimeSlider, setShowTimeSlider] = useState(false);
-  const [moveHistory, setMoveHistory] = useState([]);
-  const [simulatingMove, setSimulatingMove] = useState(null);
-  const [simulationResult, setSimulationResult] = useState(null);
-  const [simulationProgress, setSimulationProgress] = useState(0);
-  const [previewBoard, setPreviewBoard] = useState(null);
-  const [previewMove, setPreviewMove] = useState(null);
-  const [previewTileOwnership, setPreviewTileOwnership] = useState(null);
-  const [moveWithResults, setMoveWithResults] = useState(null);
-  const [simulationBoard, setSimulationBoard] = useState(null);
-  const [leaveValues, setLeaveValues] = useState({});
-  const [autoPlayBest, setAutoPlayBest] = useState(false);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [showSimulationModal, setShowSimulationModal] = useState(false);
-  const [gameEnded, setGameEnded] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const [finalPlayer1Score, setFinalPlayer1Score] = useState(0);
-  const [finalPlayer2Score, setFinalPlayer2Score] = useState(0);
-  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
-  
-  // Add state for move sound selection first
-  const [playerMoveSoundType, setPlayerMoveSoundType] = useState('classic');
-  const [botMoveSoundType, setBotMoveSoundType] = useState('classic');
+  const shouldStopSimulationRef = useRef(false);
 
   // Initialize sounds
   const sounds = useRef(initializeSounds());
@@ -225,7 +332,8 @@ export default function Play() {
       setBlankTiles,
       setPreviewScore,
       setPreviewScorePosition,
-      handleWordSubmit: handleWordSubmitClick,
+      handleWordSubmit,
+      playerMoveSound,
       arrowDirection,
       origBoard
     });
@@ -348,41 +456,7 @@ export default function Play() {
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
-    handleWordSubmit({
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      selectedTiles,
-      pool,
-      player1points,
-      player2points,
-      player1Name,
-      player2Name,
-      blankTiles,
-      moveHistory,
-      selectedBoardPosition,
-      arrowDirection,
-      setBoardCoords,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setSelectedBoardPosition,
-      setArrowDirection,
-      setPlayer1points,
-      setPlayer2points,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setPool,
-      setCurrentPlayer,
-      setMoveHistory,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen,
-      handleGameEnd: handleGameEndClick,
-      getBoardDiff,
-      playerMoveSound
-    });
+    handleWordSubmit(playerMoveSound);
   };
 
   const handleSettingsOpen = () => {
@@ -456,117 +530,13 @@ export default function Play() {
     setTimerActive(true);
     
     // Start the game using the new startBotGame function
-    startBotGame({
-      origBoard,
-      origPool,
-      TEST_RACKS,
-      setOrigBoardCoords,
-      setBoardCoords,
-      setTempBoardCoords,
-      setPlayer1points,
-      setPlayer2points,
-      setPool,
-      botGoesFirst: randomFirst,
-      setCurrentPlayer,
-      setConsecutivePasses,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setIsBotMode,
-      setPlayer1Name,
-      setPlayer2Name,
-      makeBotMove: () => makeBotMove({
-        boardCoords,
-        player2Rack,
-        pool,
-        player2points,
-        player2Name,
-        player1Rack,
-        player1points,
-        blankTiles,
-        setBoardCoords,
-        setTempBoardCoords,
-        setPlayer2Rack,
-        setBlankTiles,
-        setPool,
-        setPlayer2points,
-        setCurrentPlayer,
-        setSelectedBoardPosition,
-        setSelectedTiles,
-        setArrowDirection,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setConsecutivePasses,
-        setMoveHistory,
-        getBoardDiff,
-        handleGameEnd: handleGameEndClick,
-        botMoveSound,
-        autoPlayBest,
-        setIsBotThinking,
-        setSimulatingMove,
-        setSimulationResult,
-        setSimulationProgress,
-        setPreviewBoard,
-        setPreviewMove,
-        setMoveWithResults,
-        setTopMoves,
-        isBotMode,
-        currentPlayer
-      }),
-      gameStartSound,
-      setSimulatingMove,
-      setSimulationResult,
-      setSimulationProgress,
-      setPreviewBoard,
-      setPreviewMove,
-      setMoveWithResults,
-      setTopMoves,
-      setMoveHistory
-    });
+    startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound });
   };
 
   // Update the useEffect for bot turns to use the new makeBotMove
   useEffect(() => {
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded) {
-      makeBotMove({
-        boardCoords,
-        player2Rack,
-        pool,
-        player2points,
-        player2Name,
-        player1Rack,
-        player1points,
-        blankTiles,
-        setBoardCoords,
-        setTempBoardCoords,
-        setPlayer2Rack,
-        setBlankTiles,
-        setPool,
-        setPlayer2points,
-        setCurrentPlayer,
-        setSelectedBoardPosition,
-        setSelectedTiles,
-        setArrowDirection,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setConsecutivePasses,
-        setMoveHistory,
-        getBoardDiff,
-        handleGameEnd: handleGameEndClick,
-        botMoveSound,
-        autoPlayBest,
-        setIsBotThinking,
-        setSimulatingMove,
-        setSimulationResult,
-        setSimulationProgress,
-        setPreviewBoard,
-        setPreviewMove,
-        setMoveWithResults,
-        setTopMoves,
-        isBotMode,
-        currentPlayer
-      });
+      makeBotMove(botMoveSound);
     }
   }, [currentPlayer, isBotMode, isBotThinking, gameEnded]);
 
@@ -588,21 +558,21 @@ export default function Play() {
     if (timerActive && gameStarted) {
       timerRef.current = setInterval(() => {
         if (currentPlayer === 1) {
-          setPlayer1Time(prev => {
-            if (prev <= 0) {
-              clearInterval(timerRef.current);
-              return 0;
-            }
-            return prev - 1;
-          });
+          const currentTime = useGameStore.getState().player1Time;
+          if (currentTime <= 0 || isNaN(currentTime)) {
+            clearInterval(timerRef.current);
+            setPlayer1Time(0);
+          } else {
+            setPlayer1Time(currentTime - 1);
+          }
         } else {
-          setPlayer2Time(prev => {
-            if (prev <= 0) {
-              clearInterval(timerRef.current);
-              return 0;
-            }
-            return prev - 1;
-          });
+          const currentTime = useGameStore.getState().player2Time;
+          if (currentTime <= 0 || isNaN(currentTime)) {
+            clearInterval(timerRef.current);
+            setPlayer2Time(0);
+          } else {
+            setPlayer2Time(currentTime - 1);
+          }
         }
       }, 1000);
     }
@@ -616,85 +586,8 @@ export default function Play() {
 
   const handlePassClick = useCallback(() => {
     if (gameEnded) return; // Don't allow passes after game has ended
-    handlePass({
-      consecutivePasses,
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      player1points,
-      player2points,
-      player1Name,
-      player2Name,
-      isBotMode,
-      setConsecutivePasses,
-      setMoveHistory,
-      setCurrentPlayer,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setSelectedBoardPosition,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      makeBotMove: () => !gameEnded && makeBotMove({
-        boardCoords,
-        player2Rack,
-        pool,
-        player2points,
-        player2Name,
-        player1Rack,
-        player1points,
-        blankTiles,
-        setBoardCoords,
-        setTempBoardCoords,
-        setPlayer2Rack,
-        setBlankTiles,
-        setPool,
-        setPlayer2points,
-        setCurrentPlayer,
-        setSelectedBoardPosition,
-        setSelectedTiles,
-        setArrowDirection,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setConsecutivePasses,
-        setMoveHistory,
-        getBoardDiff,
-        handleGameEnd: handleGameEndClick,
-        botMoveSound,
-        autoPlayBest,
-        setIsBotThinking,
-        setSimulatingMove,
-        setSimulationResult,
-        setSimulationProgress,
-        setPreviewBoard,
-        setPreviewMove,
-        setMoveWithResults,
-        setTopMoves,
-        isBotMode,
-        currentPlayer
-        })
-      });
-  }, [
-    consecutivePasses,
-    boardCoords,
-    tempBoardCoords,
-    currentPlayer,
-    player1Rack,
-    player2Rack,
-    player1points,
-    player2points,
-    player1Name,
-    player2Name,
-    isBotMode,
-    pool,
-    blankTiles,
-    gameEnded
-  ]);
+    handlePass();
+  }, [consecutivePasses, boardCoords, tempBoardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, player1Name, player2Name, isBotMode, pool, blankTiles, gameEnded]);
 
   const handleGetTopMovesForExpandable = () => {
     if (gameEnded) return; // Don't allow getting top moves after game has ended
@@ -828,76 +721,7 @@ export default function Play() {
 
   const handleExchangeClick = () => {
     if (gameEnded) return; // Don't allow exchanges after game has ended
-    const result = handleExchange({
-      tilesToExchange,
-      currentRack: currentPlayer === 1 ? player1Rack : player2Rack,
-      pool,
-      currentPlayer,
-      playerName: currentPlayer === 1 ? player1Name : player2Name,
-      isBotMode,
-      boardCoords,
-      player1points,
-      player2points,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setPool,
-      setTilesToExchange,
-      setCurrentPlayer,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen,
-      setMoveHistory,
-      makeBotMove: () => !gameEnded && makeBotMove({
-        boardCoords,
-        player2Rack,
-        pool,
-        player2points,
-        player2Name,
-        player1Rack,
-        player1points,
-        blankTiles,
-        setBoardCoords,
-        setTempBoardCoords,
-        setPlayer2Rack,
-        setBlankTiles,
-        setPool,
-        setPlayer2points,
-        setCurrentPlayer,
-        setSelectedBoardPosition,
-        setSelectedTiles,
-        setArrowDirection,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setConsecutivePasses,
-        setMoveHistory,
-        getBoardDiff,
-        handleGameEnd: handleGameEndClick,
-        botMoveSound,
-        autoPlayBest,
-        setIsBotThinking,
-        setSimulatingMove,
-        setSimulationResult,
-        setSimulationProgress,
-        setPreviewBoard,
-        setPreviewMove,
-        setMoveWithResults,
-        setTopMoves,
-        isBotMode,
-        currentPlayer
-      })
-    });
-
-    if (result) {
-      const { newRack, newPool } = result;
-      // Update state with alphabetized rack
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(newRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(newRack));
-    }
-      setPool(newPool);
-    }
+    handleExchange();
   };
 
   const handleMoveSelectClick = useCallback((move) => {
@@ -917,8 +741,8 @@ export default function Play() {
       setPreviewTileOwnership(null);
       
       // Clear heat map data when selecting a new move
-      setHeatMapData(null);
-      setIsHeatMapMode(false);
+      setSimulationBoard(null);
+      setSimulationProgress(0);
       
       // Update the simulation board with the new move
       const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
@@ -1003,81 +827,11 @@ export default function Play() {
 
   const handlePlayTopMoveClick = useCallback(() => {
     if (gameEnded) return Promise.resolve(); // Don't allow playing top move after game has ended
-    
-    console.log('👤 Player Move Request:', {
-      rack: player1Rack.join(''),
-      autoPlay: autoPlayBest
-    });
-    
     setIsPlayerThinking(true);
-    return handlePlayTopMove({
-      isLoadingTopMoves,
-      isDictionaryLoading,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      tempBoardCoords,
-      boardCoords,
-      selectedTiles,
-      pool,
-      player1points,
-      player2points,
-      player1Name,
-      player2Name,
-      blankTiles,
-      moveHistory,
-      leaveValues,
-      handleGameEnd: handleGameEndClick,
-      getBoardDiff,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setSelectedBoardPosition,
-      setBoardCoords,
-      setPlayer1points,
-      setPlayer2points,
-      setBlankTiles,
-      setPool,
-      setMoveHistory,
-      setCurrentPlayer,
-      setSimulatingMove,
-      setSimulationResult,
-      setSimulationProgress,
-      setPreviewBoard,
-      setPreviewMove,
-      setMoveWithResults,
-      setTopMoves,
-      setSnackbarMessage,
-      setSnackbarSeverity,
-      setSnackbarOpen,
-      setIsDictionaryLoading,
-      setLeaveValues,
-      setArrowDirection
-    }).finally(() => {
+    return handlePlayTopMove().finally(() => {
       setIsPlayerThinking(false);
     });
-  }, [
-    isLoadingTopMoves,
-    isDictionaryLoading,
-    currentPlayer,
-    player1Rack,
-    player2Rack,
-    tempBoardCoords,
-    boardCoords,
-    selectedTiles,
-    pool,
-    player1points,
-    player2points,
-    player1Name,
-    player2Name,
-    blankTiles,
-    moveHistory,
-    leaveValues,
-    handleGameEndClick,
-    getBoardDiff,
-    gameEnded
-  ]);
+  }, [isLoadingTopMoves, isDictionaryLoading, currentPlayer, player1Rack, player2Rack, tempBoardCoords, boardCoords, selectedTiles, pool, player1points, player2points, player1Name, player2Name, blankTiles, moveHistory, leaveValues, gameEnded]);
 
   // Update the useEffect for auto-play to use isPlayerThinking
   useEffect(() => {
@@ -1144,8 +898,10 @@ export default function Play() {
 
   const resetHeatMapMode = () => {
     resetHeatMapModeFunction({
-      setIsHeatMapMode,
-      setHeatMapData
+      setSimulationBoard,
+      setSimulationProgress,
+      setPreviewMove,
+      setPreviewTileOwnership
     });
   };
 
@@ -1161,15 +917,12 @@ export default function Play() {
   };
 
   const switchToMetrics = () => {
-    switchToMetricsFunction({
-      setIsHeatMapMode
-    });
+    // This function is now empty as the state is managed by the simulation store
   };
 
   const runHeatMapSimulation = async (move) => {
     setSimulatingMove(move);
     setSimulationProgress(0);
-    setIsHeatMapMode(true);
     
     // Reset stop flag
     setShouldStopSimulation(false);
@@ -1185,9 +938,9 @@ export default function Play() {
       pool
     };
     
-    await runHeatMapSimulationFunction(move, gameState, simulationSettings, {
+    await runHeatMapSimulationFunction(move, gameState, {
       onProgress: setSimulationProgress,
-      onHeatMapUpdate: setHeatMapData,
+      onHeatMapUpdate: setSimulationBoard,
       onError: (message) => {
         setSnackbarMessage(message);
         setSnackbarSeverity('error');
@@ -1221,7 +974,7 @@ export default function Play() {
       pool
     };
     
-    await runSimulationFunction(move, gameState, simulationSettings, {
+    await runSimulationFunction(move, gameState, {
       onProgress: setSimulationProgress,
       onPreviewUpdate: (previewData) => {
         setPreviewBoard(previewData.board);
@@ -1241,8 +994,8 @@ export default function Play() {
       },
       shouldStopRef: shouldStopSimulationRef,
       resetHeatMapMode: () => {
-        setIsHeatMapMode(false);
-        setHeatMapData(null);
+        setSimulationBoard(null);
+        setSimulationProgress(0);
       }
     });
   };
@@ -1265,7 +1018,7 @@ export default function Play() {
       pool
     };
     
-    await runAllMovesSimulationFunction(topMoves, gameState, simulationSettings, {
+    await runAllMovesSimulationFunction(topMoves, gameState, {
       onProgress: setSimulationProgress,
       onResultsUpdate: setAllMoveResults,
       onError: (message) => {
@@ -1288,11 +1041,6 @@ export default function Play() {
     await runSimulation(move);
   };
 
-  const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
-  const [allMoveResults, setAllMoveResults] = useState({}); // Store results for all moves
-  const [isSimulatingAllMoves, setIsSimulatingAllMoves] = useState(false);
-  const shouldStopSimulationRef = useRef(false);
-
   // Modify the existing code that sets topMoves to also fetch leave values
   useEffect(() => {
     if (topMoves.length > 0) {
@@ -1307,9 +1055,6 @@ export default function Play() {
       setMoveHistory(prev => prev.slice(-50));
     }
   }, [moveHistory]);
-
-  const [previewScore, setPreviewScore] = useState(null);
-  const [previewScorePosition, setPreviewScorePosition] = useState(null);
 
   // Add this function to calculate preview score
   const calculatePreviewScore = () => {
@@ -1338,13 +1083,6 @@ export default function Play() {
       setPreviewScorePosition(null);
     }
   }, [selectedTiles, tempBoardCoords]);
-
-  const [heatMapData, setHeatMapData] = useState(null);
-  const [isHeatMapMode, setIsHeatMapMode] = useState(false);
-  const [simulationSettings, setSimulationSettings] = useState({
-    numSimulations: 5,
-    turnsPerSim: 1
-  });
 
   return (
     <Box className={styles.container}>
@@ -1421,8 +1159,8 @@ export default function Play() {
               player2Name={player2Name}
               player1Points={player1points}
               player2Points={player2points}
-              player1Time={formatTime(player1Time)}
-              player2Time={formatTime(player2Time)}
+              player1Time={formatTime(player1Time || 0)}
+              player2Time={formatTime(player2Time || 0)}
               currentPlayer={currentPlayer}
               player1Rack={player1Rack}
               player2Rack={player2Rack}
@@ -1622,10 +1360,15 @@ export default function Play() {
         onStartHeatMap={runHeatMapSimulation}
         onStopSimulation={stopSimulation}
         onSwitchToMetrics={switchToMetrics}
-        heatMapData={heatMapData}
-        isHeatMapMode={isHeatMapMode}
-        simulationSettings={simulationSettings}
-        onSimulationSettingsChange={setSimulationSettings}
+        heatMapData={simulationBoard}
+        isHeatMapMode={!!simulationBoard}
+        simulationSettings={{
+          numSimulations: 5,
+          turnsPerSim: 1
+        }}
+        onSimulationSettingsChange={(newSettings) => {
+          // This function is now empty as the state is managed by the simulation store
+        }}
         topMoves={topMoves}
         onMoveSelect={handleMoveSelectClick}
         onRunAllMovesSimulation={runAllMovesSimulation}
