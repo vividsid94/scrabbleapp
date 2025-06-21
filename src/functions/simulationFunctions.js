@@ -146,7 +146,19 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
             if (tile.isNew) {
               simBoard[tile.row][tile.col] = tile.letter;
               // Remove the tile from the current player's rack using count method
-              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
+              if (isOpponentTurn) {
+                // Modify botRack directly
+                const index = simBotRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  simBotRack.splice(index, 1);
+                }
+              } else {
+                // Modify ourRack directly
+                const index = simOurRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  simOurRack.splice(index, 1);
+                }
+              }
             }
           }
           
@@ -163,11 +175,19 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           
           simMoves++;
           
-          // Draw new tiles for the current player BEFORE storing the board
-          while (currentTurnRack.length < 7 && simPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * simPool.length);
-            currentTurnRack.push(simPool[randomIndex]);
-            simPool.splice(randomIndex, 1);
+          // Draw new tiles for the current player
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              botRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              ourRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
           }
           
           // Store the board after the move
@@ -199,10 +219,18 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
           // Instead of breaking, continue with a pass move
           
           // Draw new tiles for the current player even on pass
-          while (currentTurnRack.length < 7 && simPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * simPool.length);
-            currentTurnRack.push(simPool[randomIndex]);
-            simPool.splice(randomIndex, 1);
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              botRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && simPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * simPool.length);
+              ourRack.push(simPool[randomIndex]);
+              simPool.splice(randomIndex, 1);
+            }
           }
           
           // Continue to next turn instead of breaking
@@ -340,7 +368,19 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
             if (tile.isNew) {
               board[tile.row][tile.col] = tile.letter;
               // Remove the tile from the current player's rack using count method
-              currentTurnRack = removeTilesByCount(currentTurnRack, [tile.letter]);
+              if (isOpponentTurn) {
+                // Modify botRack directly
+                const index = botRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  botRack.splice(index, 1);
+                }
+              } else {
+                // Modify ourRack directly
+                const index = ourRack.indexOf(tile.letter);
+                if (index !== -1) {
+                  ourRack.splice(index, 1);
+                }
+              }
             }
           }
           
@@ -348,10 +388,18 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
           trackBoardOccupancy(board, heatMap);
           
           // Draw new tiles for the current player
-          while (currentTurnRack.length < 7 && currentPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * currentPool.length);
-            currentTurnRack.push(currentPool[randomIndex]);
-            currentPool.splice(randomIndex, 1);
+          if (isOpponentTurn) {
+            while (botRack.length < 7 && currentPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              botRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
+          } else {
+            while (ourRack.length < 7 && currentPool.length > 0) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              ourRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
           }
           
         } catch (error) {

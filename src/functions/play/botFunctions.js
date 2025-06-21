@@ -439,7 +439,9 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   } = useGameStore.getState();
 
   // Play game start sound
-  gameStartSound.current.play();
+  if (gameStartSound && gameStartSound.current) {
+    gameStartSound.current.play();
+  }
 
   // Clear move history first
   setMoveHistory([]);

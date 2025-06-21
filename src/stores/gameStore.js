@@ -78,6 +78,7 @@ export const useGameStore = create((set, get) => {
     isSimulatingAllMoves: false,
     previewScore: null,
     previewScorePosition: null,
+    shouldStopSimulationRef: { current: false },
     
     // UI state (moved from Play.js)
     theme: "STANDARD",
@@ -176,6 +177,7 @@ export const useGameStore = create((set, get) => {
     setIsSimulatingAllMoves: (simulating) => set({ isSimulatingAllMoves: simulating }),
     setPreviewScore: (score) => set({ previewScore: score }),
     setPreviewScorePosition: (position) => set({ previewScorePosition: position }),
+    setShouldStopSimulationRef: (ref) => set({ shouldStopSimulationRef: ref }),
     
     // Actions - UI
     setTheme: (theme) => set({ theme: theme }),
@@ -405,8 +407,8 @@ export const useGameStore = create((set, get) => {
       setTimerActive(true);
       
       // Import and call the startBotGame function
-      import('../functions/play/botFunctions').then(({ startBotGame }) => {
-        startBotGame(params);
+      import('../functions/play/botFunctions').then(({ startBotGame: startBotGameFunction }) => {
+        startBotGameFunction(params);
       });
     },
     
@@ -466,8 +468,12 @@ export const useGameStore = create((set, get) => {
       setPlayer2Time(gameTime * 60);
       setTimerActive(false);
       
-      // Reset game state by calling startBotGame again
-      get().startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound: null, botMoveSound: null });
+      // Reset game state by calling startBotGame again with imported constants
+      import('../components/AppContent/References/staticData').then(({ origBoard, origPool }) => {
+        import('../components/AppContent/References/testRacks').then(({ TEST_RACKS }) => {
+          get().startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound: null, botMoveSound: null });
+        });
+      });
     },
     
     // Timer management
@@ -879,6 +885,458 @@ export const useGameStore = create((set, get) => {
           setSimulationBoard(null);
           setSimulationProgress(0);
         }
+      });
+    },
+
+    // UI handler functions
+    handleSettingsOpen: () => {
+      const { setModalContent, setOpen } = get();
+      setModalContent("settings");
+      setOpen(true);
+    },
+
+    handleColorSchemeOpen: () => {
+      const { setModalContent, setOpen } = get();
+      setModalContent("colorScheme");
+      setOpen(true);
+    },
+
+    handleClose: () => {
+      const { setOpen } = get();
+      setOpen(false);
+    },
+
+    handleWordSubmitClick: (playerMoveSound) => {
+      const { handleWordSubmit } = get();
+      handleWordSubmit(playerMoveSound);
+    },
+
+    handlePassClick: () => {
+      const { gameEnded, handlePass } = get();
+      if (gameEnded) return; // Don't allow passes after game has ended
+      handlePass();
+    },
+
+    handleExchangeClick: () => {
+      const { gameEnded, handleExchange } = get();
+      if (gameEnded) return; // Don't allow exchanges after game has ended
+      handleExchange();
+    },
+
+    handlePlayTopMoveClick: () => {
+      const { gameEnded, handlePlayTopMove, setIsPlayerThinking } = get();
+      if (gameEnded) return Promise.resolve(); // Don't allow playing top move after game has ended
+      setIsPlayerThinking(true);
+      return handlePlayTopMove().finally(() => {
+        setIsPlayerThinking(false);
+      });
+    },
+
+    handleBotModeToggle: () => {
+      const { isDictionaryLoading, startBotGame } = get();
+      if (isDictionaryLoading) return;
+      
+      // Import required constants and call startBotGame
+      import('../components/AppContent/References/staticData').then(({ origBoard, origPool }) => {
+        import('../components/AppContent/References/testRacks').then(({ TEST_RACKS }) => {
+          startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound: null, botMoveSound: null });
+        });
+      });
+    },
+
+    // Simulation handler functions
+    openSimulationModal: (move = null) => {
+      const { topMoves, boardCoords, setMoveWithResults, setSimulationBoard, setPreviewBoard, setPreviewMove, setShowSimulationModal } = get();
+      
+      // Dynamic import to avoid circular dependency
+      import('../functions/simulationFunctions').then(({ openSimulationModal: openSimulationModalFunction }) => {
+        openSimulationModalFunction(move, topMoves, boardCoords, {
+          setMoveWithResults,
+          setSimulationBoard,
+          setPreviewBoard,
+          setPreviewMove,
+          setShowSimulationModal
+        });
+      });
+    },
+
+    resetHeatMapMode: () => {
+      const { setSimulationBoard, setSimulationProgress, setPreviewMove, setPreviewTileOwnership } = get();
+      
+      // Dynamic import to avoid circular dependency
+      import('../functions/simulationFunctions').then(({ resetHeatMapMode: resetHeatMapModeFunction }) => {
+        resetHeatMapModeFunction({
+          setSimulationBoard,
+          setSimulationProgress,
+          setPreviewMove,
+          setPreviewTileOwnership
+        });
+      });
+    },
+
+    stopSimulation: (shouldStopRef) => {
+      const { setShouldStopSimulation, setSimulatingMove, setSimulationProgress, setPreviewMove, setPreviewTileOwnership } = get();
+      
+      // Dynamic import to avoid circular dependency
+      import('../functions/simulationFunctions').then(({ stopSimulation: stopSimulationFunction }) => {
+        stopSimulationFunction({
+          setShouldStopSimulation,
+          shouldStopRef,
+          setSimulatingMove,
+          setSimulationProgress,
+          setPreviewMove,
+          setPreviewTileOwnership
+        });
+      });
+    },
+
+    simulateMove: async (move) => {
+      const { openSimulationModal, runSimulation } = get();
+      openSimulationModal(move);
+      await runSimulation(move);
+    },
+
+    runAllMovesSimulation: async () => {
+      const {
+        topMoves,
+        simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool,
+        setIsSimulatingAllMoves,
+        setSimulationProgress,
+        setShouldStopSimulation,
+        setAllMoveResults,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen
+      } = get();
+
+      if (!topMoves || topMoves.length === 0) return;
+      
+      setIsSimulatingAllMoves(true);
+      setSimulationProgress(0);
+      setShouldStopSimulation(false);
+      
+      // Get the ref from the store state
+      const shouldStopSimulationRef = get().shouldStopSimulationRef;
+      if (shouldStopSimulationRef) {
+        shouldStopSimulationRef.current = false;
+      }
+      
+      const gameState = {
+        boardCoords: simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool
+      };
+      
+      // Dynamic import to avoid circular dependency
+      const { runAllMovesSimulation: runAllMovesSimulationFunction } = await import('../functions/simulationFunctions');
+      
+      await runAllMovesSimulationFunction(topMoves, gameState, {
+        numSimulations: 5,
+        turnsPerSim: 1
+      }, {
+        onProgress: setSimulationProgress,
+        onResultsUpdate: setAllMoveResults,
+        onError: (message) => {
+          setSnackbarMessage(message);
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        },
+        onComplete: () => {
+          setIsSimulatingAllMoves(false);
+          setSimulationProgress(0);
+          setShouldStopSimulation(false);
+          if (shouldStopSimulationRef) {
+            shouldStopSimulationRef.current = false;
+          }
+        },
+        shouldStopRef: shouldStopSimulationRef || { current: false }
+      });
+    },
+
+    runHeatMapSimulation: async (move) => {
+      const {
+        setSimulatingMove,
+        setSimulationProgress,
+        setShouldStopSimulation,
+        setSimulationBoard,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen,
+        simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool
+      } = get();
+
+      setSimulatingMove(move);
+      setSimulationProgress(0);
+      
+      // Reset stop flag
+      setShouldStopSimulation(false);
+      
+      // Get the ref from the store state
+      const shouldStopSimulationRef = get().shouldStopSimulationRef;
+      if (shouldStopSimulationRef) {
+        shouldStopSimulationRef.current = false;
+      }
+      
+      const gameState = {
+        boardCoords: simulationBoard,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool
+      };
+      
+      // Dynamic import to avoid circular dependency
+      const { runHeatMapSimulation: runHeatMapSimulationFunction } = await import('../functions/simulationFunctions');
+      
+      await runHeatMapSimulationFunction(move, gameState, {
+        numSimulations: 5,
+        turnsPerSim: 1
+      }, {
+        onProgress: setSimulationProgress,
+        onHeatMapUpdate: setSimulationBoard,
+        onError: (message) => {
+          setSnackbarMessage(message);
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        },
+        onComplete: () => {
+          setSimulatingMove(null);
+          setSimulationProgress(0);
+          setShouldStopSimulation(false);
+          if (shouldStopSimulationRef) {
+            shouldStopSimulationRef.current = false;
+          }
+        },
+        shouldStopRef: shouldStopSimulationRef || { current: false }
+      });
+    },
+
+    handleGetTopMovesForExpandable: () => {
+      const { gameEnded, getTopMovesForExpandable } = get();
+      if (gameEnded) return; // Don't allow getting top moves after game has ended
+      getTopMovesForExpandable();
+    },
+
+    // Utility functions for effects
+    limitMoveHistory: () => {
+      const { moveHistory, setMoveHistory } = get();
+      if (moveHistory.length > 50) { // Reduce to last 50 moves instead of 100
+        setMoveHistory(moveHistory.slice(-50));
+      }
+    },
+
+    updatePreviewScore: () => {
+      const { selectedTiles, tempBoardCoords, setPreviewScore, setPreviewScorePosition } = get();
+      
+      if (selectedTiles.length > 0) {
+        // Import calculateScore function dynamically
+        import('../functions/scoreFunctions').then(({ calculateScore }) => {
+          // Get board multipliers from the static data
+          import('../components/AppContent/References/staticData').then(({ origBoard }) => {
+            const boardMultipliers = JSON.parse(origBoard);
+            const score = calculateScore(get().boardCoords, tempBoardCoords, boardMultipliers);
+            setPreviewScore(score);
+            
+            // Calculate position for score preview
+            if (get().selectedBoardPosition) {
+              const { row, col } = get().selectedBoardPosition;
+              setPreviewScorePosition({ row, col });
+            }
+          });
+        });
+      } else {
+        setPreviewScore(null);
+        setPreviewScorePosition(null);
+      }
+    },
+
+    fetchLeaveValuesForTopMoves: () => {
+      const { topMoves } = get();
+      if (topMoves.length > 0) {
+        console.log('Top moves updated, fetching leave values');
+        // Dynamic import to avoid circular dependency
+        import('../functions/play/leaveFunctions').then(({ fetchLeaveValues }) => {
+          fetchLeaveValues(topMoves);
+        });
+      }
+    },
+
+    checkDictionary: async () => {
+      const { setIsDictionaryLoading, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen } = get();
+      
+      // Set initial loading state
+      setIsDictionaryLoading(true);
+      setSnackbarMessage('Loading dictionary.. (up to 30s)');
+      setSnackbarSeverity('info');
+      setSnackbarOpen(true);
+      
+      try {
+        const response = await fetch('/.netlify/functions/gameLogic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'validate',
+            beforeBoard: get().origBoardCoords,
+            afterBoard: get().origBoardCoords
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        // Set loading to false if we get any response
+        setIsDictionaryLoading(false);
+        setSnackbarOpen(false);
+      } catch (error) {
+        console.error('Error checking dictionary:', error);
+        // Retry after a short delay
+        setTimeout(() => {
+          get().checkDictionary();
+        }, 1000);
+      }
+    },
+
+    // Keyboard event handlers
+    handleKeyDownWrapper: (e, playerMoveSound, origBoard) => {
+      const {
+        selectedBoardPosition,
+        boardCoords,
+        tempBoardCoords,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        selectedTiles,
+        blankTiles,
+        setSelectedBoardPosition,
+        setArrowDirection,
+        setTempBoardCoords,
+        setSelectedTiles,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setBlankTiles,
+        setPreviewScore,
+        setPreviewScorePosition,
+        handleWordSubmit,
+        arrowDirection,
+        getSelectedTiles
+      } = get();
+
+      // Get selectedTiles directly from the store to ensure we get the correct value
+      const store = get();
+      const selectedTilesFromStore = store.selectedTiles;
+      const selectedTilesFromGetter = getSelectedTiles();
+      
+      // Fallback: ensure we always have an array, even if the store returns a function
+      const safeSelectedTiles = Array.isArray(selectedTilesFromGetter) ? selectedTilesFromGetter : 
+                               Array.isArray(selectedTilesFromStore) ? selectedTilesFromStore : 
+                               Array.isArray(selectedTiles) ? selectedTiles : [];
+      
+      // Dynamic import to avoid circular dependency
+      import('../functions/play/keyboardFunctions').then(({ handleKeyDown }) => {
+        handleKeyDown({
+          e,
+          selectedBoardPosition,
+          boardCoords,
+          tempBoardCoords,
+          currentPlayer,
+          player1Rack,
+          player2Rack,
+          selectedTiles: safeSelectedTiles, // Use the safe fallback
+          blankTiles,
+          setSelectedBoardPosition,
+          setArrowDirection,
+          setTempBoardCoords,
+          setSelectedTiles,
+          setPlayer1Rack,
+          setPlayer2Rack,
+          setBlankTiles,
+          setPreviewScore,
+          setPreviewScorePosition,
+          handleWordSubmit,
+          playerMoveSound,
+          arrowDirection,
+          origBoard
+        });
+      });
+    },
+
+    handleKeyPressWrapper: (event, playerMoveSound, origBoard) => {
+      const {
+        gameStarted,
+        gameEnded,
+        handlePassClick,
+        handleExchangeClick,
+        handlePlayTopMoveClick,
+        autoPlayBest,
+        isPlayerThinking,
+        isBotThinking,
+        setAutoPlayBest
+      } = get();
+
+      // Dynamic import to avoid circular dependency
+      import('../functions/play/keyboardFunctions').then(({ handleKeyPress }) => {
+        handleKeyPress({
+          event,
+          gameStarted,
+          gameEnded,
+          handlePass: handlePassClick,
+          handleExchangeClick,
+          handlePlayTopMove: handlePlayTopMoveClick,
+          toggleAutoPlayBest: () => setAutoPlayBest(!autoPlayBest),
+          isPlayerThinking,
+          isBotThinking
+        });
+      });
+    },
+
+    // Time slider handler
+    handleTimeSliderMouseDown: (e, setGameTime) => {
+      const slider = e.currentTarget.parentElement;
+      const rect = slider.getBoundingClientRect();
+      
+      const handleMouseMove = (e) => {
+        const x = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, x / rect.width));
+        const value = Math.round(5 + percentage * 25);
+        setGameTime(value);
+      };
+      
+      const handleMouseUp = () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    },
+
+    // Bot move handler
+    makeBotMove: (botMoveSound) => {
+      // Dynamic import to avoid circular dependency
+      import('../functions/play/botFunctions').then(({ makeBotMove: makeBotMoveFunction }) => {
+        makeBotMoveFunction(botMoveSound);
       });
     },
   };
