@@ -77,13 +77,17 @@ export function handleTileClick({
 }) {
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
   
+  // Add safety check for undefined tilesToExchange
+  const safeTilesToExchange = tilesToExchange || [];
+  const safeSelectedTiles = selectedTiles || [];
+  
   // If we're in exchange mode, handle tile selection for exchange
-  if (tilesToExchange.length > 0 || selectedTiles.length === 0) {
-    const tileIndex = tilesToExchange.findIndex(t => t.tile === tile && t.index === index);
+  if (safeTilesToExchange.length > 0 || safeSelectedTiles.length === 0) {
+    const tileIndex = safeTilesToExchange.findIndex(t => t.tile === tile && t.index === index);
     if (tileIndex === -1) {
-      setTilesToExchange([...tilesToExchange, { tile, index }]);
+      setTilesToExchange([...safeTilesToExchange, { tile, index }]);
     } else {
-      const newTiles = [...tilesToExchange];
+      const newTiles = [...safeTilesToExchange];
       newTiles.splice(tileIndex, 1);
       setTilesToExchange(newTiles);
     }
@@ -91,11 +95,11 @@ export function handleTileClick({
   }
   
   // Otherwise handle normal tile selection for play
-  const tileIndex = selectedTiles.findIndex(t => t.tile === tile && t.index === index);
+  const tileIndex = safeSelectedTiles.findIndex(t => t.tile === tile && t.index === index);
   if (tileIndex === -1) {
-    setSelectedTiles([...selectedTiles, { tile, index }]);
+    setSelectedTiles([...safeSelectedTiles, { tile, index }]);
   } else {
-    const newTiles = [...selectedTiles];
+    const newTiles = [...safeSelectedTiles];
     newTiles.splice(tileIndex, 1);
     setSelectedTiles(newTiles);
   }

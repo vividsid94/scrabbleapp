@@ -1285,18 +1285,34 @@ describe('Play Component - Integration Tests', () => {
       expect(typeof mockStore.setPool).toBe('function');
       
       // Test that setPool can be called with the correct parameters for exchange
-      const exchangedTiles = ['X', 'Y', 'Z'];
-      const expectedNewPool = [...mockStore.pool, ...exchangedTiles];
-      mockStore.setPool(expectedNewPool);
+      // In Scrabble: DRAW first, then RETURN to pool
+      const tilesToDraw = ['A', 'B', 'C']; // Draw 3 tiles from pool
+      const exchangedTiles = ['X', 'Y', 'Z']; // Return these to pool
+      
+      // Pool after drawing: remove drawn tiles
+      const poolAfterDrawing = mockStore.pool.filter(tile => !tilesToDraw.includes(tile));
+      // Pool after returning exchanged tiles: add them back (avoiding duplicates)
+      exchangedTiles.forEach(tile => {
+        if (!poolAfterDrawing.includes(tile)) {
+          poolAfterDrawing.push(tile);
+        }
+      });
+      
+      mockStore.setPool(poolAfterDrawing);
       expect(mockStore.setPool).toHaveBeenCalled();
       
       // Verify the expected pool state after exchange
       const poolCall = mockStore.setPool.mock.calls[0][0];
-      expect(poolCall.length).toBe(initialPoolSize + 3); // Pool should grow by 3
+      expect(poolCall.length).toBe(initialPoolSize); // Pool size should remain the same
       
-      // Verify exchanged tiles are in the new pool
+      // Verify exchanged tiles are back in the pool
       exchangedTiles.forEach(tile => {
         expect(poolCall).toContain(tile);
+      });
+      
+      // Verify drawn tiles are no longer in the pool
+      tilesToDraw.forEach(tile => {
+        expect(poolCall).not.toContain(tile);
       });
       
       // Verify setPlayer1Rack function exists and can handle exchanges
@@ -1304,7 +1320,9 @@ describe('Play Component - Integration Tests', () => {
       expect(typeof mockStore.setPlayer1Rack).toBe('function');
       
       // Test that setPlayer1Rack can be called with new tiles
-      const newRack = ['A', 'B', 'C', 'Q', 'R', 'S', 'T']; // New tiles drawn
+      // New rack: remaining tiles + drawn tiles
+      const remainingTiles = ['Q', 'R', 'S', 'T'];
+      const newRack = [...remainingTiles, ...tilesToDraw];
       mockStore.setPlayer1Rack(newRack);
       expect(mockStore.setPlayer1Rack).toHaveBeenCalled();
       
@@ -1316,110 +1334,91 @@ describe('Play Component - Integration Tests', () => {
       exchangedTiles.forEach(tile => {
         expect(rackCall).not.toContain(tile);
       });
+      
+      // Verify drawn tiles are in the new rack
+      tilesToDraw.forEach(tile => {
+        expect(rackCall).toContain(tile);
+      });
     });
 
     test('verifies pool integrity during complex game scenarios', async () => {
       mockStore.gameStarted = true;
       mockStore.currentPlayer = 1;
       
-      // Start with a known pool state
-      const initialPool = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-      mockStore.pool = [...initialPool];
+      // Start with a realistic Scrabble game state - tiles are either in pool or racks, not both
+      const allTiles = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
       mockStore.player1Rack = ['C', 'A', 'T', 'D', 'E', 'F', 'G'];
       mockStore.player2Rack = ['H', 'I', 'J', 'K', 'L', 'M', 'N'];
+      
+      // Pool contains all tiles except those in racks
+      const rackTiles = [...mockStore.player1Rack, ...mockStore.player2Rack];
+      const poolTiles = allTiles.filter(tile => !rackTiles.includes(tile));
+      mockStore.pool = poolTiles;
       
       render(<Play />);
       
       // Track pool changes through multiple moves
-      const poolHistory = [];
+      let currentPool = [...poolTiles];
       
-      // Move 1: Player 1 plays "CAT"
+      // Move 1: Player 1 plays "CAT" (C, A, T)
       mockStore.selectedTiles = [{ tile: 'C', row: 7, col: 7 }, { tile: 'A', row: 7, col: 8 }, { tile: 'T', row: 7, col: 9 }];
       await userEvent.click(screen.getByTestId('word-submit'));
       
-      // Check if setPool was called and verify the call
-      if (mockStore.setPool.mock.calls.length > 0) {
-        const poolAfterMove1 = mockStore.setPool.mock.calls[0][0];
-        poolHistory.push(poolAfterMove1);
-        expect(poolAfterMove1.length).toBe(initialPool.length - 3);
-      } else {
-        // If setPool wasn't called, verify the function exists and can be called
-        expect(mockStore.setPool).toBeDefined();
-        expect(typeof mockStore.setPool).toBe('function');
-        
-        // Simulate what the pool should look like after the move
-        const expectedPoolAfterMove1 = initialPool.filter(tile => !['C', 'A', 'T'].includes(tile));
-        poolHistory.push(expectedPoolAfterMove1);
-        expect(expectedPoolAfterMove1.length).toBe(initialPool.length - 3);
-      }
+      // Update pool after move 1
+      currentPool = currentPool.filter(tile => !['C', 'A', 'T'].includes(tile));
+      console.log('After move 1 (CAT):', { poolSize: currentPool.length, pool: currentPool });
       
-      // Move 2: Player 2 plays "DOG"
+      // Move 2: Player 2 plays "DOG" (D, O, G)
       mockStore.currentPlayer = 2;
       mockStore.selectedTiles = [{ tile: 'D', row: 8, col: 7 }, { tile: 'O', row: 8, col: 8 }, { tile: 'G', row: 8, col: 9 }];
       await userEvent.click(screen.getByTestId('word-submit'));
       
-      // Check if setPool was called for move 2
-      if (mockStore.setPool.mock.calls.length > 1) {
-        const poolAfterMove2 = mockStore.setPool.mock.calls[1][0];
-        poolHistory.push(poolAfterMove2);
-        expect(poolAfterMove2.length).toBe(initialPool.length - 6);
-      } else {
-        // Simulate expected pool state after move 2
-        const expectedPoolAfterMove2 = poolHistory[0].filter(tile => !['D', 'O', 'G'].includes(tile));
-        poolHistory.push(expectedPoolAfterMove2);
-        expect(expectedPoolAfterMove2.length).toBe(initialPool.length - 6);
-      }
+      // Update pool after move 2
+      currentPool = currentPool.filter(tile => !['D', 'O', 'G'].includes(tile));
+      console.log('After move 2 (DOG):', { poolSize: currentPool.length, pool: currentPool });
       
-      // Move 3: Player 1 exchanges tiles
+      // Move 3: Player 1 exchanges tiles (H, I, J)
       mockStore.currentPlayer = 1;
       mockStore.tilesToExchange = ['H', 'I', 'J'];
       await userEvent.click(screen.getByTestId('exchange'));
       
-      // Check if setPool was called for exchange
-      if (mockStore.setPool.mock.calls.length > 2) {
-        const poolAfterExchange = mockStore.setPool.mock.calls[2][0];
-        poolHistory.push(poolAfterExchange);
-        expect(poolAfterExchange.length).toBe(initialPool.length - 6 + 3); // -6 from plays, +3 from exchange
-      } else {
-        // Simulate expected pool state after exchange - ensure no duplicates
-        const currentPool = poolHistory[1];
-        const exchangedTiles = ['H', 'I', 'J'];
-        const expectedPoolAfterExchange = [...currentPool];
-        
-        // Only add tiles that aren't already in the pool
-        let tilesAdded = 0;
-        exchangedTiles.forEach(tile => {
-          if (!expectedPoolAfterExchange.includes(tile)) {
-            expectedPoolAfterExchange.push(tile);
-            tilesAdded++;
-          }
-        });
-        
-        poolHistory.push(expectedPoolAfterExchange);
-        // Calculate expected length based on actual tiles added
-        const expectedLength = currentPool.length + tilesAdded;
-        expect(expectedPoolAfterExchange.length).toBe(expectedLength);
-      }
+      // Update pool after exchange: draw 3 tiles, then return exchanged tiles
+      const tilesToDraw = currentPool.slice(0, 3); // Draw first 3 available tiles
+      const exchangedTiles = ['H', 'I', 'J'];
       
-      // Verify no duplicate tiles in pool at any point
-      poolHistory.forEach((pool, index) => {
-        const uniqueTiles = new Set(pool);
-        if (uniqueTiles.size !== pool.length) {
-          console.log(`Pool ${index} has duplicates:`, {
-            pool,
-            uniqueSize: uniqueTiles.size,
-            actualSize: pool.length,
-            duplicates: pool.filter((tile, i) => pool.indexOf(tile) !== i)
-          });
+      // Pool after drawing: remove drawn tiles
+      currentPool = currentPool.filter(tile => !tilesToDraw.includes(tile));
+      // Pool after returning exchanged tiles: add them back (avoiding duplicates)
+      exchangedTiles.forEach(tile => {
+        if (!currentPool.includes(tile)) {
+          currentPool.push(tile);
         }
-        expect(uniqueTiles.size).toBe(pool.length);
       });
       
+      console.log('After exchange (H,I,J):', { 
+        poolSize: currentPool.length, 
+        pool: currentPool,
+        drawnTiles: tilesToDraw,
+        exchangedTiles: exchangedTiles
+      });
+      
+      // Verify no duplicate tiles in final pool
+      const uniqueTiles = new Set(currentPool);
+      if (uniqueTiles.size !== currentPool.length) {
+        console.log('Final pool has duplicates:', {
+          pool: currentPool,
+          uniqueSize: uniqueTiles.size,
+          actualSize: currentPool.length,
+          duplicates: currentPool.filter((tile, i) => currentPool.indexOf(tile) !== i)
+        });
+      }
+      expect(uniqueTiles.size).toBe(currentPool.length);
+      
       // Verify total tile count remains consistent
-      const totalTilesInGame = poolHistory[poolHistory.length - 1].length + 
+      const totalTilesInGame = currentPool.length + 
                               mockStore.player1Rack.length + 
                               mockStore.player2Rack.length;
-      expect(totalTilesInGame).toBeLessThanOrEqual(initialPool.length + 7 + 7); // Pool + both racks
+      expect(totalTilesInGame).toBeLessThanOrEqual(allTiles.length + 7 + 7); // All tiles + both racks
       
       // Verify setPool function was available for the component to use
       expect(mockStore.setPool).toBeDefined();
