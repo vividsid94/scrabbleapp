@@ -348,6 +348,7 @@ export const useGameStore = create((set, get) => {
         setBoardCoords,
         setPlayer1Rack,
         setPlayer2Rack,
+        setAutoPlayBest,
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -365,6 +366,9 @@ export const useGameStore = create((set, get) => {
       setShowVictoryOverlay(false);
       setShowConfetti(false);
       setWinner(null);
+      
+      // Turn autoplay off
+      setAutoPlayBest(false);
       
       // If there are tiles on the board, return them to the rack first
       if (selectedTiles.length > 0) {
@@ -457,6 +461,7 @@ export const useGameStore = create((set, get) => {
         setPlayer1Time,
         setPlayer2Time,
         setTimerActive,
+        setAutoPlayBest,
         gameTime
       } = get();
       
@@ -466,6 +471,9 @@ export const useGameStore = create((set, get) => {
       setWinner(null);
       setFinalPlayer1Score(0);
       setFinalPlayer2Score(0);
+      
+      // Turn autoplay off
+      setAutoPlayBest(false);
       
       // Reset timer
       setPlayer1Time(gameTime * 60);
