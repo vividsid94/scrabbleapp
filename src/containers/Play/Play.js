@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useEffect, useRef, useMemo} from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
@@ -355,85 +355,7 @@ export default function Play() {
     origBoard
   ]);
 
-  const handleGameEndClick = useCallback((winnerRack, winnerName, loserRack, loserPoints) => {
-    setGameEnded(true); // Set game as ended
-    
-    // Stop the timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setTimerActive(false);
-    
-    // Determine winner based on winnerName
-    const isPlayerWinner = winnerName === player1Name;
-    const winner = isPlayerWinner ? 'player' : 'bot';
-    setWinner(winner);
-    
-    // Calculate final scores
-    let finalPlayer1Score = player1points;
-    let finalPlayer2Score = player2points;
-    
-    if (isPlayerWinner) {
-      // Player won, bot gets remaining tiles added to their score
-      const rackSum = (loserRack || []).reduce((sum, tile) => {
-        const value = tile === '?' || tile === '*' ? 0 : 
-          tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
-          tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
-          tile === 'D' || tile === 'G' ? 2 :
-          tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
-          tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
-          tile === 'K' ? 5 :
-          tile === 'J' || tile === 'X' ? 8 :
-          tile === 'Q' || tile === 'Z' ? 10 : 0;
-        return sum + value;
-      }, 0);
-      finalPlayer2Score = loserPoints + rackSum;
-    } else {
-      // Bot won, player gets remaining tiles added to their score
-      const rackSum = (loserRack || []).reduce((sum, tile) => {
-        const value = tile === '?' || tile === '*' ? 0 : 
-          tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
-          tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
-          tile === 'D' || tile === 'G' ? 2 :
-          tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
-          tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
-          tile === 'K' ? 5 :
-          tile === 'J' || tile === 'X' ? 8 :
-          tile === 'Q' || tile === 'Z' ? 10 : 0;
-        return sum + value;
-      }, 0);
-      finalPlayer1Score = loserPoints + rackSum;
-    }
-    
-    // Set final scores in state
-    //setFinalPlayer1Score(finalPlayer1Score);
-    //setFinalPlayer2Score(finalPlayer2Score);
-
-    setFinalPlayer1Score(player1points);
-    setFinalPlayer2Score(player2points);
-    
-    // Trigger victory celebration
-    setShowConfetti(true);
-    setShowVictoryOverlay(true);
-    
-    // Note: Score calculation and state updates are now handled in handleGameEndClick
-    // No need to call the utility handleGameEnd function here
-  }, [
-    player1Name,
-    player2Name,
-    player1points,
-    player2points,
-    autoPlayBest
-  ]);
-
-  // Victory celebration handlers
-  const handleConfettiComplete = useCallback(() => {
-    setShowConfetti(false);
-    // Don't hide the victory card - let it stay open until user clicks rematch
-  }, []);
-
-  const handleNewGame = useCallback(() => {
+  const handleNewGame = () => {
     setShowVictoryOverlay(false);
     setShowConfetti(false);
     setGameEnded(false);
@@ -452,7 +374,13 @@ export default function Play() {
     
     // Reset game state
     handleBotModeToggle();
-  }, [gameTime]);
+  };
+
+  // Victory celebration handlers
+  const handleConfettiComplete = () => {
+    setShowConfetti(false);
+    // Don't hide the victory card - let it stay open until user clicks rematch
+  };
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
@@ -584,10 +512,10 @@ export default function Play() {
     };
   }, [timerActive, currentPlayer, gameStarted]);
 
-  const handlePassClick = useCallback(() => {
+  const handlePassClick = () => {
     if (gameEnded) return; // Don't allow passes after game has ended
     handlePass();
-  }, [consecutivePasses, boardCoords, tempBoardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, player1Name, player2Name, isBotMode, pool, blankTiles, gameEnded]);
+  };
 
   const handleGetTopMovesForExpandable = () => {
     if (gameEnded) return; // Don't allow getting top moves after game has ended
@@ -724,7 +652,7 @@ export default function Play() {
     handleExchange();
   };
 
-  const handleMoveSelectClick = useCallback((move) => {
+  const handleMoveSelectClick = (move) => {
     // Validate move structure
     if (!move || !move.tiles || !Array.isArray(move.tiles)) {
       console.error('Invalid move structure:', move);
@@ -772,14 +700,7 @@ export default function Play() {
       setArrowDirection
     });
     }
-  }, [
-    showSimulationModal,
-    boardCoords,
-    tempBoardCoords,
-    currentPlayer,
-    player1Rack,
-    player2Rack
-  ]);
+  };
 
   // Get the latest move from move history
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
@@ -825,13 +746,13 @@ export default function Play() {
     setPlayer2Time(gameTime * 60);
   }, [gameTime]);
 
-  const handlePlayTopMoveClick = useCallback(() => {
+  const handlePlayTopMoveClick = () => {
     if (gameEnded) return Promise.resolve(); // Don't allow playing top move after game has ended
     setIsPlayerThinking(true);
     return handlePlayTopMove().finally(() => {
       setIsPlayerThinking(false);
     });
-  }, [isLoadingTopMoves, isDictionaryLoading, currentPlayer, player1Rack, player2Rack, tempBoardCoords, boardCoords, selectedTiles, pool, player1points, player2points, player1Name, player2Name, blankTiles, moveHistory, leaveValues, gameEnded]);
+  };
 
   // Update the useEffect for auto-play to use isPlayerThinking
   useEffect(() => {
