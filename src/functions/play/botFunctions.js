@@ -11,6 +11,7 @@ export const makeBotMove = async (botMoveSound) => {
     player2Name,
     player1Rack,
     player1points,
+    player1Name,
     blankTiles,
     isBotMode,
     currentPlayer,
@@ -22,6 +23,7 @@ export const makeBotMove = async (botMoveSound) => {
     setBlankTiles,
     setPool,
     setPlayer2points,
+    setPlayer1points,
     setCurrentPlayer,
     setSelectedBoardPosition,
     setSelectedTiles,
@@ -31,6 +33,7 @@ export const makeBotMove = async (botMoveSound) => {
     setSnackbarOpen,
     setConsecutivePasses,
     setMoveHistory,
+    setAutoPlayBest,
     getBoardDiff,
     setSimulatingMove,
     setSimulationResult,
@@ -278,12 +281,25 @@ export const makeBotMove = async (botMoveSound) => {
         player1Score: player1points,
         player1Rack: player1Rack
       });
-      handleGameEnd(
-        newRack,           // winnerRack
-        player2Name,       // winnerName
-        player1Rack || [], // loserRack
-        player1points      // loserPoints
-      );
+      handleGameEnd({
+        winnerRack: newRack,
+        winnerName: player2Name,
+        loserRack: player1Rack || [],
+        loserPoints: player1points,
+        player1Rack: player1Rack,
+        player2Rack: player2Rack,
+        player1points: player1points,
+        player2points: player2points,
+        player1Name: player1Name,
+        player2Name: player2Name,
+        autoPlayBest: autoPlayBest,
+        setPlayer1points: setPlayer1points,
+        setPlayer2points: setPlayer2points,
+        setSnackbarMessage: setSnackbarMessage,
+        setSnackbarSeverity: setSnackbarSeverity,
+        setSnackbarOpen: setSnackbarOpen,
+        setAutoPlayBest: setAutoPlayBest
+      });
       return;
     }
     

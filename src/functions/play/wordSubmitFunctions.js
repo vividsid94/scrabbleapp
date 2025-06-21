@@ -191,12 +191,25 @@ export const handleWordSubmit = async (playerMoveSound) => {
 
   // Check if game should end
   if (newRack.length === 0 && pool.length === 0) {
-    handleGameEnd(
-      newRack,                                    // winnerRack
-      currentPlayer === 1 ? player1Name : player2Name,  // winnerName
-      currentPlayer === 1 ? player2Rack : player1Rack,  // loserRack
-      currentPlayer === 1 ? player2points : player1points  // loserPoints
-    );
+    handleGameEnd({
+      winnerRack: newRack,
+      winnerName: currentPlayer === 1 ? player1Name : player2Name,
+      loserRack: currentPlayer === 1 ? player2Rack : player1Rack,
+      loserPoints: currentPlayer === 1 ? player2points : player1points,
+      player1Rack: player1Rack,
+      player2Rack: player2Rack,
+      player1points: player1points,
+      player2points: player2points,
+      player1Name: player1Name,
+      player2Name: player2Name,
+      autoPlayBest: false, // We don't have access to autoPlayBest here, but it's not critical
+      setPlayer1points: setPlayer1points,
+      setPlayer2points: setPlayer2points,
+      setSnackbarMessage: setSnackbarMessage,
+      setSnackbarSeverity: setSnackbarSeverity,
+      setSnackbarOpen: setSnackbarOpen,
+      setAutoPlayBest: () => {} // We don't have access to setAutoPlayBest here, but it's not critical
+    });
     return;
   }
 

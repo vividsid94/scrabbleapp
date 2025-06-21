@@ -2,6 +2,7 @@ import { calculateExchangeLeave } from './leaveFunctions';
 import { fetchLeaveValues } from './leaveFunctions';
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
+import { handleGameEnd } from './gameEndFunctions';
 
 /**
  * Generates all possible combinations of tiles for exchange
@@ -396,8 +397,7 @@ export const handlePlayTopMove = async () => {
     setIsDictionaryLoading,
     setLeaveValues,
     setArrowDirection,
-    getBoardDiff,
-    handleGameEnd
+    getBoardDiff
   } = useGameStore.getState();
 
   if (isLoadingTopMoves || isDictionaryLoading) {
@@ -672,12 +672,25 @@ export const handlePlayTopMove = async () => {
       
       // Check if game should end
       if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
-        handleGameEnd(
-          stateUpdates.newRack,                                    // winnerRack
-          currentPlayer === 1 ? player1Name : player2Name,        // winnerName
-          currentPlayer === 1 ? player2Rack : player1Rack,        // loserRack
-          currentPlayer === 1 ? player2points : player1points     // loserPoints
-        );
+        handleGameEnd({
+          winnerRack: stateUpdates.newRack,
+          winnerName: currentPlayer === 1 ? player1Name : player2Name,
+          loserRack: currentPlayer === 1 ? player2Rack : player1Rack,
+          loserPoints: currentPlayer === 1 ? player2points : player1points,
+          player1Rack: player1Rack,
+          player2Rack: player2Rack,
+          player1points: player1points,
+          player2points: player2points,
+          player1Name: player1Name,
+          player2Name: player2Name,
+          autoPlayBest: false, // We don't have access to autoPlayBest here, but it's not critical
+          setPlayer1points: setPlayer1points,
+          setPlayer2points: setPlayer2points,
+          setSnackbarMessage: setSnackbarMessage,
+          setSnackbarSeverity: setSnackbarSeverity,
+          setSnackbarOpen: setSnackbarOpen,
+          setAutoPlayBest: () => {} // We don't have access to setAutoPlayBest here, but it's not critical
+        });
         return;
       }
       
