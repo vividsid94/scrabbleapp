@@ -17,25 +17,11 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
-import { simulateMove as simulateMoveFunction, runHeatMapSimulation as runHeatMapSimulationFunction, runAllMovesSimulation as runAllMovesSimulationFunction, runSimulation as runSimulationFunction, openSimulationModal as openSimulationModalFunction, stopSimulation as stopSimulationFunction, resetHeatMapMode as resetHeatMapModeFunction, switchToMetrics as switchToMetricsFunction } from '../../functions/simulationFunctions';
 import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
-import { alphabetizeRack } from '../../functions/play/rackFunctions';
 import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
-import { handleKeyDown, handleKeyPress } from '../../functions/play/keyboardFunctions';
-import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
-import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
-import { handleExchange } from '../../functions/play/exchangeFunctions';
-import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
-import { handleGetTopMoves, handlePlayTopMove, generateExchangeCombinations, fetchBoardControl } from '../../functions/play/moveFunctions';
-import { generateRandomRack } from '../../functions/moveFunctions';
-import { getBoardDiff } from '../../functions/play/boardUtils';
-import { handlePass } from '../../functions/play/passFunctions';
-import { handleGameEnd } from '../../functions/play/gameEndFunctions';
 import { formatTime } from '../../functions/play/timeUtils';
 import { useGameStore } from '../../stores/gameStore';
-
-const boardMultipliers = JSON.parse(origBoard);
 
 export default function Play() {
   // Use Zustand Game Store
@@ -91,11 +77,7 @@ export default function Play() {
     // Bot state
     isBotThinking,
     isPlayerThinking,
-    botGoesFirst,
-    setIsBotThinking,
-    setIsPlayerThinking,
-    setBotGoesFirst,
-    
+
     // Timer state
     player1Time,
     player2Time,
@@ -126,11 +108,6 @@ export default function Play() {
     
     // Victory state
     winner,
-    finalPlayer1Score,
-    finalPlayer2Score,
-    setWinner,
-    setFinalPlayer1Score,
-    setFinalPlayer2Score,
     
     // Simulation state
     simulatingMove,
@@ -148,6 +125,8 @@ export default function Play() {
     isSimulatingAllMoves,
     previewScore,
     previewScorePosition,
+    isHeatMapMode,
+    heatMapData,
     setSimulatingMove,
     setSimulationResult,
     setSimulationProgress,
@@ -158,11 +137,6 @@ export default function Play() {
     setSimulationBoard,
     setLeaveValues,
     setShowSimulationModal,
-    setShouldStopSimulation,
-    setAllMoveResults,
-    setIsSimulatingAllMoves,
-    setPreviewScore,
-    setPreviewScorePosition,
     
     // UI state
     theme,
@@ -472,217 +446,218 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-          <Box className={styles.title}>
+      <Box className={styles.title}>
             <Box className={styles.gameTitle}>
               <Box className={styles.playModeTitle}>
-                Playground+
-              </Box>
+          Playground+
             </Box>
-          </Box>
+            </Box>
+      </Box>
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
-              <Board 
-                board={board}
-                boardMode={theme}
-                onBoardChildClick={(row, col) => handleBoardPositionSelect({
-                  row,
-                  col,
-                  boardCoords,
-                  selectedBoardPosition,
-                  setSelectedBoardPosition,
-                  arrowDirection,
-                  setArrowDirection
-                })}
-                onTileDrop={(tile, index, row, col) => handleTileDrop({
-                  tile,
-                  index,
-                  row,
-                  col,
-                  player1Rack,
-                  setPlayer1Rack,
-                  player2Rack,
-                  setPlayer2Rack,
+          <Board 
+            board={board}
+            boardMode={theme}
+            onBoardChildClick={(row, col) => handleBoardPositionSelect({
+              row,
+              col,
+              boardCoords,
+              selectedBoardPosition,
+              setSelectedBoardPosition,
+              arrowDirection,
+              setArrowDirection
+            })}
+            onTileDrop={(tile, index, row, col) => handleTileDrop({
+              tile,
+              index,
+              row,
+              col,
+              player1Rack,
+              setPlayer1Rack,
+              player2Rack,
+              setPlayer2Rack,
                   selectedTilesArray,
-                  setSelectedTiles,
-                  setSelectedBoardPosition,
-                  tempBoardCoords,
-                  setTempBoardCoords
-                })}
-                onTileClick={(tile, index) => handleTileClick({
-                  tile,
-                  index,
-                  currentPlayer,
-                  player1Rack,
-                  player2Rack,
+              setSelectedTiles,
+              setSelectedBoardPosition,
+              tempBoardCoords,
+              setTempBoardCoords
+            })}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
                   selectedTilesArray,
-                  setSelectedTiles,
-                  tilesToExchange,
-                  setTilesToExchange
-                })}
-                selectedPosition={selectedBoardPosition}
-                arrowDirection={arrowDirection}
-                onArrowDirectionChange={(newDirection) => {
-                    console.log('Play component received direction change:', newDirection);
-                    setArrowDirection(newDirection);
-                }}
-                animate={false}
-                showSlip={false}
-                showDictionary={false}
-                dictionary=""
-                previewScore={previewScore}
-                previewScorePosition={previewScorePosition}
-                lastMoveCoordinates={lastMoveCoordinates}
-              />   
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
+            selectedPosition={selectedBoardPosition}
+            arrowDirection={arrowDirection}
+            onArrowDirectionChange={(newDirection) => {
+                console.log('Play component received direction change:', newDirection);
+                setArrowDirection(newDirection);
+            }}
+            animate={false}
+            showSlip={false}
+            showDictionary={false}
+            dictionary=""
+            previewScore={previewScore}
+            previewScorePosition={previewScorePosition}
+            lastMoveCoordinates={lastMoveCoordinates}
+          />   
             </Box>
-          </Box>
+        </Box>
 
-          <Box className={styles.rightPanel}>
-            <PlayerInfo
-              player1Name={player1Name}
-              player2Name={player2Name}
-              player1Points={player1points}
-              player2Points={player2points}
+        <Box className={styles.rightPanel}>
+          <PlayerInfo
+            player1Name={player1Name}
+            player2Name={player2Name}
+            player1Points={player1points}
+            player2Points={player2points}
               player1Time={formatTime(player1Time || 0)}
               player2Time={formatTime(player2Time || 0)}
-              currentPlayer={currentPlayer}
-              player1Rack={player1Rack}
-              player2Rack={player2Rack}
-              color={color}
-              onTileClick={(tile, index) => handleTileClick({
-                tile,
-                index,
-                currentPlayer,
-                player1Rack,
-                player2Rack,
+            currentPlayer={currentPlayer}
+            player1Rack={player1Rack}
+            player2Rack={player2Rack}
+            color={color}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
                 selectedTilesArray,
-                setSelectedTiles,
-                tilesToExchange,
-                setTilesToExchange
-              })}
-              selectedTiles={tilesToExchange}
-              isBotMode={isBotMode}
-              gameStarted={gameStarted}
-              isDictionaryLoading={isDictionaryLoading}
-              isLoadingTopMoves={isLoadingTopMoves}
-              onSettingsOpen={handleSettingsOpen}
-              onColorSchemeOpen={handleColorSchemeOpen}
-              onBotModeToggle={handleBotModeToggle}
-              onGetTopMoves={handleGetTopMovesForExpandable}
-              onWordSubmit={handleWordSubmitClick}
-              onPass={handlePassClick}
-              onExchange={handleExchangeClick}
-              onPlayTopMove={handlePlayTopMoveClick}
-              selectedBoardPosition={selectedBoardPosition}
-              tilesToExchange={tilesToExchange}
-              autoPlayBest={autoPlayBest}
-              setAutoPlayBest={setAutoPlayBest}
-              isBotThinking={isBotThinking}
-              isPlayerThinking={isPlayerThinking}
-              latestMove={latestMove}
-              moveHistory={moveHistory}
-              topMoves={topMoves}
-              onMoveSelect={handleMoveSelectClick}
-              onSimulateMove={simulateMove}
-              onOpenSimulationModal={openSimulationModal}
-              simulatingMove={simulatingMove}
-              boardCoords={boardCoords}
-              pool={pool}
-              icons={{
-                settings: <TuneIcon className={styles.keyBtn} />,
-                colorScheme: <PaletteIcon className={styles.keyBtn} />,
-                time: (
-                  <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                    <TimerIcon 
-                        className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
-                      onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
-                    />
-                  </Tooltip>
-                ),
-                botMode: <SmartToyIcon 
-                    className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
-                />,
-                topMoves: <LightbulbIcon className={styles.keyBtn} />,
-              }}
-            />
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
+            selectedTiles={tilesToExchange}
+            isBotMode={isBotMode}
+            gameStarted={gameStarted}
+            isDictionaryLoading={isDictionaryLoading}
+            isLoadingTopMoves={isLoadingTopMoves}
+            onSettingsOpen={handleSettingsOpen}
+            onColorSchemeOpen={handleColorSchemeOpen}
+            onBotModeToggle={handleBotModeToggle}
+            onGetTopMoves={handleGetTopMovesForExpandable}
+            onWordSubmit={handleWordSubmitClick}
+            onPass={handlePassClick}
+            onExchange={handleExchangeClick}
+            onPlayTopMove={handlePlayTopMoveClick}
+            selectedBoardPosition={selectedBoardPosition}
+            tilesToExchange={tilesToExchange}
+            autoPlayBest={autoPlayBest}
+            setAutoPlayBest={setAutoPlayBest}
+            isBotThinking={isBotThinking}
+            isPlayerThinking={isPlayerThinking}
+            latestMove={latestMove}
+            moveHistory={moveHistory}
+            topMoves={topMoves}
+            onMoveSelect={handleMoveSelectClick}
+            onSimulateMove={simulateMove}
+            onOpenSimulationModal={openSimulationModal}
+            simulatingMove={simulatingMove}
+            boardCoords={boardCoords}
+            pool={pool}
+            icons={{
+              settings: <TuneIcon className={styles.keyBtn} />,
+              colorScheme: <PaletteIcon className={styles.keyBtn} />,
+              time: (
+                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
+                  <TimerIcon 
+                      className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
+                  />
+                </Tooltip>
+              ),
+              botMode: <SmartToyIcon 
+                  className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+              />,
+              topMoves: <LightbulbIcon className={styles.keyBtn} />,
+            }}
+          />
 
-            {showTimeSlider && !gameStarted && (
-                <Box className={styles.timeSliderContainer}>
-                  <Box className={styles.timeSliderLabel}>
-                  Game Time: {gameTime} min
-                </Box>
-                  <Box className={styles.timeSliderWrapper}>
-                    {[5, 15, 25, 30].map((value) => (
-                      <Box
-                        key={value}
-                        className={styles.timeSliderMark}
-                        style={{ left: `${((value - 5) / 25) * 100}%` }}
-                      />
-                    ))}
+          {showTimeSlider && !gameStarted && (
+              <Box className={styles.timeSliderContainer}>
+                <Box className={styles.timeSliderLabel}>
+                Game Time: {gameTime} min
+              </Box>
+                <Box className={styles.timeSliderWrapper}>
+                  {[5, 15, 25, 30].map((value) => (
                     <Box
-                      className={styles.timeSliderThumb}
-                      style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
-                      onMouseDown={(e) => handleTimeSliderMouseDown(e, setGameTime)}
+                      key={value}
+                      className={styles.timeSliderMark}
+                      style={{ left: `${((value - 5) / 25) * 100}%` }}
                     />
-                </Box>
+                  ))}
+                  <Box
+                    className={styles.timeSliderThumb}
+                    style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
+                      onMouseDown={(e) => handleTimeSliderMouseDown(e, setGameTime)}
+                  />
               </Box>
-            )}
+            </Box>
+          )}
 
-            <Box className={styles.playerPanel}>
-              <Box className={styles.poolBox}>
-                <PlayPool 
-                  pool={pool} 
-                  player1Rack={player1Rack} 
-                  player2Rack={player2Rack}
-                  gameStarted={gameStarted}
-                />  
-              </Box>
+          <Box className={styles.playerPanel}>
+            <Box className={styles.poolBox}>
+              <PlayPool 
+                pool={pool} 
+                player1Rack={player1Rack} 
+                player2Rack={player2Rack}
+                gameStarted={gameStarted}
+              />  
             </Box>
           </Box>
         </Box>
+      </Box>
 
         <GameModal />
 
-        <Snackbar 
-          open={snackbarOpen} 
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
+      <Snackbar 
+        open={snackbarOpen} 
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          className={styles.snackbarAlert}
         >
-          <Alert 
-            onClose={() => setSnackbarOpen(false)} 
-            severity={snackbarSeverity}
-            className={styles.snackbarAlert}
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
 
-        <SimulationModal
-          open={showSimulationModal}
-          onClose={() => {
-            setShowSimulationModal(false);
-            setSimulationBoard(null);
-            setPreviewMove(null);
-            setPreviewTileOwnership(null);
-            setMoveWithResults(null);
-            resetHeatMapMode();
-          }}
-          simulationBoard={previewBoard || simulationBoard}
-          previewTileOwnership={previewTileOwnership}
-          theme={theme}
-          color={color}
-          complementaryColor={complementaryColor}
-          blankTiles={blankTiles}
-          simulatingMove={simulatingMove}
-          simulationProgress={simulationProgress}
-          simulationResult={simulationResult}
-          moveWithResults={moveWithResults}
-          onStartSimulation={runSimulation}
-          onStartHeatMap={runHeatMapSimulation}
-          onStopSimulation={stopSimulation}
+      <SimulationModal
+        open={showSimulationModal}
+        onClose={() => {
+          setShowSimulationModal(false);
+          setSimulationBoard(null);
+          setPreviewMove(null);
+          setPreviewTileOwnership(null);
+          setMoveWithResults(null);
+          resetHeatMapMode();
+        }}
+        simulationBoard={previewBoard || simulationBoard}
+          previewBoard={previewBoard}
+        previewTileOwnership={previewTileOwnership}
+        theme={theme}
+        color={color}
+        complementaryColor={complementaryColor}
+        blankTiles={blankTiles}
+        simulatingMove={simulatingMove}
+        simulationProgress={simulationProgress}
+        simulationResult={simulationResult}
+        moveWithResults={moveWithResults}
+        onStartSimulation={runSimulation}
+        onStartHeatMap={runHeatMapSimulation}
+        onStopSimulation={stopSimulation}
           onSwitchToMetrics={() => {}}
-          heatMapData={simulationBoard}
-          isHeatMapMode={!!simulationBoard}
+        heatMapData={heatMapData}
+        isHeatMapMode={isHeatMapMode}
           simulationSettings={{
             numSimulations: 5,
             turnsPerSim: 1
@@ -690,47 +665,47 @@ export default function Play() {
           onSimulationSettingsChange={(newSettings) => {
             // This function is now empty as the state is managed by the simulation store
           }}
-          topMoves={topMoves}
-          onMoveSelect={handleMoveSelectClick}
-          onRunAllMovesSimulation={runAllMovesSimulation}
-          allMoveResults={allMoveResults}
-          isSimulatingAllMoves={isSimulatingAllMoves}
-        />
+        topMoves={topMoves}
+        onMoveSelect={handleMoveSelectClick}
+        onRunAllMovesSimulation={runAllMovesSimulation}
+        allMoveResults={allMoveResults}
+        isSimulatingAllMoves={isSimulatingAllMoves}
+      />
 
-        {/* Victory Celebration Components */}
-        <Confetti
-          winner={winner}
-          isVisible={showConfetti}
-          onComplete={handleConfettiComplete}
-        />
-        
-        {/* Floating Victory Message */}
-        {showVictoryOverlay && (
+      {/* Victory Celebration Components */}
+      <Confetti
+        winner={winner}
+        isVisible={showConfetti}
+        onComplete={handleConfettiComplete}
+      />
+      
+      {/* Floating Victory Message */}
+      {showVictoryOverlay && (
           <Box className={styles.victoryOverlay}>
             <Box className={`${styles.victoryCard} ${winner === 'player' ? styles.victoryCardPlayer : styles.victoryCardBot}`}>
               <Box className={styles.victoryIcon}>
-                {winner === 'player' ? '🏆' : '🤖'}
-              </Box>
+              {winner === 'player' ? '🏆' : '🤖'}
+            </Box>
               <Box className={styles.victoryTitle}>
-                {winner === 'player' ? 'It\'s a huge, huge win!' : 'The bot got the best of you!'}
-              </Box>
+              {winner === 'player' ? 'It\'s a huge, huge win!' : 'The bot got the best of you!'}
+            </Box>
               <Box className={styles.victorySubtitle}>
-                {winner === 'player' ? '' : ''}
-              </Box>
+              {winner === 'player' ? '' : ''}
+            </Box>
               <Box className={`${styles.victoryScore} ${winner === 'player' ? styles.victoryScorePlayer : styles.victoryScoreBot}`}>
-                {winner === 'player' ? '' : ''}
-              </Box>
-              
-              {/* Rematch Button */}
-              <Box
-                onClick={handleNewGame}
+              {winner === 'player' ? '' : ''}
+            </Box>
+            
+            {/* Rematch Button */}
+            <Box
+              onClick={handleNewGame}
                 className={styles.rematchButton}
-              >
-                Rematch
-              </Box>
+            >
+              Rematch
             </Box>
           </Box>
-        )}
+        </Box>
+      )}
       </Box>
     </Box>
   );

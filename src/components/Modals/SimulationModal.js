@@ -40,7 +40,9 @@ const SimulationModal = ({
 }) => {
   const [showSettings, setShowSettings] = useState(false);
 
-  if (!open || !simulationBoard) {
+  const boardData = isHeatMapMode ? simulationBoard : (previewBoard || simulationBoard);
+  
+  if (!open || !boardData) {
     return null;
   }
 
@@ -511,7 +513,7 @@ const SimulationModal = ({
                   background: 'rgba(255, 255, 255, 0.1)',
                   border: '1px solid rgba(255, 255, 255, 0.2)'
               }}>
-                {(previewBoard || simulationBoard).map((row, rowIndex) => 
+                {boardData.map((row, rowIndex) => 
                   row.map((cell, colIndex) => {
                     const mult = boardMultipliers[rowIndex][colIndex];
                       let bg = 'rgba(255, 255, 255, 0.9)';

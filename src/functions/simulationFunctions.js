@@ -3,7 +3,28 @@ import { removeTilesByCount } from './play/rackFunctions';
 
 // Helper function to track board occupancy for heat maps
 const trackBoardOccupancy = (board, heatMap) => {
+  // Safety checks
+  if (!board || !Array.isArray(board) || board.length !== 15) {
+    console.error('Invalid board in trackBoardOccupancy:', board);
+    return;
+  }
+  
+  if (!heatMap || !Array.isArray(heatMap) || heatMap.length !== 15) {
+    console.error('Invalid heatMap in trackBoardOccupancy:', heatMap);
+    return;
+  }
+  
   for (let row = 0; row < 15; row++) {
+    if (!board[row] || !Array.isArray(board[row]) || board[row].length !== 15) {
+      console.error(`Invalid board row ${row}:`, board[row]);
+      continue;
+    }
+    
+    if (!heatMap[row] || !Array.isArray(heatMap[row]) || heatMap[row].length !== 15) {
+      console.error(`Invalid heatMap row ${row}:`, heatMap[row]);
+      continue;
+    }
+    
     for (let col = 0; col < 15; col++) {
       if (typeof board[row][col] === 'string') {
         heatMap[row][col]++;
@@ -310,6 +331,22 @@ export const runHeatMapSimulation = async (move, gameState, settings, callbacks)
       
       // Create copies of initial state for this iteration
       let board = JSON.parse(JSON.stringify(gameState.boardCoords));
+      
+      // Safety check for board initialization
+      if (!board || !Array.isArray(board) || board.length !== 15) {
+        console.error('Invalid board state in heat map simulation:', board);
+        throw new Error('Invalid board state in heat map simulation');
+      }
+      
+      // Ensure each row is properly initialized
+      for (let row = 0; row < 15; row++) {
+        if (!board[row] || !Array.isArray(board[row]) || board[row].length !== 15) {
+          console.error(`Invalid board row ${row} in heat map simulation:`, board[row]);
+          // Initialize the row if it's invalid
+          board[row] = Array(15).fill(0);
+        }
+      }
+      
       let ourRack = [...(gameState.currentPlayer === 1 ? gameState.player1Rack : gameState.player2Rack)];
       let botRack = generateRandomRack(7);
       let currentPool = [...gameState.pool];

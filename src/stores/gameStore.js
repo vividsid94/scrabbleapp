@@ -79,6 +79,8 @@ export const useGameStore = create((set, get) => {
     previewScore: null,
     previewScorePosition: null,
     shouldStopSimulationRef: { current: false },
+    isHeatMapMode: false,
+    heatMapData: null,
     
     // UI state (moved from Play.js)
     theme: "STANDARD",
@@ -178,6 +180,8 @@ export const useGameStore = create((set, get) => {
     setPreviewScore: (score) => set({ previewScore: score }),
     setPreviewScorePosition: (position) => set({ previewScorePosition: position }),
     setShouldStopSimulationRef: (ref) => set({ shouldStopSimulationRef: ref }),
+    setIsHeatMapMode: (mode) => set({ isHeatMapMode: mode }),
+    setHeatMapData: (data) => set({ heatMapData: data }),
     
     // Actions - UI
     setTheme: (theme) => set({ theme: theme }),
@@ -961,7 +965,7 @@ export const useGameStore = create((set, get) => {
     },
 
     resetHeatMapMode: () => {
-      const { setSimulationBoard, setSimulationProgress, setPreviewMove, setPreviewTileOwnership } = get();
+      const { setSimulationBoard, setSimulationProgress, setPreviewMove, setPreviewTileOwnership, setIsHeatMapMode, setHeatMapData } = get();
       
       // Dynamic import to avoid circular dependency
       import('../functions/simulationFunctions').then(({ resetHeatMapMode: resetHeatMapModeFunction }) => {
@@ -969,7 +973,9 @@ export const useGameStore = create((set, get) => {
           setSimulationBoard,
           setSimulationProgress,
           setPreviewMove,
-          setPreviewTileOwnership
+          setPreviewTileOwnership,
+          setIsHeatMapMode,
+          setHeatMapData
         });
       });
     },
@@ -1073,16 +1079,23 @@ export const useGameStore = create((set, get) => {
         setSnackbarSeverity,
         setSnackbarOpen,
         simulationBoard,
+        boardCoords, // Keep this as fallback
         currentPlayer,
         player1Rack,
         player2Rack,
         player1points,
         player2points,
-        pool
+        pool,
+        setHeatMapData,
+        setIsHeatMapMode
       } = get();
 
       setSimulatingMove(move);
       setSimulationProgress(0);
+      
+      // Set heat map mode and clear existing data
+      setIsHeatMapMode(true);
+      setHeatMapData(null);
       
       // Reset stop flag
       setShouldStopSimulation(false);
@@ -1093,8 +1106,24 @@ export const useGameStore = create((set, get) => {
         shouldStopSimulationRef.current = false;
       }
       
+      // Ensure we have a valid board to work with
+      let boardToUse = simulationBoard;
+      if (!boardToUse || !Array.isArray(boardToUse) || boardToUse.length !== 15) {
+        // If simulation board is not valid, use the current game board
+        boardToUse = boardCoords;
+        
+        // If the current game board is also not valid, create a new one
+        if (!boardToUse || !Array.isArray(boardToUse) || boardToUse.length !== 15) {
+          console.error('No valid board available for heat map simulation');
+          setSnackbarMessage('No valid board available for heat map simulation');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+          return;
+        }
+      }
+      
       const gameState = {
-        boardCoords: simulationBoard,
+        boardCoords: boardToUse,
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -1111,7 +1140,7 @@ export const useGameStore = create((set, get) => {
         turnsPerSim: 1
       }, {
         onProgress: setSimulationProgress,
-        onHeatMapUpdate: setSimulationBoard,
+        onHeatMapUpdate: setHeatMapData,
         onError: (message) => {
           setSnackbarMessage(message);
           setSnackbarSeverity('error');
