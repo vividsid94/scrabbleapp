@@ -3,6 +3,8 @@ import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
 
 export const makeBotMove = async (botMoveSound) => {
+  console.log('🤖 makeBotMove called');
+
   const {
     boardCoords,
     player2Rack,
@@ -173,8 +175,9 @@ export const makeBotMove = async (botMoveSound) => {
     const bestMove = sortedMoves[0];
 
     // Play bot move sound after the delay
-    if (botMoveSound && botMoveSound.current) {
-      botMoveSound.current.play();
+    if (botMoveSound && botMoveSound.play) {
+      console.log('🔊 Playing bot move sound');
+      botMoveSound.play();
     }
 
     // Get the current rack before making the move
@@ -439,8 +442,12 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   } = useGameStore.getState();
 
   // Play game start sound
-  if (gameStartSound && gameStartSound.current) {
-    gameStartSound.current.play();
+  console.log('🎮 startBotGame called, gameStartSound:', gameStartSound);
+  if (gameStartSound && gameStartSound.play) {
+    console.log('🔊 Playing game start sound');
+    gameStartSound.play();
+  } else {
+    console.log('❌ Game start sound not available');
   }
 
   // Clear move history first
@@ -508,8 +515,5 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setMoveWithResults(null);
   setTopMoves([]);
   
-  // If bot goes first, make its move
-  if (botGoesFirst) {
-    makeBotMove(botMoveSound);
-  }
+  // Note: Bot move will be handled by the useEffect in Play.js when currentPlayer becomes 2
 }; 

@@ -136,7 +136,9 @@ export const handleWordSubmit = async (playerMoveSound) => {
   const score = await scoreResponse.json();
 
   // Play player move sound
-  playerMoveSound.current.play();
+  if (playerMoveSound && playerMoveSound.play) {
+    playerMoveSound.play();
+  }
 
   // Get the current player's rack before making any changes
   const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;

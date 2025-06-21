@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo} from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
@@ -17,38 +17,38 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
-import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
 import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { formatTime } from '../../functions/play/timeUtils';
 import { useGameStore } from '../../stores/gameStore';
+import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 
 export default function Play() {
   // Use Zustand Game Store
   const {
     // Board state
-    boardCoords,
-    tempBoardCoords,
+      boardCoords,
+      tempBoardCoords,
     origBoardCoords,
     setBoardCoords,
-    setTempBoardCoords,
+      setTempBoardCoords,
     setOrigBoardCoords,
     
     // Player state
-    player1points,
-    player2points,
-    player1Rack,
-    player2Rack,
-    player1Name,
-    player2Name,
+      player1points,
+      player2points,
+      player1Rack,
+      player2Rack,
+      player1Name,
+      player2Name,
     currentPlayer,
-    setPlayer1points,
-    setPlayer2points,
-    setPlayer1Rack,
-    setPlayer2Rack,
+      setPlayer1points,
+      setPlayer2points,
+      setPlayer1Rack,
+      setPlayer2Rack,
     setPlayer1Name,
     setPlayer2Name,
-    setCurrentPlayer,
+      setCurrentPlayer,
     
     // Game state
     pool,
@@ -127,13 +127,13 @@ export default function Play() {
     previewScorePosition,
     isHeatMapMode,
     heatMapData,
-    setSimulatingMove,
-    setSimulationResult,
-    setSimulationProgress,
-    setPreviewBoard,
-    setPreviewMove,
+        setSimulatingMove,
+        setSimulationResult,
+        setSimulationProgress,
+        setPreviewBoard,
+        setPreviewMove,
     setPreviewTileOwnership,
-    setMoveWithResults,
+        setMoveWithResults,
     setSimulationBoard,
     setLeaveValues,
     setShowSimulationModal,
@@ -148,8 +148,8 @@ export default function Play() {
     showVictoryOverlay,
     setTheme,
     setSnackbarOpen,
-    setSnackbarMessage,
-    setSnackbarSeverity,
+        setSnackbarMessage,
+        setSnackbarSeverity,
     setShowTimeSlider,
     setShowConfetti,
     setShowVictoryOverlay,
@@ -227,74 +227,24 @@ export default function Play() {
   const boardColor = useRef('#ffffff');
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
+  const botMoveMadeRef = useRef(false);
 
-  // Initialize sounds
-  const { gameStartSound, playerMoveSound, botMoveSound } = initializeSounds() || {};
-  const gameStartSoundRef = useRef(gameStartSound);
-  const playerMoveSoundRef = useRef(playerMoveSound);
-  const botMoveSoundRef = useRef(botMoveSound);
-
-  // Add error handlers for sounds
+  // Initialize sounds (simplified) - only once
+  const [sounds, setSounds] = useState(null);
+  
   useEffect(() => {
-    if (!gameStartSoundRef.current || !playerMoveSoundRef.current || !botMoveSoundRef.current) {
-      const newSounds = initializeSounds() || {};
-      gameStartSoundRef.current = newSounds.gameStartSound;
-      playerMoveSoundRef.current = newSounds.playerMoveSound;
-      botMoveSoundRef.current = newSounds.botMoveSound;
-    }
-
-    if (gameStartSoundRef.current) {
-      gameStartSoundRef.current.addEventListener('error', () => 
-        handleSoundError(gameStartSoundRef.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
-    }
-    if (playerMoveSoundRef.current) {
-      playerMoveSoundRef.current.addEventListener('error', () => 
-        handleSoundError(playerMoveSoundRef.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
-    }
-    if (botMoveSoundRef.current) {
-      botMoveSoundRef.current.addEventListener('error', () => 
-        handleSoundError(botMoveSoundRef.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-      );
-    }
-
-    return () => {
-      if (gameStartSoundRef.current) {
-        gameStartSoundRef.current.removeEventListener('error', () => 
-          handleSoundError(gameStartSoundRef.current, 'game start', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-        );
-      }
-      if (playerMoveSoundRef.current) {
-        playerMoveSoundRef.current.removeEventListener('error', () => 
-          handleSoundError(playerMoveSoundRef.current, 'player move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-        );
-      }
-      if (botMoveSoundRef.current) {
-        botMoveSoundRef.current.removeEventListener('error', () => 
-          handleSoundError(botMoveSoundRef.current, 'bot move', setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen)
-        );
-      }
-    };
+    const soundObjects = initializeSounds() || {};
+    setSounds(soundObjects);
   }, []);
 
-  // Update audio refs when sound type changes
-  useEffect(() => {
-    if (playerMoveSoundRef.current && playerMoveSoundType) {
-      updateSoundType(playerMoveSoundRef, playerMoveSoundType, 'player');
-    }
-  }, [playerMoveSoundType]);
-
-  useEffect(() => {
-    if (botMoveSoundRef.current && botMoveSoundType) {
-      updateSoundType(botMoveSoundRef, botMoveSoundType, 'bot');
-    }
-  }, [botMoveSoundType]);
+  const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
   // Initialize game using store action
   useEffect(() => {
-    initializeGame(origBoard, origPool, TEST_RACKS, gameStartSoundRef, botMoveSoundRef);
-  }, []);
+    if (sounds) {
+      initializeGame(origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound);
+    }
+  }, [sounds]);
 
   useEffect(() => {
     let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
@@ -309,33 +259,74 @@ export default function Play() {
   // Update useEffect to handle keyboard events
   useEffect(() => {
     const handleKeyDownWrapperWithParams = (e) => {
-      handleKeyDownWrapper(e, playerMoveSoundRef, origBoard);
+      handleKeyDownWrapper(e, playerMoveSound, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyDownWrapperWithParams);
     return () => {
       window.removeEventListener('keydown', handleKeyDownWrapperWithParams);
     };
-  }, [handleKeyDownWrapper, playerMoveSoundRef, origBoard]);
+  }, [handleKeyDownWrapper, playerMoveSound, origBoard]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPressWrapperWithParams = (event) => {
-      handleKeyPressWrapper(event, playerMoveSoundRef, origBoard);
+      handleKeyPressWrapper(event, playerMoveSound, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyPressWrapperWithParams);
     return () => {
       window.removeEventListener('keydown', handleKeyPressWrapperWithParams);
     };
-  }, [handleKeyPressWrapper, playerMoveSoundRef, origBoard]);
+  }, [handleKeyPressWrapper, playerMoveSound, origBoard]);
 
   // Update the useEffect for bot turns to use the new makeBotMove
   useEffect(() => {
-    if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded) {
-      makeBotMove(botMoveSoundRef);
+    console.log('🔍 Bot move useEffect triggered:', {
+      isBotMode,
+      currentPlayer,
+      isBotThinking,
+      gameEnded,
+      botMoveMade: botMoveMadeRef.current
+    });
+    
+    if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
+      console.log('🎯 Calling makeBotMove');
+      botMoveMadeRef.current = true;
+      makeBotMove(botMoveSound);
     }
-  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, makeBotMove, botMoveSoundRef]);
+  }, [currentPlayer, isBotMode, isBotThinking, gameEnded]);
+
+  // Reset bot move flag when player changes to 1
+  useEffect(() => {
+    if (currentPlayer === 1) {
+      botMoveMadeRef.current = false;
+    }
+  }, [currentPlayer]);
+
+  // Wrapper function to pass sound objects to handleBotModeToggle
+  const handleBotModeToggleWithSounds = () => {
+    handleBotModeToggle(gameStartSound, botMoveSound);
+  };
+
+  // Update sound types when they change in settings
+  useEffect(() => {
+    if (playerMoveSound && playerMoveSoundType) {
+      const playerMoveSoundRef = { current: playerMoveSound };
+      updateSoundType(playerMoveSoundRef, playerMoveSoundType, 'player');
+      // Update the local sound object
+      Object.assign(playerMoveSound, playerMoveSoundRef.current);
+    }
+  }, [playerMoveSoundType]);
+
+  useEffect(() => {
+    if (botMoveSound && botMoveSoundType) {
+      const botMoveSoundRef = { current: botMoveSound };
+      updateSoundType(botMoveSoundRef, botMoveSoundType, 'bot');
+      // Update the local sound object
+      Object.assign(botMoveSound, botMoveSoundRef.current);
+    }
+  }, [botMoveSoundType]);
 
   // Update player2Name when isBotMode changes
   useEffect(() => {
@@ -546,7 +537,7 @@ export default function Play() {
             isLoadingTopMoves={isLoadingTopMoves}
             onSettingsOpen={handleSettingsOpen}
             onColorSchemeOpen={handleColorSchemeOpen}
-            onBotModeToggle={handleBotModeToggle}
+            onBotModeToggle={handleBotModeToggleWithSounds}
             onGetTopMoves={handleGetTopMovesForExpandable}
             onWordSubmit={handleWordSubmitClick}
             onPass={handlePassClick}

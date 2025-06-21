@@ -93,7 +93,7 @@ export const useGameStore = create((set, get) => {
     showConfetti: false,
     showVictoryOverlay: false,
     
-    // Settings state (moved from Play.js)
+    // Settings state
     playerMoveSoundType: 'classic',
     botMoveSoundType: 'classic',
   };
@@ -936,14 +936,14 @@ export const useGameStore = create((set, get) => {
       });
     },
 
-    handleBotModeToggle: () => {
+    handleBotModeToggle: (gameStartSound = null, botMoveSound = null) => {
       const { isDictionaryLoading, startBotGame } = get();
       if (isDictionaryLoading) return;
       
       // Import required constants and call startBotGame
       import('../components/AppContent/References/staticData').then(({ origBoard, origPool }) => {
         import('../components/AppContent/References/testRacks').then(({ TEST_RACKS }) => {
-          startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound: null, botMoveSound: null });
+          startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound });
         });
       });
     },

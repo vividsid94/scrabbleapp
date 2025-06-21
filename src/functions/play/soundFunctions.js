@@ -1,64 +1,67 @@
-// Sound management functions for the Play component
+// Simple sound management functions for the Play component
+
+// Simple sound player that doesn't fail
+class SimpleSoundPlayer {
+  constructor(soundPath) {
+    this.audio = null;
+    this.path = soundPath;
+  }
+
+  play() {
+    console.log('🔊 SimpleSoundPlayer.play() called for:', this.path);
+    try {
+      // Create a new audio instance each time to avoid conflicts
+      this.audio = new Audio(this.path);
+      this.audio.volume = 0.3; // Lower volume
+      this.audio.play().catch(() => {
+        // Silently fail - most browsers block autoplay anyway
+      });
+    } catch (error) {
+      // Silently fail - sounds are not critical
+    }
+  }
+}
+
+// Create sound players for each type
+const gameStartSound = new SimpleSoundPlayer('/sounds/game-start.mp3');
+const playerMoveSoundClassic = new SimpleSoundPlayer('/sounds/player-move.mp3');
+const playerMoveSoundSword = new SimpleSoundPlayer('/sounds/player-move-sword.mp3');
+const botMoveSoundClassic = new SimpleSoundPlayer('/sounds/bot-move.mp3');
+const botMoveSoundSword = new SimpleSoundPlayer('/sounds/bot-move-sword.mp3');
+
+console.log('🎵 Sound players created');
 
 export const initializeSounds = () => {
-  try {
-    const gameStartSound = new Audio('/sounds/game-start.mp3');
-    const playerMoveSound = new Audio('/sounds/player-move.mp3');
-    const botMoveSound = new Audio('/sounds/bot-move.mp3');
-    
-    // Add error handlers for debugging
-    gameStartSound.addEventListener('error', (e) => {
-      console.error('Error loading game-start sound:', e);
-    });
-    
-    playerMoveSound.addEventListener('error', (e) => {
-      console.error('Error loading player-move sound:', e);
-    });
-    
-    botMoveSound.addEventListener('error', (e) => {
-      console.error('Error loading bot-move sound:', e);
-    });
-    
-    return {
-      gameStartSound,
-      playerMoveSound,
-      botMoveSound
-    };
-  } catch (error) {
-    console.error('Error initializing sounds:', error);
-    // Return dummy audio objects to prevent crashes
-    return {
-      gameStartSound: { play: () => {}, addEventListener: () => {}, removeEventListener: () => {} },
-      playerMoveSound: { play: () => {}, addEventListener: () => {}, removeEventListener: () => {} },
-      botMoveSound: { play: () => {}, addEventListener: () => {}, removeEventListener: () => {} }
-    };
-  }
+  console.log('🎵 initializeSounds called');
+  // Return simple objects that just wrap the sound players
+  const sounds = {
+    gameStartSound: { play: () => gameStartSound.play() },
+    playerMoveSound: { play: () => playerMoveSoundClassic.play() },
+    botMoveSound: { play: () => botMoveSoundClassic.play() }
+  };
+  console.log('🎵 initializeSounds returning:', sounds);
+  return sounds;
 };
 
 export const updateSoundType = (soundRef, soundType, soundName) => {
-  try {
-    if (!soundRef || !soundType || !soundName) {
-      console.error('Missing required parameters for updateSoundType:', { soundRef, soundType, soundName });
-      return;
+  console.log(`🎵 Updating ${soundName} sound to: ${soundType}`);
+  
+  if (soundName === 'player') {
+    if (soundType === 'sword') {
+      soundRef.current = { play: () => playerMoveSoundSword.play() };
+    } else {
+      soundRef.current = { play: () => playerMoveSoundClassic.play() };
     }
-    const soundPath = `/sounds/${soundName}-move${soundType === 'sword' ? '-sword' : ''}.mp3`;
-    console.log(`Loading sound from path: ${soundPath}`);
-    soundRef.current = new Audio(soundPath);
-    
-    // Add error handler for debugging
-    soundRef.current.addEventListener('error', (e) => {
-      console.error(`Error loading ${soundName} move sound from ${soundPath}:`, e);
-    });
-    
-    console.log(`${soundName} move sound updated:`, soundType);
-  } catch (error) {
-    console.error(`Error updating ${soundName} move sound:`, error);
+  } else if (soundName === 'bot') {
+    if (soundType === 'sword') {
+      soundRef.current = { play: () => botMoveSoundSword.play() };
+    } else {
+      soundRef.current = { play: () => botMoveSoundClassic.play() };
+    }
   }
 };
 
 export const handleSoundError = (sound, name, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen) => {
-  console.error(`Error playing ${name} sound:`, sound.error);
-  setSnackbarMessage(`Error playing ${name} sound`);
-  setSnackbarSeverity('error');
-  setSnackbarOpen(true);
+  // Don't show errors for sounds - they're not critical
+  console.log(`Sound error for ${name} - ignoring`);
 }; 
