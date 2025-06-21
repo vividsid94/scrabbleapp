@@ -104,6 +104,10 @@ export const handleExchange = () => {
     newPool.splice(randomIndex, 1);
   }
 
+  // Add exchanged tiles back to pool
+  const exchangedTileLetters = tilesToExchange.map(t => t.tile);
+  newPool.push(...exchangedTileLetters);
+
   // Update state with alphabetized rack
   if (currentPlayer === 1) {
     setPlayer1Rack(newRack);
