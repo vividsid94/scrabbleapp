@@ -98,7 +98,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       for (let turn = 0; turn < turnsPerSim; turn++) {
         // Determine whose turn it is (opponent goes first after our selected move)
         const isOpponentTurn = turn % 2 === 0;
-        const currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
+        let currentTurnRack = isOpponentTurn ? simBotRack : simOurRack;
         const currentTurnScore = isOpponentTurn ? simBotScore : simOurScore;
         
         try {

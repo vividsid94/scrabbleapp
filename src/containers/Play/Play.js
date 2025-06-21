@@ -20,7 +20,6 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
 import SortIcon from '@mui/icons-material/Sort';
 import { simulateMove as simulateMoveFunction, runHeatMapSimulation as runHeatMapSimulationFunction, runAllMovesSimulation as runAllMovesSimulationFunction, runSimulation as runSimulationFunction, openSimulationModal as openSimulationModalFunction, stopSimulation as stopSimulationFunction, resetHeatMapMode as resetHeatMapModeFunction, switchToMetrics as switchToMetricsFunction } from '../../functions/simulationFunctions';
-import { calculateScore } from '../../functions/scoreFunctions';
 import { initializeSounds, updateSoundType, handleSoundError } from '../../functions/play/soundFunctions';
 import { alphabetizeRack } from '../../functions/play/rackFunctions';
 import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
@@ -30,7 +29,7 @@ import { makeBotMove, startBotGame } from '../../functions/play/botFunctions';
 import { calculateLeave, fetchLeaveValues, calculateExchangeLeave } from '../../functions/play/leaveFunctions';
 import { handleExchange } from '../../functions/play/exchangeFunctions';
 import { handleWordSubmit } from '../../functions/play/wordSubmitFunctions';
-import { handleGetTopMoves, handlePlayTopMove, handleMoveSelect, generateExchangeCombinations, fetchBoardControl } from '../../functions/play/moveFunctions';
+import { handleGetTopMoves, handlePlayTopMove, generateExchangeCombinations, fetchBoardControl } from '../../functions/play/moveFunctions';
 import { generateRandomRack } from '../../functions/moveFunctions';
 import { getBoardDiff } from '../../functions/play/boardUtils';
 import { handlePass } from '../../functions/play/passFunctions';
@@ -80,7 +79,7 @@ export default function Play() {
     setConsecutivePasses,
     
     // Tile and selection state
-    selectedTiles,
+    selectedTiles: selectedTilesArray,
     selectedBoardPosition,
     arrowDirection,
     tilesToExchange,
@@ -213,6 +212,12 @@ export default function Play() {
     handleExchange,
     handleWordSubmit,
     handlePlayTopMove,
+    getTopMovesForExpandable,
+    handleMoveSelectClick,
+    calculatePreviewScore,
+    handleConfettiComplete,
+    runSimulation,
+    getSelectedTiles,
   } = useGameStore();
 
   // Refs (keep these local)
@@ -329,30 +334,42 @@ export default function Play() {
 
   // Update useEffect to handle keyboard events
   useEffect(() => {
-    const handleKeyDownWrapper = (e) => handleKeyDown({
-      e,
-      selectedBoardPosition,
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      selectedTiles,
-      blankTiles,
-      setSelectedBoardPosition,
-      setArrowDirection,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setBlankTiles,
-      setPreviewScore,
-      setPreviewScorePosition,
-      handleWordSubmit,
-      playerMoveSound,
-      arrowDirection,
-      origBoard
-    });
+    const handleKeyDownWrapper = (e) => {
+      // Get selectedTiles directly from the store to ensure we get the correct value
+      const store = useGameStore.getState();
+      const selectedTilesFromStore = store.selectedTiles;
+      const selectedTilesFromGetter = getSelectedTiles();
+      
+      // Fallback: ensure we always have an array, even if the store returns a function
+      const safeSelectedTiles = Array.isArray(selectedTilesFromGetter) ? selectedTilesFromGetter : 
+                               Array.isArray(selectedTilesFromStore) ? selectedTilesFromStore : 
+                               Array.isArray(selectedTilesArray) ? selectedTilesArray : [];
+      
+      handleKeyDown({
+        e,
+        selectedBoardPosition,
+        boardCoords,
+        tempBoardCoords,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        selectedTiles: safeSelectedTiles, // Use the safe fallback
+        blankTiles,
+        setSelectedBoardPosition,
+        setArrowDirection,
+        setTempBoardCoords,
+        setSelectedTiles,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setBlankTiles,
+        setPreviewScore,
+        setPreviewScorePosition,
+        handleWordSubmit,
+        playerMoveSound,
+        arrowDirection,
+        origBoard
+      });
+    };
 
     window.addEventListener('keydown', handleKeyDownWrapper);
     return () => {
@@ -365,17 +382,22 @@ export default function Play() {
     currentPlayer,
     player1Rack,
     player2Rack,
-    selectedTiles,
+    selectedTilesArray,
     blankTiles,
     arrowDirection,
-    origBoard
+    origBoard,
+    setSelectedBoardPosition,
+    setArrowDirection,
+    setTempBoardCoords,
+    setSelectedTiles,
+    setPlayer1Rack,
+    setPlayer2Rack,
+    setBlankTiles,
+    setPreviewScore,
+    setPreviewScorePosition,
+    handleWordSubmit,
+    playerMoveSound
   ]);
-
-  // Victory celebration handlers
-  const handleConfettiComplete = () => {
-    setShowConfetti(false);
-    // Don't hide the victory card - let it stay open until user clicks rematch
-  };
 
   // Modify handleWordSubmit to use board diffs
   const handleWordSubmitClick = () => {
@@ -430,189 +452,9 @@ export default function Play() {
     handlePass();
   };
 
-  const handleGetTopMovesForExpandable = () => {
-    if (gameEnded) return; // Don't allow getting top moves after game has ended
-    // Create a version of handleGetTopMoves that doesn't open the modal
-    const fetchTopMovesWithoutModal = async () => {
-      setIsLoadingTopMoves(true);
-      try {
-        // Get the current rack
-        const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-        
-        // Get any tiles that are placed on the board but not committed
-        const uncommittedTiles = [];
-        for (let row = 0; row < 15; row++) {
-          for (let col = 0; col < 15; col++) {
-            if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
-              const tileIndex = selectedTiles.findIndex(t => t.tile === '*');
-              if (tileIndex !== -1) {
-                uncommittedTiles.push('*');
-              } else {
-                uncommittedTiles.push(tempBoardCoords[row][col]);
-              }
-            }
-          }
-        }
-        
-        // Return uncommitted tiles to the rack
-        const newRack = [...currentRack, ...uncommittedTiles];
-        if (currentPlayer === 1) {
-          setPlayer1Rack(newRack);
-        } else {
-          setPlayer2Rack(newRack);
-        }
-        
-        // Reset the board state
-        setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-        setSelectedTiles([]);
-        setSelectedBoardPosition(null);
-        
-        // Convert any '?' in the rack to '*' for the API
-        const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
-        
-        const response = await fetch('/.netlify/functions/getTopMoves', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            board: boardCoords,
-            letters: apiRack
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        // Check if this is the first load (dictionary loading)
-        if (data.message && data.message.includes('Loading dictionary')) {
-          setIsDictionaryLoading(true);
-          // Retry after a short delay
-          setTimeout(() => {
-            fetchTopMovesWithoutModal();
-          }, 1000);
-          return;
-        }
-        
-        setIsDictionaryLoading(false);
-
-        // Generate exchange moves
-        const exchangeCombinations = generateExchangeCombinations(newRack);
-        const exchangeMoves = exchangeCombinations.map(tiles => {
-          const leave = calculateExchangeLeave(newRack, tiles);
-          return {
-            word: `Exchange ${tiles.join('')}`,
-            score: 0,
-            tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-            direction: 'exchange',
-            startPosition: 'Exchange',
-            leave: leave,
-            isExchange: true,
-            currentRack: newRack
-          };
-        });
-
-        // First, fetch leave values for all moves
-        const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-        const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-          fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-          fetchBoardControl(boardCoords, allMoves)
-        ]);
-
-        // Create a map of move words to their control metrics
-        const controlMap = new Map(
-          boardControlMetrics.map(metric => [metric.move, metric])
-        );
-
-        // Then calculate total values and sort
-        const movesWithValues = allMoves
-          .map(move => {
-            const leaveValue = updatedLeaveValues[move.leave] || 0;
-            const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
-            const totalValue = move.isExchange ? 
-              leaveValue : // For exchanges, total value is just the leave value
-              (move.score + leaveValue); // Just points + leave, no control value
-            return {
-              ...move,
-              totalValue,
-              leaveValue, // Add the leave value to the move object
-              defensiveValue: controlMetrics.defensiveValue,
-              boardControl: controlMetrics.boardControl,
-            };
-          })
-          .sort((a, b) => b.totalValue - a.totalValue)
-          .slice(0, 15); // Show top 15 moves
-
-        setTopMoves(movesWithValues);
-      } catch (error) {
-        console.error('Error getting top moves:', error);
-        setSnackbarMessage('Error getting top moves: ' + error.message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      } finally {
-        setIsLoadingTopMoves(false);
-      }
-    };
-
-    fetchTopMovesWithoutModal();
-  };
-
   const handleExchangeClick = () => {
     if (gameEnded) return; // Don't allow exchanges after game has ended
     handleExchange();
-  };
-
-  const handleMoveSelectClick = (move) => {
-    // Validate move structure
-    if (!move || !move.tiles || !Array.isArray(move.tiles)) {
-      console.error('Invalid move structure:', move);
-      return;
-    }
-    
-    // If the simulation modal is open, update the selected move and board
-    if (showSimulationModal) {
-      setMoveWithResults(move);
-      
-      // Clear preview board so the new move shows up
-      setPreviewBoard(null);
-      setPreviewMove(null);
-      setPreviewTileOwnership(null);
-      
-      // Clear heat map data when selecting a new move
-      setSimulationBoard(null);
-      setSimulationProgress(0);
-      
-      // Update the simulation board with the new move
-      const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
-      
-      // Apply the move to the simulation board
-      for (const tile of move.tiles) {
-        if (tile.isNew) {
-          simulationBoardData[tile.row][tile.col] = tile.letter;
-        }
-      }
-      
-      setSimulationBoard(simulationBoardData);
-    } else {
-      // Normal move selection for the game board
-    handleMoveSelect({
-      move,
-      boardCoords,
-      tempBoardCoords,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      setTempBoardCoords,
-      setSelectedTiles,
-      setPlayer1Rack,
-      setPlayer2Rack,
-      setSelectedBoardPosition,
-      setArrowDirection
-    });
-    }
   };
 
   // Get the latest move from move history
@@ -790,49 +632,6 @@ export default function Play() {
     });
   };
 
-  const runSimulation = async (move) => {
-    setSimulatingMove(move);
-    setSimulationProgress(0);
-    
-    // Reset stop flag
-    setShouldStopSimulation(false);
-    shouldStopSimulationRef.current = false;
-    
-    const gameState = {
-      boardCoords: simulationBoard,
-      currentPlayer,
-      player1Rack,
-      player2Rack,
-      player1points,
-      player2points,
-      pool
-    };
-    
-    await runSimulationFunction(move, gameState, {
-      onProgress: setSimulationProgress,
-      onPreviewUpdate: (previewData) => {
-        setPreviewBoard(previewData.board);
-        setPreviewMove(previewData.move);
-        setPreviewTileOwnership(previewData.tileOwnership);
-      },
-      onError: (message) => {
-        setSnackbarMessage(message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      },
-      onComplete: () => {
-        setSimulatingMove(null);
-        setSimulationProgress(0);
-        setShouldStopSimulation(false);
-        shouldStopSimulationRef.current = false;
-      },
-      shouldStopRef: shouldStopSimulationRef,
-      resetHeatMapMode: () => {
-        setSimulationBoard(null);
-        setSimulationProgress(0);
-      }
-    });
-  };
 
   const runAllMovesSimulation = async () => {
     if (!topMoves || topMoves.length === 0) return;
@@ -890,33 +689,20 @@ export default function Play() {
     }
   }, [moveHistory]);
 
-  // Add this function to calculate preview score
-  const calculatePreviewScore = () => {
-    if (selectedTiles.length === 0) {
-      setPreviewScore(null);
-      setPreviewScorePosition(null);
-      return;
-    }
-
-    const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
-    setPreviewScore(score);
-    
-    // Calculate position for score preview
-    if (selectedBoardPosition) {
-      const { row, col } = selectedBoardPosition;
-      setPreviewScorePosition({ row, col });
-    }
-  };
-
   // Add effect to calculate preview score when tiles are placed
   useEffect(() => {
-    if (selectedTiles.length > 0) {
+    if (selectedTilesArray.length > 0) {
       calculatePreviewScore();
     } else {
       setPreviewScore(null);
       setPreviewScorePosition(null);
     }
-  }, [selectedTiles, tempBoardCoords]);
+  }, [selectedTilesArray, tempBoardCoords]);
+
+  const handleGetTopMovesForExpandable = () => {
+    if (gameEnded) return; // Don't allow getting top moves after game has ended
+    getTopMovesForExpandable();
+  };
 
   return (
     <Box className={styles.container}>
@@ -953,7 +739,7 @@ export default function Play() {
                   setPlayer1Rack,
                   player2Rack,
                   setPlayer2Rack,
-                  selectedTiles,
+                  selectedTilesArray,
                   setSelectedTiles,
                   setSelectedBoardPosition,
                   tempBoardCoords,
@@ -965,7 +751,7 @@ export default function Play() {
                   currentPlayer,
                   player1Rack,
                   player2Rack,
-                  selectedTiles,
+                  selectedTilesArray,
                   setSelectedTiles,
                   tilesToExchange,
                   setTilesToExchange
@@ -1005,7 +791,7 @@ export default function Play() {
                 currentPlayer,
                 player1Rack,
                 player2Rack,
-                selectedTiles,
+                selectedTilesArray,
                 setSelectedTiles,
                 tilesToExchange,
                 setTilesToExchange
