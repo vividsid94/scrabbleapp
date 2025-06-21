@@ -27,40 +27,31 @@ export default function Play() {
   // Use Zustand Game Store
   const {
     // Board state
-      boardCoords,
-      tempBoardCoords,
-    origBoardCoords,
+    boardCoords,
+    tempBoardCoords,
     setBoardCoords,
-      setTempBoardCoords,
+    setTempBoardCoords,
     setOrigBoardCoords,
     
     // Player state
-      player1points,
-      player2points,
-      player1Rack,
-      player2Rack,
-      player1Name,
-      player2Name,
+    player1points,
+    player2points,
+    player1Rack,
+    player2Rack,
+    player1Name,
+    player2Name,
     currentPlayer,
-      setPlayer1points,
-      setPlayer2points,
-      setPlayer1Rack,
-      setPlayer2Rack,
+    setPlayer1Rack,
+    setPlayer2Rack,
     setPlayer1Name,
     setPlayer2Name,
-      setCurrentPlayer,
     
     // Game state
     pool,
     gameStarted,
     gameEnded,
     isBotMode,
-    consecutivePasses,
-    setPool,
-    setGameStarted,
     setGameEnded,
-    setIsBotMode,
-    setConsecutivePasses,
     
     // Tile and selection state
     selectedTiles: selectedTilesArray,
@@ -72,7 +63,6 @@ export default function Play() {
     setSelectedBoardPosition,
     setArrowDirection,
     setTilesToExchange,
-    setBlankTiles,
     
     // Bot state
     isBotThinking,
@@ -94,11 +84,9 @@ export default function Play() {
     isLoadingTopMoves,
     setMoveHistory,
     setTopMoves,
-    setIsLoadingTopMoves,
     
     // Dictionary loading
     isDictionaryLoading,
-    setIsDictionaryLoading,
     
     // Auto-play
     autoPlayBest,
@@ -114,26 +102,23 @@ export default function Play() {
     simulationResult,
     simulationProgress,
     previewBoard,
-    previewMove,
     previewTileOwnership,
     moveWithResults,
     simulationBoard,
-    leaveValues,
     showSimulationModal,
-    shouldStopSimulation,
     allMoveResults,
     isSimulatingAllMoves,
     previewScore,
     previewScorePosition,
     isHeatMapMode,
     heatMapData,
-        setSimulatingMove,
-        setSimulationResult,
-        setSimulationProgress,
-        setPreviewBoard,
-        setPreviewMove,
+    setSimulatingMove,
+    setSimulationResult,
+    setSimulationProgress,
+    setPreviewBoard,
+    setPreviewMove,
     setPreviewTileOwnership,
-        setMoveWithResults,
+    setMoveWithResults,
     setSimulationBoard,
     setLeaveValues,
     setShowSimulationModal,
@@ -146,46 +131,20 @@ export default function Play() {
     showTimeSlider,
     showConfetti,
     showVictoryOverlay,
-    setTheme,
     setSnackbarOpen,
-        setSnackbarMessage,
-        setSnackbarSeverity,
     setShowTimeSlider,
-    setShowConfetti,
-    setShowVictoryOverlay,
     
     // Settings state
     playerMoveSoundType,
     botMoveSoundType,
-    setPlayerMoveSoundType,
-    setBotMoveSoundType,
-    
-    // Computed values
-    getCurrentRack,
-    getCurrentPlayerName,
-    getCurrentPlayerPoints,
-    setCurrentPlayerPoints,
-    setCurrentPlayerRack,
-    
-    // Utility functions
-    getBoardDiff,
     
     // New store actions
     initializeGame,
-    startBotGame,
-    handleVictory,
     handleNewGame,
     startTimer,
-    handlePass,
-    handleExchange,
-    handleWordSubmit,
-    handlePlayTopMove,
-    getTopMovesForExpandable,
     handleMoveSelectClick,
-    calculatePreviewScore,
     handleConfettiComplete,
     runSimulation,
-    getSelectedTiles,
     
     // UI handler functions
     handleSettingsOpen,
@@ -224,7 +183,6 @@ export default function Play() {
 
   // Refs (keep these local)
   const color = useRef('#b064af');
-  const boardColor = useRef('#ffffff');
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
