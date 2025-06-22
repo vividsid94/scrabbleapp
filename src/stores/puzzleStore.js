@@ -81,6 +81,9 @@ export const usePuzzleStore = create((set, get) => {
     
     // Leave values for move evaluation
     leaveValues: {},
+    
+    // Puzzle settings
+    puzzleMode: 'bingo', // 'bingo' or 'only-bingo'
   };
 
   return {
@@ -147,6 +150,8 @@ export const usePuzzleStore = create((set, get) => {
     setBingoMove: (move) => set({ bingoMove: move }),
     // Leave values actions
     setLeaveValues: (values) => set({ leaveValues: values }),
+    // Puzzle settings actions
+    setPuzzleMode: (mode) => set({ puzzleMode: mode }),
     // Utility
     getBoardDiff: (beforeBoard, afterBoard) => getBoardDiff(beforeBoard, afterBoard),
     
@@ -203,6 +208,7 @@ export const usePuzzleStore = create((set, get) => {
         isPausedForBingo: false,
         bingoMove: null,
         leaveValues: {},
+        puzzleMode: 'bingo',
       });
     },
 
@@ -460,6 +466,21 @@ export const usePuzzleStore = create((set, get) => {
             exchangesConsidered: pool.length >= 7
           });
 
+          // Stop game if exchanges are no longer considered (pool < 7 tiles)
+          if (pool.length < 7) {
+            console.log('🎯 GAME END: Pool too small for exchanges, ending game');
+            const { setGameEnded } = get();
+            
+            setGameEnded(true);
+            
+            setIsBotThinking(false);
+            setTopMoves([]);
+            setSelectedBoardPosition(null);
+            setSelectedTiles([]);
+            setArrowDirection('right');
+            return;
+          }
+
           if (!data.moves || data.moves.length === 0) {
             // No valid moves found, pass
             const moveHistoryEntry = {
@@ -500,19 +521,37 @@ export const usePuzzleStore = create((set, get) => {
             });
 
             // Check if the best move is a bingo (7 tiles) AND NONE of the other moves are bingos
-            const isBestMoveBingo = bestMove.tiles && bestMove.tiles.length === 7;
-            const otherMovesHaveBingos = sortedMoves.slice(1).some(move => move.tiles && move.tiles.length === 7);
+            const isBestMoveBingo = bestMove.tiles && bestMove.tiles.length === 7 && !bestMove.isExchange;
+            const otherMovesHaveBingos = sortedMoves.slice(1).some(move => 
+              move.tiles && move.tiles.length === 7 && !move.isExchange
+            );
             
-            if (isBestMoveBingo && !otherMovesHaveBingos) {
-              // Auto-pause for bingo challenge only if it's the unique bingo option
+            console.log('🎯 Bingo detection:', {
+              puzzleMode: get().puzzleMode,
+              isBestMoveBingo,
+              otherMovesHaveBingos,
+              bestMoveTiles: bestMove.tiles?.length || 0,
+              otherBingos: sortedMoves.slice(1).filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map(move => move.word)
+            });
+            
+            // Determine whether to pause based on puzzle mode
+            const shouldPauseForBingo = get().puzzleMode === 'only-bingo' ? 
+              (isBestMoveBingo && !otherMovesHaveBingos) : 
+              isBestMoveBingo;
+            
+            console.log('🎯 Should pause for bingo:', shouldPauseForBingo);
+            
+            if (shouldPauseForBingo) {
+              // Auto-pause for bingo challenge
               const { setIsPausedForBingo, setBingoMove } = get();
               setIsPausedForBingo(true);
               setBingoMove(bestMove);
               
               console.log('🎯 Bingo challenge triggered:', {
+                puzzleMode: get().puzzleMode,
                 bestMove: bestMove.word,
                 bestScore: bestMove.score,
-                otherBingos: sortedMoves.slice(1).filter(move => move.tiles && move.tiles.length === 7).map(move => move.word)
+                otherBingos: sortedMoves.slice(1).filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map(move => move.word)
               });
               
               // Don't make the move yet - wait for user to find it
@@ -569,6 +608,7 @@ export const usePuzzleStore = create((set, get) => {
             } else {
               // Handle word placement
               const boardDiff = [];
+              const tilesToRemove = [];
               
               // Place tiles on board
               bestMove.tiles.forEach(tile => {
@@ -579,14 +619,22 @@ export const usePuzzleStore = create((set, get) => {
                 // Track blank tiles for UI display
                 if (tile.isBlank) {
                   newBlankTiles.push({ row: tile.row, col: tile.col });
-                }
-                
-                // Remove tile from rack
-                const rackIndex = newRack.indexOf(letter);
-                if (rackIndex !== -1) {
-                  newRack.splice(rackIndex, 1);
+                  tilesToRemove.push('?');
+                } else {
+                  // For non-blank tiles, add the letter to tiles to remove
+                  tilesToRemove.push(letter);
                 }
               });
+              
+              // Remove all tiles at once using count method
+              if (tilesToRemove.length > 0) {
+                tilesToRemove.forEach(tile => {
+                  const index = newRack.indexOf(tile);
+                  if (index !== -1) {
+                    newRack.splice(index, 1);
+                  }
+                });
+              }
               
               // Draw new tiles
               const tilesToDraw = Math.min(7 - newRack.length, newPool.length);
@@ -655,7 +703,7 @@ export const usePuzzleStore = create((set, get) => {
           setSelectedTiles([]);
           setArrowDirection('right');
         });
-      }, 500); // 0.5 second delay
+      }, 200); // 0.2 second delay
     },
 
     // Continue after bingo challenge
@@ -724,12 +772,17 @@ export const usePuzzleStore = create((set, get) => {
         // Track blank tiles for UI display
         if (tile.isBlank) {
           newBlankTiles.push({ row: tile.row, col: tile.col });
-        }
-        
-        // Remove tile from rack
-        const rackIndex = newRack.indexOf(letter);
-        if (rackIndex !== -1) {
-          newRack.splice(rackIndex, 1);
+          // Remove blank tile from rack
+          const rackIndex = newRack.indexOf('?');
+          if (rackIndex !== -1) {
+            newRack.splice(rackIndex, 1);
+          }
+        } else {
+          // Remove regular tile from rack
+          const rackIndex = newRack.indexOf(letter);
+          if (rackIndex !== -1) {
+            newRack.splice(rackIndex, 1);
+          }
         }
       });
       

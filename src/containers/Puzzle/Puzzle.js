@@ -17,6 +17,9 @@ import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import SettingsIcon from '@mui/icons-material/Settings';
+import TuneIcon from '@mui/icons-material/Tune';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 
 export default function Puzzle() {
   // Refs (keep these local like Play.js)
@@ -98,10 +101,15 @@ export default function Puzzle() {
     continueBingoMove,
     setLeaveValues,
     fetchLeaveValuesForTopMoves,
+    puzzleMode,
+    setPuzzleMode,
   } = usePuzzleStore();
 
   // Add manual pause state
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+
+  // Add settings panel state
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
   // Helper: check if a move is a bingo
   const isBingo = (move) => move && move.tiles && move.tiles.length === 7;
@@ -185,9 +193,9 @@ export default function Puzzle() {
   useEffect(() => {
     if (topMoves && topMoves.length > 0 && !isPausedForBingo && gameStarted && !gameEnded) {
       const topMove = topMoves[0];
-      if (isBingo(topMove)) {
-        setIsPausedForBingo(true);
-        setBingoMove(topMove);
+        if (isBingo(topMove)) {
+          setIsPausedForBingo(true);
+          setBingoMove(topMove);
       }
     }
   }, [topMoves, isPausedForBingo, gameStarted, gameEnded]);
@@ -247,8 +255,8 @@ export default function Puzzle() {
     } else {
       // Resume from manual pause
       console.log('⏸️ Resuming from manual pause');
-      setIsPausedForBingo(false);
-      setBingoMove(null);
+    setIsPausedForBingo(false);
+    setBingoMove(null);
     }
   };
 
@@ -279,7 +287,7 @@ export default function Puzzle() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '10px',
+                marginRight: '4px',
                 cursor: 'pointer'
               }}
             >
@@ -293,6 +301,44 @@ export default function Puzzle() {
               />
             </Box>
           </Tooltip>
+          <Tooltip title={gameStarted ? "Mode cannot be changed during game" : "Puzzle Mode"}>
+            <Box
+              onClick={() => !gameStarted && setShowSettingsPanel(!showSettingsPanel)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '4px',
+                cursor: gameStarted ? 'not-allowed' : 'pointer',
+                position: 'relative'
+              }}
+            >
+              <ViewModuleIcon 
+                className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                style={{ 
+                  fontSize: 24, 
+                  cursor: gameStarted ? 'not-allowed' : 'pointer'
+                }}
+              />
+              <Box sx={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                borderRadius: '50%',
+                width: '16px',
+                height: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+                fontWeight: 'bold'
+              }}>
+                {puzzleMode === 'bingo' ? '1' : '2'}
+              </Box>
+            </Box>
+          </Tooltip>
           {gameStarted && (
             <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
               <Box
@@ -301,24 +347,24 @@ export default function Puzzle() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: '30px',
+                  marginRight: '6px',
                   cursor: 'pointer'
                 }}
               >
                 {isManuallyPaused ? (
                   <PlayArrowIcon 
+                    className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
                     style={{ 
                       fontSize: 24, 
-                      cursor: 'pointer',
-                      color: '#4CAF50'
+                      cursor: 'pointer'
                     }}
                   />
                 ) : (
                   <PauseIcon 
+                    className={`${styles.keyBtn} ${styles.pauseIcon}`}
                     style={{ 
                       fontSize: 24, 
-                      cursor: 'pointer',
-                      color: '#FF9800'
+                      cursor: 'pointer'
                     }}
                   />
                 )}
@@ -331,15 +377,20 @@ export default function Puzzle() {
               alignItems: 'center',
               gap: '8px',
               fontSize: '16px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              padding: '8px 12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              marginLeft: '8px'
             }}>
-              <Box sx={{ color: '#4CAF50' }}>
+              <Box>
                 {player1points}
               </Box>
               <Box sx={{ color: '#666' }}>
                 -
               </Box>
-              <Box sx={{ color: '#FF9800' }}>
+              <Box>
                 {player2points}
               </Box>
             </Box>
@@ -350,59 +401,21 @@ export default function Puzzle() {
           <Box className={styles.playerPanel}>
             <Box className={styles.playerInfo}>
               <Box className={styles.playerName}>
-                {isBotThinking ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {currentName}
-                    <Box sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      border: '1px solid rgba(255, 255, 255, 0.4)',
-                      borderRadius: '12px',
-                      padding: '4px 12px',
-                      fontSize: '0.9em',
-                      fontWeight: 500,
-                      color: 'rgb(255, 255, 255)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
-                      transition: 'all 0.3s ease'
-                    }}>
-                      <Box className={styles.thinkingDots}>
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                      </Box>
-                    </Box>
-                  </Box>
-                ) : currentName}
-              </Box>
-              <Box 
-                className={styles.timer}
-                sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  padding: '2px 6px',
-                  fontSize: '12px',
-                  color: '#fff',
-                  fontFamily: 'monospace',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {formatTime(currentTime || 0)}
+                {currentName}
               </Box>
             </Box>
-            {currentRack && currentRack.length > 0 && (
-              <Box className={styles.Rack}>
-                <Rack 
-                  rack={currentRack} 
-                  color={color.current} 
-                  onTileClick={handleTileClick}
-                  selectedTiles={tilesToExchange}
-                />
-              </Box>
-            )}
+            <Box style={{ marginTop: '12px' }}>
+              {currentRack && currentRack.length > 0 && (
+                <Box className={styles.Rack}>
+                  <Rack 
+                    rack={currentRack} 
+                    color={color.current} 
+                    onTileClick={handleTileClick}
+                    selectedTiles={tilesToExchange}
+                  />
+                </Box>
+              )}
+            </Box>
           </Box>
         )}
 
@@ -426,13 +439,16 @@ export default function Puzzle() {
           }}>
             <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
               <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
-                Bingo Challenge!
+                {puzzleMode === 'only-bingo' ? 'Unique Bingo Found!' : 'Bingo Challenge!'}
               </Box>
               <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
                 {currentPlayer === 1 ? player1Name : player2Name} found a bingo!
               </Box>
               <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
-                Can you find where to place all 7 tiles?
+                {puzzleMode === 'only-bingo' 
+                  ? 'This is the only bingo available. Can you find where to place all 7 tiles?'
+                  : 'Can you find it?'
+                }
               </Box>
               <button onClick={handleResume} style={{ 
                 fontSize: 14, 
@@ -446,6 +462,88 @@ export default function Puzzle() {
               }}>
                 Show Answer & Continue
               </button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Game ended message */}
+        {gameEnded && (
+          <Box className={styles.playerPanel} style={{ 
+            marginTop: '16px',
+            padding: '16px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+          }}>
+            <Box style={{ textAlign: 'center' }}>
+              <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Game Ended
+              </Box>
+              <Box style={{ fontSize: '14px', marginBottom: '12px', opacity: 0.8 }}>
+                Too few tiles left.
+              </Box>
+              <button onClick={startNewGame} style={{ 
+                fontSize: 14, 
+                padding: '6px 16px', 
+                borderRadius: 6, 
+                cursor: 'pointer',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                fontWeight: 'bold'
+              }}>
+                New Game
+              </button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Settings panel */}
+        {showSettingsPanel && !gameStarted && (
+          <Box className={styles.playerPanel} style={{ 
+            marginTop: '16px',
+            padding: '16px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+          }}>
+            <Box style={{ marginBottom: '12px' }}>
+              <Box style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Bingo Challenge Mode
+              </Box>
+              <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
+                Choose when to pause for bingo challenges
+              </Box>
+            </Box>
+            <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Box 
+                onClick={() => setPuzzleMode('bingo')}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  backgroundColor: puzzleMode === 'bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: puzzleMode === 'bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '14px'
+                }}
+              >
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>1) All Bingos</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause for every bingo found</Box>
+              </Box>
+              <Box 
+                onClick={() => setPuzzleMode('only-bingo')}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  backgroundColor: puzzleMode === 'only-bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: puzzleMode === 'only-bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '14px'
+                }}
+              >
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>2) Only Bingo</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause only when there's exactly 1 bingo available</Box>
+              </Box>
             </Box>
           </Box>
         )}
@@ -486,7 +584,7 @@ export default function Puzzle() {
             <PuzzlePlayerInfo />
             
             {/* Player info and pool */}
-            <Box className={styles.playerPanel}>
+            {/* <Box className={styles.playerPanel}>
               <Box className={styles.poolBox}>
                 <PlayPool 
                   pool={pool} 
@@ -495,7 +593,7 @@ export default function Puzzle() {
                   gameStarted={gameStarted}
                 />  
               </Box>
-            </Box>
+            </Box> */}
           </Box>
         </Box>
         {/* Confetti and victory overlays */}
