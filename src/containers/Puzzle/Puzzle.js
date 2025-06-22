@@ -152,7 +152,6 @@ export default function Puzzle() {
         botMoveMadeRef.current = true;
         makeBotMove(botMoveSound);
       } else {
-        console.log('❌ Bot move conditions not met');
       }
     }, 10); // Small delay to ensure state updates are processed
 
@@ -182,9 +181,7 @@ export default function Puzzle() {
 
   // Reset bot move flag when bingo pause is cleared
   useEffect(() => {
-    console.log('🔄 Bingo pause useEffect', { isPausedForBingo, botMoveMadeRef: botMoveMadeRef.current });
     if (!isPausedForBingo) {
-      console.log('✅ Resetting bot move flag after bingo pause');
       botMoveMadeRef.current = false;
     }
   }, [isPausedForBingo]);

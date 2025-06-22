@@ -503,56 +503,22 @@ export const usePuzzleStore = create((set, get) => {
             const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
             const bestMove = sortedMoves[0];
 
-            console.log('Bot move selection:', {
-              bestMove: {
-                word: bestMove.word,
-                score: bestMove.score,
-                totalValue: bestMove.totalValue,
-                leave: bestMove.leave,
-                tiles: bestMove.tiles?.length || 0,
-                isExchange: bestMove.isExchange
-              },
-              topMoves: sortedMoves.slice(0, 3).map(move => ({
-                word: move.word,
-                score: move.score,
-                totalValue: move.totalValue,
-                leave: move.leave
-              }))
-            });
-
             // Check if the best move is a bingo (7 tiles) AND NONE of the other moves are bingos
             const isBestMoveBingo = bestMove.tiles && bestMove.tiles.length === 7 && !bestMove.isExchange;
             const otherMovesHaveBingos = sortedMoves.slice(1).some(move => 
               move.tiles && move.tiles.length === 7 && !move.isExchange
             );
             
-            console.log('🎯 Bingo detection:', {
-              puzzleMode: get().puzzleMode,
-              isBestMoveBingo,
-              otherMovesHaveBingos,
-              bestMoveTiles: bestMove.tiles?.length || 0,
-              otherBingos: sortedMoves.slice(1).filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map(move => move.word)
-            });
-            
             // Determine whether to pause based on puzzle mode
             const shouldPauseForBingo = get().puzzleMode === 'only-bingo' ? 
               (isBestMoveBingo && !otherMovesHaveBingos) : 
               isBestMoveBingo;
-            
-            console.log('🎯 Should pause for bingo:', shouldPauseForBingo);
             
             if (shouldPauseForBingo) {
               // Auto-pause for bingo challenge
               const { setIsPausedForBingo, setBingoMove } = get();
               setIsPausedForBingo(true);
               setBingoMove(bestMove);
-              
-              console.log('🎯 Bingo challenge triggered:', {
-                puzzleMode: get().puzzleMode,
-                bestMove: bestMove.word,
-                bestScore: bestMove.score,
-                otherBingos: sortedMoves.slice(1).filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map(move => move.word)
-              });
               
               // Don't make the move yet - wait for user to find it
               // Don't add to move history yet - wait for user to continue
