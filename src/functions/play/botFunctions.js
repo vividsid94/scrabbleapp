@@ -574,7 +574,8 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
     setPreviewMove,
     setMoveWithResults,
     setTopMoves,
-    setMoveHistory
+    setMoveHistory,
+    setGameStarted
   } = useGameStore.getState();
 
   // Play game start sound
@@ -651,5 +652,6 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setMoveWithResults(null);
   setTopMoves([]);
   
-  // Note: Bot move will be handled by the useEffect in Play.js when currentPlayer becomes 2
+  // Set gameStarted to true
+  setGameStarted(true);
 }; 
