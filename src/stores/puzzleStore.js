@@ -18,8 +18,8 @@ export const usePuzzleStore = create((set, get) => {
     player2points: 0,
     player1Rack: [],
     player2Rack: [],
-    player1Name: 'Bot 1',
-    player2Name: 'Bot 2',
+    player1Name: 'SidBot 1',
+    player2Name: 'SidBot 2',
     currentPlayer: 1,
     
     // Game state
@@ -169,8 +169,8 @@ export const usePuzzleStore = create((set, get) => {
         player2points: 0,
         player1Rack: [],
         player2Rack: [],
-        player1Name: 'Bot 1',
-        player2Name: 'Bot 2',
+        player1Name: 'SidBot 1',
+        player2Name: 'SidBot 2',
         currentPlayer: 1,
         pool: origPool,
         gameStarted: false,
@@ -357,8 +357,8 @@ export const usePuzzleStore = create((set, get) => {
       
       // Set bot mode and names
       setIsBotMode(true);
-      setPlayer1Name('Bot 1');
-      setPlayer2Name('Bot 2');
+      setPlayer1Name('SidBot 1');
+      setPlayer2Name('SidBot 2');
       
       // Clear all temporary states
       setSelectedTiles([]);

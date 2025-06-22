@@ -307,7 +307,7 @@ export default function Puzzle() {
           }}>
             {null} {/* No time icon in puzzle mode */}
           </Box>
-          <Tooltip title={gameStarted ? "Start New Bot vs Bot Game" : "Start Bot vs Bot Game"}>
+          <Tooltip title={gameStarted ? "Start New SidBot vs SidBot Game" : "Start SidBot vs SidBot Game"}>
             <Box
               onClick={startNewGame}
               sx={{
@@ -319,7 +319,7 @@ export default function Puzzle() {
               }}
             >
               <SmartToyIcon 
-                className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+                className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
                 style={{ 
                   fontSize: 24, 
                   cursor: 'pointer',
@@ -429,6 +429,11 @@ export default function Puzzle() {
             <Box className={styles.playerInfo}>
               <Box className={styles.playerName}>
                 {currentName}
+                {isBotThinking && (
+                  <Box component="span" className={styles.thinkingEmoji}>
+                    🤔
+                  </Box>
+                )}
               </Box>
             </Box>
             <Box style={{ marginTop: '12px' }}>
@@ -598,10 +603,10 @@ export default function Puzzle() {
             border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
             <Box style={{ textAlign: 'center' }}>
-              <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+              <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
                 Game Ended
               </Box>
-              <Box style={{ fontSize: '14px', opacity: 0.8 }}>
+              <Box style={{ fontSize: '12px', opacity: 0.8 }}>
                 Too few tiles left.
               </Box>
             </Box>
