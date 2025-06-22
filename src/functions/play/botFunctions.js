@@ -4,7 +4,7 @@ import { handleGameEnd } from './gameEndFunctions';
 
 // Add warmup function for the Go service
 export const warmupGoService = async (retryCount = 0) => {
-  const renderUrl = 'https://scrabble-move-generator.onrender.com/generate-moves';
+  const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves';
   const maxRetries = 2;
   
   try {
@@ -20,7 +20,7 @@ export const warmupGoService = async (retryCount = 0) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for warmup
     
-    const response = await fetch(renderUrl, {
+    const response = await fetch(railwayUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -48,10 +48,10 @@ const getLeaveValue = (leave) => {
 async function callGoGenerateMoves(board, letters) {
   try {
     // Call the Go service
-    const renderUrl = 'https://scrabble-move-generator.onrender.com/generate-moves'; // Go service running on Render
+    const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves'; // Go service running on Railway
     
     console.log('🚀 ATTEMPTING TO USE GO SERVICE for move generation...');
-    console.log('📍 Calling URL:', renderUrl);
+    console.log('📍 Calling URL:', railwayUrl);
     
     // Debug: Log what we're sending to Go service
     const boardData = board.map(row => row.map(cell => cell || ''));
@@ -76,7 +76,7 @@ async function callGoGenerateMoves(board, letters) {
       topN: 100 // Get top 100 moves
     });
     
-    const url = new URL(renderUrl);
+    const url = new URL(railwayUrl);
     const options = {
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
