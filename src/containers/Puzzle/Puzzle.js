@@ -443,7 +443,7 @@ export default function Puzzle() {
           }}>
             <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
               <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
-                {puzzleMode === 'only-bingo' ? 'Unique Bingo Found!' : 'Bingo Challenge!'}
+                {puzzleMode === 'only-bingo' && 'Unique Bingo Found!'}
               </Box>
               <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
                 {currentPlayer === 1 ? player1Name : player2Name} found a bingo!
@@ -451,7 +451,7 @@ export default function Puzzle() {
               <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
                 {puzzleMode === 'only-bingo' 
                   ? 'This is the only bingo available. Can you find where to place all 7 tiles?'
-                  : 'Can you find it?'
+                  : 'Can you find the best one?'
                 }
               </Box>
               <Box style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -482,32 +482,52 @@ export default function Puzzle() {
                   Show Answer & Continue
                 </button>
                 {puzzleMode === 'bingo' && (
-                  <button 
-                    onClick={() => setShowAllBingos(!showAllBingos)}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                      e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                      e.target.style.transform = 'scale(1) translateY(0)';
-                    }}
-                    style={{ 
-                      fontSize: 14, 
-                      padding: '8px 16px', 
-                      borderRadius: 0, 
-                      cursor: 'pointer',
-                      background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                  <Box style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => setShowAllBingos(!showAllBingos)}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                        e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                        e.target.style.transform = 'scale(1) translateY(0)';
+                      }}
+                      style={{ 
+                        fontSize: 14, 
+                        padding: '8px 16px', 
+                        borderRadius: 0, 
+                        cursor: 'pointer',
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                        color: 'white',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        fontWeight: 'bold',
+                        backdropFilter: 'blur(5px)',
+                        transition: 'all 0.3s ease',
+                        fontFamily: 'Syne, sans-serif'
+                      }}
+                    >
+                      {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
+                    </button>
+                    <Box style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      backgroundColor: '#4CAF50',
                       color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
                       fontWeight: 'bold',
-                      backdropFilter: 'blur(5px)',
-                      transition: 'all 0.3s ease',
-                      fontFamily: 'Syne, sans-serif'
-                    }}
-                  >
-                    {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
-                  </button>
+                      border: '2px solid rgba(255, 255, 255, 0.2)'
+                    }}>
+                      {storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0}
+                    </Box>
+                  </Box>
                 )}
               </Box>
             </Box>
@@ -560,21 +580,9 @@ export default function Puzzle() {
               <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                 Game Ended
               </Box>
-              <Box style={{ fontSize: '14px', marginBottom: '12px', opacity: 0.8 }}>
+              <Box style={{ fontSize: '14px', opacity: 0.8 }}>
                 Too few tiles left.
               </Box>
-              <button onClick={startNewGame} style={{ 
-                fontSize: 14, 
-                padding: '6px 16px', 
-                borderRadius: 6, 
-                cursor: 'pointer',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                fontWeight: 'bold'
-              }}>
-                New Game
-              </button>
             </Box>
           </Box>
         )}
