@@ -466,8 +466,8 @@ export default function Puzzle() {
                     e.target.style.transform = 'scale(1) translateY(0)';
                   }}
                   style={{ 
-                    fontSize: 14, 
-                    padding: '8px 16px', 
+                    fontSize: 12, 
+                    padding: '6px 12px', 
                     borderRadius: 0, 
                     cursor: 'pointer',
                     background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
@@ -494,8 +494,8 @@ export default function Puzzle() {
                         e.target.style.transform = 'scale(1) translateY(0)';
                       }}
                       style={{ 
-                        fontSize: 14, 
-                        padding: '8px 16px', 
+                        fontSize: 12, 
+                        padding: '6px 12px', 
                         borderRadius: 0, 
                         cursor: 'pointer',
                         background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
@@ -522,8 +522,7 @@ export default function Puzzle() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '12px',
-                      fontWeight: 'bold',
-                      border: '2px solid rgba(255, 255, 255, 0.2)'
+                      fontWeight: 'bold'
                     }}>
                       {storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0}
                     </Box>
