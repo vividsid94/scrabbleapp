@@ -13,6 +13,7 @@ import Play from "./containers/Play/Play";
 import Changelog from "./containers/Changelog/Changelog";
 import Study from "./containers/Study/Study";
 import Boggle from "./containers/Boggle/Boggle";
+import Puzzle from "./containers/Puzzle/Puzzle";
 
 export const ThemeContext = React.createContext();
 
@@ -46,6 +47,7 @@ function App() {
               <Route path="/changelog" element={<Changelog/>}/>
               <Route path="/study" element={<Study/>}/>
               <Route path="/boggle" element={<Boggle/>}/>
+              <Route path="/puzzle" element={<Puzzle/>}/>
             </Routes>
           </Router>
         </header>
