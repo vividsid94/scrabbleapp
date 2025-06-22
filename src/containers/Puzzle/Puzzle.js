@@ -784,6 +784,14 @@ export default function Puzzle() {
               <Box className={styles.playModeTitle}>
                 Puzzle+
               </Box>
+              <Box style={{ 
+                fontSize: '16px', 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                textAlign: 'center', 
+                fontWeight: '600'
+              }}>
+                Solve puzzles on the spot as SidBot vs SidBot plays
+              </Box>
             </Box>
           </Box>
           

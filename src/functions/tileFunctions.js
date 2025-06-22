@@ -44,9 +44,13 @@ export const modifyImageColor = (image, color) => {
     }
 
     const isDark = isColorDark(color);
-    canvas.width = image.width;
-    canvas.height = image.height;
-    ctx.drawImage(image, 0, 0);
+    // Use the natural image dimensions for clarity, but cap it to prevent blow-outs on certain devices.
+    const size = Math.min(image.naturalWidth, 200);
+    canvas.width = size;
+    canvas.height = size; // Assuming square tiles
+    
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(image, 0, 0, size, size);
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = new Uint32Array(imageData.data.buffer);
