@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { origPool, origBoard } from '../components/AppContent/References/staticData.js';
-import { TEST_RACKS } from '../components/AppContent/References/testRacks.js';
+import { alphabetizeRack } from '../functions/play/rackFunctions';
 import { getBoardDiff } from '../functions/play/boardUtils';
 
 export const useGameStore = create((set, get) => {
@@ -115,8 +115,8 @@ export const useGameStore = create((set, get) => {
     // Actions - Players
     setPlayer1points: (points) => set({ player1points: points }),
     setPlayer2points: (points) => set({ player2points: points }),
-    setPlayer1Rack: (rack) => set({ player1Rack: rack }),
-    setPlayer2Rack: (rack) => set({ player2Rack: rack }),
+    setPlayer1Rack: (rack) => set({ player1Rack: alphabetizeRack(rack) }),
+    setPlayer2Rack: (rack) => set({ player2Rack: alphabetizeRack(rack) }),
     setPlayer1Name: (name) => set({ player1Name: name }),
     setPlayer2Name: (name) => set({ player2Name: name }),
     setCurrentPlayer: (player) => set({ currentPlayer: player }),

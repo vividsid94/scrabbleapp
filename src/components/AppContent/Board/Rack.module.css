@@ -14,8 +14,6 @@
     border-radius: 5px;
 }
 .Tile{
-    width: 42px;
-    height: 42px;
     background-color: teal;
     display: flex;
     align-items: center;
@@ -28,15 +26,13 @@
     border: 2px solid #4CAF50;
 }
 .Protile{
-    width: 42px;
-    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 2.5px;
     border-radius: 4px;
     font-size: 30px;
     filter: brightness(0.85);
+    margin: 2px;
 }
 .Protile.selected {
     border: 2px solid #4CAF50;
@@ -50,14 +46,9 @@
         height: 35px;
     }
     .Tile{
-        width: 30px;
-        height: 30px;
         font-size: 20px;
     }
     .Protile{
-        width: 30px;
-        height: 30px;
         font-size: 20px;
-        margin: 0px;
     }
 }
