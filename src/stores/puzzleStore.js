@@ -74,8 +74,8 @@ export const usePuzzleStore = create((set, get) => {
     showVictoryOverlay: false,
     
     // Settings state
-    playerMoveSoundType: 'classic',
-    botMoveSoundType: 'classic',
+    playerMoveSoundType: 'sword',
+    botMoveSoundType: 'sword',
     // Puzzle-specific
     isPausedForBingo: false,
     bingoMove: null,
@@ -205,8 +205,8 @@ export const usePuzzleStore = create((set, get) => {
         showTimeSlider: false,
         showConfetti: false,
         showVictoryOverlay: false,
-        playerMoveSoundType: 'classic',
-        botMoveSoundType: 'classic',
+        playerMoveSoundType: 'sword',
+        botMoveSoundType: 'sword',
         isPausedForBingo: false,
         bingoMove: null,
         leaveValues: {},

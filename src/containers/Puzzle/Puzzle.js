@@ -36,6 +36,21 @@ export default function Puzzle() {
     setSounds(soundObjects);
   }, []);
 
+  // Update sounds to sword type for puzzle mode
+  useEffect(() => {
+    if (sounds) {
+      const playerMoveSoundRef = { current: sounds.playerMoveSound };
+      const botMoveSoundRef = { current: sounds.botMoveSound };
+      
+      updateSoundType(playerMoveSoundRef, 'sword', 'player');
+      updateSoundType(botMoveSoundRef, 'sword', 'bot');
+      
+      // Update the sound objects
+      Object.assign(sounds.playerMoveSound, playerMoveSoundRef.current);
+      Object.assign(sounds.botMoveSound, botMoveSoundRef.current);
+    }
+  }, [sounds]);
+
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
   const {
