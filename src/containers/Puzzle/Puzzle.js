@@ -414,30 +414,6 @@ export default function Puzzle() {
               </Box>
             </Tooltip>
           )}
-          {gameStarted && (
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              padding: '8px 12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              marginLeft: '8px'
-            }}>
-              <Box>
-                {player1points}
-              </Box>
-              <Box sx={{ color: '#666' }}>
-                -
-              </Box>
-              <Box>
-                {player2points}
-              </Box>
-            </Box>
-          )}
         </Box>
 
         {gameStarted && (
