@@ -572,8 +572,7 @@ export default function Puzzle() {
             marginTop: '16px',
             padding: '16px',
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
             <Box style={{ textAlign: 'center' }}>
               <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
