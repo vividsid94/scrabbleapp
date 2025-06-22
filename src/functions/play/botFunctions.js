@@ -184,6 +184,72 @@ export const makeBotMove = async (botMoveSound) => {
     setIsBotThinking(true);
   }
 
+  // Create a deep copy of the board and rack (moved outside try block for retry access)
+  const boardCopy = JSON.parse(JSON.stringify(boardCoords));
+  const rackCopy = [...player2Rack];
+  
+  // Convert any '?' in the rack to '*' for the API
+  const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
+
+  // Helper function to attempt bot move with retry logic
+  const attemptBotMove = async (isRetry = false) => {
+    if (isRetry) {
+      console.log('🔄 Retrying Railway service query...');
+      setSnackbarMessage('Bot fallback: Retrying move');
+      setSnackbarSeverity('info');
+      setSnackbarOpen(true);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
+    
+    try {
+      const response = await fetch('/.netlify/functions/botLogic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          board: boardCopy,
+          letters: apiRack,
+          pool: pool
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          errorData = { error: 'Failed to parse error response' };
+        }
+        console.error('Bot error details:', errorData);
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      
+      // Filter out moves with empty words
+      if (data.moves) {
+        data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+      }
+
+      if (!data.moves || data.moves.length === 0) {
+        throw new Error('No valid moves found');
+      }
+
+      return data;
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Bot calculation timed out. Please try again.');
+      }
+      throw fetchError;
+    }
+  };
+
   try {
     // Ensure Go service is warmed up before making the actual request
     console.log('🔥 Ensuring Go service is warmed up...');
@@ -193,104 +259,23 @@ export const makeBotMove = async (botMoveSound) => {
       console.warn('⚠️ Go service warmup failed, proceeding with fallback...');
     }
 
-    // Create a deep copy of the board and rack
-    const boardCopy = JSON.parse(JSON.stringify(boardCoords));
-    const rackCopy = [...player2Rack];
-    
-    // Convert any '?' in the rack to '*' for the API
-    const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
-    
     console.log('🤖 Bot Move Request:', {
       rack: apiRack.join('')
     });
 
-    let response;
+    // First attempt
+    let data = await attemptBotMove(false);
+
     // Only add delay if auto-play is not enabled
     if (!autoPlayBest) {
       const startTime = Date.now();
       
-      // Add timeout to the fetch request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
-      
-      try {
-        response = await fetch('/.netlify/functions/botLogic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            board: boardCopy,
-            letters: apiRack,
-            pool: pool
-          }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Bot calculation timed out. Please try again.');
-        }
-        throw fetchError;
-      }
-
       // Calculate remaining time to ensure minimum 2 second delay
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, 1000 - elapsedTime);
       if (remainingTime > 0) {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
-    } else {
-      // Skip delay when auto-play is enabled, but still add timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
-      
-      try {
-        response = await fetch('/.netlify/functions/botLogic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            board: boardCopy,
-            letters: apiRack,
-            pool: pool
-          }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Bot calculation timed out. Please try again.');
-        }
-        throw fetchError;
-      }
-    }
-
-    if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch (jsonError) {
-        errorData = { error: 'Failed to parse error response' };
-      }
-      console.error('Bot error details:', errorData);
-      throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.error('Failed to parse bot response:', jsonError);
-      throw new Error('Bot returned invalid response. Please try again.');
-    }
-
-    // Filter out moves with empty words
-    if (data.moves) {
-      data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
     }
 
     console.log('Bot moves response:', {
@@ -470,7 +455,149 @@ export const makeBotMove = async (botMoveSound) => {
     
     // Try fallback strategies
     try {
-      console.log('Attempting fallback bot move...');
+      console.log('🔄 Attempting fallback bot move...');
+      
+      // First, try to query the Railway service again
+      try {
+        const retryData = await attemptBotMove(true);
+        
+        console.log('✅ Railway service retry successful!');
+        
+        // Sort moves by totalValue (points + leave) from the backend
+        const sortedMoves = retryData.moves.sort((a, b) => b.totalValue - a.totalValue);
+        const bestMove = sortedMoves[0];
+        
+        // Play bot move sound
+        if (botMoveSound && botMoveSound.play) {
+          botMoveSound.play();
+        }
+        
+        // Execute the move (same logic as above)
+        const botRack = player2Rack;
+        const newBoard = JSON.parse(JSON.stringify(boardCoords));
+        let newRack = [...player2Rack];
+        const newBlankTiles = [...blankTiles];
+        let newPool = [...pool];
+        let botRunningTotal = player2points;
+        
+        if (bestMove.isExchange) {
+          // Handle exchange move
+          const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
+          const newTiles = bestMove.newTiles || [];
+          
+          newRack = removeTilesByCount(newRack, tilesToExchange);
+          newRack.push(...newTiles);
+          
+          for (const tile of newTiles) {
+            const poolIndex = newPool.indexOf(tile);
+            if (poolIndex !== -1) {
+              newPool.splice(poolIndex, 1);
+            }
+          }
+          
+          newPool.push(...tilesToExchange);
+          setPlayer2Rack(alphabetizeRack(newRack));
+          setPool(newPool);
+        } else {
+          // Handle regular move
+          const tilesToRemove = [];
+          
+          for (const tile of bestMove.tiles) {
+            if (tile.isNew) {
+              newBoard[tile.row][tile.col] = tile.letter;
+              
+              if (tile.isBlank) {
+                newBlankTiles.push({ row: tile.row, col: tile.col });
+                tilesToRemove.push('?');
+              } else {
+                tilesToRemove.push(tile.letter);
+              }
+            }
+          }
+          
+          if (tilesToRemove.length > 0) {
+            newRack = removeTilesByCount(newRack, tilesToRemove);
+          }
+          
+          botRunningTotal = player2points + bestMove.score;
+          
+          const boardDiff = getBoardDiff(boardCoords, newBoard);
+          const moveHistoryEntry = {
+            boardDiff,
+            player: player2Name,
+            score: bestMove.score,
+            rack: alphabetizeRack(botRack).join(''),
+            total: botRunningTotal,
+            word: bestMove.word
+          };
+          
+          const currentHistory = useGameStore.getState().moveHistory || [];
+          setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
+          
+          setBoardCoords(newBoard);
+          setTempBoardCoords(JSON.parse(JSON.stringify(newBoard)));
+          setPlayer2Rack(alphabetizeRack(newRack));
+          setBlankTiles(newBlankTiles);
+          setPlayer2points(botRunningTotal);
+        }
+        
+        // Check if game should end
+        if (newRack.length === 0 && newPool.length === 0) {
+          console.log('🎯 GAME END: Bot played all tiles and pool is empty!');
+          handleGameEnd({
+            winnerRack: newRack,
+            winnerName: player2Name,
+            loserRack: player1Rack || [],
+            loserPoints: player1points,
+            player1Rack: player1Rack,
+            player2Rack: player2Rack,
+            player1points: player1points,
+            player2points: player2points,
+            player1Name: player1Name,
+            player2Name: player2Name,
+            autoPlayBest: autoPlayBest,
+            setPlayer1points: setPlayer1points,
+            setPlayer2points: setPlayer2points,
+            setSnackbarMessage: setSnackbarMessage,
+            setSnackbarSeverity: setSnackbarSeverity,
+            setSnackbarOpen: setSnackbarOpen,
+            setAutoPlayBest: setAutoPlayBest
+          });
+          return;
+        }
+        
+        // Draw new tiles for bot
+        while (newRack.length < 7 && newPool.length > 0) {
+          const randomIndex = Math.floor(Math.random() * newPool.length);
+          newRack.push(newPool[randomIndex]);
+          newPool.splice(randomIndex, 1);
+        }
+        setPlayer2Rack(alphabetizeRack(newRack));
+        setPool(newPool);
+        
+        setConsecutivePasses(0);
+        setCurrentPlayer(1);
+        setSelectedBoardPosition(null);
+        setSelectedTiles([]);
+        setArrowDirection('right');
+        
+        console.log('✅ Bot move completed successfully after retry');
+        
+        // Show success message for retry (with delay so retry message is visible)
+        setTimeout(() => {
+          setSnackbarMessage('Bot move completed (recovered from initial error)');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
+        }, 1500); // 1.5 second delay
+        
+        return;
+        
+      } catch (retryError) {
+        console.log('⚠️ Railway service retry failed:', retryError.message);
+      }
+      
+      // If Railway service retry failed, fall back to simple pass/exchange
+      console.log('🔄 Falling back to simple pass/exchange strategy...');
       
       // If the bot can't calculate moves, try a simple pass or exchange
       if (pool.length >= 7) {
@@ -524,10 +651,12 @@ export const makeBotMove = async (botMoveSound) => {
       setCurrentPlayer(1);
       setConsecutivePasses(prev => prev + 1);
       
-      // Show user-friendly message
-      setSnackbarMessage('Bot had trouble calculating moves, used fallback strategy');
-      setSnackbarSeverity('warning');
-      setSnackbarOpen(true);
+      // Show user-friendly message (with delay so retry message is visible)
+      setTimeout(() => {
+        setSnackbarMessage('Bot used simple fallback strategy (pass/exchange)');
+        setSnackbarSeverity('warning');
+        setSnackbarOpen(true);
+      }, 1500); // 1.5 second delay
       
     } catch (fallbackError) {
       console.error('Fallback also failed:', fallbackError);
