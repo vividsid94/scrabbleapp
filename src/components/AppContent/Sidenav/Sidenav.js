@@ -17,9 +17,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { Tooltip } from "@mui/material";
 
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import ArticleIcon from '@mui/icons-material/Article';
+import CastleIcon from '@mui/icons-material/Castle';
+import EyeIcon from '@mui/icons-material/Search';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
 import styles from './Sidenav.module.css';
 
@@ -29,18 +29,18 @@ export default function MiniDrawer() {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   const getBackgroundColor = () => {
-    return lightMode === 'dark' ? '#110113' : '#d0d0d0';
+    return lightMode === 'dark' ? '#000000' : '#5a5a7a';
   };
 
   const getTextColor = () => {
-    return lightMode === 'dark' ? '#fff' : '#000';
+    return lightMode === 'dark' ? '#fff' : '#f5f5f5';
   };
 
   const openedMixin = () => ({
     width: `180px`,
     overflowX: 'hidden',
     background: getBackgroundColor(),
-    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     transition: '0.5s ease',
   });
 
@@ -48,7 +48,7 @@ export default function MiniDrawer() {
     width: `65px`,
     overflowX: 'hidden',
     background: getBackgroundColor(),
-    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     transition: '0.5s ease',
   });
 
@@ -76,7 +76,7 @@ export default function MiniDrawer() {
   const MyAppBar = styled(AppBar)({
     position: 'fixed',
     background: getBackgroundColor(),
-    backgroundImage: lightMode === 'dark' ? "url('https://www.transparenttextures.com/patterns/maze-black.png')" : "url('https://www.transparenttextures.com/patterns/maze-white.png')",
+    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     display: "flex",
     justifyContent: "space-between"
   });
@@ -127,19 +127,19 @@ export default function MiniDrawer() {
               Changelog
             </MenuItem>
           </Menu>
-          <img src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
+          <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </MyToolbar>
       </MyAppBar>
       <Drawer className={styles.myDrawer} variant="permanent" open={open}>
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img onClick={handleDrawer} src={'/images/ssLogo.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
+          <img onClick={handleDrawer} src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </DrawerHeader>
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
             <ListItem className={styles.listItem}>
               <ListItemIcon>
                 <Tooltip title="Home">
-                  <HomeOutlinedIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <CastleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Home"} sx={{ color: getTextColor() }}/>
@@ -151,7 +151,7 @@ export default function MiniDrawer() {
             <ListItem className={styles.listItem}>
               <ListItemIcon>
                 <Tooltip title="Game Viewer">
-                  <VisibilityOutlinedIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <EyeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Viewer"} sx={{ color: getTextColor() }}/>
@@ -163,7 +163,7 @@ export default function MiniDrawer() {
             <ListItem className={styles.listItem}>
               <ListItemIcon>
                 <Tooltip title="Changelog">
-                  <ArticleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Changelog"} sx={{ color: getTextColor() }}/>
