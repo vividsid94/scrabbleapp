@@ -478,7 +478,7 @@ export default function Puzzle() {
               </Box>
               <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
                 {puzzleMode === 'only-bingo' 
-                  ? 'This is the only bingo available. Can you find where to place all 7 tiles?'
+                  ? 'There is only one. Can you find it?'
                   : 'Can you find the best one?'
                 }
               </Box>
