@@ -474,9 +474,9 @@ export default function Puzzle() {
                   : puzzleMode === 'bingo'
                   ? 'Can you find the best one?'
                   : puzzleMode === 'significant-best'
-                  ? 'The best move is significantly better than the rest. Can you find it?'
+                  ? 'The best move is significant. Can you find it?'
                   : puzzleMode === 'non-bingo-significant'
-                  ? 'The best non-bingo move is significantly better. Can you find it?'
+                  ? 'The best non-bingo move is significant. Can you find it?'
                   : 'Can you find the best move?'
                 }
               </Box>
@@ -580,7 +580,7 @@ export default function Puzzle() {
                         fontFamily: 'Syne, sans-serif'
                       }}
                     >
-                      {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Plays'}
+                      {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Moves'}
                     </button>
                     <Box style={{
                       position: 'absolute',
@@ -750,8 +750,8 @@ export default function Puzzle() {
                   fontSize: '14px'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>3) Significant Best Play</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is 10+ points better than 2nd best</Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>3) Significant Move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is 10+ equity better than next best move</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('non-bingo-significant')}
@@ -764,8 +764,8 @@ export default function Puzzle() {
                   fontSize: '14px'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>4) Non-Bingo Significant</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Same as above, but only for non-bingo moves</Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>4) Significant Non-Bingo Move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is a non-bingo that is 10+ equity better than next best move</Box>
               </Box>
             </Box>
           </Box>
