@@ -28,13 +28,15 @@ const playerMoveSoundClassic = new SimpleSoundPlayer('/sounds/player-move.mp3');
 const playerMoveSoundSword = new SimpleSoundPlayer('/sounds/player-move-sword.mp3');
 const botMoveSoundClassic = new SimpleSoundPlayer('/sounds/bot-move.mp3');
 const botMoveSoundSword = new SimpleSoundPlayer('/sounds/bot-move-sword.mp3');
+const puzzleClickSound = new SimpleSoundPlayer('/sounds/puzzle-click.mp3');
 
 export const initializeSounds = () => {
   // Return simple objects that just wrap the sound players
   const sounds = {
     gameStartSound: { play: () => gameStartSound.play() },
     playerMoveSound: { play: () => playerMoveSoundClassic.play() },
-    botMoveSound: { play: () => botMoveSoundClassic.play() }
+    botMoveSound: { play: () => botMoveSoundClassic.play() },
+    puzzleClickSound: { play: () => puzzleClickSound.play() }
   };
   console.log('🎵 initializeSounds returning:', sounds);
   return sounds;
