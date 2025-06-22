@@ -110,18 +110,12 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
     case "rack":
       return (
         <div style={{ 
-          backgroundColor: color,
-          borderRadius: '4px',
-          margin: '2.5px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '42px',
-          height: '42px',
-          filter: 'brightness(0.85)',
-          transition: 'all 0.2s ease'
+          background: bonus?.hasBorder ? lightenColor(bonus.color) : bonus.color, 
+          boxShadow: bonus?.boxShadow 
         }}>
-          {cell(bonus?.value)}
+          <div className={styles.decalContainer}>
+              <div>{cell(bonus?.value)}</div>
+          </div>
         </div>
       );
     default:
