@@ -378,7 +378,9 @@ export default function Puzzle() {
                 fontSize: '10px',
                 fontWeight: 'bold'
               }}>
-                {puzzleMode === 'bingo' ? '1' : '2'}
+                {puzzleMode === 'bingo' ? '1' : 
+                 puzzleMode === 'only-bingo' ? '2' : 
+                 puzzleMode === 'significant-best' ? '3' : '4'}
               </Box>
             </Box>
           </Tooltip>
@@ -419,13 +421,14 @@ export default function Puzzle() {
         {gameStarted && (
           <Box className={styles.playerPanel}>
             <Box className={styles.playerInfo}>
-              <Box className={styles.playerName}>
+              <Box className={styles.playerName} style={{ minWidth: '120px', textAlign: 'center' }}>
                 {currentName}
-                {isBotThinking && (
-                  <Box component="span" className={styles.thinkingEmoji}>
-                    🤔
-                  </Box>
-                )}
+                <Box component="span" className={styles.thinkingEmoji} style={{ 
+                  visibility: isBotThinking ? 'visible' : 'hidden',
+                  marginLeft: '4px'
+                }}>
+                  {currentPlayer === 1 ? '🤔' : '🧠'}
+                </Box>
               </Box>
             </Box>
             <Box style={{ marginTop: '12px' }}>
@@ -463,12 +466,18 @@ export default function Puzzle() {
           }}>
             <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
               <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
-                {currentPlayer === 1 ? player1Name : player2Name} found a bingo!
+                {currentPlayer === 1 ? player1Name : player2Name} found a {puzzleMode === 'bingo' || puzzleMode === 'only-bingo' ? 'bingo' : 'significant play'}!
               </Box>
               <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
                 {puzzleMode === 'only-bingo' 
                   ? 'There is only one. Can you find it?'
-                  : 'Can you find the best one?'
+                  : puzzleMode === 'bingo'
+                  ? 'Can you find the best one?'
+                  : puzzleMode === 'significant-best'
+                  ? 'The best move is significantly better than the rest. Can you find it?'
+                  : puzzleMode === 'non-bingo-significant'
+                  ? 'The best non-bingo move is significantly better. Can you find it?'
+                  : 'Can you find the best move?'
                 }
               </Box>
               <Box style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -545,6 +554,53 @@ export default function Puzzle() {
                     </Box>
                   </Box>
                 )}
+                {(puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') && (
+                  <Box style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => setShowAllBingos(!showAllBingos)}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                        e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                        e.target.style.transform = 'scale(1) translateY(0)';
+                      }}
+                      style={{ 
+                        fontSize: 12, 
+                        padding: '6px 12px', 
+                        borderRadius: 0, 
+                        cursor: 'pointer',
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                        color: 'white',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        fontWeight: 'bold',
+                        backdropFilter: 'blur(5px)',
+                        transition: 'all 0.3s ease',
+                        fontFamily: 'Syne, sans-serif'
+                      }}
+                    >
+                      {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Plays'}
+                    </button>
+                    <Box style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      backgroundColor: '#FF9800',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      2
+                    </Box>
+                  </Box>
+                )}
               </Box>
             </Box>
             
@@ -570,13 +626,48 @@ export default function Puzzle() {
                         fontWeight: 'normal'
                       }}>
                         {move.startPosition} {move.word} ({move.score} pts)
-                        {move.leave && (
+                        {move.leaveValue && (
                           <span style={{ fontSize: '11px', opacity: 0.7, marginLeft: '8px' }}>
-                            Leave: {move.leave}
+                            Leave: {move.leaveValue}
                           </span>
                         )}
                       </Box>
                     ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Top 2 plays list for modes 3 and 4 */}
+            {(puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') && showAllBingos && storedTopMoves && (
+              <Box style={{ 
+                marginTop: '12px', 
+                padding: '12px', 
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px'
+              }}>
+                <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
+                  Top 2 Plays:
+                </Box>
+                <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {storedTopMoves.slice(0, 2).map((move, index) => (
+                    <Box key={index} style={{
+                      fontSize: '12px',
+                      color: 'white',
+                      fontWeight: index === 0 ? 'bold' : 'normal',
+                      padding: '4px 8px',
+                      backgroundColor: index === 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                      border: index === 0 ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px'
+                    }}>
+                      <Box style={{ marginBottom: '2px' }}>
+                        {index + 1}. {move.startPosition} {move.word} ({move.score} pts)
+                      </Box>
+                      <Box style={{ fontSize: '11px', opacity: 0.8 }}>
+                        Total Value: {move.totalValue && !isNaN(parseFloat(move.totalValue)) ? Math.round(parseFloat(move.totalValue)) : 'N/A'} | Leave: {move.leaveValue && !isNaN(parseFloat(move.leaveValue)) ? Math.round(parseFloat(move.leaveValue)) : 'N/A'}
+                      </Box>
+                    </Box>
+                  ))}
                 </Box>
               </Box>
             )}
@@ -613,10 +704,10 @@ export default function Puzzle() {
           }}>
             <Box style={{ marginBottom: '12px' }}>
               <Box style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-                Bingo Challenge Mode
+                Puzzle Challenge Mode
               </Box>
               <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
-                Choose when to pause for bingo challenges
+                Choose when to pause for puzzle challenges
               </Box>
             </Box>
             <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -647,6 +738,34 @@ export default function Puzzle() {
               >
                 <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>2) Only Bingo</Box>
                 <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause only when there's exactly 1 bingo available</Box>
+              </Box>
+              <Box 
+                onClick={() => handlePuzzleModeChange('significant-best')}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  backgroundColor: puzzleMode === 'significant-best' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: puzzleMode === 'significant-best' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '14px'
+                }}
+              >
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>3) Significant Best Play</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is 10+ points better than 2nd best</Box>
+              </Box>
+              <Box 
+                onClick={() => handlePuzzleModeChange('non-bingo-significant')}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  backgroundColor: puzzleMode === 'non-bingo-significant' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: puzzleMode === 'non-bingo-significant' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '14px'
+                }}
+              >
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>4) Non-Bingo Significant</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Same as above, but only for non-bingo moves</Box>
               </Box>
             </Box>
           </Box>

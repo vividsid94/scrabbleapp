@@ -80,7 +80,7 @@ export const usePuzzleStore = create((set, get) => {
     // Puzzle-specific
     isPausedForBingo: false,
     bingoMove: null,
-    puzzleMode: 'bingo', // 'bingo' for all bingos, 'only-bingo' for unique bingos only
+    puzzleMode: 'bingo', // 'bingo' for all bingos, 'only-bingo' for unique bingos only, 'significant-best' for 10+ point gaps, 'non-bingo-significant' for non-bingo 10+ point gaps
     storedTopMoves: [], // Store moves when bingo is found
     
     // Leave values for move evaluation
@@ -512,18 +512,31 @@ export const usePuzzleStore = create((set, get) => {
               move.tiles && move.tiles.length === 7 && !move.isExchange
             );
             
-            // Determine whether to pause based on puzzle mode
-            const shouldPauseForBingo = get().puzzleMode === 'only-bingo' ? 
-              (isBestMoveBingo && !otherMovesHaveBingos) : 
-              isBestMoveBingo;
+            // Check for significant best play (10+ point gap)
+            const hasSignificantGap = sortedMoves.length > 1 && 
+              (bestMove.totalValue - sortedMoves[1].totalValue) >= 10;
             
-            if (shouldPauseForBingo) {
-              // Auto-pause for bingo challenge
+            // Determine whether to pause based on puzzle mode
+            let shouldPause = false;
+            const puzzleMode = get().puzzleMode;
+            
+            if (puzzleMode === 'bingo') {
+              shouldPause = isBestMoveBingo;
+            } else if (puzzleMode === 'only-bingo') {
+              shouldPause = isBestMoveBingo && !otherMovesHaveBingos;
+            } else if (puzzleMode === 'significant-best') {
+              shouldPause = hasSignificantGap;
+            } else if (puzzleMode === 'non-bingo-significant') {
+              shouldPause = hasSignificantGap && !isBestMoveBingo;
+            }
+            
+            if (shouldPause) {
+              // Auto-pause for challenge
               const { setIsPausedForBingo, setBingoMove, setStoredTopMoves } = get();
               setIsPausedForBingo(true);
               setBingoMove(bestMove);
               
-              // Store the moves for display in "Show All Bingos"
+              // Store the moves for display
               setStoredTopMoves(sortedMoves);
               
               // Play game start sound to indicate it's player's turn to guess
