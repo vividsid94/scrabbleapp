@@ -723,7 +723,7 @@ export default function Puzzle() {
                 }}
               >
                 <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>1) All Bingos</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause for every bingo found</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when a bingo is found</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('only-bingo')}
@@ -737,7 +737,7 @@ export default function Puzzle() {
                 }}
               >
                 <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>2) Only Bingo</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause only when there's exactly 1 bingo available</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when there's exactly 1 bingo available</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('significant-best')}
@@ -751,7 +751,7 @@ export default function Puzzle() {
                 }}
               >
                 <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>3) Significant Move</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is 10+ equity better than next best move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when the best move is 10+ equity better than next best move</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('non-bingo-significant')}
@@ -765,7 +765,7 @@ export default function Puzzle() {
                 }}
               >
                 <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>4) Significant Non-Bingo Move</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when best move is a non-bingo that is 10+ equity better than next best move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
               </Box>
             </Box>
           </Box>
