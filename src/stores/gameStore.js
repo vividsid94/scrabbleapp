@@ -94,8 +94,8 @@ export const useGameStore = create((set, get) => {
     showVictoryOverlay: false,
     
     // Settings state
-    playerMoveSoundType: 'classic',
-    botMoveSoundType: 'classic',
+    playerMoveSoundType: 'puzzle',
+    botMoveSoundType: 'puzzle',
   };
 
   return {

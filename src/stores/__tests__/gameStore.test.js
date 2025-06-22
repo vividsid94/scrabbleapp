@@ -375,11 +375,11 @@ describe('Game Store', () => {
       
       act(() => {
         result.current.setPlayerMoveSoundType('modern');
-        result.current.setBotMoveSoundType('classic');
+        result.current.setBotMoveSoundType('puzzle');
       });
       
       expect(result.current.playerMoveSoundType).toBe('modern');
-      expect(result.current.botMoveSoundType).toBe('classic');
+      expect(result.current.botMoveSoundType).toBe('puzzle');
     });
   });
 

@@ -49,6 +49,7 @@ const GameModal = () => {
               >
                 <option value="classic">Classic</option>
                 <option value="sword">Sword</option>
+                <option value="puzzle">Puzzle</option>
               </select>
             </Box>
             <Box className={styles.modalContainer__dictionary}>
@@ -60,6 +61,7 @@ const GameModal = () => {
               >
                 <option value="classic">Classic</option>
                 <option value="sword">Sword</option>
+                <option value="puzzle">Puzzle</option>
               </select>
             </Box>
           </Box>

@@ -272,8 +272,8 @@ describe('Play Component', () => {
       setShowVictoryOverlay: jest.fn(),
       
       // Settings state
-      playerMoveSoundType: 'classic',
-      botMoveSoundType: 'classic',
+      playerMoveSoundType: 'puzzle',
+      botMoveSoundType: 'puzzle',
       setPlayerMoveSoundType: jest.fn(),
       setBotMoveSoundType: jest.fn(),
       

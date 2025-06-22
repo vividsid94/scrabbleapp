@@ -274,8 +274,8 @@ describe('Play Component - Integration Tests', () => {
       setShowVictoryOverlay: jest.fn(),
       
       // Settings state
-      playerMoveSoundType: 'classic',
-      botMoveSoundType: 'classic',
+      playerMoveSoundType: 'puzzle',
+      botMoveSoundType: 'puzzle',
       setPlayerMoveSoundType: jest.fn(),
       setBotMoveSoundType: jest.fn(),
       
@@ -1120,13 +1120,13 @@ describe('Play Component - Integration Tests', () => {
 
     test('handles sound type switching', async () => {
       mockStore.playerMoveSoundType = 'modern';
-      mockStore.botMoveSoundType = 'classic';
+      mockStore.botMoveSoundType = 'puzzle';
       
       render(<Play />);
       
       // Sound types should be configurable
       expect(mockStore.playerMoveSoundType).toBe('modern');
-      expect(mockStore.botMoveSoundType).toBe('classic');
+      expect(mockStore.botMoveSoundType).toBe('puzzle');
     });
 
     test('handles game with maximum score scenarios', async () => {

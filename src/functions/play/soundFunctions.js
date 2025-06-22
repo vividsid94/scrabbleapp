@@ -26,16 +26,18 @@ class SimpleSoundPlayer {
 const gameStartSound = new SimpleSoundPlayer('/sounds/game-start.mp3');
 const playerMoveSoundClassic = new SimpleSoundPlayer('/sounds/player-move.mp3');
 const playerMoveSoundSword = new SimpleSoundPlayer('/sounds/player-move-sword.mp3');
+const playerMoveSoundPuzzle = new SimpleSoundPlayer('/sounds/player-move-puzzle.mp3');
 const botMoveSoundClassic = new SimpleSoundPlayer('/sounds/bot-move.mp3');
 const botMoveSoundSword = new SimpleSoundPlayer('/sounds/bot-move-sword.mp3');
+const botMoveSoundPuzzle = new SimpleSoundPlayer('/sounds/bot-move-puzzle.mp3');
 const puzzleClickSound = new SimpleSoundPlayer('/sounds/puzzle-click.mp3');
 
 export const initializeSounds = () => {
   // Return simple objects that just wrap the sound players
   const sounds = {
     gameStartSound: { play: () => gameStartSound.play() },
-    playerMoveSound: { play: () => playerMoveSoundClassic.play() },
-    botMoveSound: { play: () => botMoveSoundClassic.play() },
+    playerMoveSound: { play: () => playerMoveSoundPuzzle.play() },
+    botMoveSound: { play: () => botMoveSoundPuzzle.play() },
     puzzleClickSound: { play: () => puzzleClickSound.play() }
   };
   console.log('🎵 initializeSounds returning:', sounds);
@@ -48,12 +50,16 @@ export const updateSoundType = (soundRef, soundType, soundName) => {
   if (soundName === 'player') {
     if (soundType === 'sword') {
       soundRef.current = { play: () => playerMoveSoundSword.play() };
+    } else if (soundType === 'puzzle') {
+      soundRef.current = { play: () => playerMoveSoundPuzzle.play() };
     } else {
       soundRef.current = { play: () => playerMoveSoundClassic.play() };
     }
   } else if (soundName === 'bot') {
     if (soundType === 'sword') {
       soundRef.current = { play: () => botMoveSoundSword.play() };
+    } else if (soundType === 'puzzle') {
+      soundRef.current = { play: () => botMoveSoundPuzzle.play() };
     } else {
       soundRef.current = { play: () => botMoveSoundClassic.play() };
     }
