@@ -369,7 +369,7 @@ export const usePuzzleStore = create((set, get) => {
       setTimerActive(true);
     },
 
-    makeBotMove: (botMoveSound) => {
+    makeBotMove: (botMoveSound, gameStartSound) => {
       const {
         boardCoords,
         player2Rack,
@@ -458,11 +458,6 @@ export const usePuzzleStore = create((set, get) => {
           return response.json();
         })
         .then(data => {
-          // Play bot move sound
-          if (botMoveSound && botMoveSound.play) {
-            botMoveSound.play();
-          }
-
           // Filter out moves with empty words
           if (data.moves) {
             data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
@@ -530,6 +525,11 @@ export const usePuzzleStore = create((set, get) => {
               
               // Store the moves for display in "Show All Bingos"
               setStoredTopMoves(sortedMoves);
+              
+              // Play game start sound to indicate it's player's turn to guess
+              if (gameStartSound && gameStartSound.play) {
+                gameStartSound.play();
+              }
               
               // Don't make the move yet - wait for user to find it
               // Don't add to move history yet - wait for user to continue

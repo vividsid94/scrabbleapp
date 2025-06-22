@@ -177,7 +177,7 @@ export default function Puzzle() {
     const timeoutId = setTimeout(() => {
       if (isBotMode && gameStarted && (currentPlayer === 1 || currentPlayer === 2) && !isBotThinking && !gameEnded && !botMoveMadeRef.current && !isPausedForBingo && !isManuallyPaused) {
         botMoveMadeRef.current = true;
-        makeBotMove(botMoveSound);
+        makeBotMove(botMoveSound, gameStartSound);
       } else {
       }
     }, 10); // Small delay to ensure state updates are processed
