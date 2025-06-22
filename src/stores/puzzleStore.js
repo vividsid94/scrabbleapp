@@ -275,12 +275,6 @@ export const usePuzzleStore = create((set, get) => {
       
       if (isDictionaryLoading) return;
       
-      // Play game start sound
-      const { gameStartSound } = params;
-      if (gameStartSound && gameStartSound.play) {
-        gameStartSound.play();
-      }
-      
       // Reset ALL game state for new game
       setGameEnded(false);
       setShowVictoryOverlay(false);
