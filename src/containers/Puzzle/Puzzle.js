@@ -626,11 +626,6 @@ export default function Puzzle() {
                         fontWeight: 'normal'
                       }}>
                         {move.startPosition} {move.word} ({move.score} pts)
-                        {move.leaveValue && (
-                          <span style={{ fontSize: '11px', opacity: 0.7, marginLeft: '8px' }}>
-                            Leave: {move.leaveValue}
-                          </span>
-                        )}
                       </Box>
                     ))}
                 </Box>
