@@ -287,6 +287,17 @@ export default function Puzzle() {
     setShowAllBingos(false);
   };
 
+  // Handle puzzle mode change
+  const handlePuzzleModeChange = (newMode) => {
+    if (newMode !== puzzleMode) {
+      setPuzzleMode(newMode);
+      setShowSettingsPanel(false);
+      setIsManuallyPaused(false); // Resume game
+      // Start a new game with the new mode
+      startNewGame();
+    }
+  };
+
   // Empty function for tile clicking (no tile clicking in puzzle mode)
   const handleTileClick = () => {};
 
@@ -328,23 +339,28 @@ export default function Puzzle() {
               />
             </Box>
           </Tooltip>
-          <Tooltip title={gameStarted ? "Mode cannot be changed during game" : "Puzzle Mode"}>
+          <Tooltip title="Puzzle Mode">
             <Box
-              onClick={() => !gameStarted && setShowSettingsPanel(!showSettingsPanel)}
+              onClick={() => {
+                const newShowSettings = !showSettingsPanel;
+                setShowSettingsPanel(newShowSettings);
+                // Pause game when settings open, resume when closed
+                setIsManuallyPaused(newShowSettings);
+              }}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: '4px',
-                cursor: gameStarted ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 position: 'relative'
               }}
             >
               <ViewModuleIcon 
-                className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''}`}
                 style={{ 
                   fontSize: 24, 
-                  cursor: gameStarted ? 'not-allowed' : 'pointer'
+                  cursor: 'pointer'
                 }}
               />
               <Box sx={{
@@ -611,7 +627,7 @@ export default function Puzzle() {
         )}
 
         {/* Settings panel */}
-        {showSettingsPanel && !gameStarted && (
+        {showSettingsPanel && (
           <Box className={styles.playerPanel} style={{ 
             marginTop: '16px',
             padding: '16px',
@@ -629,7 +645,7 @@ export default function Puzzle() {
             </Box>
             <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Box 
-                onClick={() => setPuzzleMode('bingo')}
+                onClick={() => handlePuzzleModeChange('bingo')}
                 style={{
                   padding: '8px 12px',
                   borderRadius: '6px',
@@ -643,7 +659,7 @@ export default function Puzzle() {
                 <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause for every bingo found</Box>
               </Box>
               <Box 
-                onClick={() => setPuzzleMode('only-bingo')}
+                onClick={() => handlePuzzleModeChange('only-bingo')}
                 style={{
                   padding: '8px 12px',
                   borderRadius: '6px',
