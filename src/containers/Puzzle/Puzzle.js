@@ -719,11 +719,30 @@ export default function Puzzle() {
                   cursor: 'pointer',
                   backgroundColor: puzzleMode === 'bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                   border: puzzleMode === 'bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  position: 'relative'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>1) All Bingos</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when a bingo is found</Box>
+                <Box style={{
+                  position: 'absolute',
+                  left: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  1
+                </Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>All Bingos</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when a bingo is found</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('only-bingo')}
@@ -733,11 +752,30 @@ export default function Puzzle() {
                   cursor: 'pointer',
                   backgroundColor: puzzleMode === 'only-bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                   border: puzzleMode === 'only-bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  position: 'relative'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>2) Only Bingo</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when there's exactly 1 bingo available</Box>
+                <Box style={{
+                  position: 'absolute',
+                  left: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  2
+                </Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Only Bingo</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when there's exactly 1 bingo available</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('significant-best')}
@@ -747,11 +785,30 @@ export default function Puzzle() {
                   cursor: 'pointer',
                   backgroundColor: puzzleMode === 'significant-best' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                   border: puzzleMode === 'significant-best' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  position: 'relative'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>3) Significant Move</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when the best move is 10+ equity better than next best move</Box>
+                <Box style={{
+                  position: 'absolute',
+                  left: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  3
+                </Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is 10+ equity better than next best move</Box>
               </Box>
               <Box 
                 onClick={() => handlePuzzleModeChange('non-bingo-significant')}
@@ -761,11 +818,30 @@ export default function Puzzle() {
                   cursor: 'pointer',
                   backgroundColor: puzzleMode === 'non-bingo-significant' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                   border: puzzleMode === 'non-bingo-significant' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  position: 'relative'
                 }}
               >
-                <Box style={{ fontWeight: 'bold', marginBottom: '2px' }}>4) Significant Non-Bingo Move</Box>
-                <Box style={{ fontSize: '12px', opacity: 0.8 }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
+                <Box style={{
+                  position: 'absolute',
+                  left: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  4
+                </Box>
+                <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Non-Bingo Move</Box>
+                <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
               </Box>
             </Box>
           </Box>
