@@ -1,7 +1,4 @@
 .footer {
-    background-color: #110113 !important;
-    color: white !important;
-    background-image: url('https://www.transparenttextures.com/patterns/maze-black.png');
     display: flex;
     flex-direction: column;
     width: calc(100% - 65px);
