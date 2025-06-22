@@ -2,37 +2,169 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
 
+// Add warmup function for the Go service
+export const warmupGoService = async (retryCount = 0) => {
+  const renderUrl = 'https://scrabble-move-generator.onrender.com/generate-moves';
+  const maxRetries = 2;
+  
+  try {
+    console.log(`🔥 Warming up Go service... (attempt ${retryCount + 1}/${maxRetries + 1})`);
+    
+    // Make a simple warmup request with minimal data
+    const warmupData = {
+      board: Array(15).fill().map(() => Array(15).fill('')),
+      rack: 'HELLO',
+      topN: 1
+    };
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for warmup
+    
+    const response = await fetch(renderUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(warmupData),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      console.log('✅ Go service warmed up successfully');
+      return true;
+    } else {
+      console.warn(`⚠️ Go service warmup failed with status: ${response.status}`);
+      
+      // Retry if we haven't exceeded max retries
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Retrying warmup in 2 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return warmupGoService(retryCount + 1);
+      }
+      
+      return false;
+    }
+  } catch (error) {
+    console.warn(`⚠️ Go service warmup failed: ${error.message}`);
+    
+    // Retry if we haven't exceeded max retries and it's not an abort error
+    if (retryCount < maxRetries && error.name !== 'AbortError') {
+      console.log(`🔄 Retrying warmup in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return warmupGoService(retryCount + 1);
+    }
+    
+    return false;
+  }
+};
+
+// Cache for warmup status
+let goServiceWarmedUp = false;
+let warmupPromise = null;
+
+// Function to ensure Go service is warmed up
+export const ensureGoServiceWarmedUp = async () => {
+  if (goServiceWarmedUp) {
+    return true;
+  }
+  
+  if (warmupPromise) {
+    return warmupPromise;
+  }
+  
+  warmupPromise = warmupGoService().then(success => {
+    goServiceWarmedUp = success;
+    return success;
+  });
+  
+  return warmupPromise;
+};
+
+// Function to pre-warm the Go service (can be called when app starts)
+export const preWarmGoService = async () => {
+  console.log('🔥 Pre-warming Go service...');
+  try {
+    const success = await ensureGoServiceWarmedUp();
+    if (success) {
+      console.log('✅ Go service pre-warmed successfully');
+      
+      // Start periodic warmup to keep service alive
+      startPeriodicWarmup();
+    } else {
+      console.warn('⚠️ Go service pre-warm failed');
+    }
+    return success;
+  } catch (error) {
+    console.error('❌ Go service pre-warm error:', error);
+    return false;
+  }
+};
+
+// Periodic warmup to keep Go service alive
+let periodicWarmupInterval = null;
+
+export const startPeriodicWarmup = () => {
+  // Clear any existing interval
+  if (periodicWarmupInterval) {
+    clearInterval(periodicWarmupInterval);
+  }
+  
+  // Ping the service every 4 minutes to keep it warm
+  periodicWarmupInterval = setInterval(async () => {
+    console.log('🔥 Periodic Go service warmup...');
+    try {
+      await warmupGoService();
+    } catch (error) {
+      console.warn('⚠️ Periodic warmup failed:', error.message);
+    }
+  }, 4 * 60 * 1000); // 4 minutes
+  
+  console.log('🔄 Started periodic Go service warmup (every 4 minutes)');
+};
+
+export const stopPeriodicWarmup = () => {
+  if (periodicWarmupInterval) {
+    clearInterval(periodicWarmupInterval);
+    periodicWarmupInterval = null;
+    console.log('🛑 Stopped periodic Go service warmup');
+  }
+};
+
 export const makeBotMove = async (botMoveSound) => {
   const {
-    boardCoords,
-    player2Rack,
-    pool,
-    player2points,
-    player2Name,
-    player1Rack,
-    player1points,
-    player1Name,
-    blankTiles,
     isBotMode,
     currentPlayer,
+    boardCoords,
+    player2Rack,
+    player1Rack,
+    pool,
+    blankTiles,
+    player2points,
+    player1points,
+    player2Name,
+    player1Name,
     autoPlayBest,
     setIsBotThinking,
+    setCurrentPlayer,
+    setPlayer2Rack,
+    setPlayer1Rack,
     setBoardCoords,
     setTempBoardCoords,
-    setPlayer2Rack,
-    setBlankTiles,
     setPool,
+    setBlankTiles,
     setPlayer2points,
     setPlayer1points,
-    setCurrentPlayer,
-    setSelectedBoardPosition,
-    setSelectedTiles,
-    setArrowDirection,
+    setMoveHistory,
+    setTopMoves,
     setSnackbarMessage,
     setSnackbarSeverity,
     setSnackbarOpen,
     setConsecutivePasses,
-    setMoveHistory,
+    setSelectedBoardPosition,
+    setSelectedTiles,
+    setArrowDirection,
     setAutoPlayBest,
     getBoardDiff,
     setSimulatingMove,
@@ -40,8 +172,7 @@ export const makeBotMove = async (botMoveSound) => {
     setSimulationProgress,
     setPreviewBoard,
     setPreviewMove,
-    setMoveWithResults,
-    setTopMoves
+    setMoveWithResults
   } = useGameStore.getState();
 
   if (!isBotMode || currentPlayer !== 2) {
@@ -54,6 +185,14 @@ export const makeBotMove = async (botMoveSound) => {
   }
 
   try {
+    // Ensure Go service is warmed up before making the actual request
+    console.log('🔥 Ensuring Go service is warmed up...');
+    const isWarmedUp = await ensureGoServiceWarmedUp();
+    
+    if (!isWarmedUp) {
+      console.warn('⚠️ Go service warmup failed, proceeding with fallback...');
+    }
+
     // Create a deep copy of the board and rack
     const boardCopy = JSON.parse(JSON.stringify(boardCoords));
     const rackCopy = [...player2Rack];

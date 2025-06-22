@@ -3,6 +3,7 @@ import { origPool, origBoard } from '../components/AppContent/References/staticD
 import { TEST_RACKS } from '../components/AppContent/References/testRacks.js';
 import { getBoardDiff } from '../functions/play/boardUtils';
 import { alphabetizeRack } from '../functions/play/rackFunctions';
+import { ensureGoServiceWarmedUp } from '../functions/play/botFunctions';
 
 export const usePuzzleStore = create((set, get) => {
   // Initial state
@@ -434,6 +435,14 @@ export const usePuzzleStore = create((set, get) => {
         console.log('🤖 Bot Move Request:', {
           rack: apiRack.join(''),
           player: currentName
+        });
+
+        // Ensure Go service is warmed up before making the actual request
+        console.log('🔥 Ensuring Go service is warmed up...');
+        ensureGoServiceWarmedUp().then(isWarmedUp => {
+          if (!isWarmedUp) {
+            console.warn('⚠️ Go service warmup failed, proceeding with fallback...');
+          }
         });
 
         // Call the bot API

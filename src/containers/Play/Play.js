@@ -22,6 +22,7 @@ import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.j
 import { formatTime } from '../../functions/play/timeUtils';
 import { useGameStore } from '../../stores/gameStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
+import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
 
 export default function Play() {
   // Use Zustand Game Store
@@ -193,6 +194,16 @@ export default function Play() {
   useEffect(() => {
     const soundObjects = initializeSounds() || {};
     setSounds(soundObjects);
+  }, []);
+
+  // Pre-warm the Go service when component mounts
+  useEffect(() => {
+    preWarmGoService();
+    
+    // Cleanup function to stop periodic warmup when component unmounts
+    return () => {
+      stopPeriodicWarmup();
+    };
   }, []);
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
