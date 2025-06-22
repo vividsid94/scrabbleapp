@@ -470,9 +470,6 @@ export default function Puzzle() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
           }}>
             <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
-              <Box style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
-                {puzzleMode === 'only-bingo' && 'Unique Bingo Found!'}
-              </Box>
               <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
                 {currentPlayer === 1 ? player1Name : player2Name} found a bingo!
               </Box>
