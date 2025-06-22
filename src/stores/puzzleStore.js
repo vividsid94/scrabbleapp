@@ -78,12 +78,11 @@ export const usePuzzleStore = create((set, get) => {
     // Puzzle-specific
     isPausedForBingo: false,
     bingoMove: null,
+    puzzleMode: 'bingo', // 'bingo' for all bingos, 'only-bingo' for unique bingos only
+    storedTopMoves: [], // Store moves when bingo is found
     
     // Leave values for move evaluation
     leaveValues: {},
-    
-    // Puzzle settings
-    puzzleMode: 'bingo', // 'bingo' or 'only-bingo'
   };
 
   return {
@@ -148,6 +147,8 @@ export const usePuzzleStore = create((set, get) => {
     // Puzzle-specific actions
     setIsPausedForBingo: (paused) => set({ isPausedForBingo: paused }),
     setBingoMove: (move) => set({ bingoMove: move }),
+    setPuzzleMode: (mode) => set({ puzzleMode: mode }),
+    setStoredTopMoves: (moves) => set({ storedTopMoves: moves }),
     // Leave values actions
     setLeaveValues: (values) => set({ leaveValues: values }),
     // Puzzle settings actions
@@ -209,6 +210,7 @@ export const usePuzzleStore = create((set, get) => {
         bingoMove: null,
         leaveValues: {},
         puzzleMode: 'bingo',
+        storedTopMoves: [],
       });
     },
 
@@ -264,6 +266,7 @@ export const usePuzzleStore = create((set, get) => {
         setFinalPlayer2Score,
         setIsPausedForBingo,
         setBingoMove,
+        setStoredTopMoves,
         isDictionaryLoading,
         gameTime
       } = get();
@@ -287,6 +290,7 @@ export const usePuzzleStore = create((set, get) => {
       // Reset puzzle-specific state
       setIsPausedForBingo(false);
       setBingoMove(null);
+      setStoredTopMoves([]);
       
       // Turn autoplay off
       setAutoPlayBest(false);
@@ -516,9 +520,12 @@ export const usePuzzleStore = create((set, get) => {
             
             if (shouldPauseForBingo) {
               // Auto-pause for bingo challenge
-              const { setIsPausedForBingo, setBingoMove } = get();
+              const { setIsPausedForBingo, setBingoMove, setStoredTopMoves } = get();
               setIsPausedForBingo(true);
               setBingoMove(bestMove);
+              
+              // Store the moves for display in "Show All Bingos"
+              setStoredTopMoves(sortedMoves);
               
               // Don't make the move yet - wait for user to find it
               // Don't add to move history yet - wait for user to continue
@@ -699,6 +706,7 @@ export const usePuzzleStore = create((set, get) => {
         setIsPausedForBingo,
         setBingoMove,
         setBlankTiles,
+        setStoredTopMoves,
         getBoardDiff
       } = get();
 
@@ -789,6 +797,7 @@ export const usePuzzleStore = create((set, get) => {
       // Clear bingo pause state
       setIsPausedForBingo(false);
       setBingoMove(null);
+      setStoredTopMoves([]);
 
       console.log('✅ Bingo move completed');
       

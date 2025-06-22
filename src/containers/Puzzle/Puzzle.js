@@ -103,6 +103,7 @@ export default function Puzzle() {
     fetchLeaveValuesForTopMoves,
     puzzleMode,
     setPuzzleMode,
+    storedTopMoves,
   } = usePuzzleStore();
 
   // Add manual pause state
@@ -110,6 +111,9 @@ export default function Puzzle() {
 
   // Add settings panel state
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+
+  // Add state to show all bingos
+  const [showAllBingos, setShowAllBingos] = useState(false);
 
   // Helper: check if a move is a bingo
   const isBingo = (move) => move && move.tiles && move.tiles.length === 7;
@@ -255,6 +259,9 @@ export default function Puzzle() {
     setIsPausedForBingo(false);
     setBingoMove(null);
     }
+    
+    // Hide the bingos list when resuming
+    setShowAllBingos(false);
   };
 
   // Empty function for tile clicking (no tile clicking in puzzle mode)
@@ -447,19 +454,96 @@ export default function Puzzle() {
                   : 'Can you find it?'
                 }
               </Box>
-              <button onClick={handleResume} style={{ 
-                fontSize: 14, 
-                padding: '6px 16px', 
-                borderRadius: 6, 
-                cursor: 'pointer',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                fontWeight: 'bold'
-              }}>
-                Show Answer & Continue
-              </button>
+              <Box style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <button 
+                  onClick={handleResume} 
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                    e.target.style.transform = 'scale(1) translateY(0)';
+                  }}
+                  style={{ 
+                    fontSize: 14, 
+                    padding: '8px 16px', 
+                    borderRadius: 0, 
+                    cursor: 'pointer',
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                    color: 'white',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    fontWeight: 'bold',
+                    backdropFilter: 'blur(5px)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: 'Syne, sans-serif'
+                  }}
+                >
+                  Show Answer & Continue
+                </button>
+                {puzzleMode === 'bingo' && (
+                  <button 
+                    onClick={() => setShowAllBingos(!showAllBingos)}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                      e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                      e.target.style.transform = 'scale(1) translateY(0)';
+                    }}
+                    style={{ 
+                      fontSize: 14, 
+                      padding: '8px 16px', 
+                      borderRadius: 0, 
+                      cursor: 'pointer',
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      fontWeight: 'bold',
+                      backdropFilter: 'blur(5px)',
+                      transition: 'all 0.3s ease',
+                      fontFamily: 'Syne, sans-serif'
+                    }}
+                  >
+                    {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
+                  </button>
+                )}
+              </Box>
             </Box>
+            
+            {/* All bingos list for mode 1 */}
+            {puzzleMode === 'bingo' && showAllBingos && storedTopMoves && (
+              <Box style={{ 
+                marginTop: '12px', 
+                padding: '12px', 
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px'
+              }}>
+                <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
+                  All Available Bingos:
+                </Box>
+                <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {storedTopMoves
+                    .filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange)
+                    .map((move, index) => (
+                      <Box key={index} style={{
+                        fontSize: '12px',
+                        color: 'white',
+                        fontWeight: 'normal'
+                      }}>
+                        {move.startPosition} {move.word} ({move.score} pts)
+                        {move.leave && (
+                          <span style={{ fontSize: '11px', opacity: 0.7, marginLeft: '8px' }}>
+                            Leave: {move.leave}
+                          </span>
+                        )}
+                      </Box>
+                    ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         )}
 
