@@ -45,16 +45,18 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
             }}
           >
             {!isBlank && (
-              <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                right: '0',
-                bottom: '0',
-                backgroundImage: `url(${modifiedImageUrl})`,
-                backgroundSize: '100%',
-                zIndex: 0
-              }} />
+              <img 
+                src={modifiedImageUrl} 
+                alt={`tile ${bonus?.value}`}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  zIndex: 0
+                }} 
+              />
             )}
             
             {isBlank && (
