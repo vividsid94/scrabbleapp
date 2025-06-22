@@ -36,8 +36,6 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
               boxShadow: bonus?.boxShadow,
               backgroundColor: isLastMove ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color),
               boxSizing: 'border-box',
-              width: type === 'rack' ? '42px' : undefined,
-              height: type === 'rack' ? '42px' : undefined,
               opacity: isLastMove ? 0.85 : 1,
               border: 'none',
               borderRadius: '0',
