@@ -254,7 +254,6 @@ export default function Play() {
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
       botMoveMadeRef.current = true;
       makeBotMove(botMoveSound);
-    } else {
     }
   }, [currentPlayer, isBotMode, isBotThinking, gameEnded, gameStarted]);
 
@@ -268,10 +267,16 @@ export default function Play() {
   // Reset bot move flag when game starts (for new games)
   useEffect(() => {
     if (gameStarted) {
-      console.log('🎮 Game started, resetting bot move flag');
       botMoveMadeRef.current = false;
     }
-  }, [gameStarted]);
+  }, [gameStarted, isBotMode, currentPlayer]);
+
+  // Reset bot move flag when bot mode is enabled
+  useEffect(() => {
+    if (isBotMode) {
+      botMoveMadeRef.current = false;
+    }
+  }, [isBotMode]);
 
   // Wrapper function to pass sound objects to handleBotModeToggle
   const handleBotModeToggleWithSounds = () => {

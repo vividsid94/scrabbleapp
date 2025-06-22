@@ -579,12 +579,8 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   } = useGameStore.getState();
 
   // Play game start sound
-  console.log('🎮 startBotGame called, gameStartSound:', gameStartSound);
   if (gameStartSound && gameStartSound.play) {
-    console.log('🔊 Playing game start sound');
     gameStartSound.play();
-  } else {
-    console.log('❌ Game start sound not available');
   }
 
   // Clear move history first
