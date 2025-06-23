@@ -396,7 +396,7 @@ export default function Puzzle() {
               </Box>
             </Box>
           </Tooltip>
-          <Tooltip title={isFastPlayMode ? "Disable Fast Play Mode" : "Enable Fast Play Mode"}>
+          <Tooltip title={isFastPlayMode ? "Fast Play On" : "Fast Play Off"}>
             <Box
               onClick={() => setIsFastPlayMode(!isFastPlayMode)}
               sx={{
@@ -425,18 +425,10 @@ export default function Puzzle() {
                   top: '-2px',
                   right: '-2px',
                   backgroundColor: '#FF9800',
-                  color: 'white',
                   borderRadius: '50%',
                   width: '12px',
-                  height: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '8px',
-                  fontWeight: 'bold'
-                }}>
-                  •
-                </Box>
+                  height: '12px'
+                }} />
               )}
             </Box>
           </Tooltip>
