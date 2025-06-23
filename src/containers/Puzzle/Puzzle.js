@@ -572,10 +572,7 @@ export default function Puzzle() {
                 borderRadius: '4px'
               }}>
                 <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
-                <Box>• Click tiles in your rack to select them, then click board to place</Box>
-                <Box>• Or click board position and type letters directly</Box>
-                <Box>• Use arrow keys to change direction, backspace to remove</Box>
-                <Box>• Press Enter to submit or Escape to clear</Box>
+                <Box>• Place your guess on the board, or reveal the answer by clicking the button below.</Box>
               </Box>
               
               {/* Current guess indicator */}
@@ -609,7 +606,12 @@ export default function Puzzle() {
                 </Box>
               )}
               
-              <Box style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <Box style={{ 
+                display: 'flex', 
+                gap: '8px', 
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+              }}>
                 <button 
                   onClick={handleResume} 
                   onMouseEnter={(e) => {
@@ -621,8 +623,10 @@ export default function Puzzle() {
                     e.target.style.transform = 'scale(1) translateY(0)';
                   }}
                   style={{ 
+                    flex: '1',
+                    minWidth: '120px',
                     fontSize: 12, 
-                    padding: '6px 12px', 
+                    padding: '8px 12px', 
                     borderRadius: 0, 
                     cursor: 'pointer',
                     background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
@@ -631,7 +635,9 @@ export default function Puzzle() {
                     fontWeight: 'bold',
                     backdropFilter: 'blur(5px)',
                     transition: 'all 0.3s ease',
-                    fontFamily: 'Syne, sans-serif'
+                    fontFamily: 'Syne, sans-serif',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   Show Answer & Continue
@@ -650,8 +656,10 @@ export default function Puzzle() {
                     e.target.style.transform = 'scale(1) translateY(0)';
                   }}
                   style={{ 
+                    flex: '1',
+                    minWidth: '120px',
                     fontSize: 12, 
-                    padding: '6px 12px', 
+                    padding: '8px 12px', 
                     borderRadius: 0, 
                     cursor: 'pointer',
                     background: 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))',
@@ -660,7 +668,9 @@ export default function Puzzle() {
                     fontWeight: 'bold',
                     backdropFilter: 'blur(5px)',
                     transition: 'all 0.3s ease',
-                    fontFamily: 'Syne, sans-serif'
+                    fontFamily: 'Syne, sans-serif',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   Submit Guess
@@ -676,8 +686,10 @@ export default function Puzzle() {
                     e.target.style.transform = 'scale(1) translateY(0)';
                   }}
                   style={{ 
+                    flex: '1',
+                    minWidth: '120px',
                     fontSize: 12, 
-                    padding: '6px 12px', 
+                    padding: '8px 12px', 
                     borderRadius: 0, 
                     cursor: 'pointer',
                     background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
@@ -686,39 +698,44 @@ export default function Puzzle() {
                     fontWeight: 'bold',
                     backdropFilter: 'blur(5px)',
                     transition: 'all 0.3s ease',
-                    fontFamily: 'Syne, sans-serif'
+                    fontFamily: 'Syne, sans-serif',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   Clear
                 </button>
                 {puzzleMode === 'bingo' && (
-                  <Box style={{ position: 'relative' }}>
-                    <button 
-                      onClick={() => setShowAllBingos(!showAllBingos)}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                        e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                        e.target.style.transform = 'scale(1) translateY(0)';
-                      }}
-                      style={{ 
-                        fontSize: 12, 
-                        padding: '6px 12px', 
-                        borderRadius: 0, 
-                        cursor: 'pointer',
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                        color: 'white',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        fontWeight: 'bold',
-                        backdropFilter: 'blur(5px)',
-                        transition: 'all 0.3s ease',
-                        fontFamily: 'Syne, sans-serif'
-                      }}
-                    >
-                      {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
-                    </button>
+                  <button 
+                    onClick={() => setShowAllBingos(!showAllBingos)}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                      e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                      e.target.style.transform = 'scale(1) translateY(0)';
+                    }}
+                    style={{ 
+                      flex: '1',
+                      minWidth: '120px',
+                      fontSize: 12, 
+                      padding: '8px 12px', 
+                      borderRadius: 0, 
+                      cursor: 'pointer',
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      fontWeight: 'bold',
+                      backdropFilter: 'blur(5px)',
+                      transition: 'all 0.3s ease',
+                      fontFamily: 'Syne, sans-serif',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                      position: 'relative'
+                    }}
+                  >
+                    {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
                     <Box style={{
                       position: 'absolute',
                       top: '-8px',
@@ -736,36 +753,39 @@ export default function Puzzle() {
                     }}>
                       {storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0}
                     </Box>
-                  </Box>
+                  </button>
                 )}
                 {(puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') && (
-                  <Box style={{ position: 'relative' }}>
-                    <button 
-                      onClick={() => setShowAllBingos(!showAllBingos)}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                        e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                        e.target.style.transform = 'scale(1) translateY(0)';
-                      }}
-                      style={{ 
-                        fontSize: 12, 
-                        padding: '6px 12px', 
-                        borderRadius: 0, 
-                        cursor: 'pointer',
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                        color: 'white',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        fontWeight: 'bold',
-                        backdropFilter: 'blur(5px)',
-                        transition: 'all 0.3s ease',
-                        fontFamily: 'Syne, sans-serif'
-                      }}
-                    >
-                      {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Moves'}
-                    </button>
+                  <button 
+                    onClick={() => setShowAllBingos(!showAllBingos)}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                      e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                      e.target.style.transform = 'scale(1) translateY(0)';
+                    }}
+                    style={{ 
+                      flex: '1',
+                      minWidth: '120px',
+                      fontSize: 12, 
+                      padding: '8px 12px', 
+                      borderRadius: 0, 
+                      cursor: 'pointer',
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      fontWeight: 'bold',
+                      backdropFilter: 'blur(5px)',
+                      transition: 'all 0.3s ease',
+                      fontFamily: 'Syne, sans-serif',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                      position: 'relative'
+                    }}
+                  >
+                    {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Moves'}
                     <Box style={{
                       position: 'absolute',
                       top: '-8px',
@@ -783,7 +803,7 @@ export default function Puzzle() {
                     }}>
                       2
                     </Box>
-                  </Box>
+                  </button>
                 )}
               </Box>
             </Box>

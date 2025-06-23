@@ -325,8 +325,6 @@ export const usePuzzleStore = create((set, get) => {
         }
       }
       
-      console.log('🎯 Position check:', { allPositionsCorrect, allLettersCorrect });
-      
       // Determine the result
       if (allPositionsCorrect && allLettersCorrect) {
         setSnackbarMessage('Correct! Well done!');
@@ -335,11 +333,11 @@ export const usePuzzleStore = create((set, get) => {
         // Continue the game
         continueBingoMove();
       } else if (!allPositionsCorrect) {
-        setSnackbarMessage('Incorrect position. Make sure tiles are in the right places!');
+        setSnackbarMessage('Hmm, not quite. Try again!');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
       } else {
-        setSnackbarMessage('Incorrect word. Check your spelling!');
+        setSnackbarMessage('Hmm, not quite. Try again!');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
       }
