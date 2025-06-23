@@ -25,7 +25,7 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 
 export default function Puzzle() {
   // Refs (keep these local like Play.js)
-  const color = useRef('#b064af');
+  const color = useRef('#7878a4');
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
