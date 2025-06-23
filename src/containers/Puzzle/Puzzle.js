@@ -21,6 +21,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TuneIcon from '@mui/icons-material/Tune';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
 
 export default function Puzzle() {
   // Refs (keep these local like Play.js)
@@ -117,6 +118,11 @@ export default function Puzzle() {
     puzzleMode,
     setPuzzleMode,
     storedTopMoves,
+    isFastPlayMode,
+    setIsFastPlayMode,
+    makeFastBotMove,
+    isExecutingFastPlay,
+    fastPlayMoves,
   } = usePuzzleStore();
 
   // Add manual pause state
@@ -177,13 +183,19 @@ export default function Puzzle() {
     const timeoutId = setTimeout(() => {
       if (isBotMode && gameStarted && (currentPlayer === 1 || currentPlayer === 2) && !isBotThinking && !gameEnded && !botMoveMadeRef.current && !isPausedForBingo && !isManuallyPaused) {
         botMoveMadeRef.current = true;
-        makeBotMove(botMoveSound, gameStartSound);
+        
+        // Use fast play mode if enabled, otherwise use regular bot move
+        if (isFastPlayMode) {
+          makeFastBotMove(botMoveSound, gameStartSound);
+        } else {
+          makeBotMove(botMoveSound, gameStartSound);
+        }
       } else {
       }
     }, 10); // Small delay to ensure state updates are processed
 
     return () => clearTimeout(timeoutId);
-  }, [currentPlayer, isBotMode, gameStarted, isBotThinking, gameEnded, isPausedForBingo, isManuallyPaused]);
+  }, [currentPlayer, isBotMode, gameStarted, isBotThinking, gameEnded, isPausedForBingo, isManuallyPaused, isFastPlayMode]);
 
   // Reset bot move flag when player changes
   useEffect(() => {
@@ -384,6 +396,50 @@ export default function Puzzle() {
               </Box>
             </Box>
           </Tooltip>
+          <Tooltip title={isFastPlayMode ? "Disable Fast Play Mode" : "Enable Fast Play Mode"}>
+            <Box
+              onClick={() => setIsFastPlayMode(!isFastPlayMode)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '4px',
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              <Box 
+                className={`${styles.keyBtn} ${isFastPlayMode ? styles.active : ''}`}
+                style={{ 
+                  fontSize: 24, 
+                  cursor: 'pointer',
+                  color: isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)',
+                  fontWeight: 'bold'
+                }}
+              >
+                <FlashOnIcon style={{ fontSize: 24 }} />
+              </Box>
+              {isFastPlayMode && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '12px',
+                  height: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '8px',
+                  fontWeight: 'bold'
+                }}>
+                  •
+                </Box>
+              )}
+            </Box>
+          </Tooltip>
           {gameStarted && (
             <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
               <Box
@@ -429,6 +485,16 @@ export default function Puzzle() {
                 }}>
                   {currentPlayer === 1 ? '🤔' : '🧠'}
                 </Box>
+                {isExecutingFastPlay && (
+                  <Box component="span" style={{ 
+                    marginLeft: '4px',
+                    fontSize: '12px',
+                    color: '#FF9800',
+                    fontWeight: 'bold'
+                  }}>
+                    ⚡ Fast Playing...
+                  </Box>
+                )}
               </Box>
             </Box>
             <Box style={{ marginTop: '12px' }}>
@@ -454,6 +520,49 @@ export default function Puzzle() {
           boardCoords={boardCoords}
           pool={pool}
         />
+
+        {/* Fast Play Summary */}
+        {fastPlayMoves.length > 0 && !isExecutingFastPlay && !isPausedForBingo && (
+          <Box className={styles.playerPanel} style={{ 
+            marginTop: '12px',
+            padding: '12px',
+            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+            border: '1px solid rgba(255, 152, 0, 0.3)',
+            borderRadius: '6px'
+          }}>
+            <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center', color: '#FF9800' }}>
+              ⚡ Fast Play Summary
+            </Box>
+            <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {fastPlayMoves.map((moveData, index) => (
+                <Box key={index} style={{
+                  fontSize: '12px',
+                  color: 'white',
+                  padding: '4px 8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                  {moveData.type === 'move' && (
+                    <Box>
+                      {moveData.player}: {moveData.move.word} ({moveData.move.score} pts)
+                    </Box>
+                  )}
+                  {moveData.type === 'pass' && (
+                    <Box>
+                      {moveData.player}: Pass
+                    </Box>
+                  )}
+                  {moveData.type === 'puzzle' && (
+                    <Box style={{ fontWeight: 'bold', color: '#4CAF50' }}>
+                      🎯 {moveData.player}: {moveData.move.word} ({moveData.move.score} pts) - Puzzle Challenge!
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
 
         {/* Bingo challenge section */}
         {isPausedForBingo && bingoMove && (
@@ -705,6 +814,7 @@ export default function Puzzle() {
                 Choose when to pause for puzzle challenges
               </Box>
             </Box>
+            
             <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Box 
                 onClick={() => handlePuzzleModeChange('bingo')}

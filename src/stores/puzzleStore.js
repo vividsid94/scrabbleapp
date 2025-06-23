@@ -83,6 +83,12 @@ export const usePuzzleStore = create((set, get) => {
     puzzleMode: 'bingo', // 'bingo' for all bingos, 'only-bingo' for unique bingos only, 'significant-best' for 10+ point gaps, 'non-bingo-significant' for non-bingo 10+ point gaps
     storedTopMoves: [], // Store moves when bingo is found
     
+    // Fast play mode
+    isFastPlayMode: true,
+    fastPlayMoves: [],
+    isExecutingFastPlay: false,
+    showAllBingos: false,
+    
     // Leave values for move evaluation
     leaveValues: {},
   };
@@ -153,10 +159,18 @@ export const usePuzzleStore = create((set, get) => {
     setStoredTopMoves: (moves) => set({ storedTopMoves: moves }),
     // Leave values actions
     setLeaveValues: (values) => set({ leaveValues: values }),
+    // Fast play mode actions
+    setIsFastPlayMode: (mode) => set({ isFastPlayMode: mode }),
+    setFastPlayMoves: (moves) => set({ fastPlayMoves: moves }),
+    setIsExecutingFastPlay: (executing) => set({ isExecutingFastPlay: executing }),
+    setShowAllBingos: (show) => set({ showAllBingos: show }),
     // Puzzle settings actions
     setPuzzleMode: (mode) => set({ puzzleMode: mode }),
     // Utility
     getBoardDiff: (beforeBoard, afterBoard) => getBoardDiff(beforeBoard, afterBoard),
+    
+    // Helper: check if a move is a bingo
+    isBingo: (move) => move && move.tiles && move.tiles.length === 7,
     
     // Initialize puzzle to clean state
     initializePuzzle: () => {
@@ -213,6 +227,10 @@ export const usePuzzleStore = create((set, get) => {
         leaveValues: {},
         puzzleMode: 'bingo',
         storedTopMoves: [],
+        // Clear fast play state
+        fastPlayMoves: [],
+        isExecutingFastPlay: false,
+        showAllBingos: false,
       });
     },
 
@@ -724,6 +742,7 @@ export const usePuzzleStore = create((set, get) => {
         setBingoMove,
         setBlankTiles,
         setStoredTopMoves,
+        setFastPlayMoves,
         getBoardDiff
       } = get();
 
@@ -815,6 +834,9 @@ export const usePuzzleStore = create((set, get) => {
       setIsPausedForBingo(false);
       setBingoMove(null);
       setStoredTopMoves([]);
+      // Clear fast play moves after puzzle challenge
+      setFastPlayMoves([]);
+
 
       console.log('✅ Bingo move completed');
       
@@ -836,5 +858,459 @@ export const usePuzzleStore = create((set, get) => {
         });
       }
     },
+
+    // Fast play mode - group moves together until pause conditions are met
+    makeFastBotMove: async (botMoveSound, gameStartSound) => {
+      const {
+        isFastPlayMode,
+        isExecutingFastPlay,
+        setIsExecutingFastPlay,
+        setFastPlayMoves,
+        makeBotMove,
+        isBingo,
+        setBoardCoords,
+        setTempBoardCoords,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setPlayer1points,
+        setPlayer2points,
+        setPool,
+        setCurrentPlayer,
+        setMoveHistory,
+        setConsecutivePasses,
+        setBlankTiles,
+        getBoardDiff
+      } = get();
+
+      if (!isFastPlayMode || isExecutingFastPlay) {
+        return;
+      }
+
+      setIsExecutingFastPlay(true);
+      const movesToExecute = [];
+      let currentState = get();
+      // Initialize blank tiles tracking for simulation
+      currentState.blankTiles = [...currentState.blankTiles];
+      let shouldPause = false;
+      let pauseReason = null;
+
+      console.log('🚀 Starting fast play mode');
+
+      // Collect moves until we hit a pause condition
+      while (!shouldPause && !currentState.gameEnded) {
+        // Get current game state
+        const {
+          boardCoords,
+          player1Rack,
+          player2Rack,
+          pool,
+          currentPlayer,
+          puzzleMode
+        } = currentState;
+
+        if (currentState.pool.length < 7) {
+          console.log('🎯 GAME END: Pool too small for exchanges');
+          const { setGameEnded } = get();
+          setGameEnded(true);
+          break;
+        }
+
+        // Determine which bot is moving
+        const currentRack = currentPlayer === 1 ? currentState.player1Rack : currentState.player2Rack;
+        const currentName = currentPlayer === 1 ? currentState.player1Name : currentState.player2Name;
+
+        console.log(`🤖 Fast play iteration - Player: ${currentName}, Rack: ${currentRack.join('')} (${currentRack.length} tiles), Pool: ${currentState.pool.length} tiles`);
+
+        // Create a deep copy of the board and rack
+        const boardCopy = JSON.parse(JSON.stringify(currentState.boardCoords));
+        const rackCopy = [...currentRack];
+        const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
+
+        try {
+          // Call the bot API
+          const response = await fetch('/.netlify/functions/botLogic', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              board: boardCopy,
+              letters: apiRack,
+              pool: currentState.pool
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // Filter out moves with empty words
+          if (data.moves) {
+            data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+          }
+
+          if (!data.moves || data.moves.length === 0) {
+            // No valid moves found, add pass to moves list
+            movesToExecute.push({
+              type: 'pass',
+              player: currentName,
+              currentPlayer: currentPlayer
+            });
+            break;
+          }
+
+          // Sort moves by totalValue
+          const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
+          const bestMove = sortedMoves[0];
+
+          // Check pause conditions
+          const isBestMoveBingo = isBingo(bestMove);
+          const otherMovesHaveBingos = sortedMoves.slice(1).some(move => isBingo(move));
+          const hasSignificantGap = sortedMoves.length > 1 && 
+            (bestMove.totalValue - sortedMoves[1].totalValue) >= 10;
+
+          if (puzzleMode === 'bingo' && isBestMoveBingo) {
+            shouldPause = true;
+            pauseReason = 'bingo';
+          } else if (puzzleMode === 'only-bingo' && isBestMoveBingo && !otherMovesHaveBingos) {
+            shouldPause = true;
+            pauseReason = 'only-bingo';
+          } else if (puzzleMode === 'significant-best' && hasSignificantGap) {
+            shouldPause = true;
+            pauseReason = 'significant-best';
+          } else if (puzzleMode === 'non-bingo-significant' && hasSignificantGap && !isBestMoveBingo) {
+            shouldPause = true;
+            pauseReason = 'non-bingo-significant';
+          }
+
+          if (shouldPause) {
+            // Store the moves for the puzzle challenge
+            movesToExecute.push({
+              type: 'puzzle',
+              move: bestMove,
+              allMoves: sortedMoves,
+              player: currentName,
+              currentPlayer: currentPlayer,
+              reason: pauseReason
+            });
+            
+            // Don't simulate the puzzle move - it will be executed when the user continues
+            // This keeps the real state in sync with the simulation
+          } else {
+            // Add move to execution list
+            movesToExecute.push({
+              type: 'move',
+              move: bestMove,
+              player: currentName,
+              currentPlayer: currentPlayer
+            });
+
+            // Simulate the move to update state for next iteration (don't update real state yet)
+            if (bestMove.isExchange) {
+              // Handle exchange simulation
+              const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
+              const newTiles = bestMove.newTiles || [];
+              
+              // Update rack
+              const newRack = currentRack.filter(tile => !tilesToExchange.includes(tile));
+              newRack.push(...newTiles);
+              
+              console.log(`🔄 Exchange simulation - Old rack: ${currentRack.join('')} (${currentRack.length}), New rack: ${newRack.join('')} (${newRack.length})`);
+              
+              // Update pool
+              currentState.pool.push(...tilesToExchange);
+              
+              if (currentPlayer === 1) {
+                currentState.player1Rack = newRack;
+              } else {
+                currentState.player2Rack = newRack;
+              }
+            } else {
+              // Handle word placement simulation
+              const tilesToRemove = [];
+              
+              bestMove.tiles.forEach(tile => {
+                const { row, col, letter } = tile;
+                currentState.boardCoords[row][col] = letter;
+                
+                if (tile.isBlank) {
+                  tilesToRemove.push('?');
+                  // Track blank tiles for simulation
+                  currentState.blankTiles.push({ row: tile.row, col: tile.col });
+                } else {
+                  tilesToRemove.push(letter);
+                }
+              });
+
+              // Update rack
+              let newRack = [...currentRack];
+              tilesToRemove.forEach(tile => {
+                const index = newRack.indexOf(tile);
+                if (index !== -1) {
+                  newRack.splice(index, 1);
+                }
+              });
+
+              // Draw new tiles
+              const tilesToDraw = Math.min(7 - newRack.length, currentState.pool.length);
+              for (let i = 0; i < tilesToDraw; i++) {
+                const randomIndex = Math.floor(Math.random() * currentState.pool.length);
+                newRack.push(currentState.pool[randomIndex]);
+                currentState.pool.splice(randomIndex, 1);
+              }
+
+              console.log(`🔄 Move simulation - Old rack: ${currentRack.join('')} (${currentRack.length}), Tiles played: ${tilesToRemove.join('')}, New rack: ${newRack.join('')} (${newRack.length})`);
+
+              if (currentPlayer === 1) {
+                currentState.player1Rack = newRack;
+                currentState.player1points += bestMove.score;
+              } else {
+                currentState.player2Rack = newRack;
+                currentState.player2points += bestMove.score;
+              }
+            }
+
+            // Switch to the other player
+            currentState.currentPlayer = currentPlayer === 1 ? 2 : 1;
+          }
+
+        } catch (error) {
+          console.error('Error in fast play mode:', error);
+          movesToExecute.push({
+            type: 'error',
+            player: currentName,
+            currentPlayer: currentPlayer,
+            error: error.message
+          });
+          break;
+        }
+      }
+
+      // Store the moves for execution
+      setFastPlayMoves(movesToExecute);
+
+      if (movesToExecute.length > 0) {
+        const lastMove = movesToExecute[movesToExecute.length - 1];
+        
+        if (lastMove.type === 'puzzle') {
+          // Execute all moves except the puzzle move, then pause for challenge
+          const movesToExecuteNow = movesToExecute.slice(0, -1); // Exclude the puzzle move
+          if (movesToExecuteNow.length > 0) {
+            await get().executeFastPlayMoves(movesToExecuteNow, botMoveSound);
+          }
+          
+          // Update the real game state to match the simulated state for the puzzle move
+          const { 
+            setBoardCoords, 
+            setTempBoardCoords, 
+            setPlayer1Rack, 
+            setPlayer2Rack, 
+            setPlayer1points, 
+            setPlayer2points, 
+            setPool, 
+            setCurrentPlayer,
+            setBlankTiles
+          } = get();
+          
+          // Get the current state after simulation
+          const finalState = currentState;
+          
+          // Update real state to match simulation
+          setBoardCoords(JSON.parse(JSON.stringify(finalState.boardCoords)));
+          setTempBoardCoords(JSON.parse(JSON.stringify(finalState.boardCoords)));
+          setPlayer1Rack([...finalState.player1Rack]);
+          setPlayer2Rack([...finalState.player2Rack]);
+          setPlayer1points(finalState.player1points);
+          setPlayer2points(finalState.player2points);
+          setPool([...finalState.pool]);
+          setCurrentPlayer(finalState.currentPlayer);
+          setBlankTiles([...finalState.blankTiles]);
+          
+          console.log(`🎯 Updated real state for puzzle pause - Player 1 rack: ${finalState.player1Rack.join('')} (${finalState.player1Rack.length}), Player 2 rack: ${finalState.player2Rack.join('')} (${finalState.player2Rack.length})`);
+          console.log(`🎯 Updated real state for puzzle pause - Blank tiles: ${finalState.blankTiles.length}, Pool: ${finalState.pool.length}`);
+          
+          // Pause for puzzle challenge
+          const { setIsPausedForBingo, setBingoMove, setStoredTopMoves } = get();
+          setIsPausedForBingo(true);
+          setBingoMove(lastMove.move);
+          setStoredTopMoves(lastMove.allMoves);
+          
+          if (gameStartSound && gameStartSound.play) {
+            gameStartSound.play();
+          }
+        } else {
+          // Execute all moves together
+          await get().executeFastPlayMoves(movesToExecute, botMoveSound);
+        }
+      }
+
+      setIsExecutingFastPlay(false);
+    },
+
+    // Execute the collected moves quickly
+    executeFastPlayMoves: async (moves, botMoveSound) => {
+      const {
+        boardCoords,
+        player1Rack,
+        player2Rack,
+        player1points,
+        player2points,
+        pool,
+        blankTiles,
+        setBoardCoords,
+        setTempBoardCoords,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setPlayer1points,
+        setPlayer2points,
+        setPool,
+        setCurrentPlayer,
+        setMoveHistory,
+        setConsecutivePasses,
+        setBlankTiles,
+        getBoardDiff
+      } = get();
+
+      console.log('⚡ Executing', moves.length, 'moves in fast play mode');
+
+      let currentBoard = JSON.parse(JSON.stringify(boardCoords));
+      let currentPlayer1Rack = [...player1Rack];
+      let currentPlayer2Rack = [...player2Rack];
+      let currentPlayer1Points = player1points;
+      let currentPlayer2Points = player2points;
+      let currentPool = [...pool];
+      let currentBlankTiles = [...blankTiles];
+      let currentPlayer = get().currentPlayer;
+      const moveHistoryEntries = [];
+
+      for (const moveData of moves) {
+        if (moveData.type === 'move') {
+          const { move, player, currentPlayer: movePlayer } = moveData;
+          const currentRack = movePlayer === 1 ? currentPlayer1Rack : currentPlayer2Rack;
+          const currentPoints = movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points;
+
+          if (move.isExchange) {
+            // Handle exchange
+            const tilesToExchange = move.tilesToExchange || move.tiles.map(t => t.letter);
+            const newTiles = move.newTiles || [];
+            
+            // Update rack
+            const newRack = currentRack.filter(tile => !tilesToExchange.includes(tile));
+            newRack.push(...newTiles);
+            
+            // Update pool
+            currentPool.push(...tilesToExchange);
+            
+            if (movePlayer === 1) {
+              currentPlayer1Rack = newRack;
+            } else {
+              currentPlayer2Rack = newRack;
+            }
+
+            moveHistoryEntries.push({
+              boardDiff: [],
+              player: player,
+              score: 0,
+              rack: newRack.join(''),
+              total: currentPoints,
+              word: 'Exchange'
+            });
+          } else {
+            // Handle word placement
+            const boardDiff = [];
+            const tilesToRemove = [];
+            
+            move.tiles.forEach(tile => {
+              const { row, col, letter } = tile;
+              currentBoard[row][col] = letter;
+              boardDiff.push({ row, col, letter });
+              
+              if (tile.isBlank) {
+                currentBlankTiles.push({ row: tile.row, col: tile.col });
+                tilesToRemove.push('?');
+              } else {
+                tilesToRemove.push(letter);
+              }
+            });
+
+            // Update rack
+            let newRack = [...currentRack];
+            tilesToRemove.forEach(tile => {
+              const index = newRack.indexOf(tile);
+              if (index !== -1) {
+                newRack.splice(index, 1);
+              }
+            });
+
+            // Draw new tiles
+            const tilesToDraw = Math.min(7 - newRack.length, currentPool.length);
+            for (let i = 0; i < tilesToDraw; i++) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              newRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
+
+            if (movePlayer === 1) {
+              currentPlayer1Rack = newRack;
+              currentPlayer1Points += move.score;
+            } else {
+              currentPlayer2Rack = newRack;
+              currentPlayer2Points += move.score;
+            }
+
+            moveHistoryEntries.push({
+              boardDiff: boardDiff,
+              player: player,
+              score: move.score,
+              rack: newRack.join(''),
+              total: currentPoints + move.score,
+              word: move.word
+            });
+          }
+
+          currentPlayer = movePlayer === 1 ? 2 : 1;
+        } else if (moveData.type === 'pass') {
+          // Handle pass
+          moveHistoryEntries.push({
+            boardDiff: [],
+            player: moveData.player,
+            score: 0,
+            rack: (moveData.currentPlayer === 1 ? currentPlayer1Rack : currentPlayer2Rack).join(''),
+            total: moveData.currentPlayer === 1 ? currentPlayer1Points : currentPlayer2Points,
+            word: 'Pass'
+          });
+          currentPlayer = moveData.currentPlayer === 1 ? 2 : 1;
+        }
+      }
+
+      // Update all state at once
+      setBoardCoords(currentBoard);
+      setTempBoardCoords(currentBoard);
+      setPlayer1Rack(currentPlayer1Rack);
+      setPlayer2Rack(currentPlayer2Rack);
+      setPlayer1points(currentPlayer1Points);
+      setPlayer2points(currentPlayer2Points);
+      setPool(currentPool);
+      setBlankTiles(currentBlankTiles);
+      setCurrentPlayer(currentPlayer);
+      
+      // Add all moves to history
+      const currentHistory = get().moveHistory || [];
+      setMoveHistory([...currentHistory.slice(-49), ...moveHistoryEntries]);
+      
+      // Play sound for the last move
+      if (botMoveSound && botMoveSound.play) {
+        botMoveSound.play();
+      }
+
+      console.log('✅ Fast play execution completed');
+      
+      // Clear fast play moves after a short delay to show the summary
+      setTimeout(() => {
+        get().setFastPlayMoves([]);
+      }, 3000); // Show summary for 3 seconds
+    },
   };
-}); 
+});
