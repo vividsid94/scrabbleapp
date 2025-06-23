@@ -31,6 +31,7 @@ export const usePuzzleStore = create((set, get) => {
     
     // Tile and selection state
     selectedTiles: [],
+    selectedRackTiles: [],
     selectedBoardPosition: null,
     arrowDirection: 'right',
     tilesToExchange: [],
@@ -115,6 +116,7 @@ export const usePuzzleStore = create((set, get) => {
     setIsBotMode: (isBot) => set({ isBotMode: isBot }),
     // Tile and selection actions
     setSelectedTiles: (tiles) => set({ selectedTiles: tiles }),
+    setSelectedRackTiles: (tiles) => set({ selectedRackTiles: tiles }),
     setSelectedBoardPosition: (position) => set({ selectedBoardPosition: position }),
     setArrowDirection: (direction) => set({ arrowDirection: direction }),
     setTilesToExchange: (tiles) => set({ tilesToExchange: tiles }),
@@ -164,10 +166,435 @@ export const usePuzzleStore = create((set, get) => {
     setFastPlayMoves: (moves) => set({ fastPlayMoves: moves }),
     setIsExecutingFastPlay: (executing) => set({ isExecutingFastPlay: executing }),
     setShowAllBingos: (show) => set({ showAllBingos: show }),
-    // Puzzle settings actions
-    setPuzzleMode: (mode) => set({ puzzleMode: mode }),
-    // Utility
-    getBoardDiff: (beforeBoard, afterBoard) => getBoardDiff(beforeBoard, afterBoard),
+    // Puzzle tile placement actions
+    handleTileDrop: (tile, index, row, col) => {
+      const {
+        selectedRackTiles,
+        selectedTiles,
+        setSelectedTiles,
+        setSelectedRackTiles,
+        setSelectedBoardPosition,
+        tempBoardCoords,
+        setTempBoardCoords
+      } = get();
+      
+      // Find the tile in selectedRackTiles
+      const rackTile = selectedRackTiles.find(t => t.tile === tile && t.index === index);
+      if (rackTile) {
+        // Add to board tiles
+        setSelectedTiles([...selectedTiles, { tile, row, col }]);
+        // Remove from rack tiles
+        const newRackTiles = selectedRackTiles.filter(t => !(t.tile === tile && t.index === index));
+        setSelectedRackTiles(newRackTiles);
+        console.log('🎯 Tile dropped:', { tile, row, col, selectedTiles: [...selectedTiles, { tile, row, col }] });
+      }
+      
+      setSelectedBoardPosition({ row, col });
+
+      const newTempBoard = [...tempBoardCoords];
+      newTempBoard[row][col] = tile;
+      setTempBoardCoords(newTempBoard);
+      console.log('🎯 Board updated:', { row, col, tile, newBoardValue: newTempBoard[row][col] });
+    },
+
+    handlePuzzleTileClick: (tile, index) => {
+      const {
+        selectedRackTiles,
+        setSelectedRackTiles
+      } = get();
+      
+      console.log('🎯 handlePuzzleTileClick called:', { tile, index, currentSelectedRackTiles: selectedRackTiles });
+      
+      const tileIndex = selectedRackTiles.findIndex(t => t.tile === tile && t.index === index);
+      if (tileIndex === -1) {
+        setSelectedRackTiles([...selectedRackTiles, { tile, index }]);
+        console.log('🎯 Tile added to rack selection');
+      } else {
+        const newTiles = [...selectedRackTiles];
+        newTiles.splice(tileIndex, 1);
+        setSelectedRackTiles(newTiles);
+        console.log('🎯 Tile removed from rack selection');
+      }
+    },
+
+    handleBoardPositionSelect: (row, col) => {
+      const {
+        boardCoords,
+        selectedBoardPosition,
+        setSelectedBoardPosition,
+        arrowDirection,
+        setArrowDirection
+      } = get();
+      
+      if (!boardCoords || !boardCoords[row] || typeof boardCoords[row][col] !== 'number') {
+        return;
+      }
+      
+      const isSamePosition =
+        selectedBoardPosition?.row === row &&
+        selectedBoardPosition?.col === col;
+      setSelectedBoardPosition({ row, col });
+      if (isSamePosition) {
+        // Toggle between horizontal and vertical
+        const newDirection = arrowDirection === 'right' ? 'down' : 'right';
+        setArrowDirection(newDirection);
+      }
+    },
+
+    // Word submission for puzzle mode
+    submitPuzzleGuess: () => {
+      const {
+        selectedTiles,
+        tempBoardCoords,
+        bingoMove,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen,
+        continueBingoMove
+      } = get();
+      
+      console.log('🎯 submitPuzzleGuess called:', { 
+        selectedTiles, 
+        bingoMove: bingoMove?.word,
+        bingoMoveTiles: bingoMove?.tiles,
+        tempBoardCoords: selectedTiles.map(t => ({ row: t.row, col: t.col, letter: tempBoardCoords[t.row][t.col] }))
+      });
+      
+      if (selectedTiles.length === 0) {
+        setSnackbarMessage('Please place tiles on the board');
+        setSnackbarSeverity('warning');
+        setSnackbarOpen(true);
+        return;
+      }
+      
+      if (!bingoMove || !bingoMove.tiles) {
+        setSnackbarMessage('No puzzle move found');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        return;
+      }
+      
+      // Check if the number of tiles matches
+      if (selectedTiles.length !== bingoMove.tiles.length) {
+        setSnackbarMessage(`Incorrect number of tiles. Expected ${bingoMove.tiles.length}, got ${selectedTiles.length}`);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        return;
+      }
+      
+      // Check if all tiles are in the correct positions
+      let allPositionsCorrect = true;
+      let allLettersCorrect = true;
+      
+      // Create a map of expected positions and letters
+      const expectedPositions = new Map();
+      bingoMove.tiles.forEach(tile => {
+        const key = `${tile.row},${tile.col}`;
+        expectedPositions.set(key, tile.letter);
+      });
+      
+      // Check each placed tile
+      for (const placedTile of selectedTiles) {
+        const key = `${placedTile.row},${placedTile.col}`;
+        const expectedLetter = expectedPositions.get(key);
+        const actualLetter = tempBoardCoords[placedTile.row][placedTile.col];
+        
+        if (!expectedLetter) {
+          // Tile is placed in wrong position
+          allPositionsCorrect = false;
+          console.log(`🎯 Wrong position: ${placedTile.row},${placedTile.col} - expected no tile here`);
+          break;
+        }
+        
+        if (expectedLetter !== actualLetter) {
+          // Wrong letter in correct position
+          allLettersCorrect = false;
+          console.log(`🎯 Wrong letter at ${placedTile.row},${placedTile.col}: expected ${expectedLetter}, got ${actualLetter}`);
+        }
+      }
+      
+      // Check if all expected positions are covered
+      if (allPositionsCorrect) {
+        for (const [key, expectedLetter] of expectedPositions) {
+          const [row, col] = key.split(',').map(Number);
+          const actualLetter = tempBoardCoords[row][col];
+          if (actualLetter !== expectedLetter) {
+            allLettersCorrect = false;
+            console.log(`🎯 Missing or wrong letter at ${row},${col}: expected ${expectedLetter}, got ${actualLetter}`);
+          }
+        }
+      }
+      
+      console.log('🎯 Position check:', { allPositionsCorrect, allLettersCorrect });
+      
+      // Determine the result
+      if (allPositionsCorrect && allLettersCorrect) {
+        setSnackbarMessage('Correct! Well done!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        // Continue the game
+        continueBingoMove();
+      } else if (!allPositionsCorrect) {
+        setSnackbarMessage('Incorrect position. Make sure tiles are in the right places!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Incorrect word. Check your spelling!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    },
+
+    // Keyboard typing for puzzle mode
+    handlePuzzleKeyDown: (e) => {
+      const {
+        selectedBoardPosition,
+        boardCoords,
+        tempBoardCoords,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        selectedTiles,
+        blankTiles,
+        setSelectedBoardPosition,
+        setArrowDirection,
+        setTempBoardCoords,
+        setSelectedTiles,
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setBlankTiles,
+        arrowDirection,
+        alphabetizeRack
+      } = get();
+
+      if (!selectedBoardPosition) return;
+
+      const { row, col } = selectedBoardPosition;
+      const key = e.key.toUpperCase();
+
+      // Prevent modifier keys
+      if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        return;
+      }
+
+      // Handle arrow keys
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setArrowDirection('right');
+        return;
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setArrowDirection('down');
+        return;
+      }
+
+      // Handle enter key
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        get().submitPuzzleGuess();
+        return;
+      }
+
+      // Handle escape key
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        get().clearPuzzlePlacement();
+        return;
+      }
+
+      // Handle backspace
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        const newTempBoard = [...tempBoardCoords];
+        
+        // Debug: Log what selectedTiles is
+        console.log('selectedTiles in handlePuzzleKeyDown:', selectedTiles, typeof selectedTiles);
+        
+        // Determine the actual direction of the placed tiles
+        let actualDirection = arrowDirection;
+        if (selectedTiles && Array.isArray(selectedTiles) && selectedTiles.length > 1) {
+          // Find the actual first and last tiles placed by examining positions
+          let minRow = Infinity, maxRow = -Infinity;
+          let minCol = Infinity, maxCol = -Infinity;
+          
+          selectedTiles.forEach(tile => {
+            minRow = Math.min(minRow, tile.row);
+            maxRow = Math.max(maxRow, tile.row);
+            minCol = Math.min(minCol, tile.col);
+            maxCol = Math.max(maxCol, tile.col);
+          });
+          
+          // Determine direction based on the span of tiles
+          if (minRow === maxRow) {
+            // All tiles in same row = horizontal move
+            actualDirection = 'right';
+          } else if (minCol === maxCol) {
+            // All tiles in same column = vertical move
+            actualDirection = 'down';
+          }
+        }
+        
+        // Find the actual last tile that was placed
+        let lastPlacedTile = null;
+        if (selectedTiles && Array.isArray(selectedTiles) && selectedTiles.length > 0) {
+          if (actualDirection === 'right') {
+            // For horizontal moves, find the rightmost tile
+            lastPlacedTile = selectedTiles.reduce((last, current) => 
+              current.col > last.col ? current : last
+            );
+          } else {
+            // For vertical moves, find the bottommost tile
+            lastPlacedTile = selectedTiles.reduce((last, current) => 
+              current.row > last.row ? current : last
+            );
+          }
+        }
+        
+        if (lastPlacedTile) {
+          const lastRow = lastPlacedTile.row;
+          const lastCol = lastPlacedTile.col;
+          
+          if (lastRow >= 0 && lastCol >= 0 && Number.isInteger(boardCoords[lastRow][lastCol])) {
+            const tileToRemove = newTempBoard[lastRow][lastCol];
+            
+            if (typeof tileToRemove === 'string' && tileToRemove.length === 1) {
+              // Restore original board value
+              newTempBoard[lastRow][lastCol] = boardCoords[lastRow][lastCol];
+              setTempBoardCoords(newTempBoard);
+              
+              const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+              // Find the tile that was placed at this position
+              const placedTile = selectedTiles && selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
+              if (placedTile) {
+                const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
+                const newRack = [...currentRack, tileToAdd];
+                if (currentPlayer === 1) {
+                  setPlayer1Rack(alphabetizeRack(newRack));
+                } else {
+                  setPlayer2Rack(alphabetizeRack(newRack));
+                }
+
+                // Remove from blankTiles if it was a blank
+                if (placedTile.tile === '*') {
+                  setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+                }
+
+                // Update selectedTiles to match what's actually on the board
+                const currentSelectedTiles = selectedTiles || [];
+                const newSelectedTiles = currentSelectedTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol));
+                setSelectedTiles(newSelectedTiles);
+              }
+            }
+          }
+        }
+        
+        // Always update cursor position to the position of the removed tile
+        if (lastPlacedTile) {
+          const lastRow = lastPlacedTile.row;
+          const lastCol = lastPlacedTile.col;
+          
+          setSelectedBoardPosition({ row: lastRow, col: lastCol });
+        }
+        return;
+      }
+
+      // Handle letter keys
+      if (!/[A-Z]/.test(key)) {
+        e.preventDefault();
+        return;
+      }
+
+      e.preventDefault();
+
+      // Check if there's already a tile at this position
+      if (typeof boardCoords[row][col] === 'string' || typeof tempBoardCoords[row][col] === 'string') {
+        return;
+      }
+
+      const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+      const tileIndex = currentRack.indexOf(key);
+      const blankIndex = currentRack.indexOf('?') !== -1 ? currentRack.indexOf('?') : currentRack.indexOf('*');
+          
+      // If we don't have the letter and don't have a blank, return
+      if (tileIndex === -1 && blankIndex === -1) {
+        return;
+      }
+
+      if (!Number.isInteger(boardCoords[row][col])) {
+        return;
+      }
+
+      const newTempBoard = [...tempBoardCoords];
+      const newBlankTiles = [...blankTiles];
+      let newRack = [...currentRack];
+
+      // Always use the actual letter if we have it
+      if (tileIndex !== -1) {
+        const tileToPlace = newRack[tileIndex];
+        // Remove the tile from the rack immediately when typing
+        newRack.splice(tileIndex, 1);
+        newTempBoard[row][col] = key;
+        const currentSelectedTiles = selectedTiles || [];
+        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
+        console.log('🎯 Typed tile placed:', { tile: tileToPlace, row, col, key, selectedTiles: [...currentSelectedTiles, { tile: tileToPlace, row, col }] });
+      } 
+      // Only use the blank tile if we don't have the letter
+      else if (blankIndex !== -1) {
+        const tileToPlace = newRack[blankIndex];
+        // Remove the blank tile from the rack immediately when typing
+        newRack.splice(blankIndex, 1);
+        newTempBoard[row][col] = key;
+        newBlankTiles.push({ row, col });
+        setBlankTiles(newBlankTiles);
+        const currentSelectedTiles = selectedTiles || [];
+        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
+      }
+
+      // Update the rack immediately when typing
+      if (currentPlayer === 1) {
+        setPlayer1Rack(alphabetizeRack(newRack));
+      } else {
+        setPlayer2Rack(alphabetizeRack(newRack));
+      }
+
+      setTempBoardCoords(newTempBoard);
+
+      // Move to next position
+      if (arrowDirection === 'right') {
+        let nextCol = col + 1;
+        while (nextCol <= 14 && !Number.isInteger(boardCoords[row][nextCol])) {
+          nextCol++;
+        }
+        if (nextCol <= 14) {
+          setSelectedBoardPosition({ row, col: nextCol });
+        }
+      } else {
+        let nextRow = row + 1;
+        while (nextRow <= 14 && !Number.isInteger(boardCoords[nextRow][col])) {
+          nextRow++;
+        }
+        if (nextRow <= 14) {
+          setSelectedBoardPosition({ row: nextRow, col });
+        }
+      }
+    },
+
+    // Clear puzzle placement
+    clearPuzzlePlacement: () => {
+      const {
+        setSelectedTiles,
+        setSelectedRackTiles,
+        setSelectedBoardPosition,
+        setTempBoardCoords,
+        boardCoords
+      } = get();
+      
+      setSelectedTiles([]);
+      setSelectedRackTiles([]);
+      setSelectedBoardPosition(null);
+      setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+    },
     
     // Helper: check if a move is a bingo
     isBingo: (move) => move && move.tiles && move.tiles.length === 7,
@@ -192,6 +619,7 @@ export const usePuzzleStore = create((set, get) => {
         isBotMode: true,
         consecutivePasses: 0,
         selectedTiles: [],
+        selectedRackTiles: [],
         selectedBoardPosition: null,
         arrowDirection: 'right',
         tilesToExchange: [],
@@ -287,6 +715,7 @@ export const usePuzzleStore = create((set, get) => {
         setIsPausedForBingo,
         setBingoMove,
         setStoredTopMoves,
+        setSelectedRackTiles,
         isDictionaryLoading,
         gameTime
       } = get();
@@ -374,6 +803,7 @@ export const usePuzzleStore = create((set, get) => {
       
       // Clear all temporary states
       setSelectedTiles([]);
+      setSelectedRackTiles([]);
       setSelectedBoardPosition(null);
       setArrowDirection('right');
       setBlankTiles([]);
@@ -412,6 +842,7 @@ export const usePuzzleStore = create((set, get) => {
         setCurrentPlayer,
         setSelectedBoardPosition,
         setSelectedTiles,
+        setSelectedRackTiles,
         setArrowDirection,
         setSnackbarMessage,
         setSnackbarSeverity,
@@ -498,6 +929,7 @@ export const usePuzzleStore = create((set, get) => {
             setTopMoves([]);
             setSelectedBoardPosition(null);
             setSelectedTiles([]);
+            setSelectedRackTiles([]);
             setArrowDirection('right');
             return;
           }
@@ -568,6 +1000,7 @@ export const usePuzzleStore = create((set, get) => {
               setTopMoves([]);
               setSelectedBoardPosition(null);
               setSelectedTiles([]);
+              setSelectedRackTiles([]);
               setArrowDirection('right');
               return;
             }
@@ -709,6 +1142,7 @@ export const usePuzzleStore = create((set, get) => {
           setTopMoves([]);
           setSelectedBoardPosition(null);
           setSelectedTiles([]);
+          setSelectedRackTiles([]);
           setArrowDirection('right');
         });
       }, 200); // 0.2 second delay
@@ -1137,6 +1571,14 @@ export const usePuzzleStore = create((set, get) => {
           setBingoMove(lastMove.move);
           setStoredTopMoves(lastMove.allMoves);
           
+          // Clear any previous puzzle placement state
+          const { setSelectedTiles, setSelectedRackTiles, setSelectedBoardPosition, setArrowDirection, boardCoords } = get();
+          setSelectedTiles([]);
+          setSelectedRackTiles([]);
+          setSelectedBoardPosition(null);
+          setArrowDirection('right');
+          setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+          
           if (gameStartSound && gameStartSound.play) {
             gameStartSound.play();
           }
@@ -1312,5 +1754,18 @@ export const usePuzzleStore = create((set, get) => {
         get().setFastPlayMoves([]);
       }, 3000); // Show summary for 3 seconds
     },
+
+    // Utility
+    getBoardDiff: (beforeBoard, afterBoard) => getBoardDiff(beforeBoard, afterBoard),
+
+    // Helper function for rack alphabetization
+    alphabetizeRack: (rack) => {
+      return rack.sort((a, b) => {
+        // Handle blank tiles
+        const aVal = a === '?' || a === '*' ? 26 : a.charCodeAt(0) - 65;
+        const bVal = b === '?' || b === '*' ? 26 : b.charCodeAt(0) - 65;
+        return aVal - bVal;
+      });
+    },
   };
-});
+}); 

@@ -28,9 +28,9 @@ export function handleBoardPositionSelect({
     selectedBoardPosition?.col === col;
   setSelectedBoardPosition({ row, col });
   if (isSamePosition) {
-    setArrowDirection(prev =>
-      prev === 'right' ? 'down' : 'right'
-    );
+    // Toggle between horizontal and vertical
+    const newDirection = arrowDirection === 'right' ? 'down' : 'right';
+    setArrowDirection(newDirection);
   }
 }
 

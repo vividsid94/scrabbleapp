@@ -22,6 +22,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import TuneIcon from '@mui/icons-material/Tune';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
+import { Snackbar, Alert } from "@mui/material";
 
 export default function Puzzle() {
   // Refs (keep these local like Play.js)
@@ -79,6 +80,7 @@ export default function Puzzle() {
     snackbarOpen,
     snackbarMessage,
     snackbarSeverity,
+    setSnackbarOpen,
     showTimeSlider,
     showConfetti,
     showVictoryOverlay,
@@ -107,10 +109,12 @@ export default function Puzzle() {
     handleBotModeToggle,
     selectedTiles,
     setSelectedTiles,
+    selectedRackTiles,
     tilesToExchange,
     setTilesToExchange,
     selectedBoardPosition,
     setSelectedBoardPosition,
+    arrowDirection,
     initializePuzzle,
     continueBingoMove,
     setLeaveValues,
@@ -123,6 +127,12 @@ export default function Puzzle() {
     makeFastBotMove,
     isExecutingFastPlay,
     fastPlayMoves,
+    handleTileDrop,
+    handlePuzzleTileClick,
+    handleBoardPositionSelect,
+    submitPuzzleGuess,
+    clearPuzzlePlacement,
+    handlePuzzleKeyDown,
   } = usePuzzleStore();
 
   // Add manual pause state
@@ -225,6 +235,13 @@ export default function Puzzle() {
     }
   }, [isPausedForBingo]);
 
+  // Reset showAllBingos when a new puzzle challenge starts
+  useEffect(() => {
+    if (isPausedForBingo) {
+      setShowAllBingos(false);
+    }
+  }, [isPausedForBingo]);
+
   // Check for bingos in top moves
   useEffect(() => {
     if (topMoves && topMoves.length > 0 && !isPausedForBingo && gameStarted && !gameEnded) {
@@ -310,9 +327,6 @@ export default function Puzzle() {
     }
   };
 
-  // Empty function for tile clicking (no tile clicking in puzzle mode)
-  const handleTileClick = () => {};
-
   // Custom PlayerInfo component for puzzle mode that shows current player's rack
   const PuzzlePlayerInfo = () => {
     const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
@@ -320,6 +334,14 @@ export default function Puzzle() {
     const currentPoints = currentPlayer === 1 ? player1points : player2points;
     const currentTime = currentPlayer === 1 ? player1Time : player2Time;
     
+    // Conditional tile click handler - only allow when paused for puzzle
+    const handleTileClick = (tile, index) => {
+      console.log('🎯 Tile clicked:', { tile, index, isPausedForBingo });
+      if (isPausedForBingo) {
+        handlePuzzleTileClick(tile, index);
+      }
+    };
+
     return (
       <Box className={styles.playerPanel}>
         <Box className={styles.playerToggle}>
@@ -496,7 +518,7 @@ export default function Puzzle() {
                     rack={currentRack} 
                     color={color.current} 
                     onTileClick={handleTileClick}
-                    selectedTiles={tilesToExchange}
+                    selectedTiles={isPausedForBingo ? selectedRackTiles : tilesToExchange}
                   />
                 </Box>
               )}
@@ -512,49 +534,6 @@ export default function Puzzle() {
           boardCoords={boardCoords}
           pool={pool}
         />
-
-        {/* Fast Play Summary */}
-        {fastPlayMoves.length > 0 && !isExecutingFastPlay && !isPausedForBingo && (
-          <Box className={styles.playerPanel} style={{ 
-            marginTop: '12px',
-            padding: '12px',
-            backgroundColor: 'rgba(255, 152, 0, 0.1)',
-            border: '1px solid rgba(255, 152, 0, 0.3)',
-            borderRadius: '6px'
-          }}>
-            <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center', color: '#FF9800' }}>
-              ⚡ Fast Play Summary
-            </Box>
-            <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {fastPlayMoves.map((moveData, index) => (
-                <Box key={index} style={{
-                  fontSize: '12px',
-                  color: 'white',
-                  padding: '4px 8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '4px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                  {moveData.type === 'move' && (
-                    <Box>
-                      {moveData.player}: {moveData.move.word} ({moveData.move.score} pts)
-                    </Box>
-                  )}
-                  {moveData.type === 'pass' && (
-                    <Box>
-                      {moveData.player}: Pass
-                    </Box>
-                  )}
-                  {moveData.type === 'puzzle' && (
-                    <Box style={{ fontWeight: 'bold', color: '#4CAF50' }}>
-                      🎯 {moveData.player}: {moveData.move.word} ({moveData.move.score} pts) - Puzzle Challenge!
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
 
         {/* Bingo challenge section */}
         {isPausedForBingo && bingoMove && (
@@ -581,6 +560,55 @@ export default function Puzzle() {
                   : 'Can you find the best move?'
                 }
               </Box>
+              
+              {/* Instructions */}
+              <Box style={{ 
+                fontSize: '11px', 
+                marginBottom: '12px', 
+                opacity: 0.7,
+                padding: '8px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px'
+              }}>
+                <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
+                <Box>• Click tiles in your rack to select them, then click board to place</Box>
+                <Box>• Or click board position and type letters directly</Box>
+                <Box>• Use arrow keys to change direction, backspace to remove</Box>
+                <Box>• Press Enter to submit or Escape to clear</Box>
+              </Box>
+              
+              {/* Current guess indicator */}
+              {selectedTiles.length > 0 && (
+                <Box style={{ 
+                  marginBottom: '12px',
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '4px',
+                  fontSize: '12px'
+                }}>
+                  <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>
+                    Your Guess:
+                  </Box>
+                  <Box style={{ 
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    color: '#4CAF50',
+                    fontWeight: 'bold'
+                  }}>
+                    {selectedTiles
+                      .sort((a, b) => {
+                        if (a.row !== b.row) return a.row - b.row;
+                        return a.col - b.col;
+                      })
+                      .map(tile => tile.tile)
+                      .join('')
+                    }
+                  </Box>
+                </Box>
+              )}
+              
               <Box style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                 <button 
                   onClick={handleResume} 
@@ -607,6 +635,61 @@ export default function Puzzle() {
                   }}
                 >
                   Show Answer & Continue
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('🎯 Submit button clicked');
+                    submitPuzzleGuess();
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.3), rgba(76,175,80,0.2))';
+                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))';
+                    e.target.style.transform = 'scale(1) translateY(0)';
+                  }}
+                  style={{ 
+                    fontSize: 12, 
+                    padding: '6px 12px', 
+                    borderRadius: 0, 
+                    cursor: 'pointer',
+                    background: 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))',
+                    color: 'white',
+                    border: '1px solid rgba(76, 175, 80, 0.3)',
+                    fontWeight: 'bold',
+                    backdropFilter: 'blur(5px)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: 'Syne, sans-serif'
+                  }}
+                >
+                  Submit Guess
+                </button>
+                <button 
+                  onClick={clearPuzzlePlacement}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                    e.target.style.transform = 'scale(1) translateY(0)';
+                  }}
+                  style={{ 
+                    fontSize: 12, 
+                    padding: '6px 12px', 
+                    borderRadius: 0, 
+                    cursor: 'pointer',
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                    color: 'white',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    fontWeight: 'bold',
+                    backdropFilter: 'blur(5px)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: 'Syne, sans-serif'
+                  }}
+                >
+                  Clear
                 </button>
                 {puzzleMode === 'bingo' && (
                   <Box style={{ position: 'relative' }}>
@@ -783,7 +866,7 @@ export default function Puzzle() {
                 Game Ended
               </Box>
               <Box style={{ fontSize: '12px', opacity: 0.8 }}>
-                Too few tiles left.
+                Too few tiles left. There aren't any more matching puzzles for this game. Start a new one!
               </Box>
             </Box>
           </Box>
@@ -947,6 +1030,18 @@ export default function Puzzle() {
     );
   };
 
+  // Keyboard event handling for puzzle mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (isPausedForBingo) {
+        handlePuzzleKeyDown(e);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isPausedForBingo, handlePuzzleKeyDown]);
+
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -980,6 +1075,10 @@ export default function Puzzle() {
                 previewScore={null}
                 previewScorePosition={null}
                 lastMoveCoordinates={lastMoveCoordinates}
+                onBoardChildClick={isPausedForBingo ? handleBoardPositionSelect : undefined}
+                onTileDrop={isPausedForBingo ? handleTileDrop : undefined}
+                selectedPosition={isPausedForBingo ? selectedBoardPosition : null}
+                arrowDirection={isPausedForBingo ? arrowDirection : 'right'}
               />   
             </Box>
           </Box>
@@ -1019,6 +1118,22 @@ export default function Puzzle() {
           </Box>
         )}
       </Box>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 } 
