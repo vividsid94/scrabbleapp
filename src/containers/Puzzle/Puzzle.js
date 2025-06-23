@@ -1078,7 +1078,7 @@ export default function Puzzle() {
                 textAlign: 'center', 
                 fontWeight: '600'
               }}>
-                Solve puzzles on the spot as SidBot vs SidBot plays
+                Solve puzzles on the spot as SidBot plays itself
               </Box>
             </Box>
           </Box>
