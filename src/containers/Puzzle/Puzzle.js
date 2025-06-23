@@ -575,37 +575,6 @@ export default function Puzzle() {
                 <Box>• Place your guess on the board, or reveal the answer by clicking the button below.</Box>
               </Box>
               
-              {/* Current guess indicator */}
-              {selectedTiles.length > 0 && (
-                <Box style={{ 
-                  marginBottom: '12px',
-                  padding: '8px 12px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}>
-                  <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>
-                    Your Guess:
-                  </Box>
-                  <Box style={{ 
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    color: '#4CAF50',
-                    fontWeight: 'bold'
-                  }}>
-                    {selectedTiles
-                      .sort((a, b) => {
-                        if (a.row !== b.row) return a.row - b.row;
-                        return a.col - b.col;
-                      })
-                      .map(tile => tile.tile)
-                      .join('')
-                    }
-                  </Box>
-                </Box>
-              )}
-              
               <Box style={{ 
                 display: 'flex', 
                 gap: '8px', 
