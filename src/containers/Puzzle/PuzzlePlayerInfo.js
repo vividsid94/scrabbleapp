@@ -6,6 +6,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
@@ -63,6 +64,7 @@ const PuzzlePlayerInfo = React.memo(() => {
   const isFastPlayMode = usePuzzleStore(state => state.isFastPlayMode);
   const isExecutingFastPlay = usePuzzleStore(state => state.isExecutingFastPlay);
   const gameEnded = usePuzzleStore(state => state.gameEnded);
+  const showAllBingos = usePuzzleStore(state => state.showAllBingos);
   
   // Subscribe to actions
   const {
@@ -85,7 +87,6 @@ const PuzzlePlayerInfo = React.memo(() => {
   // Local state
   const [isManuallyPaused, setIsManuallyPausedLocal] = React.useState(false);
   const [showSettingsPanel, setShowSettingsPanelLocal] = React.useState(false);
-  const [showAllBingos, setShowAllBingosLocal] = React.useState(false);
 
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
   const currentName = currentPlayer === 1 ? player1Name : player2Name;
@@ -115,7 +116,7 @@ const PuzzlePlayerInfo = React.memo(() => {
     }
     
     // Hide the bingos list when resuming
-    setShowAllBingosLocal(false);
+    setShowAllBingos(false);
   };
 
   // Handle puzzle mode change
@@ -273,6 +274,31 @@ const PuzzlePlayerInfo = React.memo(() => {
             </Box>
           </Tooltip>
         )}
+        {gameStarted && (
+          <Tooltip title="Reset Rack">
+            <Box
+              onClick={() => {
+                console.log(' Reset rack clicked');
+                clearPuzzlePlacement();
+              }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <RefreshIcon 
+                className={`${styles.keyBtn} ${styles.resetIcon}`}
+                style={{ 
+                  fontSize: 24, 
+                  cursor: 'pointer'
+                }}
+              />
+            </Box>
+          </Tooltip>
+        )}
       </Box>
 
       {gameStarted && (
@@ -386,10 +412,28 @@ const PuzzlePlayerInfo = React.memo(() => {
                   transition: 'all 0.3s ease',
                   fontFamily: 'Syne, sans-serif',
                   textAlign: 'center',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  position: 'relative'
                 }}
               >
-                Show Answer & Continue
+                Reveal/Skip
+                <Box sx={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  1
+                </Box>
               </button>
               <button 
                 onClick={() => {
@@ -425,7 +469,7 @@ const PuzzlePlayerInfo = React.memo(() => {
                 Submit Guess
               </button>
               <button 
-                onClick={clearPuzzlePlacement}
+                onClick={() => setShowAllBingos(!showAllBingos)}
                 onMouseEnter={(e) => {
                   e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
                   e.target.style.transform = 'scale(1.05) translateY(-2px)';
@@ -449,93 +493,36 @@ const PuzzlePlayerInfo = React.memo(() => {
                   transition: 'all 0.3s ease',
                   fontFamily: 'Syne, sans-serif',
                   textAlign: 'center',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  position: 'relative'
                 }}
               >
-                Clear
-              </button>
-              {puzzleMode === 'bingo' && (
-                <button 
-                  onClick={() => setShowAllBingosLocal(!showAllBingos)}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                    e.target.style.transform = 'scale(1) translateY(0)';
-                  }}
-                  style={{ 
-                    flex: '1',
-                    minWidth: '120px',
-                    fontSize: 12, 
-                    padding: '8px 12px', 
-                    borderRadius: 0, 
-                    cursor: 'pointer',
-                    background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    fontWeight: 'bold',
-                    backdropFilter: 'blur(5px)',
-                    transition: 'all 0.3s ease',
-                    fontFamily: 'Syne, sans-serif',
-                    textAlign: 'center',
-                    whiteSpace: 'nowrap',
-                    position: 'relative'
-                  }}
-                >
-                  {showAllBingos ? 'Hide All Bingos' : 'Show All Bingos'}
-                  <Box style={{
-                    position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
-                  }}>
-                    {storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0}
+                {showAllBingos ? (
+                  <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                    {puzzleMode === 'bingo' ? (
+                      storedTopMoves?.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map((move, index) => (
+                        <Box key={index} style={{ fontSize: '10px', fontWeight: 'normal' }}>
+                          {move.startPosition} {move.word} ({move.score} pts)
+                        </Box>
+                      ))
+                    ) : (puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') ? (
+                      storedTopMoves?.slice(0, 2).map((move, index) => (
+                        <Box key={index} style={{ fontSize: '10px', fontWeight: index === 0 ? 'bold' : 'normal' }}>
+                          {index + 1}. {move.startPosition} {move.word} ({move.score} pts)
+                        </Box>
+                      ))
+                    ) : null}
                   </Box>
-                </button>
-              )}
-              {(puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') && (
-                <button 
-                  onClick={() => setShowAllBingosLocal(!showAllBingos)}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                    e.target.style.transform = 'scale(1) translateY(0)';
-                  }}
-                  style={{ 
-                    flex: '1',
-                    minWidth: '120px',
-                    fontSize: 12, 
-                    padding: '8px 12px', 
-                    borderRadius: 0, 
-                    cursor: 'pointer',
-                    background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    fontWeight: 'bold',
-                    backdropFilter: 'blur(5px)',
-                    transition: 'all 0.3s ease',
-                    fontFamily: 'Syne, sans-serif',
-                    textAlign: 'center',
-                    whiteSpace: 'nowrap',
-                    position: 'relative'
-                  }}
-                >
-                  {showAllBingos ? 'Hide Top 2 Plays' : 'Show Top 2 Moves'}
-                  <Box style={{
+                ) : (
+                  puzzleMode === 'bingo' 
+                    ? `Show ${storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0} bingos`
+                    : puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant'
+                    ? 'Show Top 2 Moves'
+                    : 'Show Moves'
+                )}
+                <Box 
+                  onClick={() => setShowAllBingos(!showAllBingos)}
+                  style={{
                     position: 'absolute',
                     top: '-8px',
                     right: '-8px',
@@ -548,77 +535,15 @@ const PuzzlePlayerInfo = React.memo(() => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '12px',
-                    fontWeight: 'bold'
-                  }}>
-                    2
-                  </Box>
-                </button>
-              )}
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  2
+                </Box>
+              </button>
             </Box>
           </Box>
-          
-          {/* All bingos list for mode 1 */}
-          {puzzleMode === 'bingo' && showAllBingos && storedTopMoves && (
-            <Box style={{ 
-              marginTop: '12px', 
-              padding: '12px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '4px'
-            }}>
-              <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
-                All Available Bingos:
-              </Box>
-              <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {storedTopMoves
-                  .filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange)
-                  .map((move, index) => (
-                    <Box key={index} style={{
-                      fontSize: '12px',
-                      color: 'white',
-                      fontWeight: 'normal'
-                    }}>
-                      {move.startPosition} {move.word} ({move.score} pts)
-                    </Box>
-                  ))}
-              </Box>
-            </Box>
-          )}
-
-          {/* Top 2 plays list for modes 3 and 4 */}
-          {(puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') && showAllBingos && storedTopMoves && (
-            <Box style={{ 
-              marginTop: '12px', 
-              padding: '12px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '4px'
-            }}>
-              <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
-                Top 2 Plays:
-              </Box>
-              <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {storedTopMoves.slice(0, 2).map((move, index) => (
-                  <Box key={index} style={{
-                    fontSize: '12px',
-                    color: 'white',
-                    fontWeight: index === 0 ? 'bold' : 'normal',
-                    padding: '4px 8px',
-                    backgroundColor: index === 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    border: index === 0 ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '4px'
-                  }}>
-                    <Box style={{ marginBottom: '2px' }}>
-                      {index + 1}. {move.startPosition} {move.word} ({move.score} pts)
-                    </Box>
-                    <Box style={{ fontSize: '11px', opacity: 0.8 }}>
-                      Total Value: {move.totalValue && !isNaN(parseFloat(move.totalValue)) ? Math.round(parseFloat(move.totalValue)) : 'N/A'} | Leave: {move.leaveValue && !isNaN(parseFloat(move.leaveValue)) ? Math.round(parseFloat(move.leaveValue)) : 'N/A'}
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
         </Box>
       )}
 

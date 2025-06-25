@@ -404,12 +404,11 @@ export const usePuzzleStore = create((set, get) => {
         setPlayer2Rack,
         setBlankTiles,
         arrowDirection,
-        alphabetizeRack
+        alphabetizeRack,
+        continueBingoMove
       } = get();
 
-      if (!selectedBoardPosition) return;
-
-      const { row, col } = selectedBoardPosition;
+      const { row, col } = selectedBoardPosition || {};
       const key = e.key.toUpperCase();
 
       // Prevent modifier keys
@@ -417,6 +416,24 @@ export const usePuzzleStore = create((set, get) => {
         e.preventDefault();
         return;
       }
+
+      // Handle reveal/skip shortcut (1 key) - always available when paused
+      if (e.key === '1') {
+        e.preventDefault();
+        continueBingoMove();
+        return;
+      }
+
+      // Handle show/hide bingos shortcut (2 key) - always available when paused
+      if (e.key === '2') {
+        e.preventDefault();
+        const { setShowAllBingos, showAllBingos } = get();
+        setShowAllBingos(!showAllBingos);
+        return;
+      }
+
+      // For other keys, need a selected position
+      if (!selectedBoardPosition) return;
 
       // Handle arrow keys
       if (e.key === 'ArrowRight') {
@@ -622,12 +639,42 @@ export const usePuzzleStore = create((set, get) => {
     // Clear puzzle placement
     clearPuzzlePlacement: () => {
       const {
+        selectedTiles,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
+        blankTiles,
         setSelectedTiles,
         setSelectedRackTiles,
         setSelectedBoardPosition,
         setTempBoardCoords,
-        boardCoords
+        setPlayer1Rack,
+        setPlayer2Rack,
+        setBlankTiles,
+        boardCoords,
+        alphabetizeRack
       } = get();
+      
+      // Restore tiles to the rack
+      if (selectedTiles && selectedTiles.length > 0) {
+        const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+        const tilesToRestore = selectedTiles.map(tile => tile.tile === '*' ? '?' : tile.tile);
+        const newRack = [...currentRack, ...tilesToRestore];
+        
+        if (currentPlayer === 1) {
+          setPlayer1Rack(alphabetizeRack(newRack));
+        } else {
+          setPlayer2Rack(alphabetizeRack(newRack));
+        }
+        
+        // Remove blank tiles that were placed
+        const newBlankTiles = blankTiles.filter(blankTile => 
+          !selectedTiles.some(selectedTile => 
+            selectedTile.row === blankTile.row && selectedTile.col === blankTile.col
+          )
+        );
+        setBlankTiles(newBlankTiles);
+      }
       
       setSelectedTiles([]);
       setSelectedRackTiles([]);
