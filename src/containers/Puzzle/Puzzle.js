@@ -203,7 +203,7 @@ export default function Puzzle() {
         if (isFastPlayMode) {
           makeFastBotMove(botMoveSound, gameStartSound);
         } else {
-          makeBotMove(botMoveSound, gameStartSound);
+        makeBotMove(botMoveSound, gameStartSound);
         }
       } else {
       }

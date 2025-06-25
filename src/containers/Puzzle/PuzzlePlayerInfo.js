@@ -102,7 +102,6 @@ const PuzzlePlayerInfo = React.memo(() => {
 
   // Resume after bingo challenge
   const handleResume = () => {
-    console.log('🔄 handleResume called', { isPausedForBingo });
     
     if (isPausedForBingo) {
       // Continue the bingo move

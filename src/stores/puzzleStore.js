@@ -186,7 +186,6 @@ export const usePuzzleStore = create((set, get) => {
         // Remove from rack tiles
         const newRackTiles = selectedRackTiles.filter(t => !(t.tile === tile && t.index === index));
         setSelectedRackTiles(newRackTiles);
-        console.log('🎯 Tile dropped:', { tile, row, col, selectedTiles: [...selectedTiles, { tile, row, col }] });
       }
       
       setSelectedBoardPosition({ row, col });
@@ -194,7 +193,6 @@ export const usePuzzleStore = create((set, get) => {
       const newTempBoard = [...tempBoardCoords];
       newTempBoard[row][col] = tile;
       setTempBoardCoords(newTempBoard);
-      console.log('🎯 Board updated:', { row, col, tile, newBoardValue: newTempBoard[row][col] });
     },
 
     handlePuzzleTileClick: (tile, index) => {
@@ -203,17 +201,13 @@ export const usePuzzleStore = create((set, get) => {
         setSelectedRackTiles
       } = get();
       
-      console.log('🎯 handlePuzzleTileClick called:', { tile, index, currentSelectedRackTiles: selectedRackTiles });
-      
       const tileIndex = selectedRackTiles.findIndex(t => t.tile === tile && t.index === index);
       if (tileIndex === -1) {
         setSelectedRackTiles([...selectedRackTiles, { tile, index }]);
-        console.log('🎯 Tile added to rack selection');
       } else {
         const newTiles = [...selectedRackTiles];
         newTiles.splice(tileIndex, 1);
         setSelectedRackTiles(newTiles);
-        console.log('🎯 Tile removed from rack selection');
       }
     },
 
@@ -247,18 +241,12 @@ export const usePuzzleStore = create((set, get) => {
         selectedTiles,
         tempBoardCoords,
         bingoMove,
+        storedTopMoves,
         setSnackbarMessage,
         setSnackbarSeverity,
         setSnackbarOpen,
         continueBingoMove
       } = get();
-      
-      console.log('🎯 submitPuzzleGuess called:', { 
-        selectedTiles, 
-        bingoMove: bingoMove?.word,
-        bingoMoveTiles: bingoMove?.tiles,
-        tempBoardCoords: selectedTiles.map(t => ({ row: t.row, col: t.col, letter: tempBoardCoords[t.row][t.col] }))
-      });
       
       if (selectedTiles.length === 0) {
         setSnackbarMessage('Please place tiles on the board');
@@ -282,7 +270,7 @@ export const usePuzzleStore = create((set, get) => {
         return;
       }
       
-      // Check if all tiles are in the correct positions
+      // Check if the guess matches the exact best move (position and word)
       let allPositionsCorrect = true;
       let allLettersCorrect = true;
       
@@ -302,14 +290,11 @@ export const usePuzzleStore = create((set, get) => {
         if (!expectedLetter) {
           // Tile is placed in wrong position
           allPositionsCorrect = false;
-          console.log(`🎯 Wrong position: ${placedTile.row},${placedTile.col} - expected no tile here`);
-          break;
         }
         
         if (expectedLetter !== actualLetter) {
           // Wrong letter in correct position
           allLettersCorrect = false;
-          console.log(`🎯 Wrong letter at ${placedTile.row},${placedTile.col}: expected ${expectedLetter}, got ${actualLetter}`);
         }
       }
       
@@ -320,27 +305,84 @@ export const usePuzzleStore = create((set, get) => {
           const actualLetter = tempBoardCoords[row][col];
           if (actualLetter !== expectedLetter) {
             allLettersCorrect = false;
-            console.log(`🎯 Missing or wrong letter at ${row},${col}: expected ${expectedLetter}, got ${actualLetter}`);
           }
         }
       }
       
-      // Determine the result
+      // If exact match, it's correct
       if (allPositionsCorrect && allLettersCorrect) {
         setSnackbarMessage('Correct! Well done!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
         // Continue the game
         continueBingoMove();
-      } else if (!allPositionsCorrect) {
-        setSnackbarMessage('Hmm, not quite. Try again!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      } else {
-        setSnackbarMessage('Hmm, not quite. Try again!');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        return;
       }
+      
+      // If not exact match, check if it's a tied move
+      if (storedTopMoves && storedTopMoves.length > 0) {
+        const bestMove = storedTopMoves[0];
+        const bestScore = bestMove.score;
+        
+        // Find all moves with the same score as the best move
+        const tiedMoves = storedTopMoves.filter(move => move.score === bestScore);
+        
+        // Check if the guessed position matches any of the tied moves
+        for (const tiedMove of tiedMoves) {
+          // Use the same logic as exact match check - compare positions and letters
+          let allPositionsCorrect = true;
+          let allLettersCorrect = true;
+          
+          // Create a map of expected positions and letters for this tied move
+          const expectedPositions = new Map();
+          tiedMove.tiles.forEach(tile => {
+            const key = `${tile.row},${tile.col}`;
+            expectedPositions.set(key, tile.letter);
+          });
+          
+          // Check each placed tile
+          for (const placedTile of selectedTiles) {
+            const key = `${placedTile.row},${placedTile.col}`;
+            const expectedLetter = expectedPositions.get(key);
+            const actualLetter = tempBoardCoords[placedTile.row][placedTile.col];
+            
+            if (!expectedLetter) {
+              // Tile is placed in wrong position
+              allPositionsCorrect = false;
+            }
+            
+            if (expectedLetter !== actualLetter) {
+              // Wrong letter in correct position
+              allLettersCorrect = false;
+            }
+          }
+          
+          // Check if all expected positions are covered
+          if (allPositionsCorrect) {
+            for (const [key, expectedLetter] of expectedPositions) {
+              const [row, col] = key.split(',').map(Number);
+              const actualLetter = tempBoardCoords[row][col];
+              if (actualLetter !== expectedLetter) {
+                allLettersCorrect = false;
+              }
+            }
+          }
+          
+          if (allPositionsCorrect && allLettersCorrect) {
+            setSnackbarMessage('Correct! Well done! (Tied for best move)');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            // Continue the game
+            continueBingoMove();
+            return;
+          }
+        }
+      }
+      
+      // If we get here, it's incorrect
+      setSnackbarMessage('Hmm, not quite. Try again!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     },
 
     // Keyboard typing for puzzle mode
@@ -535,7 +577,6 @@ export const usePuzzleStore = create((set, get) => {
         newTempBoard[row][col] = key;
         const currentSelectedTiles = selectedTiles || [];
         setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
-        console.log('🎯 Typed tile placed:', { tile: tileToPlace, row, col, key, selectedTiles: [...currentSelectedTiles, { tile: tileToPlace, row, col }] });
       } 
       // Only use the blank tile if we don't have the letter
       else if (blankIndex !== -1) {
@@ -873,11 +914,6 @@ export const usePuzzleStore = create((set, get) => {
         // Convert any '?' in the rack to '*' for the API
         const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
         
-        console.log('🤖 Bot Move Request:', {
-          rack: apiRack.join(''),
-          player: currentName
-        });
-
         // Ensure Go service is warmed up before making the actual request
         console.log('🔥 Ensuring Go service is warmed up...');
         ensureGoServiceWarmedUp().then(isWarmedUp => {
@@ -1178,10 +1214,7 @@ export const usePuzzleStore = create((set, get) => {
         getBoardDiff
       } = get();
 
-      console.log('🎯 continueBingoMove called', { bingoMove, currentPlayer });
-
       if (!bingoMove) {
-        console.log('❌ No bingo move found');
         return;
       }
 
@@ -1191,12 +1224,6 @@ export const usePuzzleStore = create((set, get) => {
       const currentName = currentPlayer === 1 ? player1Name : player2Name;
       const setCurrentRack = currentPlayer === 1 ? setPlayer1Rack : setPlayer2Rack;
       const setCurrentPoints = currentPlayer === 1 ? setPlayer1points : setPlayer2points;
-
-      console.log('🎯 Executing bingo move', { 
-        word: bingoMove.word, 
-        score: bingoMove.score, 
-        tiles: bingoMove.tiles.length 
-      });
 
       // Create a copy of the board with the bingo move
       const newBoard = JSON.parse(JSON.stringify(boardCoords));
@@ -1268,15 +1295,6 @@ export const usePuzzleStore = create((set, get) => {
       setStoredTopMoves([]);
       // Clear fast play moves after puzzle challenge
       setFastPlayMoves([]);
-
-
-      console.log('✅ Bingo move completed');
-      
-      // Reset bot move flag immediately to allow next bot to move
-      setTimeout(() => {
-        console.log('🔄 Resetting bot move flag after bingo completion');
-        // This will be handled by the useEffect in Puzzle.js
-      }, 0);
     },
 
     // Fetch leave values for top moves
@@ -1350,8 +1368,6 @@ export const usePuzzleStore = create((set, get) => {
         // Determine which bot is moving
         const currentRack = currentPlayer === 1 ? currentState.player1Rack : currentState.player2Rack;
         const currentName = currentPlayer === 1 ? currentState.player1Name : currentState.player2Name;
-
-        console.log(`🤖 Fast play iteration - Player: ${currentName}, Rack: ${currentRack.join('')} (${currentRack.length} tiles), Pool: ${currentState.pool.length} tiles`);
 
         // Create a deep copy of the board and rack
         const boardCopy = JSON.parse(JSON.stringify(currentState.boardCoords));
@@ -1493,8 +1509,6 @@ export const usePuzzleStore = create((set, get) => {
                 currentState.pool.splice(randomIndex, 1);
               }
 
-              console.log(`🔄 Move simulation - Old rack: ${currentRack.join('')} (${currentRack.length}), Tiles played: ${tilesToRemove.join('')}, New rack: ${newRack.join('')} (${newRack.length})`);
-
               if (currentPlayer === 1) {
                 currentState.player1Rack = newRack;
                 currentState.player1points += bestMove.score;
@@ -1559,9 +1573,6 @@ export const usePuzzleStore = create((set, get) => {
           setPool([...finalState.pool]);
           setCurrentPlayer(finalState.currentPlayer);
           setBlankTiles([...finalState.blankTiles]);
-          
-          console.log(`🎯 Updated real state for puzzle pause - Player 1 rack: ${finalState.player1Rack.join('')} (${finalState.player1Rack.length}), Player 2 rack: ${finalState.player2Rack.join('')} (${finalState.player2Rack.length})`);
-          console.log(`🎯 Updated real state for puzzle pause - Blank tiles: ${finalState.blankTiles.length}, Pool: ${finalState.pool.length}`);
           
           // Pause for puzzle challenge
           const { setIsPausedForBingo, setBingoMove, setStoredTopMoves } = get();
