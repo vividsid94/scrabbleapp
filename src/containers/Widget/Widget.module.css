@@ -1,0 +1,41 @@
+.widget-container {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.widget-header {
+  -webkit-app-region: drag;
+}
+
+.widget-header button {
+  -webkit-app-region: no-drag;
+}
+
+/* Make the widget draggable */
+.widget-container {
+  cursor: move;
+}
+
+/* Ensure buttons are clickable */
+.widget-container button,
+.widget-container .MuiChip-root {
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+/* Widget page styling */
+.widget-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+/* Ensure widget has fixed size */
+.widget-wrapper {
+  width: 400px;
+  height: 300px;
+  flex-shrink: 0;
+} 

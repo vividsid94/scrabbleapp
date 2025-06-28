@@ -1,6 +1,7 @@
 {
-  "short_name": "Tile Turnover",
-  "name": "Tile Turnover",
+  "short_name": "Scrabble Widget",
+  "name": "Scrabble Desktop Widget",
+  "description": "A desktop widget for Scrabble game tracking and study",
   "icons": [
     {
       "src": "favicon.ico",
@@ -18,8 +19,11 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/widget",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#6c6a62",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["games", "education", "productivity"]
 }
