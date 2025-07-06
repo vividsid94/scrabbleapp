@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Paper, TextField, List, ListItem, ListItemText } from '@mui/material';
+import { Box, Typography, IconButton, Paper, TextField, List, ListItem, ListItemText, CircularProgress } from '@mui/material';
 import { Close, Minimize, Refresh, Search } from '@mui/icons-material';
 
 const Widget = () => {
@@ -8,6 +8,7 @@ const Widget = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     // Check if running in Electron
@@ -21,23 +22,46 @@ const Widget = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sample word list for search (you can replace with your actual dictionary)
-  const sampleWords = [
-    'SCRABBLE', 'TILE', 'WORD', 'GAME', 'PLAY', 'SCORE', 'BOARD',
-    'RACK', 'LETTER', 'POINT', 'TRIPLE', 'DOUBLE', 'BONUS',
-    'QUIZ', 'PUZZLE', 'STUDY', 'LEARN', 'PRACTICE', 'CHALLENGE'
-  ];
+  // Debounced search function
+  useEffect(() => {
+    const searchTimeout = setTimeout(() => {
+      if (searchTerm.length > 0) {
+        performSearch(searchTerm);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(searchTimeout);
+  }, [searchTerm]);
+
+  const performSearch = async (term) => {
+    if (term.length < 1) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Call the Netlify function
+      const response = await fetch(`/.netlify/functions/searchWords?searchTerm=${encodeURIComponent(term)}`);
+      const data = await response.json();
+      
+      if (data.words) {
+        setSearchResults(data.words);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    if (term.length > 0) {
-      const filtered = sampleWords.filter(word => 
-        word.toLowerCase().includes(term.toLowerCase())
-      );
-      setSearchResults(filtered.slice(0, 5)); // Show max 5 results
-    } else {
-      setSearchResults([]);
-    }
   };
 
   const handleClose = () => {
@@ -140,28 +164,33 @@ const Widget = () => {
             <Typography variant="subtitle2" sx={{ color: '#6c6a62', fontWeight: 'bold' }}>
               Word Search
             </Typography>
-            <TextField
-              size="small"
-              placeholder="Search words..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: '#6c6a62' }} />,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#6c6a62',
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                size="small"
+                placeholder="Search Scrabble words..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: <Search sx={{ mr: 1, color: '#6c6a62' }} />,
+                  endAdornment: isSearching ? (
+                    <CircularProgress size={16} sx={{ color: '#6c6a62' }} />
+                  ) : null
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#6c6a62',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#808080',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6c6a62',
+                    },
                   },
-                  '&:hover fieldset': {
-                    borderColor: '#808080',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#6c6a62',
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </Box>
             
             {/* Search Results */}
             {searchResults.length > 0 && (
@@ -191,6 +220,13 @@ const Widget = () => {
                   </ListItem>
                 ))}
               </List>
+            )}
+            
+            {/* No results message */}
+            {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+              <Typography variant="caption" sx={{ color: '#666', textAlign: 'center', py: 1 }}>
+                No words found
+              </Typography>
             )}
           </Box>
         </Box>

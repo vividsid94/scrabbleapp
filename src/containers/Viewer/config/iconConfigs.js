@@ -33,7 +33,7 @@ export const createIconList = (
   {
     icon: SkipPreviousIcon,
     toolTip: "Beginning of game",
-    onClick: () => beginningOfGame(setBoardCoords, currentMoveRef, setPool, origBoard, origPool)
+    onClick: () => beginningOfGame()
   },
   {
     icon: KeyboardArrowLeftIcon,
@@ -65,7 +65,7 @@ export const createIconList = (
   {
     icon: SwapHorizIcon,
     toolTip: "Switch mode",
-    onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode(mode, setMode, onChange, randomizeGame)),
+    onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode(onChange)),
     condition: {
       color: !unlockEloMode ? 'transparent' : 'white',
       background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'

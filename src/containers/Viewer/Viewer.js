@@ -11,8 +11,7 @@ import { getMove, createBoard } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
 import { removeFromPool } from '../../functions/poolFunctions';
-import { useGameState } from './hooks/useGameState';
-import { handleBoardClick, switchMode, beginningOfGame, chooseGame } from '../../functions/gameControls';
+import { useViewerStore } from '../../stores/viewerStore';
 import { revealPlayers, revealElo } from '../../functions/playerFunctions';
 import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
 import ColorScheme from '../../components/common/ColorScheme';
@@ -27,7 +26,10 @@ import ViewedGamesList from './components/ViewedGamesList';
 
 export default function Viewer({ onChange }){ 
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
+  
+  // Use Zustand Viewer Store
   const {
+    // Game state
     gameNum, setGameNum,
     boardClickCount, setBoardClickCount,
     moveSet, setMoveSet,
@@ -60,18 +62,27 @@ export default function Viewer({ onChange }){
     customPlayerMode,
     showUnlockText, setShowUnlockText,
     origPlayerRaw, setOrigPlayerRaw,
-    notes, setNote,
+    notes, setNotes,
     gamesViewed, setGamesViewed,
     recentNames, setRecentNames,
     recentDictionaries, setRecentDictionaries,
     recentGameNums, setRecentGameNums,
     loadingMsg, setLoadingMsg,
     modalContent, setModalContent,
+    
+    // Functions
+    handleClose,
+    switchValue,
+    handleCustomPlayerMode,
+    handleDictionaryChange,
+    handleELOCommentaryChange,
+    handleTileChange,
+    switchMode: switchModeStore,
     randomizeGame,
-    loadGameData
-  } = useGameState(onChange);
-
-  const handleClose = () => setOpen(false);
+    loadGameData,
+    beginningOfGame: beginningOfGameStore,
+    chooseGame: chooseGameStore
+  } = useViewerStore();
 
   const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
     const state = {
@@ -89,27 +100,6 @@ export default function Viewer({ onChange }){
     handleMove(superLastMove, lastMove, thisMove, nextMove, type, state);
   };
 
-  const handleCustomPlayerMode = (event) => {
-    customPlayerMode.current = event.target.value;
-  };
-
-  const handleDictionaryChange = event => {
-    setDictionary(event.target.value);
-    customPlayerMode.current = "";
-  };
-
-  const handleELOCommentaryChange = event => {
-    setELOCommentary(event.target.value);
-  };
-
-  const handleTileChange = event => {
-    setTiles(event.target.value);
-  };
-
-  const switchValue = () => {
-    setDictionary("ANY");
-  };
-
   const toggleLightMode = () => {
     setLightMode(lightMode === 'dark' ? 'light' : 'dark');
   };
@@ -119,7 +109,7 @@ export default function Viewer({ onChange }){
   }, [loadGameData]);
 
   const iconList = createIconList(
-    beginningOfGame,
+    beginningOfGameStore,
     currentMoveRef,
     setMoveDirection,
     handleMoveWrapper,
@@ -127,7 +117,7 @@ export default function Viewer({ onChange }){
     randomizeGame,
     unlockEloMode,
     showUnlockText,
-    switchMode,
+    switchModeStore,
     mode,
     onChange,
     setBoardCoords,
@@ -194,7 +184,7 @@ export default function Viewer({ onChange }){
               recentNames={recentNames}
               recentDictionaries={recentDictionaries}
               recentGameNums={recentGameNums}
-              chooseGame={(gameNum) => chooseGame(gameNum, currentMoveRef, setResetCount, setGameNum, resetCount)}
+              chooseGame={(gameNum) => chooseGameStore(gameNum)}
               mode={mode}
               handleClose={handleClose}
             />
@@ -202,7 +192,7 @@ export default function Viewer({ onChange }){
           {modalContent === "gamesHistory" && (
             <ViewedGamesList
               gamesViewed={gamesViewed}
-              chooseGame={(gameNum) => chooseGame(gameNum, currentMoveRef, setResetCount, setGameNum, resetCount)}
+              chooseGame={(gameNum) => chooseGameStore(gameNum)}
               handleClose={handleClose}
             />
           )}
@@ -370,7 +360,11 @@ export default function Viewer({ onChange }){
                   }}
                 />
                 <Box className={styles.poolBox} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
-                  <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
+                  {moveSet && moveSet.length > 0 ? (
+                    <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
+                  ) : (
+                    <div>Loading pool...</div>
+                  )}
                 </Box>
                 <Box className={styles.commentaryContainer} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
                   {notes.map(([note, moveNumber], index) => (
