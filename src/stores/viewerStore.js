@@ -163,6 +163,9 @@ export const useViewerStore = create((set, get) => {
           currentMoveRef: { current: -1 },
           gameNum: randomNumber 
         });
+        
+        // Load the new game data after setting the game number
+        get().loadGameData();
       };
       
       loadCustomPlayerGameInfo();
@@ -320,6 +323,9 @@ export const useViewerStore = create((set, get) => {
         resetCount: state.resetCount + 1,
         gameNum: gameNum
       });
+      
+      // Load the new game data after setting the game number
+      get().loadGameData();
     }
   };
 }); 

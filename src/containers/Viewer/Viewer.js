@@ -104,9 +104,10 @@ export default function Viewer({ onChange }){
     setLightMode(lightMode === 'dark' ? 'light' : 'dark');
   };
 
+  // Load initial game data
   useEffect(() => {
     loadGameData();
-  }, [loadGameData]);
+  }, []); // Only run once on mount
 
   const iconList = createIconList(
     beginningOfGameStore,
