@@ -5,6 +5,22 @@ import Rack from '../../../components/AppContent/Board/Rack';
 import { createRack } from '../../../functions/rackFunctions.js';
 import { ThemeContext } from '../../../App';
 
+const PlayerInfoSection = ({ name, points, rack, color, tiles, isCurrentPlayer, textColor }) => (
+  <Box className={styles.playerPanel} style={{padding: '10px 0px'}}>
+    <Box className={styles.playerInfo}>
+      <Box className={styles.playerName} style={{color: '#333'}}>{name}</Box>
+    </Box>
+    <Box className={styles.points}>
+      {points}
+    </Box>
+    {rack && (
+      <Box className={styles.Rack}>
+        <Rack board={rack} tiles={tiles} color={color.current}/>
+      </Box>
+    )}
+  </Box>
+);
+
 const PlayerInfo = ({
   mode,
   name1,
@@ -26,31 +42,40 @@ const PlayerInfo = ({
   const totalTurns = moveSet ? moveSet.length : 0;
   const textColor = lightMode === 'dark' ? '#fff' : '#000';
 
+  // Determine which player is currently active
+  const currentPlayer = moveSet[currentMoveRef.current + 1] ? 
+    moveSet[currentMoveRef.current + 1].split(':')[0] : null;
+  const isPlayer1Active = currentPlayer === origPlayerRaw;
+
+  const player1Name = mode === "VIEWER" ? name1 : revealedName1;
+  const player2Name = mode === "VIEWER" ? name2 : revealedName2;
+  const player1FullName = revealedElo ? `${player1Name}, ${revealedElo}` : player1Name;
+  const player2FullName = revealedElo2 ? `${player2Name}, ${revealedElo2}` : player2Name;
+
+  const player1Rack = isPlayer1Active ? createRack(moveSet, currentMoveRef.current) : null;
+  const player2Rack = !isPlayer1Active ? createRack(moveSet, currentMoveRef.current) : null;
+
   return (
-    <Box className={styles.playerPanel} style={{color: textColor}}>
-      <Box style={{color: textColor}}>
-        {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
-      </Box>
-      <Box className={styles.Rack}>
-        {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') === origPlayerRaw ? 
-          <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles} color={color.current}/> : null}
-      </Box> 
-      <Box style={{color: textColor}}>
-        {player1points} points
-      </Box>
-      <Box className={styles.player2Panel} style={{color: textColor}}>
-        <Box style={{color: textColor}}>
-          {mode === "VIEWER" ? name2 : revealedName2}{revealedElo2 ? ", " + revealedElo2 : ''}
-        </Box>
-        <Box className={styles.Rack}>
-          {(moveSet[currentMoveRef.current + 1] ? moveSet[currentMoveRef.current + 1].split(':')[0] : 'null') !== origPlayerRaw ? 
-            <Rack board={createRack(moveSet, currentMoveRef.current)} tiles={tiles} color={color.current}/> : null}
-        </Box>
-        <Box style={{color: textColor}}>
-          {player2points} points
-        </Box>
-      </Box> 
-    </Box>
+    <>
+      <PlayerInfoSection
+        name={player1FullName}
+        points={player1points}
+        rack={player1Rack}
+        color={color}
+        tiles={tiles}
+        isCurrentPlayer={isPlayer1Active}
+        textColor={textColor}
+      />
+      <PlayerInfoSection
+        name={player2FullName}
+        points={player2points}
+        rack={player2Rack}
+        color={color}
+        tiles={tiles}
+        isCurrentPlayer={!isPlayer1Active}
+        textColor={textColor}
+      />
+    </>
   );
 };
 

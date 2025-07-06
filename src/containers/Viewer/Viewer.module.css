@@ -220,7 +220,6 @@ form{
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .player2Panel{
@@ -819,5 +818,25 @@ form{
 
 .bestMoveButton.active {
   background-color: rgba(76, 175, 80, 0.2);
+}
+
+/* Player info styling - matching Play.js */
+.playerInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.points {
+  font-size: 24px;
+  font-weight: bold;
+  color: darkcyan;
 }
 

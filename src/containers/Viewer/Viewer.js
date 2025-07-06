@@ -242,7 +242,7 @@ export default function Viewer({ onChange }){
         </Box>
       </Modal>  
       <Box className={styles.page}>
-        <Box className={styles.title}>
+        <Box className={styles.title} style={{color: '#fff'}}>
           {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
           <button 
             onClick={toggleLightMode}
@@ -252,7 +252,7 @@ export default function Viewer({ onChange }){
               border: 'none',
               cursor: 'pointer',
               fontSize: '20px',
-              color: lightMode === 'dark' ? '#fff' : '#000'
+              color: '#fff'
             }}
           >
             {lightMode === 'dark' ? '☀️' : '🌙'}
@@ -269,11 +269,15 @@ export default function Viewer({ onChange }){
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
+              showDictionary={false}
             />   
           </Box>
           <Box className={styles.rightPanel}>
             <Box className={styles.topPlayerPanel}>
-              <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
+              <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`} style={{color: '#fff'}}>
+                <Box style={{color: '#fff', fontSize: '12px', marginBottom: '10px', marginTop: '15px', opacity: 0.8}}>
+                  Dictionary: {gameDictionary}
+                </Box>
                 <Box className={styles.playerToggle}>
                   {/* Main navigation icons */}
                   {iconList.map((icon, index) => (
@@ -281,7 +285,7 @@ export default function Viewer({ onChange }){
                       <icon.icon
                         className={styles.Arrows} 
                         onClick={icon.onClick}
-                        sx={{color: lightMode === 'dark' ? '#fff' : '#000'}}
+                        sx={{color: '#fff'}}
                       />
                     </Tooltip>
                   ))}
@@ -320,7 +324,7 @@ export default function Viewer({ onChange }){
                                   justifyContent: 'center'
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[0].icon1.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[0].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -335,7 +339,7 @@ export default function Viewer({ onChange }){
                                   justifyContent: 'center'
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[0].icon2.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[0].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -350,7 +354,7 @@ export default function Viewer({ onChange }){
                                   justifyContent: 'center'
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[0].icon3.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[0].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -365,7 +369,7 @@ export default function Viewer({ onChange }){
                                   justifyContent: 'center'
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -389,7 +393,7 @@ export default function Viewer({ onChange }){
                                   ...(groupedIcons[1].icon1.condition || {})
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[1].icon1.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[1].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -410,10 +414,11 @@ export default function Viewer({ onChange }){
                                        sx: { 
                                          fontSize: 20,
                                          fontFamily: 'Dancing Script !important',
-                                         fontWeight: 'normal'
+                                         fontWeight: 'normal',
+                                         color: '#fff'
                                        } 
                                      }, groupedIcons[1].icon2.text)
-                                   : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20 } })}
+                                   : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -428,7 +433,7 @@ export default function Viewer({ onChange }){
                                   justifyContent: 'center'
                                 }}
                               >
-                                                                 {React.createElement(groupedIcons[1].icon3.icon, { sx: { fontSize: 20 } })}
+                                                                 {React.createElement(groupedIcons[1].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
                               </Box>
                             </Tooltip>
                           )}
@@ -438,7 +443,7 @@ export default function Viewer({ onChange }){
                   </Box>
                 </Collapse>
               </Box>
-              <Box className={styles.playerPanel} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
+              <Box className={styles.playerPanel} style={{color: '#fff'}}>
                 <PlayerInfo
                   mode={mode}
                   name1={name1}
@@ -560,14 +565,14 @@ export default function Viewer({ onChange }){
                     }
                   }}
                 />
-                <Box className={styles.poolBox} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
+                <Box className={styles.poolBox} style={{color: '#fff'}}>
                   {moveSet && moveSet.length > 0 ? (
                     <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
                   ) : (
                     <div>Loading pool...</div>
                   )}
                 </Box>
-                <Box className={styles.commentaryContainer} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
+                <Box className={styles.commentaryContainer} style={{color: '#fff'}}>
                   {notes.map(([note, moveNumber], index) => (
                     <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
                       "{note.trim()}"
