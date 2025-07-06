@@ -31,30 +31,6 @@ export default function Board({
     const [modalContent, setModalContent] = useState("slip");
     const [circledLetters, setCircledLetters] = useState([]);
     const handleClose = () => setOpen(false);
-    let message = "";
-    if (/^-[^-\s]/.test(move)){
-        message = "Exchanged: " + move.substring(1, move.indexOf(" ")); 
-    }
-    else if (/^-[^-]/.test(move)){
-        message = "Unsuccessfully challenged or passed"
-    }
-    else{
-        switch (move[0]) {
-            case "-":
-                message = "Challenged off";
-                break;
-            case "+":
-                message = move + " " + (points ? points : "") + "(final)";
-                break;
-            default:
-                if (move !== "N/A"){
-                    message = move + " " + points + " from " + rack;
-                }
-                else{
-                    message = "Start of game";
-                }
-        }
-    }
 
     useEffect(() => {
         const lowercaseLetters = move.match(/(?<![a-z(])[a-z](?![a-z)])/g);
@@ -141,10 +117,7 @@ export default function Board({
         color: lightMode === 'dark' ? '#fff' : '#000'
     });
 
-    const getFooterStyle = () => ({
-        backgroundColor: lightMode === 'dark' ? 'rgb(108, 4, 4)' : '#d4d2c9',
-        color: lightMode === 'dark' ? '#fff' : '#000'
-    });
+
 
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
@@ -223,9 +196,7 @@ export default function Board({
                     )}
                 </Box>
             </Box>
-            <Box className={`${styles.Footer} ${!showSlip ? styles.hidden : ''}`} style={getFooterStyle()}>
-                {message}
-            </Box>
+
             <Modal open={open} onClose={handleClose}>
                 <Box className={styles.modalContainer}>
                     {modalContent === "slip" && <SlipContent />}

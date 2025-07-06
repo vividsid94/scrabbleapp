@@ -28,20 +28,6 @@ const PlayerInfo = ({
 
   return (
     <Box className={styles.playerPanel} style={{color: textColor}}>
-      {totalTurns > 0 && (
-        <Box className={styles.turnNumbers}>
-          {Array.from({ length: totalTurns }, (_, i) => (
-            <Box 
-              key={i + 1}
-              className={styles.turnNumber}
-              onClick={() => onTurnClick && onTurnClick(i)}
-              style={{color: textColor}}
-            >
-              {i + 1}
-            </Box>
-          ))}
-        </Box>
-      )}
       <Box style={{color: textColor}}>
         {mode === "VIEWER" ? name1 : revealedName1}{revealedElo ? ", " + revealedElo : ''}
       </Box>
