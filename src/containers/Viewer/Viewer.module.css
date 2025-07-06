@@ -193,8 +193,50 @@ form{
 }
 
 .title{
+  grid-area: title;
   display: flex;
   justify-content: center;
+  justify-self: center;
+  font-size: 30px;
+  margin-top: 25px;
+  padding-left: 24px;
+  font-family: 'Preahvihear', sans-serif !important;
+  font-weight: 600;
+  background: linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.gameTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gameTitleText {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gameSubtitle {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.playModeTitle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 30px;
   margin-top: 25px;
   font-family: 'Preahvihear', sans-serif !important;
@@ -205,15 +247,35 @@ form{
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-.mainPanel{
+.playModeSubtitle {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.mainBoxContent {
   display: flex;
-  flex-direction: row;
-  animation: fadeIn 0.5s ease-out;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mainBox {
+  flex-grow: 1;
+  padding: 24px;
+}
+
+.mainPanel{
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: 
+    "title ."
+    "board panel";
 }
 
 .playerPanel{
-  width: 380px;
   height: auto;
+  padding: 10px 0px;
   background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
   border: 0;
   color: #fff;
@@ -249,11 +311,21 @@ form{
   justify-content: flex-end;
 }
 
+.leftContainer {
+  grid-area: board;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .rightPanel{
+	grid-area: panel;
+	width: 380px;
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
   justify-content: flex-start;
+  gap: 20px;
 }
 
 .topPlayerPanel{
@@ -346,17 +418,19 @@ form{
 }
 
 @media screen and (max-width: 992px) {
+  .mainPanel{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: 
+      "title"
+      "panel"
+      "board";
+  }
   .rightPanel{
     padding: 24px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-  }
-  .mainPanel{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
   }
   .topPlayerPanel{
     padding-bottom: 24px;
@@ -371,6 +445,14 @@ form{
 }
 
 @media screen and (max-width: 676px) {
+  .mainPanel{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: 
+      "title"
+      "panel"
+      "board";
+  }
   .rightPanel{
     padding: 0px 0px 24px 0px;
     display: flex;

@@ -242,24 +242,29 @@ export default function Viewer({ onChange }){
         </Box>
       </Modal>  
       <Box className={styles.page}>
-        <Box className={styles.title} style={{color: '#fff'}}>
-          {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
-          <button 
-            onClick={toggleLightMode}
-            style={{
-              marginLeft: '10px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '20px',
-              color: '#fff'
-            }}
-          >
-            {lightMode === 'dark' ? '☀️' : '🌙'}
-          </button>
-        </Box>
         <Box className={styles.mainPanel}>
-          <Box className={styles.mainBox} component="main" sx={{ flexGrow: 1, p: 3 }}>
+                    <Box className={styles.title}>
+            <Box className={styles.gameTitle}>
+              <Box className={styles.playModeTitle}>
+                {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
+                <button 
+                  onClick={toggleLightMode}
+                  style={{
+                    marginLeft: '10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '20px',
+                    color: '#fff'
+                  }}
+                >
+                  {lightMode === 'dark' ? '☀️' : '🌙'}
+                </button>
+              </Box>
+            </Box>
+          </Box>
+          <Box className={styles.leftContainer}>
+            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
             <Board 
               board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current)} 
               points={pointsScored} 
@@ -269,317 +274,314 @@ export default function Viewer({ onChange }){
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
-              showDictionary={false}
+                showDictionary={false}
             />   
+            </Box>
           </Box>
           <Box className={styles.rightPanel}>
-            <Box className={styles.topPlayerPanel}>
-              <Box sx={{flexDirection: 'column', lineHeight: '0px'}} className={`${styles.playerPanel}`} style={{color: '#fff'}}>
-                <Box style={{color: '#fff', fontSize: '12px', marginBottom: '10px', marginTop: '15px', opacity: 0.8}}>
-                  Dictionary: {gameDictionary}
-                </Box>
-                <Box className={styles.playerToggle}>
-                  {/* Main navigation icons */}
-                  {iconList.map((icon, index) => (
-                    <Tooltip key={`icon-${index}`} title={icon.toolTip}>
-                      <icon.icon
-                        className={styles.Arrows} 
-                        onClick={icon.onClick}
-                        sx={{color: '#fff'}}
-                      />
-                    </Tooltip>
-                  ))}
-                  
-                  {/* Collapsible options button */}
-                  <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>
-                    <Box
-                      className={styles.keyBtn}
-                      onClick={() => setShowOptions(!showOptions)}
-                      sx={{ 
-                        ...actionButtonStyle,
-                        transform: showOptions ? 'rotate(90deg)' : 'none',
-                        transition: 'transform 0.2s ease'
-                      }}
-                    >
-                      <MoreHorizIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                  </Tooltip>
-                </Box>
-
-                {/* Collapsible options section */}
-                <Collapse in={showOptions}>
-                  <Box className={styles.bestMoveSection} sx={{ display: 'flex', gap: '50px', padding: '8px 0' }}>
-                    {/* First group of icons */}
-                    <Box sx={{ display: 'flex', gap: '4px' }}>
-                      {groupedIcons[0] && (
-                        <>
-                          {groupedIcons[0].icon1 && (
-                            <Tooltip title={groupedIcons[0].icon1.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[0].icon1.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[0].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                          {groupedIcons[0].icon2 && (
-                            <Tooltip title={groupedIcons[0].icon2.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[0].icon2.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[0].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                          {groupedIcons[0].icon3 && (
-                            <Tooltip title={groupedIcons[0].icon3.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[0].icon3.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[0].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                          {groupedIcons[0].icon4 && (
-                            <Tooltip title={groupedIcons[0].icon4.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[0].icon4.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                        </>
-                      )}
-                    </Box>
-                    
-                    {/* Second group of icons */}
-                    <Box sx={{ display: 'flex', gap: '16px' }}>
-                      {groupedIcons[1] && (
-                        <>
-                          {groupedIcons[1].icon1 && (
-                            <Tooltip title={groupedIcons[1].icon1.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[1].icon1.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  ...(groupedIcons[1].icon1.condition || {})
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[1].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                          {groupedIcons[1].icon2 && (
-                            <Tooltip title={groupedIcons[1].icon2.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[1].icon2.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  ...(groupedIcons[1].icon2.condition || {})
-                                }}
-                              >
-                                                                 {groupedIcons[1].icon2.icon === Typography
-                                   ? React.createElement(Typography, { 
-                                       sx: { 
-                                         fontSize: 20,
-                                         fontFamily: 'Dancing Script !important',
-                                         fontWeight: 'normal',
-                                         color: '#fff'
-                                       } 
-                                     }, groupedIcons[1].icon2.text)
-                                   : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                          {groupedIcons[1].icon3 && (
-                            <Tooltip title={groupedIcons[1].icon3.toolTip}>
-                              <Box
-                                className={styles.bestMoveButton}
-                                onClick={groupedIcons[1].icon3.onClick}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                                                 {React.createElement(groupedIcons[1].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                              </Box>
-                            </Tooltip>
-                          )}
-                        </>
-                      )}
-                    </Box>
-                  </Box>
-                </Collapse>
+            <Box className={styles.playerPanel} style={{color: '#fff'}}>
+              <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8}}>
+                Dictionary: {gameDictionary}
               </Box>
-              <Box className={styles.playerPanel} style={{color: '#fff'}}>
-                <PlayerInfo
-                  mode={mode}
-                  name1={name1}
-                  name2={name2}
-                  revealedName1={revealedName1}
-                  revealedName2={revealedName2}
-                  revealedElo={revealedElo}
-                  revealedElo2={revealedElo2}
-                  player1points={player1points}
-                  player2points={player2points}
-                  moveSet={moveSet}
-                  currentMoveRef={currentMoveRef}
-                  origPlayerRaw={origPlayerRaw}
-                  tiles={tiles}
-                  color={color}
-                  onTurnClick={(turn) => {
-                    if (turn >= 0 && turn < moveSet.length) {
-                      // Reset board to initial state
-                      setBoardCoords(JSON.parse(origBoard));
-                      setPlayer1points(0);
-                      setPlayer2points(0);
-                      setPointsScored(0);
-                      
-                      // Calculate pool state by applying all moves up to the selected turn
-                      let currentPool = origPool;
-                      for (let i = 0; i <= turn; i++) {
-                        const move = moveSet[i];
-                        if (move) {
-                          const parts = move.split(" ");
-                          const play = parts[3];
-                          if (play && play !== "--") {
-                            currentPool = removeFromPool(play, currentPool);
-                          }
-                        }
-                      }                
-                      // First remove all moves after the selected turn
-                      for (let i = moveSet.length - 1; i > turn; i--) {
-                        handleMoveWrapper(
-                          moveSet[i - 3],
-                          moveSet[i - 2],
-                          moveSet[i - 1],
-                          moveSet[i],
-                          "previous"
-                        );
-                      }
-                      
-                      // Then apply all moves up to the selected turn
-                      for (let i = 0; i <= turn; i++) {
-                        handleMoveWrapper(
-                          moveSet[i - 2],
-                          moveSet[i - 1],
-                          moveSet[i],
-                          moveSet[i + 1],
-                          "next"
-                        );
-                      }
-                      
-                      // Set the pool state after all moves are processed
-                      setPool(currentPool);
-                      
-                      currentMoveRef.current = turn;
-                    }
-                  }}
-                />
-                <LatestMove
-                  moveSet={moveSet}
-                  currentMoveRef={currentMoveRef}
-                  name1={name1}
-                  name2={name2}
-                  boardCoords={boardCoords}
-                  pool={pool}
-                  currentMoveCoords={currentMoveCoords}
-                  onTurnClick={(turn) => {
-                    if (turn >= 0 && turn < moveSet.length) {
-                      // Reset board to initial state
-                      setBoardCoords(JSON.parse(origBoard));
-                      setPlayer1points(0);
-                      setPlayer2points(0);
-                      setPointsScored(0);
-                      
-                      // Calculate pool state by applying all moves up to the selected turn
-                      let currentPool = origPool;
-                      for (let i = 0; i <= turn; i++) {
-                        const move = moveSet[i];
-                        if (move) {
-                          const parts = move.split(" ");
-                          const play = parts[3];
-                          if (play && play !== "--") {
-                            currentPool = removeFromPool(play, currentPool);
-                          }
-                        }
-                      }                
-                      // First remove all moves after the selected turn
-                      for (let i = moveSet.length - 1; i > turn; i--) {
-                        handleMoveWrapper(
-                          moveSet[i - 3],
-                          moveSet[i - 2],
-                          moveSet[i - 1],
-                          moveSet[i],
-                          "previous"
-                        );
-                      }
-                      
-                      // Then apply all moves up to the selected turn
-                      for (let i = 0; i <= turn; i++) {
-                        handleMoveWrapper(
-                          moveSet[i - 2],
-                          moveSet[i - 1],
-                          moveSet[i],
-                          moveSet[i + 1],
-                          "next"
-                        );
-                      }
-                      
-                      // Set the pool state after all moves are processed
-                      setPool(currentPool);
-                      
-                      currentMoveRef.current = turn;
-                    }
-                  }}
-                />
-                <Box className={styles.poolBox} style={{color: '#fff'}}>
-                  {moveSet && moveSet.length > 0 ? (
-                    <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
-                  ) : (
-                    <div>Loading pool...</div>
-                  )}
+              <Box className={styles.playerToggle}>
+                {/* Main navigation icons */}
+                {iconList.map((icon, index) => (
+                  <Tooltip key={`icon-${index}`} title={icon.toolTip}>
+                    <icon.icon
+                      className={styles.Arrows} 
+                      onClick={icon.onClick}
+                      sx={{color: '#fff'}}
+                    />
+                  </Tooltip>
+                ))}
+                
+                {/* Collapsible options button */}
+                <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>
+                  <Box
+                    className={styles.keyBtn} 
+                    onClick={() => setShowOptions(!showOptions)}
+                    sx={{ 
+                      ...actionButtonStyle,
+                      transform: showOptions ? 'rotate(90deg)' : 'none',
+                      transition: 'transform 0.2s ease'
+                    }}
+                  >
+                    <MoreHorizIcon sx={{ fontSize: 20 }} />
+                  </Box>
+                </Tooltip>
+              </Box>
+
+              {/* Collapsible options section */}
+              <Collapse in={showOptions}>
+                <Box className={styles.bestMoveSection} sx={{ display: 'flex', gap: '50px', padding: '8px 0' }}>
+                  {/* First group of icons */}
+                  <Box sx={{ display: 'flex', gap: '4px' }}>
+                    {groupedIcons[0] && (
+                      <>
+                        {groupedIcons[0].icon1 && (
+                          <Tooltip title={groupedIcons[0].icon1.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon1.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                        {groupedIcons[0].icon2 && (
+                          <Tooltip title={groupedIcons[0].icon2.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon2.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                        {groupedIcons[0].icon3 && (
+                          <Tooltip title={groupedIcons[0].icon3.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon3.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                        {groupedIcons[0].icon4 && (
+                          <Tooltip title={groupedIcons[0].icon4.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon4.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                  
+                  {/* Second group of icons */}
+                  <Box sx={{ display: 'flex', gap: '16px' }}>
+                    {groupedIcons[1] && (
+                      <>
+                        {groupedIcons[1].icon1 && (
+                          <Tooltip title={groupedIcons[1].icon1.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[1].icon1.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                ...(groupedIcons[1].icon1.condition || {})
+                              }}
+                            >
+                              {React.createElement(groupedIcons[1].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                        {groupedIcons[1].icon2 && (
+                          <Tooltip title={groupedIcons[1].icon2.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[1].icon2.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                ...(groupedIcons[1].icon2.condition || {})
+                              }}
+                            >
+                              {groupedIcons[1].icon2.icon === Typography
+                                ? React.createElement(Typography, { 
+                                    sx: { 
+                                      fontSize: 20,
+                                      fontFamily: 'Dancing Script !important',
+                                      fontWeight: 'normal',
+                                      color: '#fff'
+                                    } 
+                                  }, groupedIcons[1].icon2.text)
+                                : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                        {groupedIcons[1].icon3 && (
+                          <Tooltip title={groupedIcons[1].icon3.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[1].icon3.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[1].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </Box>
                 </Box>
-                <Box className={styles.commentaryContainer} style={{color: '#fff'}}>
-                  {notes.map(([note, moveNumber], index) => (
-                    <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
-                      "{note.trim()}"
-                    </Box>
-                  ))}
+              </Collapse>
+              <PlayerInfo
+              mode={mode}
+              name1={name1}
+              name2={name2}
+              revealedName1={revealedName1}
+              revealedName2={revealedName2}
+              revealedElo={revealedElo}
+              revealedElo2={revealedElo2}
+              player1points={player1points}
+              player2points={player2points}
+              moveSet={moveSet}
+              currentMoveRef={currentMoveRef}
+              origPlayerRaw={origPlayerRaw}
+              tiles={tiles}
+              color={color}
+              onTurnClick={(turn) => {
+                if (turn >= 0 && turn < moveSet.length) {
+                  // Reset board to initial state
+                  setBoardCoords(JSON.parse(origBoard));
+                  setPlayer1points(0);
+                  setPlayer2points(0);
+                  setPointsScored(0);
+                  
+                  // Calculate pool state by applying all moves up to the selected turn
+                  let currentPool = origPool;
+                  for (let i = 0; i <= turn; i++) {
+                    const move = moveSet[i];
+                    if (move) {
+                      const parts = move.split(" ");
+                      const play = parts[3];
+                      if (play && play !== "--") {
+                        currentPool = removeFromPool(play, currentPool);
+                      }
+                    }
+                  }                
+                  // First remove all moves after the selected turn
+                  for (let i = moveSet.length - 1; i > turn; i--) {
+                    handleMoveWrapper(
+                      moveSet[i - 3],
+                      moveSet[i - 2],
+                      moveSet[i - 1],
+                      moveSet[i],
+                      "previous"
+                    );
+                  }
+                  
+                  // Then apply all moves up to the selected turn
+                  for (let i = 0; i <= turn; i++) {
+                    handleMoveWrapper(
+                      moveSet[i - 2],
+                      moveSet[i - 1],
+                      moveSet[i],
+                      moveSet[i + 1],
+                      "next"
+                    );
+                  }
+                  
+                  // Set the pool state after all moves are processed
+                  setPool(currentPool);
+                  
+                  currentMoveRef.current = turn;
+                }
+              }}
+            />
+            <LatestMove
+              moveSet={moveSet}
+              currentMoveRef={currentMoveRef}
+              name1={name1}
+              name2={name2}
+              boardCoords={boardCoords}
+              pool={pool}
+              currentMoveCoords={currentMoveCoords}
+              onTurnClick={(turn) => {
+                if (turn >= 0 && turn < moveSet.length) {
+                  // Reset board to initial state
+                  setBoardCoords(JSON.parse(origBoard));
+                  setPlayer1points(0);
+                  setPlayer2points(0);
+                  setPointsScored(0);
+                  
+                  // Calculate pool state by applying all moves up to the selected turn
+                  let currentPool = origPool;
+                  for (let i = 0; i <= turn; i++) {
+                    const move = moveSet[i];
+                    if (move) {
+                      const parts = move.split(" ");
+                      const play = parts[3];
+                      if (play && play !== "--") {
+                        currentPool = removeFromPool(play, currentPool);
+                      }
+                    }
+                  }                
+                  // First remove all moves after the selected turn
+                  for (let i = moveSet.length - 1; i > turn; i--) {
+                    handleMoveWrapper(
+                      moveSet[i - 3],
+                      moveSet[i - 2],
+                      moveSet[i - 1],
+                      moveSet[i],
+                      "previous"
+                    );
+                  }
+                  
+                  // Then apply all moves up to the selected turn
+                  for (let i = 0; i <= turn; i++) {
+                    handleMoveWrapper(
+                      moveSet[i - 2],
+                      moveSet[i - 1],
+                      moveSet[i],
+                      moveSet[i + 1],
+                      "next"
+                    );
+                  }
+                  
+                  // Set the pool state after all moves are processed
+                  setPool(currentPool);
+                  
+                  currentMoveRef.current = turn;
+                }
+              }}
+            />
+            <Box className={styles.poolBox} style={{color: '#fff'}}>
+              {moveSet && moveSet.length > 0 ? (
+                <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
+              ) : (
+                <div>Loading pool...</div>
+              )}
+            </Box>
+            <Box className={styles.commentaryContainer} style={{color: '#fff'}}>
+              {notes.map(([note, moveNumber], index) => (
+                <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
+                  "{note.trim()}"
                 </Box>
-              </Box> 
+              ))}
+            </Box>
             </Box>
           </Box>
         </Box>  
