@@ -105,9 +105,7 @@ export default function Viewer({ onChange }){
     handleMove(superLastMove, lastMove, thisMove, nextMove, type, state);
   };
 
-  const toggleLightMode = () => {
-    setLightMode(lightMode === 'dark' ? 'light' : 'dark');
-  };
+
 
   // Load initial game data
   useEffect(() => {
@@ -243,26 +241,7 @@ export default function Viewer({ onChange }){
       </Modal>  
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-                    <Box className={styles.title}>
-            <Box className={styles.gameTitle}>
-              <Box className={styles.playModeTitle}>
-                {mode === "VIEWER" ? "Annotated Game Viewer" : "Guess the Elo!"}
-                <button 
-                  onClick={toggleLightMode}
-                  style={{
-                    marginLeft: '10px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '20px',
-                    color: '#fff'
-                  }}
-                >
-                  {lightMode === 'dark' ? '☀️' : '🌙'}
-                </button>
-              </Box>
-            </Box>
-          </Box>
+          
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
             <Board 

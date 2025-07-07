@@ -349,21 +349,63 @@ export default function Puzzle() {
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-          <Box className={styles.title}>
-            <Box className={styles.gameTitle}>
-              <Box className={styles.playModeTitle}>
-                Puzzle+
-              </Box>
-              <Box style={{ 
-                fontSize: '16px', 
-                color: 'rgba(255, 255, 255, 0.7)', 
-                textAlign: 'center', 
-                fontWeight: '600'
-              }}>
-                Solve puzzles on the spot as SidBot plays itself
-              </Box>
-            </Box>
+          
+          {/* Puzzle Instructions Banner */}
+          <Box sx={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            textAlign: 'center',
+            maxWidth: '600px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          }}>
+            {puzzleMode === 'bingo' && (
+              <>🧩 <strong>Bingo Puzzles:</strong> Solve bingo puzzles when SidBot finds 7-letter words!</>
+            )}
+            {puzzleMode === 'only-bingo' && (
+              <>🧩 <strong>Only Bingo:</strong> Solve puzzles only when there's exactly one bingo available!</>
+            )}
+            {puzzleMode === 'significant-best' && (
+              <>🧩 <strong>Best Move Puzzles:</strong> Solve puzzles when SidBot finds the best possible move!</>
+            )}
+            {puzzleMode === 'non-bingo-significant' && (
+              <>🧩 <strong>Significant Moves:</strong> Solve puzzles for any significant non-bingo plays!</>
+            )}
           </Box>
+          
+          {/* Game Running Instructions */}
+          {gameStarted && !isPausedForBingo && !gameEnded && (
+            <Box sx={{
+              position: 'absolute',
+              top: '80px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              color: 'white',
+              padding: '8px 14px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              textAlign: 'center',
+              maxWidth: '400px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+            }}>
+              ⏳ Watching SidBot play... Waiting for a puzzle opportunity!
+            </Box>
+          )}
           
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">

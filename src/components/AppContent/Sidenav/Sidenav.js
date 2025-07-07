@@ -9,7 +9,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 
 import ListItem from "@mui/material/ListItem";
@@ -20,13 +20,16 @@ import { Tooltip } from "@mui/material";
 import CastleIcon from '@mui/icons-material/Castle';
 import EyeIcon from '@mui/icons-material/Search';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 import styles from './Sidenav.module.css';
 
 export default function MiniDrawer() {
-  const { lightMode } = React.useContext(ThemeContext);
+  const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const location = useLocation();
 
   const getBackgroundColor = () => {
     return lightMode === 'dark' ? '#000000' : '#5a5a7a';
@@ -103,6 +106,35 @@ export default function MiniDrawer() {
     setAnchorEl(null);
   };
 
+  const toggleLightMode = () => {
+    setLightMode(lightMode === 'dark' ? 'light' : 'dark');
+  };
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Home';
+    if (path === '/viewer') return 'Viewer';
+    if (path === '/playground' || path === '/play') return 'Play';
+    if (path === '/puzzle') return 'Puzzle';
+    if (path === '/changelog') return 'Changelog';
+    if (path === '/memory') return 'Memory';
+    if (path === '/words') return 'Words';
+    if (path === '/series') return 'Series';
+    if (path === '/study') return 'Study';
+    if (path === '/boggle') return 'Boggle';
+    return 'Home';
+  };
+
+  const isCurrentPage = (pagePath) => {
+    const path = location.pathname;
+    if (pagePath === '/' && path === '/') return true;
+    if (pagePath === '/viewer' && path === '/viewer') return true;
+    if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
+    if (pagePath === '/puzzle' && path === '/puzzle') return true;
+    if (pagePath === '/changelog' && path === '/changelog') return true;
+    return false;
+  };
+
   return (
     <Box>
       <MyAppBar className={styles.myAppBar}>
@@ -117,14 +149,23 @@ export default function MiniDrawer() {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose} component={Link} to="/">
-              Home
+            <MenuItem onClick={handleClose} component={Link} to="/" sx={{ 
+              backgroundColor: isCurrentPage('/') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/') ? '600' : '400'
+            }}>
+              Home {isCurrentPage('/') && '✓'}
             </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/viewer">
-              Annotated Game Viewer
+            <MenuItem onClick={handleClose} component={Link} to="/viewer" sx={{ 
+              backgroundColor: isCurrentPage('/viewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/viewer') ? '600' : '400'
+            }}>
+              Annotated Game Viewer {isCurrentPage('/viewer') && '✓'}
             </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/changelog">
-              Changelog
+            <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
+              backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/changelog') ? '600' : '400'
+            }}>
+              Changelog {isCurrentPage('/changelog') && '✓'}
             </MenuItem>
           </Menu>
           <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
@@ -134,9 +175,37 @@ export default function MiniDrawer() {
         <DrawerHeader className={styles.cfLogoContainer}>
           <img onClick={handleDrawer} src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </DrawerHeader>
+        
+        {/* Current Page Indicator */}
+        {open && (
+          <Box sx={{ 
+            padding: '8px 16px', 
+            borderBottom: `1px solid ${getTextColor()}20`,
+            marginBottom: '8px'
+          }}>
+            <Box sx={{ 
+              fontSize: '12px', 
+              color: `${getTextColor()}80`, 
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Current Page
+            </Box>
+            <Box sx={{ 
+              fontSize: '14px', 
+              color: getTextColor(), 
+              fontWeight: '600',
+              marginTop: '2px'
+            }}>
+              {getCurrentPage()}
+            </Box>
+          </Box>
+        )}
+        
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
-            <ListItem className={styles.listItem}>
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/') ? styles.activePage : ''}`}>
               <ListItemIcon>
                 <Tooltip title="Home">
                   <CastleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
@@ -148,7 +217,7 @@ export default function MiniDrawer() {
         </List>
         <List className={styles.btnContainer}>
           <a id="viewerBtn" className={styles.link} href="/viewer">
-            <ListItem className={styles.listItem}>
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`}>
               <ListItemIcon>
                 <Tooltip title="Game Viewer">
                   <EyeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
@@ -160,7 +229,7 @@ export default function MiniDrawer() {
         </List>
         <List className={styles.btnContainer}>
           <a id="changelogBtn" className={styles.link} href="/changelog">
-            <ListItem className={styles.listItem}>
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`}>
               <ListItemIcon>
                 <Tooltip title="Changelog">
                   <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
@@ -169,6 +238,20 @@ export default function MiniDrawer() {
               <ListItemText className={styles.listItemText} primary={"Changelog"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ cursor: 'pointer' }}>
+            <ListItemIcon>
+              <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+                {lightMode === 'dark' ? (
+                  <LightModeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                ) : (
+                  <DarkModeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                )}
+              </Tooltip>
+            </ListItemIcon>
+            <ListItemText className={styles.listItemText} primary={lightMode === 'dark' ? 'Light' : 'Dark'} sx={{ color: getTextColor() }}/>
+          </ListItem>
         </List>
       </Drawer>
     </Box>

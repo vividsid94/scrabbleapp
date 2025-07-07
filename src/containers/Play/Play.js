@@ -422,13 +422,7 @@ export default function Play() {
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-      <Box className={styles.title}>
-            <Box className={styles.gameTitle}>
-              <Box className={styles.playModeTitle}>
-          Playground+
-            </Box>
-            </Box>
-      </Box>
+
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
           <Board 

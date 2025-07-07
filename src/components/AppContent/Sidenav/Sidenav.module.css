@@ -23,6 +23,22 @@
 .listItem{
     padding: 5px !important;
     display: flex;
+    transition: all 0.2s ease;
+}
+
+.listItem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.activePage {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px;
+    border-left: 3px solid #fff;
+}
+
+.activePage .homeLogo {
+    color: #fff !important;
 }
 
 .listItemText{
