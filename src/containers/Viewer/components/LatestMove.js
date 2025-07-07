@@ -4,9 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import DownloadIcon from '@mui/icons-material/Download';
 import styles from '../Viewer.module.css';
-import { generateGCGContent, downloadGCGFile } from '../../../functions/gcgUtils';
 import { getMove } from '../../../functions/boardFunctions';
 
 const LatestMove = ({ 
@@ -93,30 +91,7 @@ const LatestMove = ({
     }
   };
 
-  // Handle download .gcg file
-  const handleDownloadGCG = () => {
-    if (moveSet.length === 0) {
-      return;
-    }
-    
-    // Convert moveSet to the format expected by generateGCGContent
-    const allMoves = moveSet.map((move, index) => {
-      const playerName = getPlayerName(move);
-      const word = extractWord(move);
-      const score = extractScore(move);
-      
-      return {
-        player: playerName,
-        word: word,
-        score: score,
-        boardDiff: [] // We don't have boardDiff in Viewer, so empty array
-      };
-    });
-    
-    const gcgContent = generateGCGContent(allMoves, name1, name2, boardCoords, [], [], pool);
-    const filename = `viewer_game_${new Date().toISOString().split('T')[0]}.gcg`;
-    downloadGCGFile(gcgContent, filename);
-  };
+
 
   // Simple animation when moves change
   useEffect(() => {
@@ -218,27 +193,6 @@ const LatestMove = ({
           {moveSet.length > 1 && (
             <Box className={styles.expandIcon} onClick={handleExpandClick}>
               {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
-            </Box>
-          )}
-          {moveSet.length > 0 && (
-            <Box className={styles.downloadIcon} onClick={handleDownloadGCG} title="Download .gcg file">
-              <Box sx={{
-                fontSize: '10px',
-                fontWeight: '600',
-                color: 'rgba(255, 255, 255, 0.7)',
-                padding: '2px 6px',
-                borderRadius: '3px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                fontFamily: 'monospace',
-                letterSpacing: '0.5px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <DownloadIcon style={{ fontSize: 14 }} />
-                GCG
-              </Box>
             </Box>
           )}
         </Box>
