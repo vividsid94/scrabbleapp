@@ -125,6 +125,7 @@ export default function Viewer({ onChange }){
         
         if (play && play !== "--" && parts[2]) {
           // Get the coordinates for this move
+          console.log('Calling highlightPreviousMove with:', { location: parts[2], play, parts });
           const moveCoords = highlightPreviousMove(parts[2], play, boardCoords);
           
           // Check if any of the moveCoords contain lowercase letters
@@ -133,11 +134,11 @@ export default function Viewer({ onChange }){
               // Check if this position corresponds to a blank tile
               const [row, col] = coord;
               
-              // Look for lowercase letters in the play string
+              // Look for dots (.) OR lowercase letters in the play string which represent blank tiles
               let letterIndex = 0;
               for (let i = 0; i < play.length; i++) {
                 const char = play[i];
-                if (char >= 'a' && char <= 'z') {
+                if (char === '.' || (char >= 'a' && char <= 'z')) {
                   // This is a blank tile
                   if (letterIndex === index) {
                     // Check if this blank tile is already in our list
@@ -148,7 +149,7 @@ export default function Viewer({ onChange }){
                     break;
                   }
                   letterIndex++;
-                } else if (char !== '.') {
+                } else if (char !== '.' && !(char >= 'a' && char <= 'z')) {
                   letterIndex++;
                 }
               }

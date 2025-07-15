@@ -21,7 +21,15 @@ export const getMove = (moveString, currentMoveCoords) => {
 }
 
 export const extractLocation = (str) => {
+    if (!str) {
+        console.warn('extractLocation called with null/undefined str:', str);
+        return [null, null];
+    }
     let parts = str.match(/^(\d+)(\D+)|^(\D+)(\d+)$/);
+    if (!parts) {
+        console.warn('extractLocation regex match failed for str:', str);
+        return [null, null];
+    }
     let part1 = parts[1] || parts[3];
     let part2 = parts[2] || parts[4];
     return [part1, part2];
@@ -32,6 +40,12 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     const locationParts = extractLocation(location);
     const part1 = locationParts[0]; 
     const part2 = locationParts[1];
+    
+    // Return empty array if location is invalid
+    if (!part1 || !part2) {
+        return curMoveCoords;
+    }
+    
     let i, coord1, coord2;
     if (Number.isInteger(Number(part1))) {
       // Horizontal play
