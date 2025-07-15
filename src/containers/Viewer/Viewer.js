@@ -314,7 +314,8 @@ export default function Viewer({ onChange }){
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
-                showDictionary={false}
+              showDictionary={false}
+              commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
             />
    
             </Box>
@@ -616,16 +617,11 @@ export default function Viewer({ onChange }){
                 <div>Loading pool...</div>
               )}
             </Box>
-            <Box className={styles.commentaryContainer} style={{color: '#fff'}}>
-              {notes.map(([note, moveNumber], index) => (
-                <Box className={styles.commentaryBox} key={index} style={{ display: currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES") ? 'block' : 'none' }}>
-                  "{note.trim()}"
-                </Box>
-              ))}
-            </Box>
-            </Box>
           </Box>
-        </Box>  
+        </Box>
+        </Box>
+        
+
       </Box>   
     </Box>
   );

@@ -152,6 +152,7 @@ td {
   max-width: 600px;
   height: auto;
   aspect-ratio: 1;
+  position: relative;
 }
 
 .Board__FULLBOARD,
@@ -290,4 +291,39 @@ td {
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     z-index: 1000;
+}
+
+.commentaryContainer {
+  background: slategrey;
+  background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+  position: absolute;
+  margin-top: 10px;
+  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  z-index: 10;
+}
+
+@media screen and (max-width: 992px) {
+  .commentaryContainer {
+    position: relative;
+    margin-top: 15px;
+    width: 100%;
+  }
+}
+
+.commentaryBox {
+  padding: 10px;
+  font-family: 'Syne';
+  overflow-wrap: break-word;
+  text-align: justify;
+  font-size: 13px;
+  line-height: 18px;
+  color: white;
 }

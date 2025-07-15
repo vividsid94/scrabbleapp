@@ -22,7 +22,8 @@ export default function Board({
     showDictionary = true,
     previewScore,
     previewScorePosition,
-    lastMoveCoordinates = []
+    lastMoveCoordinates = [],
+    commentary = null
 }) {
     const { lightMode } = useContext(ThemeContext);
     let boardTheme = "Board__" + boardMode;
@@ -196,6 +197,14 @@ export default function Board({
                     )}
                 </Box>
             </Box>
+
+            {commentary && (
+                <Box className={styles.commentaryContainer}>
+                    <Box className={styles.commentaryBox}>
+                        "{commentary}"
+                    </Box>
+                </Box>
+            )}
 
             <Modal open={open} onClose={handleClose}>
                 <Box className={styles.modalContainer}>
