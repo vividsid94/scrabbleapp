@@ -123,7 +123,7 @@ export default function Viewer({ onChange }){
         const parts = move.split(" ");
         const play = parts[3];
         
-        if (play && play !== "--") {
+        if (play && play !== "--" && parts[2]) {
           // Get the coordinates for this move
           const moveCoords = highlightPreviousMove(parts[2], play, boardCoords);
           

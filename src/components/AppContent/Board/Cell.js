@@ -26,11 +26,20 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
   }
   function cell(letter) {
     if (letter) {
-      const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
+      // For blank tiles, use the actual letter (uppercase) for the image, not the blank '_'
+      const cacheKey = isBlank ? letter.toUpperCase() : (/[a-z]/.test(letter) ? '_' : letter);
       const cachedImage = preloadedImages[cacheKey];
+
+      if (isBlank) {
+        console.log('Blank tile debug:', { letter, cacheKey, hasCachedImage: !!cachedImage, color });
+      }
 
       if (cachedImage) {
         const modifiedImageUrl = modifyImageColor(cachedImage, color);
+        
+        if (isBlank) {
+          console.log('Blank tile image URL:', modifiedImageUrl);
+        }
         
         return (
           <div
