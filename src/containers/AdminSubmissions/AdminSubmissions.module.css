@@ -1,135 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Preahvihear');
+
 .page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  position: relative;
-  min-height: 100vh;
-}
-
-.mainPanel {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
-  gap: 20px;
-}
-
-.leftContainer {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  max-width: 1200px;
-}
-
-.mainBox {
   width: 100%;
-  max-width: 1000px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.mainBoxContent {
-  padding: 40px;
-}
-
-.rightPanel {
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.playerPanel {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  color: #fff;
 }
 
-.poolBox {
-  padding: 0px 10px;
+.content {
+  width: 75%;
+  margin: 25px auto;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.loginContainer,
-.adminContainer {
-  width: 100%;
+.content h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #3D5A80;
+  font-size: 1.5em;
+  border-bottom: 2px solid rgba(61, 90, 128, 0.3);
+  padding-bottom: 8px;
 }
 
-.title {
-  text-align: center;
-  margin-bottom: 16px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.content h3 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: #3D5A80;
+  font-size: 1.3em;
+  border-bottom: 2px solid rgba(61, 90, 128, 0.3);
+  padding-bottom: 8px;
 }
 
-.description {
-  text-align: center;
-  margin-bottom: 32px;
-  color: #666;
-  line-height: 1.6;
+.content p {
+  margin-bottom: 20px;
+  line-height: 1.5;
+  color: #333;
 }
 
-.submitButton {
-  height: 48px;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-  transition: all 0.3s ease;
-  margin-top: 16px;
-}
-
-.submitButton:hover {
-  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
-  transform: translateY(-2px);
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .description {
-    color: #aaa;
-  }
+.form {
+  margin-bottom: 20px;
 }
 
 /* Responsive design */
-@media (max-width: 992px) {
-  .mainPanel {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .rightPanel {
-    width: 100%;
-    max-width: 1000px;
-  }
-}
-
 @media (max-width: 768px) {
-  .mainPanel {
-    padding: 16px;
-  }
-  
-  .mainBoxContent {
-    padding: 24px;
-  }
-  
-  .title {
-    font-size: 1.75rem;
-  }
-  
-  .rightPanel {
-    width: 100%;
+  .content {
+    width: 90%;
+    padding: 20px;
   }
 } 
