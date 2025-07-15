@@ -326,6 +326,7 @@ form{
 	flex-direction: column;
   justify-content: flex-start;
   gap: 20px;
+  position: relative;
 }
 
 .topPlayerPanel{
@@ -370,6 +371,8 @@ form{
 .commentaryContainer{
   background: slategrey;
   background-image: url("https://www.transparenttextures.com/patterns/light-mesh.png");
+  margin-top: 10px;
+  border-radius: 8px;
 }
 
 .commentaryBox{
