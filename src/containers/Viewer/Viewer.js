@@ -19,6 +19,8 @@ import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen
 import ColorScheme from '../../components/common/ColorScheme';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 import { ThemeContext } from '../../App';
+import { getWooglesGame } from '../../axios/api';
+
 
 // Import components
 import PlayerInfo from './components/PlayerInfo';
@@ -119,6 +121,50 @@ export default function Viewer({ onChange }){
     setShowPlayersModal(false);
     setGameNum(gameNum);
     await loadGameData();
+  };
+
+  // Add Load Woogles Game button logic
+  const handleLoadWooglesGame = async () => {
+    try {
+      const gcg = await getWooglesGame('qj3fjmdK');
+      if (!gcg) throw new Error('No GCG data returned');
+      // Parse moves and origPlayerRaw from GCG
+      const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
+      const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
+      const lines = gcg.split('\n');
+      let notes = [];
+      let lexicon = '';
+      let player1 = '';
+      let player2 = '';
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('#note')) {
+          const count = lines.slice(0, i).filter(line => line.startsWith('>')).length;
+          notes.push([lines[i].replace('#note ', ''), count]);
+        }
+        if (lines[i].startsWith('#lexicon')) {
+          lexicon = lines[i].split(' ')[1];
+        }
+        if (lines[i].startsWith('#player1')) {
+          player1 = lines[i].split(' ').slice(2).join(' ');
+        }
+        if (lines[i].startsWith('#player2')) {
+          player2 = lines[i].split(' ').slice(2).join(' ');
+        }
+      }
+      setMoveSet(moveSet);
+      setOrigPlayerRaw(origPlayerRaw);
+      setNotes(notes);
+      setGameNum('woogles-qj3fjmdK');
+      setName1(player1);
+      setName2(player2);
+      setRevealedName1('');
+      setRevealedName2('');
+      setRevealedElo('');
+      setRevealedElo2('');
+      setGameDictionary(lexicon);
+    } catch (error) {
+      console.error('Failed to load Woogles game:', error);
+    }
   };
 
   // Load initial game data
@@ -344,7 +390,7 @@ export default function Viewer({ onChange }){
             <Box className={styles.playerPanel} style={{color: '#fff'}}>
               <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8}}>
                 Dictionary: {gameDictionary}
-                <Box
+                                <Box
                   className={styles.bestMoveButton}
                   onClick={handleOpenPlayersModal}
                   sx={{
@@ -370,7 +416,9 @@ export default function Viewer({ onChange }){
                 >
                   Browse Players
                 </Box>
-              </Box>
+
+
+                </Box>
               <Box className={styles.playerToggle}>
                 {/* Main navigation icons */}
                 {iconList.map((icon, index) => (
@@ -530,6 +578,33 @@ export default function Viewer({ onChange }){
                             </Box>
                           </Tooltip>
                         )}
+                        <Tooltip title="Test Woogles Game Loading">
+                          <Box
+                            className={styles.bestMoveButton}
+                            onClick={handleLoadWooglesGame}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontFamily: 'Syne',
+                              fontWeight: 500,
+                              color: '#fff',
+                              padding: '4px 12px',
+                              minWidth: '80px',
+                              border: '1px solid rgba(255,255,255,0.3)',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                borderColor: 'rgba(255,255,255,0.5)'
+                              }
+                            }}
+                          >
+                            Test Woogles
+                          </Box>
+                        </Tooltip>
                       </>
                     )}
                   </Box>

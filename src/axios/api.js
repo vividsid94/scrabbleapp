@@ -214,5 +214,241 @@ export const searchPlayerByName = async (playerName) => {
   }
 };
 
+// Get a specific Woogles game by ID (returns GCG format) - using REST API
+export const getWooglesGame = async (gameId) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetGCG';
+    const requestBody = { game_id: gameId };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Game Response:', response.data);
+    return response.data.gcg; // Returns the GCG string
+  } catch (error) {
+    console.error('Error getting Woogles game:', error);
+    throw error;
+  }
+};
+
+// Parse Woogles GCG data into structured format
+export const parseWooglesGCG = (gcgData) => {
+  try {
+    const lines = gcgData.split('\n');
+    const gameInfo = {
+      id: '',
+      lexicon: '',
+      player1: { name: '', username: '' },
+      player2: { name: '', username: '' },
+      moves: [],
+      finalScores: { player1: 0, player2: 0 },
+      winner: ''
+    };
+    
+    for (const line of lines) {
+      if (line.startsWith('#id')) {
+        gameInfo.id = line.split(' ')[1];
+      } else if (line.startsWith('#lexicon')) {
+        gameInfo.lexicon = line.split(' ')[1];
+      } else if (line.startsWith('#player1')) {
+        const parts = line.split(' ');
+        gameInfo.player1.username = parts[1];
+        gameInfo.player1.name = parts.slice(2).join(' ');
+      } else if (line.startsWith('#player2')) {
+        const parts = line.split(' ');
+        gameInfo.player2.username = parts[1];
+        gameInfo.player2.name = parts.slice(2).join(' ');
+      } else if (line.startsWith('>') && line.includes(':')) {
+        // Parse move line
+        const moveMatch = line.match(/^>([^:]+):\s*([A-Z?]+\s+\w+\s+[A-Z.]+)\s+\+(\d+)\s+(\d+)$/);
+        if (moveMatch) {
+          const [, player, play, points, runningTotal] = moveMatch;
+          gameInfo.moves.push({
+            player: player.trim(),
+            play: play.trim(),
+            points: parseInt(points),
+            runningTotal: parseInt(runningTotal)
+          });
+        }
+      }
+    }
+    
+    // Get final scores from last moves
+    if (gameInfo.moves.length > 0) {
+      const lastMove = gameInfo.moves[gameInfo.moves.length - 1];
+      if (lastMove.player === gameInfo.player1.username) {
+        gameInfo.finalScores.player1 = lastMove.runningTotal;
+        gameInfo.finalScores.player2 = gameInfo.moves[gameInfo.moves.length - 2]?.runningTotal || 0;
+      } else {
+        gameInfo.finalScores.player2 = lastMove.runningTotal;
+        gameInfo.finalScores.player1 = gameInfo.moves[gameInfo.moves.length - 2]?.runningTotal || 0;
+      }
+      
+      // Determine winner
+      if (gameInfo.finalScores.player1 > gameInfo.finalScores.player2) {
+        gameInfo.winner = gameInfo.player1.username;
+      } else if (gameInfo.finalScores.player2 > gameInfo.finalScores.player1) {
+        gameInfo.winner = gameInfo.player2.username;
+      }
+    }
+    
+    return gameInfo;
+  } catch (error) {
+    console.error('Error parsing Woogles GCG:', error);
+    return null;
+  }
+};
+
+// Get Woogles game history (returns detailed game data) - using REST API
+export const getWooglesGameHistory = async (gameId) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetGameHistory';
+    const requestBody = { game_id: gameId };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Game History Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting Woogles game history:', error);
+    throw error;
+  }
+};
+
+// Get Woogles user profile and games - using REST API
+export const getWooglesUserProfile = async (username) => {
+  try {
+    const url = 'https://woogles.io/api/user_service.UserService/GetFullProfile';
+    const requestBody = { username: username };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles User Profile Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting Woogles user profile:', error);
+    throw error;
+  }
+};
+
+// Get Woogles games for a specific player
+export const getWooglesPlayerGames = async (username, limit = 10) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetGameHistory';
+    const requestBody = { 
+      username: username,
+      limit: limit,
+      offset: 0
+    };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Player Games Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting Woogles player games:', error);
+    throw error;
+  }
+};
+
+// Search for Woogles players
+export const searchWooglesPlayers = async (searchTerm) => {
+  try {
+    const url = 'https://woogles.io/api/user_service.UserService/GetFullProfile';
+    const requestBody = { username: searchTerm };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Player Search Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error searching Woogles players:', error);
+    throw error;
+  }
+};
+
+// Test Woogles API with the correct REST endpoints
+export const testWooglesAPI = async () => {
+  try {
+    console.log('🧪 Testing Woogles REST API...');
+    
+    // Test with a real game ID from the gist example
+    const realGameId = 'qj3fjmdK';
+    console.log('Testing with game ID:', realGameId);
+    
+    // Test GetGCG endpoint and parse the data
+    try {
+      const gcgResponse = await getWooglesGame(realGameId);
+      console.log('✅ GetGCG Raw Response:', gcgResponse);
+      
+      // Parse the GCG data
+      const parsedGame = parseWooglesGCG(gcgResponse);
+      console.log('✅ Parsed Game Data:', parsedGame);
+      
+      if (parsedGame) {
+        console.log('🎮 Game Summary:');
+        console.log(`   ID: ${parsedGame.id}`);
+        console.log(`   Lexicon: ${parsedGame.lexicon}`);
+        console.log(`   Players: ${parsedGame.player1.name} vs ${parsedGame.player2.name}`);
+        console.log(`   Final Score: ${parsedGame.finalScores.player1} - ${parsedGame.finalScores.player2}`);
+        console.log(`   Winner: ${parsedGame.winner}`);
+        console.log(`   Total Moves: ${parsedGame.moves.length}`);
+      }
+    } catch (gcgError) {
+      console.log('❌ GetGCG failed:', gcgError.message);
+    }
+    
+    // Test GetGameHistory endpoint
+    try {
+      const historyResponse = await getWooglesGameHistory(realGameId);
+      console.log('✅ GetGameHistory Response:', historyResponse);
+    } catch (historyError) {
+      console.log('❌ GetGameHistory failed:', historyError.message);
+    }
+    
+    // Test user profile endpoint (this one doesn't work)
+    try {
+      const profileResponse = await getWooglesUserProfile('testuser');
+      console.log('✅ GetFullProfile Response:', profileResponse);
+    } catch (profileError) {
+      console.log('❌ GetFullProfile failed:', profileError.message);
+    }
+    
+    return { 
+      message: 'Woogles API test completed - check console for details',
+      gameId: realGameId
+    };
+  } catch (error) {
+    console.error('❌ Error testing Woogles API:', error);
+    throw error;
+  }
+};
+
+
+
 
 

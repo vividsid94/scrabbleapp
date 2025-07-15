@@ -9,7 +9,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-import { getCustomPlayerGameInfo, searchPlayerByName } from '../../../axios/api';
+import { getCustomPlayerGameInfo, searchPlayerByName, getWooglesGame, getWooglesGameHistory, testWooglesAPI } from '../../../axios/api';
 import styles from '../Viewer.module.css';
 
 const BrowsePlayersModal = ({ open, onClose, onLoadGame }) => {
@@ -114,13 +114,34 @@ const BrowsePlayersModal = ({ open, onClose, onLoadGame }) => {
       <Box className={styles.modalContainer} sx={{ borderRadius: '0 !important', maxWidth: '400px', width: '90vw', padding: '8px 8px 0 8px', minWidth: 0 }}>
         <Box sx={{ 
           display: 'flex', 
-          justifyContent: 'flex-end', 
+          justifyContent: 'space-between', 
           alignItems: 'center',
           marginBottom: '6px',
           borderBottom: '1px solid rgba(0,0,0,0.07)',
           paddingBottom: '2px',
           minHeight: 0
         }}>
+          <Button 
+            onClick={async () => {
+              try {
+                console.log('Testing Woogles API...');
+                const result = await testWooglesAPI('DjEwYLBF3nKtncFgBYK2nSW9s7eTgfSAL8sYq2UMSFQH');
+                console.log('Woogles API test result:', result);
+              } catch (error) {
+                console.error('Woogles API test failed:', error);
+              }
+            }}
+            sx={{ 
+              fontSize: '10px',
+              padding: '2px 6px',
+              color: '#4CAF50',
+              border: '1px solid #4CAF50',
+              '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
+            }}
+            variant="outlined"
+          >
+            Test Woogles
+          </Button>
           <Button 
             onClick={handleClosePlayersModal}
             sx={{ 
