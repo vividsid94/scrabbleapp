@@ -369,18 +369,7 @@ export default function Puzzle() {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
           }}>
-            {puzzleMode === 'bingo' && (
-              <>🧩 <strong>Bingo Puzzles:</strong> Solve bingo puzzles when SidBot finds 7-letter words!</>
-            )}
-            {puzzleMode === 'only-bingo' && (
-              <>🧩 <strong>Only Bingo:</strong> Solve puzzles only when there's exactly one bingo available!</>
-            )}
-            {puzzleMode === 'significant-best' && (
-              <>🧩 <strong>Best Move Puzzles:</strong> Solve puzzles when SidBot finds the best possible move!</>
-            )}
-            {puzzleMode === 'non-bingo-significant' && (
-              <>🧩 <strong>Significant Moves:</strong> Solve puzzles for any significant non-bingo plays!</>
-            )}
+            🧩 <strong>Solve puzzles as SidBot plays itself</strong>
           </Box>
           
           {/* Game Running Instructions */}
