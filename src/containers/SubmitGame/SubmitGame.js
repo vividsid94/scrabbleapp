@@ -108,12 +108,11 @@ export default function SubmitGame() {
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
               <Box className={styles.submitContainer}>
                 <Typography variant="h4" className={styles.title}>
-                  Submit a Game for Analysis
+                  Submit a  GTE Game
                 </Typography>
                 
                 <Typography variant="body1" className={styles.description}>
-                  Submit a Cross-Tables or Woogles game URL for Mack Meller to analyze in his next video.
-                  Make sure the game is publicly accessible.
+                  Anonymously submit an XT or Woogles game URL for Mack Meller to analyze in his next video.
                 </Typography>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
@@ -201,31 +200,6 @@ export default function SubmitGame() {
                     )}
                   </Button>
                 </form>
-
-                <Box className={styles.infoSection}>
-                  <Typography variant="h6" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
-                    What happens next?
-                  </Typography>
-                  <ul className={styles.infoList}>
-                    <li>Mack will review your submission</li>
-                    <li>If selected, the game will be featured in an upcoming video</li>
-                    <li>You'll be notified if your game is chosen</li>
-                    <li>Submissions are reviewed on a first-come, first-served basis</li>
-                  </ul>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-          
-          <Box className={styles.rightPanel}>
-            <Box className={styles.playerPanel}>
-              <Box className={styles.poolBox}>
-                <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
-                  Game Submission
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
-                  Submit your favorite games for analysis
-                </Typography>
               </Box>
             </Box>
           </Box>
