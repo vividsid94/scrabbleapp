@@ -148,6 +148,9 @@ export default function Puzzle() {
 
   // Add state to show all bingos
   const [showAllBingos, setShowAllBingos] = useState(false);
+  
+  // Add state for dynamic hourglass
+  const [hourglassIndex, setHourglassIndex] = useState(0);
 
   // Helper: check if a move is a bingo
   const isBingo = (move) => move && move.tiles && move.tiles.length === 7;
@@ -246,6 +249,16 @@ export default function Puzzle() {
       setShowAllBingos(false);
     }
   }, [isPausedForBingo]);
+
+  // Animate hourglass when game is running
+  useEffect(() => {
+    if (gameStarted && !isPausedForBingo && !gameEnded) {
+      const interval = setInterval(() => {
+        setHourglassIndex(prev => (prev + 1) % 4);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [gameStarted, isPausedForBingo, gameEnded]);
 
   // Check for bingos in top moves
   useEffect(() => {
@@ -369,32 +382,14 @@ export default function Puzzle() {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
           }}>
-            🧩 <strong>Solve puzzles as SidBot plays itself</strong>
+            {gameStarted && !isPausedForBingo && !gameEnded ? (
+              <>{['⏳', '⌛', '⏳', '⌛'][hourglassIndex]} <strong>Solve puzzles as SidBot plays itself</strong></>
+            ) : (
+              <>🧩 <strong>Solve puzzles as SidBot plays itself</strong></>
+            )}
           </Box>
           
-          {/* Game Running Instructions */}
-          {gameStarted && !isPausedForBingo && !gameEnded && (
-            <Box sx={{
-              position: 'absolute',
-              top: '80px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 10,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              color: 'white',
-              padding: '8px 14px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: '500',
-              textAlign: 'center',
-              maxWidth: '400px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
-            }}>
-              ⏳ Watching SidBot play... Waiting for a puzzle opportunity!
-            </Box>
-          )}
+
           
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
