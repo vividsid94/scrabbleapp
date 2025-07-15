@@ -12,7 +12,7 @@ import styles from './SubmitGame.module.css';
 export default function SubmitGame() {
   const { lightMode } = React.useContext(ThemeContext);
   const [gameUrl, setGameUrl] = useState('');
-  const [gameType, setGameType] = useState('cross-tables');
+  const [gameType, setGameType] = useState('woogles');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
@@ -97,108 +97,83 @@ export default function SubmitGame() {
     <Box sx={{ display: 'flex' }}>
       <Sidenav />
       <Box className={styles.page}>
-        <Box className={styles.mainPanel}>
-          
-          <Box className={styles.leftContainer}>
-            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
-              <Box className={styles.submitContainer}>
-                <Typography variant="h4" className={styles.title}>
-                  Submit a  GTE Game
-                </Typography>
-                
-                <Typography variant="body1" className={styles.description}>
-                  Submit a Woogles game URL for Mack Meller to analyze in his next video.
-                  Make sure the game is publicly accessible.
-                </Typography>
+        <Box className={styles.content}>
+          <p>Submit a Woogles Game for Mack Meller to analyze for GTE!</p>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <TextField
+              fullWidth
+              label="Game URL"
+              variant="outlined"
+              value={gameUrl}
+              onChange={handleUrlChange}
+              placeholder="https://woogles.io/game/abc123"
+              disabled={submitting}
+              sx={{
+                marginBottom: '16px',
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#ccc',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#999',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#3D5A80',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#666',
+                },
+                '& .MuiInputBase-input': {
+                  color: '#333',
+                },
+              }}
+            />
 
-                <form onSubmit={handleSubmit} className={styles.form}>
-                  <TextField
-                    fullWidth
-                    label="Game URL"
-                    variant="outlined"
-                    value={gameUrl}
-                    onChange={handleUrlChange}
-                    placeholder="https://woogles.io/game/abc123"
-                    disabled={submitting}
-                    className={styles.urlInput}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: lightMode ? '#ccc' : '#555',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: lightMode ? '#999' : '#777',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#1976d2',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: lightMode ? '#666' : '#aaa',
-                      },
-                      '& .MuiInputBase-input': {
-                        color: lightMode ? '#333' : '#fff',
-                      },
-                    }}
-                  />
+            <div className={styles.gameTypeInfo}>
+              <p>Detected game type: <strong>{gameType === 'woogles' ? 'Woogles' : 'Unknown'}</strong></p>
+            </div>
 
-                  <Box className={styles.gameTypeInfo}>
-                    <Typography variant="body2" sx={{ color: lightMode ? '#666' : '#aaa' }}>
-                      Detected game type: <strong style={{ color: lightMode ? '#1976d2' : '#64b5f6' }}>
-                        {gameType === 'woogles' ? 'Woogles' : 'Unknown'}
-                      </strong>
-                    </Typography>
-                  </Box>
+            {message && (
+              <Alert 
+                severity={messageType} 
+                sx={{
+                  marginBottom: '16px',
+                  backgroundColor: messageType === 'success' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                  color: messageType === 'success' ? '#2e7d32' : '#c62828',
+                  border: `1px solid ${messageType === 'success' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`,
+                  borderRadius: '8px'
+                }}
+              >
+                {message}
+              </Alert>
+            )}
 
-                  {message && (
-                    <Alert 
-                      severity={messageType} 
-                      className={styles.alert}
-                      sx={{
-                        backgroundColor: messageType === 'success' 
-                          ? (lightMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.2)') 
-                          : (lightMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.2)'),
-                        color: messageType === 'success' 
-                          ? (lightMode ? '#2e7d32' : '#81c784') 
-                          : (lightMode ? '#c62828' : '#e57373'),
-                        border: `1px solid ${messageType === 'success' 
-                          ? (lightMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(76, 175, 80, 0.4)') 
-                          : (lightMode ? 'rgba(244, 67, 54, 0.3)' : 'rgba(244, 67, 54, 0.4)')}`,
-                        borderRadius: '8px'
-                      }}
-                    >
-                      {message}
-                    </Alert>
-                  )}
-
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={submitting || !gameUrl.trim()}
-                    className={styles.submitButton}
-                    sx={{
-                      backgroundColor: '#1976d2',
-                      '&:hover': {
-                        backgroundColor: '#1565c0',
-                      },
-                      '&:disabled': {
-                        backgroundColor: '#ccc',
-                      }
-                    }}
-                  >
-                    {submitting ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CircularProgress size={20} color="inherit" />
-                        Submitting...
-                      </Box>
-                    ) : (
-                      'Submit Game'
-                    )}
-                  </Button>
-                </form>
-              </Box>
-            </Box>
-          </Box>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={submitting || !gameUrl.trim()}
+              sx={{
+                backgroundColor: '#3D5A80',
+                '&:hover': {
+                  backgroundColor: '#2c3e50',
+                },
+                '&:disabled': {
+                  backgroundColor: '#ccc',
+                },
+                marginBottom: '20px'
+              }}
+            >
+              {submitting ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={20} color="inherit" />
+                  Submitting...
+                </Box>
+              ) : (
+                'Submit Game'
+              )}
+            </Button>
+          </form>
         </Box>
       </Box>
     </Box>
