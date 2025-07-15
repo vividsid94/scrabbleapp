@@ -17,13 +17,18 @@
 }
 
 .homeLogo{
-    font-size: 50px !important;
+    font-size: 24px !important;
 }
 
 .listItem{
-    padding: 5px !important;
-    display: flex;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
     transition: all 0.2s ease;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 48px !important;
+    width: 100% !important;
 }
 
 .listItem:hover {
@@ -48,6 +53,9 @@
 
 .link{
     text-decoration: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
 }
 .link:hover{
     text-decoration: none !important;
@@ -58,8 +66,48 @@
     justify-content: center !important;
 }
 .btnContainer{
-    margin-left: 5% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
 }
 .customDrawer{
     position: relative !important;
+}
+
+/* Center icons properly - more specific selectors */
+.listItem .MuiListItemIcon-root {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+/* Override any Material-UI default padding - more specific */
+.myDrawer .MuiListItem-root {
+    padding: 0 !important;
+    margin: 0 !important;
+    justify-content: center !important;
+}
+
+.myDrawer .MuiListItemIcon-root {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Even more specific to override Material-UI */
+.myDrawer .btnContainer .listItem .MuiListItemIcon-root {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
 }

@@ -28,7 +28,6 @@ import styles from './Sidenav.module.css';
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
-  const [open, setOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const location = useLocation();
 
@@ -40,42 +39,26 @@ export default function MiniDrawer() {
     return lightMode === 'dark' ? '#fff' : '#f5f5f5';
   };
 
-  const openedMixin = () => ({
-    width: `180px`,
+  const drawerMixin = () => ({
+    width: `55px`,
     overflowX: 'hidden',
     background: getBackgroundColor(),
     backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
-    transition: '0.5s ease',
-  });
-
-  const closedMixin = () => ({
-    width: `65px`,
-    overflowX: 'hidden',
-    background: getBackgroundColor(),
-    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
-    transition: '0.5s ease',
+    transition: '0.3s ease',
   });
 
   const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    padding: theme.spacing(0, 1),
+    justifyContent: 'center',
+    padding: theme.spacing(2, 1),
     ...theme.mixins.toolbar,
   }));
 
-  const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-    ({ theme, open }) => ({
-      ...(open && {
-        ...openedMixin(theme),
-        '& .MuiDrawer-paper': openedMixin(theme),
-      }),
-      ...(!open && {
-        ...closedMixin(theme),
-        '& .MuiDrawer-paper': closedMixin(theme),
-      }),
-    }),
-  );
+  const Drawer = styled(MuiDrawer)(({ theme }) => ({
+    ...drawerMixin(theme),
+    '& .MuiDrawer-paper': drawerMixin(theme),
+  }));
 
   const MyAppBar = styled(AppBar)({
     position: 'fixed',
@@ -89,15 +72,6 @@ export default function MiniDrawer() {
     display: "flex",
     justifyContent: "space-between"
   });
-
-  const handleDrawer = () => {
-    if (open){
-      setOpen(false);
-    }
-    else{
-      setOpen(true);
-    }
-  };
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -138,8 +112,49 @@ export default function MiniDrawer() {
     return false;
   };
 
+  // Aggressive centering styles
+  const iconStyle = {
+    minWidth: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 0,
+    padding: 0,
+    width: '100%'
+  };
+
+  const listItemStyle = {
+    padding: 0,
+    margin: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '48px',
+    width: '100%'
+  };
+
   return (
     <Box>
+      {/* Force override Material-UI styles */}
+      <style>
+        {`
+          .myDrawer .MuiListItemIcon-root {
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+          }
+          .myDrawer .MuiListItem-root {
+            padding: 0 !important;
+            margin: 0 !important;
+            justify-content: center !important;
+          }
+        `}
+      </style>
+      
       <MyAppBar className={styles.myAppBar}>
         <MyToolbar>
           <IconButton color="inherit" onClick={handleClick}>
@@ -180,90 +195,59 @@ export default function MiniDrawer() {
           <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </MyToolbar>
       </MyAppBar>
-      <Drawer className={styles.myDrawer} variant="permanent" open={open}>
+      <Drawer className={styles.myDrawer} variant="permanent">
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img onClick={handleDrawer} src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
+          <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="40" height="40"/>
         </DrawerHeader>
-        
-        {/* Current Page Indicator */}
-        {open && (
-          <Box sx={{ 
-            padding: '8px 16px', 
-            borderBottom: `1px solid ${getTextColor()}20`,
-            marginBottom: '8px'
-          }}>
-            <Box sx={{ 
-              fontSize: '12px', 
-              color: `${getTextColor()}80`, 
-              fontWeight: '500',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Current Page
-            </Box>
-            <Box sx={{ 
-              fontSize: '14px', 
-              color: getTextColor(), 
-              fontWeight: '600',
-              marginTop: '2px'
-            }}>
-              {getCurrentPage()}
-            </Box>
-          </Box>
-        )}
         
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/') ? styles.activePage : ''}`}>
-              <ListItemIcon>
-                <Tooltip title="Home">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Home" placement="right">
                   <CastleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Home"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
         <List className={styles.btnContainer}>
           <a id="viewerBtn" className={styles.link} href="/viewer">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`}>
-              <ListItemIcon>
-                <Tooltip title="Game Viewer">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Game Viewer" placement="right">
                   <EyeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Viewer"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
         <List className={styles.btnContainer}>
           <a id="changelogBtn" className={styles.link} href="/changelog">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`}>
-              <ListItemIcon>
-                <Tooltip title="Changelog">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Changelog" placement="right">
                   <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Changelog"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
         <List className={styles.btnContainer}>
           <a id="submitGameBtn" className={styles.link} href="/submit-game">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`}>
-              <ListItemIcon>
-                <Tooltip title="Submit Game">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Submit Game" placement="right">
                   <SendIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText className={styles.listItemText} primary={"Submit Game"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>
         <List className={styles.btnContainer}>
-          <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ cursor: 'pointer' }}>
-            <ListItemIcon>
-              <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+          <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+              <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} placement="right">
                 {lightMode === 'dark' ? (
                   <LightModeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 ) : (
@@ -271,7 +255,6 @@ export default function MiniDrawer() {
                 )}
               </Tooltip>
             </ListItemIcon>
-            <ListItemText className={styles.listItemText} primary={lightMode === 'dark' ? 'Light' : 'Dark'} sx={{ color: getTextColor() }}/>
           </ListItem>
         </List>
       </Drawer>
