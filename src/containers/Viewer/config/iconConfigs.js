@@ -68,7 +68,9 @@ export const createIconList = (
   },
   {
     icon: SwapHorizIcon,
-    toolTip: "Switch mode",
+    toolTip: wooglesMode ? 
+      (mode === "GUESSELO" ? "Switch to Viewer (Woogles)" : "Switch to Guess ELO (Woogles)") :
+      (mode === "GUESSELO" ? "Switch to Viewer (Cross-Tables)" : "Switch to Guess ELO (Cross-Tables)"),
     onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode(onChange)),
     condition: {
       color: !unlockEloMode ? 'transparent' : 'white',

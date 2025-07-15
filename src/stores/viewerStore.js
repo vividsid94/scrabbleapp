@@ -139,7 +139,12 @@ export const useViewerStore = create((set, get) => {
       const state = get();
       let newMode = state.mode === "GUESSELO" ? "VIEWER" : "GUESSELO";
       if (state.mode !== newMode) {
-        get().randomizeGame();
+        // Use the appropriate randomize function based on current platform
+        if (state.wooglesMode) {
+          get().randomizeWooglesGame();
+        } else {
+          get().randomizeGame();
+        }
         set({ mode: newMode });
         onChange(newMode);
       }
