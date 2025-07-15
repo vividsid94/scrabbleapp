@@ -223,22 +223,22 @@ export default function MiniDrawer() {
           </a>
         </List>
         <List className={styles.btnContainer}>
-          <a id="changelogBtn" className={styles.link} href="/changelog">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Changelog" placement="right">
-                  <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
           <a id="submitGameBtn" className={styles.link} href="/submit-game">
             <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Submit Game" placement="right">
                   <SendIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
+        <List className={`${styles.btnContainer} ${styles.changelogContainer}`}>
+          <a id="changelogBtn" className={styles.link} href="/changelog">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Changelog" placement="right">
+                  <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
                 </Tooltip>
               </ListItemIcon>
             </ListItem>

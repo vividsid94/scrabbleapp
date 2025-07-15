@@ -74,6 +74,23 @@
     position: relative !important;
 }
 
+/* Make the drawer a flex container */
+.myDrawer {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+@media screen and (max-width: 992px) {
+    .myDrawer {
+        display: none !important;
+    }
+}
+
+/* Push changelog to bottom */
+.changelogContainer {
+    margin-top: auto !important;
+}
+
 /* Center icons properly - more specific selectors */
 .listItem .MuiListItemIcon-root {
     min-width: 0 !important;
