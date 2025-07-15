@@ -45,6 +45,7 @@ form{
   flex-direction: column;
   justify-content: center;
   border: none;
+  box-shadow: none;
   padding: 25px;
   width: auto;
   outline: none;
@@ -59,30 +60,9 @@ form{
   transform: translate(-50%, -50%);
   font-family: 'Syne' !important;
   border-radius: 20px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: modalAppear 0.4s ease-out, gradientShift 8s ease infinite;
-}
-
-.modalContainer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  padding: 2px;
-  background: linear-gradient(135deg, 
-    rgba(74, 74, 122, 0.2), 
-    rgba(106, 106, 154, 0.2)
-  );
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 
 .modalContainer:hover {

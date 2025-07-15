@@ -109,22 +109,44 @@ export const getCustomPlayerGameInfo = async (searchLink, searchLink2, p) => {
     if(id){
         const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(searchLink2) + id)
         let text = response.data;
-        const regex = /<td><a href='annotated\.php\?u=(\d+)'>View<\/a><\/td>/g;
-        // Array to store the numbers
-        const numbers = [];
-        // Use `match` method to find all matches
+        
+        // Extract game numbers, opponent names, dates, and tournaments from the table
+        const gameData = [];
+        const tableRegex = /<tr class='row[01]'[^>]*>.*?<td><a href='annotated\.php\?u=(\d+)'>View<\/a><\/td>.*?<td class='nowrap'><a[^>]*>([^<]+)<\/a><\/td>.*?<td><a[^>]*>([^<]+)<\/a><\/td>.*?<td>([^<]+)<\/td>/gs;
+        
         let match;
-        while ((match = regex.exec(text)) !== null) {
-            // The first captured group will contain the number
-            numbers.push(match[1]);
+        while ((match = tableRegex.exec(text)) !== null) {
+            const gameNum = match[1];
+            const opponentName = match[2].trim();
+            const tournament = match[3].trim();
+            const date = match[4].trim();
+            gameData.push({ gameNum, opponentName, tournament, date });
         }
         
-        return numbers;
+        return gameData;
     }
   } catch(err) {
     console.log(err)
   }
 }
+
+// Fetch up to 1000 players from cross-tables.com
+export const getAllPlayers = async (lexicon = 'twl') => {
+  let allPlayers = [];
+  for (let i = 0; i < 5; i++) {
+    const url = lexicon === 'csw'
+      ? `https://cross-tables.com/rest/players.php?lexicon=csw&offset=${i * 200}`
+      : `https://cross-tables.com/rest/players.php?offset=${i * 200}`;
+    const response = await axios.get(url);
+    if (response.data.players && response.data.players.length > 0) {
+      allPlayers = allPlayers.concat(response.data.players);
+      if (response.data.players.length < 200) break; // No more players
+    } else {
+      break;
+    }
+  }
+  return allPlayers;
+};
 
 
 
