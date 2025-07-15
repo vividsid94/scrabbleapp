@@ -413,6 +413,12 @@ export const useViewerStore = create((set, get) => {
             tourneyNumber = matchTourney[1];
           }
           
+          set({
+            wooglesMode: false,
+            currentWooglesGame: null,
+            gameNum: gameNum
+          });
+          
         } else if (gameUrl.includes('woogles.io')) {
           // Extract game ID from Woogles URL
           const gameIdMatch = gameUrl.match(/game\/([^\/\?]+)/);
@@ -463,6 +469,12 @@ export const useViewerStore = create((set, get) => {
           
           moveRes = [moveSet, origPlayerRaw, notes];
           dictionary = metadata.lexicon || lexicon || 'Unknown';
+          
+          set({
+            wooglesMode: true,
+            currentWooglesGame: { gameId },
+            gameNum: `woogles-${gameId}`
+          });
           
         } else {
           throw new Error('Unsupported game URL format');
