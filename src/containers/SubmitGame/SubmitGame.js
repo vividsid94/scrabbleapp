@@ -149,7 +149,7 @@ export default function SubmitGame() {
                   <Box className={styles.gameTypeInfo}>
                     <Typography variant="body2" sx={{ color: lightMode ? '#666' : '#aaa' }}>
                       Detected game type: <strong style={{ color: lightMode ? '#1976d2' : '#64b5f6' }}>
-                        {gameType === 'cross-tables' ? 'Cross-Tables' : gameType === 'woogles' ? 'Woogles' : 'Unknown'}
+                        {gameType === 'cross-tables' ? 'XT' : gameType === 'woogles' ? 'Woogles' : 'Unknown'}
                       </strong>
                     </Typography>
                   </Box>
