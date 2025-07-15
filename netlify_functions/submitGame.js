@@ -43,15 +43,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Validate URL format
-    const crossTablesPattern = /^https?:\/\/(?:www\.)?cross-tables\.com\/results\.html\?.*$/;
+    // Validate URL format - only Woogles games allowed
     const wooglesPattern = /^https?:\/\/(?:www\.)?woogles\.io\/game\/[a-zA-Z0-9-]+$/;
     
-    if (!crossTablesPattern.test(gameUrl) && !wooglesPattern.test(gameUrl)) {
+    if (!wooglesPattern.test(gameUrl)) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Invalid game URL format' })
+        body: JSON.stringify({ error: 'Only Woogles game URLs are accepted' })
       };
     }
 

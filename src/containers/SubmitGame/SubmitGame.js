@@ -18,19 +18,14 @@ export default function SubmitGame() {
   const [messageType, setMessageType] = useState('');
 
   const validateUrl = (url) => {
-    // Cross-Tables URL pattern
-    const crossTablesPattern = /^https?:\/\/(?:www\.)?cross-tables\.com\/results\.html\?.*$/;
-    
-    // Woogles URL pattern
+    // Only Woogles URL pattern
     const wooglesPattern = /^https?:\/\/(?:www\.)?woogles\.io\/game\/[a-zA-Z0-9-]+$/;
     
-    return crossTablesPattern.test(url) || wooglesPattern.test(url);
+    return wooglesPattern.test(url);
   };
 
   const detectGameType = (url) => {
-    if (url.includes('cross-tables.com')) {
-      return 'cross-tables';
-    } else if (url.includes('woogles.io')) {
+    if (url.includes('woogles.io')) {
       return 'woogles';
     }
     return 'unknown';
@@ -58,7 +53,7 @@ export default function SubmitGame() {
     }
 
     if (!validateUrl(gameUrl)) {
-      setMessage('Please enter a valid XT or Woogles game URL');
+      setMessage('Please enter a valid Woogles game URL');
       setMessageType('error');
       return;
     }
@@ -112,7 +107,8 @@ export default function SubmitGame() {
                 </Typography>
                 
                 <Typography variant="body1" className={styles.description}>
-                  Anonymously submit an XT or Woogles game URL for Mack Meller to analyze in his next video.
+                  Submit a Woogles game URL for Mack Meller to analyze in his next video.
+                  Make sure the game is publicly accessible.
                 </Typography>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
@@ -122,7 +118,7 @@ export default function SubmitGame() {
                     variant="outlined"
                     value={gameUrl}
                     onChange={handleUrlChange}
-                    placeholder="https://cross-tables.com/results.html?g=12345 or https://woogles.io/game/abc123"
+                    placeholder="https://woogles.io/game/abc123"
                     disabled={submitting}
                     className={styles.urlInput}
                     sx={{
@@ -149,7 +145,7 @@ export default function SubmitGame() {
                   <Box className={styles.gameTypeInfo}>
                     <Typography variant="body2" sx={{ color: lightMode ? '#666' : '#aaa' }}>
                       Detected game type: <strong style={{ color: lightMode ? '#1976d2' : '#64b5f6' }}>
-                        {gameType === 'cross-tables' ? 'XT' : gameType === 'woogles' ? 'Woogles' : 'Unknown'}
+                        {gameType === 'woogles' ? 'Woogles' : 'Unknown'}
                       </strong>
                     </Typography>
                   </Box>
