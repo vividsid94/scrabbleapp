@@ -7,7 +7,7 @@ const Footer = () => {
   const { lightMode } = useContext(ThemeContext);
 
   const getBackgroundColor = () => {
-    return lightMode === 'dark' ? '#000000' : '#5a5a7a';
+    return '#1F2937';
   };
 
   const getTextColor = () => {

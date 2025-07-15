@@ -32,7 +32,7 @@ export default function MiniDrawer() {
   const location = useLocation();
 
   const getBackgroundColor = () => {
-    return lightMode === 'dark' ? '#000000' : '#5a5a7a';
+    return '#1F2937';
   };
 
   const getTextColor = () => {
