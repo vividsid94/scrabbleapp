@@ -58,7 +58,7 @@ export default function SubmitGame() {
     }
 
     if (!validateUrl(gameUrl)) {
-      setMessage('Please enter a valid Cross-Tables or Woogles game URL');
+      setMessage('Please enter a valid XT or Woogles game URL');
       setMessageType('error');
       return;
     }
