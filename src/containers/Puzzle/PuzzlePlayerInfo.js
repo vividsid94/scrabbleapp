@@ -301,6 +301,35 @@ const PuzzlePlayerInfo = React.memo(() => {
         )}
       </Box>
 
+      {/* Puzzle Instructions Banner */}
+      <Box sx={{
+        marginTop: '16px',
+        padding: '8px 12px',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        color: 'white',
+        fontSize: '12px',
+        fontWeight: '500',
+        textAlign: 'center',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {gameStarted && !isPausedForBingo && !gameEnded ? (
+          <><strong>Solve puzzles as SidBot plays itself</strong>
+            <Box className={styles.thinkingDots}>
+              <div></div>
+              <div></div>
+              <div></div>
+            </Box>
+          </>
+        ) : (
+          <><strong>Solve puzzles as SidBot plays itself</strong></>
+        )}
+      </Box>
+
       {gameStarted && (
         <Box className={styles.playerPanel}>
           <Box className={styles.playerInfo}>
@@ -312,16 +341,6 @@ const PuzzlePlayerInfo = React.memo(() => {
               }}>
                 {currentPlayer === 1 ? '🤔' : '🧠'}
               </Box>
-              {isExecutingFastPlay && (
-                <Box component="span" style={{ 
-                  marginLeft: '4px',
-                  fontSize: '12px',
-                  color: '#FF9800',
-                  fontWeight: 'bold'
-                }}>
-                  ⚡ Fast Playing...
-                </Box>
-              )}
             </Box>
           </Box>
           <Box style={{ marginTop: '12px' }}>

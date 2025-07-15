@@ -363,31 +363,7 @@ export default function Puzzle() {
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
           
-          {/* Puzzle Instructions Banner */}
-          <Box sx={{
-            position: 'absolute',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            textAlign: 'center',
-            maxWidth: '600px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-          }}>
-            {gameStarted && !isPausedForBingo && !gameEnded ? (
-              <>{['⏳', '⌛', '⏳', '⌛'][hourglassIndex]} <strong>Solve puzzles as SidBot plays itself</strong></>
-            ) : (
-              <>🧩 <strong>Solve puzzles as SidBot plays itself</strong></>
-            )}
-          </Box>
+
           
 
           
