@@ -26,6 +26,7 @@ export const useViewerStore = create((set, get) => {
     open: false,
     gameDictionary: "Loading...",
     currentMoveRef: { current: -1 },
+    blankTiles: [],
     
     // Player state
     name1: '',
@@ -75,6 +76,7 @@ export const useViewerStore = create((set, get) => {
     setOpen: (isOpen) => set({ open: isOpen }),
     setGameDictionary: (dict) => set({ gameDictionary: dict }),
     setCurrentMoveRef: (ref) => set({ currentMoveRef: ref }),
+    setBlankTiles: (tiles) => set({ blankTiles: tiles }),
     
     // Actions - Player state
     setName1: (name) => set({ name1: name }),

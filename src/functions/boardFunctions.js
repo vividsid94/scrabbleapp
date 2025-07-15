@@ -60,9 +60,6 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
 } 
 
 export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = []) => {
-  if (blankTiles.length > 0) {
-    //console.log('createBoard called with blankTiles:', blankTiles);
-  }
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
@@ -70,16 +67,20 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
           const lightenedCell = isCurrentMove;
           const isBlank = blankTiles.some(tile => {
             const matches = tile.row === rowIndex && tile.col === colIndex;
-            if (matches) {
-              //console.log('Found blank tile at position:', { rowIndex, colIndex, letter: col });
-            }
             return matches;
           });
           const isLastMove = lastMoveCoordinates.some(coord => coord.row === rowIndex && coord.col === colIndex);
+          
+          // For blank tiles, we need to pass the lowercase letter to show the curved effect
+          let displayLetter = col;
+          if (isBlank && typeof col === 'string' && col.length === 1) {
+            displayLetter = col.toLowerCase();
+          }
+          
           return Cell({
             rowIndex,
             colIndex,
-            bonus: cellType(col, lightenedCell),
+            bonus: cellType(displayLetter, lightenedCell),
             type: "board",
             theme,
             tiles,

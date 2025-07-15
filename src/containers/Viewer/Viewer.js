@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Viewer.module.css';
@@ -9,7 +9,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
-import { getMove, createBoard } from "../../functions/boardFunctions.js";
+import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
 import { removeFromPool } from '../../functions/poolFunctions';
@@ -36,7 +36,6 @@ export default function Viewer({ onChange }){
   const {
     // Game state
     gameNum, setGameNum,
-    boardClickCount, setBoardClickCount,
     moveSet, setMoveSet,
     currentMoveCoords, setCurrentMoveCoords,
     boardCoords, setBoardCoords,
@@ -45,7 +44,6 @@ export default function Viewer({ onChange }){
     pointsScored, setPointsScored,
     pool, setPool,
     mode, setMode,
-    resetCount, setResetCount,
     moveDirection, setMoveDirection,
     boardMode, setBoardMode,
     tiles, setTiles,
@@ -54,6 +52,7 @@ export default function Viewer({ onChange }){
     open, setOpen,
     gameDictionary, setGameDictionary,
     currentMoveRef,
+    blankTiles, setBlankTiles,
     name1, setName1,
     name2, setName2,
     revealedName1, setRevealedName1,
@@ -111,6 +110,67 @@ export default function Viewer({ onChange }){
   useEffect(() => {
     loadGameData();
   }, []); // Only run once on mount
+
+  // Create board with useMemo like Play.js
+  const board = useMemo(() => {
+    // Calculate ALL blankTiles from the entire game up to current move
+    let calculatedBlankTiles = [];
+    
+    // Go through all moves up to the current move to find all blank tiles
+    for (let moveIndex = 0; moveIndex <= currentMoveRef.current; moveIndex++) {
+      const move = moveSet[moveIndex];
+      if (move) {
+        const parts = move.split(" ");
+        const play = parts[3];
+        
+        if (play && play !== "--") {
+          // Get the coordinates for this move
+          const moveCoords = highlightPreviousMove(parts[2], play, boardCoords);
+          
+          // Check if any of the moveCoords contain lowercase letters
+          moveCoords.forEach((coord, index) => {
+            if (Array.isArray(coord) && coord.length === 2) {
+              // Check if this position corresponds to a blank tile
+              const [row, col] = coord;
+              
+              // Look for lowercase letters in the play string
+              let letterIndex = 0;
+              for (let i = 0; i < play.length; i++) {
+                const char = play[i];
+                if (char >= 'a' && char <= 'z') {
+                  // This is a blank tile
+                  if (letterIndex === index) {
+                    // Check if this blank tile is already in our list
+                    const alreadyExists = calculatedBlankTiles.some(bt => bt.row === row && bt.col === col);
+                    if (!alreadyExists) {
+                      calculatedBlankTiles.push({ row, col });
+                    }
+                    break;
+                  }
+                  letterIndex++;
+                } else if (char !== '.') {
+                  letterIndex++;
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    
+    const result = createBoard(
+      boardCoords, 
+      currentMoveCoords, 
+      tiles, 
+      lightMode, 
+      color.current, 
+      null, // complementaryColor
+      calculatedBlankTiles
+    );
+    return result;
+  }, [boardCoords, currentMoveCoords, tiles, lightMode, color.current, currentMoveRef.current, moveSet]);
+
+
 
   // Handle keyboard events for backspace (move back)
   useEffect(() => {
@@ -245,7 +305,7 @@ export default function Viewer({ onChange }){
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
             <Board 
-              board={createBoard(boardCoords, currentMoveCoords, tiles, lightMode, color.current)} 
+              board={board} 
               points={pointsScored} 
               boardMode={boardMode}
               rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} 
@@ -254,7 +314,8 @@ export default function Viewer({ onChange }){
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
                 showDictionary={false}
-            />   
+            />
+   
             </Box>
           </Box>
           <Box className={styles.rightPanel}>

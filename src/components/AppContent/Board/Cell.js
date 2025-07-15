@@ -21,6 +21,9 @@ function lightenColor(color) {
 preload();  
 
 export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank, isLastMove }) {
+  if (isBlank) {
+    console.log('Cell with isBlank=true:', { rowIndex, colIndex, letter: bonus?.value, type });
+  }
   function cell(letter) {
     if (letter) {
       const cacheKey = /[a-z]/.test(letter) ? '_' : letter;
