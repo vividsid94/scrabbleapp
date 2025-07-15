@@ -34,6 +34,7 @@ import TopMoves from './components/TopMoves';
 import SettingsModal from './components/SettingsModal';
 import RecentGamesList from './components/RecentGamesList';
 import ViewedGamesList from './components/ViewedGamesList';
+import SubmittedGamesModal from './components/SubmittedGamesModal';
 import Typography from '@mui/material/Typography';
 import BrowsePlayersModal from './components/BrowsePlayersModal';
 
@@ -41,6 +42,7 @@ export default function Viewer({ onChange }){
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const [showOptions, setShowOptions] = useState(false);
   const [showPlayersModal, setShowPlayersModal] = useState(false);
+  const [showSubmittedGamesModal, setShowSubmittedGamesModal] = useState(false);
 
   // Use Zustand Viewer Store
   const {
@@ -127,6 +129,14 @@ export default function Viewer({ onChange }){
 
   const handleClosePlayersModal = () => {
     setShowPlayersModal(false);
+  };
+
+  const handleOpenSubmittedGamesModal = () => {
+    setShowSubmittedGamesModal(true);
+  };
+
+  const handleCloseSubmittedGamesModal = () => {
+    setShowSubmittedGamesModal(false);
   };
 
   const handleLoadGame = async (gameNum) => {
@@ -289,7 +299,8 @@ export default function Viewer({ onChange }){
     wooglesMode,
     currentWooglesGame,
     handleOpenPlayersModal,
-    handleRevealElo
+    handleRevealElo,
+    handleOpenSubmittedGamesModal
   );
 
   const actionButtonStyle = {
@@ -346,6 +357,13 @@ export default function Viewer({ onChange }){
               gamesViewed={gamesViewed}
               chooseGame={(gameNum) => chooseGameStore(gameNum)}
               handleClose={handleClose}
+            />
+          )}
+          {modalContent === "submittedGames" && (
+            <SubmittedGamesModal
+              open={showSubmittedGamesModal}
+              onClose={handleCloseSubmittedGamesModal}
+              onLoadGame={handleLoadGame}
             />
           )}
           {modalContent === "loading" && (
@@ -592,6 +610,22 @@ export default function Viewer({ onChange }){
                             </Box>
                           </Tooltip>
                         )}
+                        {groupedIcons[0].icon6 && (
+                          <Tooltip title={groupedIcons[0].icon6.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon6.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                ...(groupedIcons[0].icon6.condition || {})
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon6.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
                       </>
                     )}
                   </Box>
@@ -828,6 +862,11 @@ export default function Viewer({ onChange }){
             <BrowsePlayersModal 
         open={showPlayersModal}
         onClose={handleClosePlayersModal}
+        onLoadGame={handleLoadGame}
+      />
+      <SubmittedGamesModal 
+        open={showSubmittedGamesModal}
+        onClose={handleCloseSubmittedGamesModal}
         onLoadGame={handleLoadGame}
       />
     </Box>

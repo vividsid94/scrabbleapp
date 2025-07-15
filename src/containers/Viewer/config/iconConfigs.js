@@ -121,7 +121,7 @@ export const createGroupedIcons = (
       icon: LibraryBooksIcon,
       toolTip: "Submitted Games",
       onClick: () => handleOpenSubmittedGamesModal(),
-      condition: { display: 'flex' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
     }
   },
   {
