@@ -8,6 +8,7 @@ import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import BookIcon from '@mui/icons-material/Book';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -372,9 +373,12 @@ export default function Viewer({ onChange }){
           <Box className={styles.rightPanel}>
             <Box className={styles.playerPanel} style={{color: '#fff'}}>
               <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <span>Dictionary: {gameDictionary}</span>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                  <span>{gameDictionary}</span>
+                </Box>
                 <span style={{marginLeft: '12px'}}></span>
-                <Tooltip title={wooglesMode ? "Switch to Cross-Tables" : "Switch to Woogles"}>
+                <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
                   <Box
                     className={styles.bestMoveButton}
                     onClick={toggleWooglesMode}
@@ -383,17 +387,17 @@ export default function Viewer({ onChange }){
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginLeft: '8px',
-                      padding: '4px 10px',
+                      padding: '2px 6px',
                       fontSize: '10px',
                       fontFamily: 'Syne',
                       fontWeight: 500,
                       color: '#fff',
                       border: '1px solid rgba(255,255,255,0.3)',
-                      borderRadius: '3px',
+                      borderRadius: '2px',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       minWidth: 'fit-content',
-                      minHeight: '36px',
+                      minHeight: '24px',
                       backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
                       borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255,255,255,0.3)',
                       '&:hover': {

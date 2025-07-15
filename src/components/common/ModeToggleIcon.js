@@ -11,8 +11,8 @@ const ModeToggleIcon = ({ wooglesMode, onClick, sx = {} }) => {
       alt={wooglesMode ? "Switch to Cross-Tables" : "Switch to Woogles"}
       onClick={onClick}
       style={{
-        width: '32px',
-        height: '32px',
+        width: '18px',
+        height: '18px',
         cursor: 'pointer',
         objectFit: 'contain',
         verticalAlign: 'middle',
