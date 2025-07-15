@@ -374,97 +374,107 @@ export default function Viewer({ onChange }){
             </Box>
           </Box>
           <Box className={styles.rightPanel}>
-            <Box className={styles.playerPanel} style={{color: '#fff'}}>
-              <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
-                  <span>{gameDictionary}</span>
-                  <Tooltip title="Game lexicon">
-                    <InfoIcon sx={{ fontSize: 12, color: '#fff', opacity: 0.6 }} />
-                  </Tooltip>
-                </Box>
-                <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
-                <Tooltip title={wooglesMode ? 
-                  (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
-                  (mode === "VIEWER" ? "Switch to Guess ELO (XT)" : "Switch to Viewer (XT)")
-                }>
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '4px',
-                      cursor: 'pointer',
-                      padding: '2px 4px',
-                      borderRadius: '2px',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.1)'
-                      }
-                    }}
-                    onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
-                  >
-                    {mode === "VIEWER" ? (
-                      <VisibilityIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
-                    ) : (
-                      <PsychologyIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
-                    )}
-                    <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
-                  </Box>
-                </Tooltip>
-                <span style={{marginLeft: '2px', marginRight: '8px', opacity: 0.4}}>|</span>
-                <Tooltip title={wooglesMode ? "New Woogles game" : "New XT game"}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      cursor: 'pointer',
-                      padding: '2px 4px',
-                      borderRadius: '2px',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.1)'
-                      }
-                    }}
-                    onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
-                  >
-                    <AddCircleOutlineIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
-                    <span style={{fontSize: '12px', fontFamily: 'Syne', fontWeight: 500, color: '#fff', opacity: 0.8, letterSpacing: '0.2px'}}>New</span>
-                  </Box>
-                </Tooltip>
-                <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
-                <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
-                  <Box
-                    className={styles.bestMoveButton}
-                    onClick={toggleWooglesMode}
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginLeft: '8px',
-                      padding: '2px 6px',
-                      fontSize: '10px',
-                      fontFamily: 'Syne',
-                      fontWeight: 500,
-                      color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      borderRadius: '2px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      minWidth: 'fit-content',
-                      minHeight: '24px',
-                      backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
-                      borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255,255,255,0.3)',
-                      '&:hover': {
-                        backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)',
-                        borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255,255,255,0.5)'
-                      }
-                    }}
-                  >
-                    <ModeToggleIcon wooglesMode={wooglesMode} />
-                  </Box>
+            <Box style={{
+              color: '#fff',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '40px',
+              backgroundImage: 'url("https://www.transparenttextures.com/patterns/bright-squares.png")',
+              borderBottom: '1px solid rgba(0,0,0,0.12)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                <span>{gameDictionary}</span>
+                <Tooltip title="Game lexicon">
+                  <InfoIcon sx={{ fontSize: 12, color: '#fff', opacity: 0.6 }} />
                 </Tooltip>
               </Box>
+              <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
+              <Tooltip title={wooglesMode ? 
+                (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
+                (mode === "VIEWER" ? "Switch to Guess ELO (XT)" : "Switch to Viewer (XT)")
+              }>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: '2px',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                  onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
+                >
+                  {mode === "VIEWER" ? (
+                    <VisibilityIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                  ) : (
+                    <PsychologyIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                  )}
+                  <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
+                </Box>
+              </Tooltip>
+              <span style={{marginLeft: '2px', marginRight: '8px', opacity: 0.4}}>|</span>
+              <Tooltip title={wooglesMode ? "New Woogles game" : "New XT game"}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: '2px',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                  onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
+                >
+                  <AddCircleOutlineIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                  <span style={{fontSize: '12px', fontFamily: 'Syne', fontWeight: 500, color: '#fff', opacity: 0.8, letterSpacing: '0.2px'}}>New</span>
+                </Box>
+              </Tooltip>
+              <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
+              <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
+                <Box
+                  className={styles.bestMoveButton}
+                  onClick={toggleWooglesMode}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: '8px',
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    fontFamily: 'Syne',
+                    fontWeight: 500,
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    minWidth: 'fit-content',
+                    minHeight: '24px',
+                    backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
+                    borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255,255,255,0.3)',
+                    '&:hover': {
+                      backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)',
+                      borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255,255,255,0.5)'
+                    }
+                  }}
+                >
+                  <ModeToggleIcon wooglesMode={wooglesMode} />
+                </Box>
+              </Tooltip>
+            </Box>
+            <Box className={styles.playerPanel} style={{color: '#fff', paddingTop: '0px'}}>
               <Box className={styles.playerToggle}>
                 {/* Main navigation icons */}
                 {iconList.map((icon, index) => (
