@@ -25,10 +25,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
 
   const getHeaderBackgroundColor = () => {
-    if (appState === 'VIEWER') {
-      return lightMode === 'dark' ? '#000003' : '#808080';
-    }
-    return lightMode === 'dark' ? '#6C695A' : '#6c6a62';
+    return lightMode === 'dark' ? '#000003' : '#808080';
   };
 
   return (

@@ -9,6 +9,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import BookIcon from '@mui/icons-material/Book';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -377,7 +379,35 @@ export default function Viewer({ onChange }){
                   <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
                   <span>{gameDictionary}</span>
                 </Box>
-                <span style={{marginLeft: '12px'}}></span>
+                <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
+                <Tooltip title={wooglesMode ? 
+                  (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
+                  (mode === "VIEWER" ? "Switch to Guess ELO (XT)" : "Switch to Viewer (XT)")
+                }>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: '2px',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                    onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
+                  >
+                    {mode === "VIEWER" ? (
+                      <VisibilityIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                    ) : (
+                      <PsychologyIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                    )}
+                    <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
+                  </Box>
+                </Tooltip>
+                <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
                 <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
                   <Box
                     className={styles.bestMoveButton}

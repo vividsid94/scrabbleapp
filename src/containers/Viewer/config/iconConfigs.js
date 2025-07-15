@@ -2,7 +2,7 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+
 import TimelineIcon from '@mui/icons-material/Timeline';
 import HistoryIcon from '@mui/icons-material/History';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -66,17 +66,7 @@ export const createIconList = (
     toolTip: wooglesMode ? "New Woogles game" : "New game",
     onClick: wooglesMode ? randomizeWooglesGame : randomizeGame
   },
-  {
-    icon: SwapHorizIcon,
-    toolTip: wooglesMode ? 
-      (mode === "GUESSELO" ? "Switch to Viewer (Woogles)" : "Switch to Guess ELO (Woogles)") :
-      (mode === "GUESSELO" ? "Switch to Viewer (XT)" : "Switch to Guess ELO (XT)"),
-    onClick: () => (!unlockEloMode ? setShowUnlockText(true) : switchMode(onChange)),
-    condition: {
-      color: !unlockEloMode ? 'transparent' : 'white',
-      background: !unlockEloMode ? 'repeating-linear-gradient(45deg, #3D3B35, #3D3B35 5px, #767266 5px, #767266 10px)' : 'none'
-    }
-  }
+
 ];
 
 export const createGroupedIcons = (
