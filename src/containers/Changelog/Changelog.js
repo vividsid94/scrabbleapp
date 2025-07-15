@@ -12,11 +12,14 @@ export default function Changelog() {
       <Box className={styles.page}>
         <Box className={styles.developmentMessage}>    
           <h2>Recent Updates</h2> 
-          <h5>Added light/dark mode toggle for better viewing experience</h5>
-          <h5>Dramatically changed overall UI and Game Viewer performance</h5>
+          <h5>Complete UI redesign with streamlined navigation and improved theming</h5>
+          <h5>Enhanced Game Viewer performance and mobile responsiveness</h5>
           <h2>Beta Features</h2>
-          <div className={styles.betaSection}>
-            <h5>The <Link to="/playground" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Playground+</Link> page is currently in beta! Play against SidBot while I complete development!</h5>
+          <div className={styles.betaSection} style={{textAlign: 'left', padding: '5px'}}>
+            <h5 style={{margin: '0'}}><Link to="/play" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Play Mode</Link> - Play against SidBot</h5>
+            <h5 style={{margin: '0'}}><Link to="/puzzle" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Puzzle Mode</Link> - Solve Scrabble puzzles</h5>
+            <h5 style={{margin: '0'}}><Link to="/widget" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Widget System</Link> - Embed tools on your site</h5>
+            <h5 style={{margin: '0'}}><Link to="/boggle" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>Boggle Game</Link> - Classic word game</h5>
           </div>
           <div className={styles.footer}>
             <p>Last updated: {new Date().toLocaleDateString()}</p>
