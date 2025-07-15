@@ -22,6 +22,7 @@ import EyeIcon from '@mui/icons-material/Search';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import SendIcon from '@mui/icons-material/Send';
 
 import styles from './Sidenav.module.css';
 
@@ -117,6 +118,7 @@ export default function MiniDrawer() {
     if (path === '/playground' || path === '/play') return 'Play';
     if (path === '/puzzle') return 'Puzzle';
     if (path === '/changelog') return 'Changelog';
+    if (path === '/submit-game') return 'Submit Game';
     if (path === '/memory') return 'Memory';
     if (path === '/words') return 'Words';
     if (path === '/series') return 'Series';
@@ -132,6 +134,7 @@ export default function MiniDrawer() {
     if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
     if (pagePath === '/puzzle' && path === '/puzzle') return true;
     if (pagePath === '/changelog' && path === '/changelog') return true;
+    if (pagePath === '/submit-game' && path === '/submit-game') return true;
     return false;
   };
 
@@ -166,6 +169,12 @@ export default function MiniDrawer() {
               fontWeight: isCurrentPage('/changelog') ? '600' : '400'
             }}>
               Changelog {isCurrentPage('/changelog') && '✓'}
+            </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/submit-game" sx={{ 
+              backgroundColor: isCurrentPage('/submit-game') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/submit-game') ? '600' : '400'
+            }}>
+              Submit Game {isCurrentPage('/submit-game') && '✓'}
             </MenuItem>
           </Menu>
           <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
@@ -236,6 +245,18 @@ export default function MiniDrawer() {
                 </Tooltip>
               </ListItemIcon>
               <ListItemText className={styles.listItemText} primary={"Changelog"} sx={{ color: getTextColor() }}/>
+            </ListItem>
+          </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <a id="submitGameBtn" className={styles.link} href="/submit-game">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`}>
+              <ListItemIcon>
+                <Tooltip title="Submit Game">
+                  <SendIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                </Tooltip>
+              </ListItemIcon>
+              <ListItemText className={styles.listItemText} primary={"Submit Game"} sx={{ color: getTextColor() }}/>
             </ListItem>
           </a>
         </List>

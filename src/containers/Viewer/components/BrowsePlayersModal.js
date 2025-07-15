@@ -104,6 +104,8 @@ const BrowsePlayersModal = ({ open, onClose, onLoadGame }) => {
     onLoadGame(gameNum);
   };
 
+
+
   return (
     <Modal
       open={open}
@@ -138,35 +140,35 @@ const BrowsePlayersModal = ({ open, onClose, onLoadGame }) => {
         <Box sx={{ maxHeight: '65vh', overflowY: 'auto', padding: 0 }}>
           {/* Search Input */}
           <Box sx={{ padding: '0 8px 8px 8px', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search players (min 3 characters)..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ fontSize: 18, color: '#666' }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  fontSize: '12px',
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: 'rgba(0,0,0,0.1)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(0,0,0,0.2)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#4CAF50',
-                    },
-                  },
-                }
-              }}
-            />
-          </Box>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search players (min 3 characters)..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ fontSize: 18, color: '#666' }} />
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      fontSize: '12px',
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'rgba(0,0,0,0.1)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(0,0,0,0.2)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#4CAF50',
+                        },
+                      },
+                    }
+                  }}
+                />
+              </Box>
           {loadingPlayers && (
             <Box sx={{ textAlign: 'center', padding: '10px', color: '#666', fontSize: '13px' }}>
               Loading players...
@@ -348,8 +350,8 @@ const BrowsePlayersModal = ({ open, onClose, onLoadGame }) => {
                   </ListItem>
                 )}
               </React.Fragment>
-            ))}
-          </List>
+                          ))}
+            </List>
         </Box>
       </Box>
     </Modal>

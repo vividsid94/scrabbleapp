@@ -336,6 +336,169 @@ export const useViewerStore = create((set, get) => {
       }
     },
     
+    loadSubmittedGameData: async (gameUrl) => {
+      try {
+        const state = get();
+        let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+        document.title = 'Submitted Game Viewer';
+        
+        set({
+          boardCoords: parsedOrigBoardCoords,
+          player1points: 0,
+          player2points: 0,
+          pointsScored: 0,
+          revealedName1: "Player 1",
+          revealedName2: "Player 2",
+          revealedElo: "",
+          revealedElo2: "",
+          pool: String(origPool),
+          recentNames: [],
+          recentDictionaries: [],
+          open: true,
+          loadingMsg: "Loading submitted game...",
+          modalContent: "loading"
+        });
+
+        // Determine if it's a Cross-Tables or Woogles URL
+        let moveRes;
+        let gameInfo;
+        let name1 = '';
+        let name2 = '';
+        let tourneyNumber = 0;
+        let dictionary = 'Unknown';
+
+        if (gameUrl.includes('cross-tables.com')) {
+          // Extract game number from Cross-Tables URL
+          const gameNumMatch = gameUrl.match(/u=(\d+)/);
+          if (!gameNumMatch) {
+            throw new Error('Invalid Cross-Tables URL');
+          }
+          const gameNum = gameNumMatch[1];
+          
+          moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
+          if (!moveRes || !moveRes[0]) {
+            throw new Error('Failed to load Cross-Tables move set');
+          }
+          
+          gameInfo = await getGameInfo('https://www.cross-tables.com/annotated.php?u=', gameNum);
+          if (!gameInfo) {
+            throw new Error('Failed to load Cross-Tables game info');
+          }
+          
+          // Extract dictionary
+          const startIndex = gameInfo.indexOf('<p>Dictionary: <b>');
+          if (startIndex !== -1) {
+            const endIndex = gameInfo.indexOf('</b>', startIndex);
+            if (endIndex !== -1) {
+              dictionary = gameInfo.substring(startIndex + 18, endIndex);
+            }
+          }
+          
+          // Extract player names
+          const regex = /<tr><td>([^<]+)<\/td>/g;
+          const matches = gameInfo.matchAll(regex);
+          let i = 0;
+          for (const match of matches) {
+            if (i === 0) {
+              name1 = match[1];
+            } else if (i === 1) {
+              name2 = match[1];
+            }
+            i++;
+          }
+          
+          // Extract tournament number
+          let matchTourney = gameInfo.match(/<a href='tourney\.php\?t=(\d+)'>/);
+          if (matchTourney) {
+            tourneyNumber = matchTourney[1];
+          }
+          
+        } else if (gameUrl.includes('woogles.io')) {
+          // Extract game ID from Woogles URL
+          const gameIdMatch = gameUrl.match(/game\/([^\/\?]+)/);
+          if (!gameIdMatch) {
+            throw new Error('Invalid Woogles URL');
+          }
+          const gameId = gameIdMatch[1];
+          
+          // Import the Woogles API functions
+          const { getWooglesGameGCG, getWooglesGameMetadata } = await import('../axios/api');
+          
+          // Get both GCG and metadata
+          const [gcg, metadata] = await Promise.all([
+            getWooglesGameGCG(gameId),
+            getWooglesGameMetadata(gameId)
+          ]);
+          
+          if (!gcg) {
+            throw new Error('Failed to load Woogles GCG');
+          }
+          
+          if (!metadata) {
+            throw new Error('Failed to load Woogles metadata');
+          }
+          
+          // Parse moves and origPlayerRaw from GCG
+          const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
+          const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
+          const lines = gcg.split('\n');
+          let notes = [];
+          let lexicon = '';
+          
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith('#note')) {
+              const count = lines.slice(0, i).filter(line => line.startsWith('>')).length;
+              notes.push([lines[i].replace('#note ', ''), count]);
+            }
+            if (lines[i].startsWith('#lexicon')) {
+              lexicon = lines[i].split(' ')[1];
+            }
+            if (lines[i].startsWith('#player1')) {
+              name1 = lines[i].split(' ').slice(2).join(' ');
+            }
+            if (lines[i].startsWith('#player2')) {
+              name2 = lines[i].split(' ').slice(2).join(' ');
+            }
+          }
+          
+          moveRes = [moveSet, origPlayerRaw, notes];
+          dictionary = metadata.lexicon || lexicon || 'Unknown';
+          
+        } else {
+          throw new Error('Unsupported game URL format');
+        }
+        
+        set({
+          moveSet: moveRes[0],
+          origPlayerRaw: moveRes[1],
+          notes: moveRes[2],
+          name1: name1,
+          name2: name2,
+          tourneyNum: tourneyNumber,
+          gamesViewed: [...state.gamesViewed, gameUrl],
+          gameDictionary: dictionary,
+          loadingMsg: "Loading the game...",
+          currentMoveRef: { current: -1 }
+        });
+        
+        console.log("Submitted game loaded.");
+        setTimeout(() => {
+          set({ open: false });
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error loading submitted game data:', error);
+        set({ 
+          open: true, 
+          loadingMsg: `Error loading game: ${error.message}`, 
+          modalContent: "loading" 
+        });
+        setTimeout(() => {
+          set({ open: false });
+        }, 3000);
+      }
+    },
+    
     loadWooglesGameData: async () => {
       try {
         const state = get();

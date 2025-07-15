@@ -16,6 +16,8 @@ import Boggle from "./containers/Boggle/Boggle";
 import Puzzle from "./containers/Puzzle/Puzzle";
 import WidgetPage from "./containers/Widget/WidgetPage";
 import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
+import SubmitGame from "./containers/SubmitGame/SubmitGame";
+import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
 
 export const ThemeContext = React.createContext();
 
@@ -48,6 +50,8 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/puzzle" element={<Puzzle/>}/>
           <Route path="/widget" element={<WidgetPage/>}/>
           <Route path="/widget-landing" element={<WidgetLanding/>}/>
+          <Route path="/submit-game" element={<SubmitGame/>}/>
+          <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}

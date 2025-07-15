@@ -489,6 +489,19 @@ export const getWooglesGameGCG = async (gameId) => {
   }
 };
 
+export const getApprovedSubmissions = async () => {
+  try {
+    const response = await axios.get('/.netlify/functions/getApprovedSubmissions');
+    if (response.data && response.data.success) {
+      return response.data.submissions;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching approved submissions:', error);
+    return [];
+  }
+};
+
 
 
 

@@ -12,6 +12,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SearchIcon from '@mui/icons-material/Search';
 import Typography from '@mui/material/Typography';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 export const createIconList = (
   beginningOfGame,
@@ -87,7 +88,8 @@ export const createGroupedIcons = (
   wooglesMode,
   currentWooglesGame,
   handleOpenPlayersModal,
-  handleRevealElo
+  handleRevealElo,
+  handleOpenSubmittedGamesModal
 ) => [
   {
     icon1: {
@@ -114,6 +116,12 @@ export const createGroupedIcons = (
       icon: SearchIcon,
       toolTip: "Browse Players",
       onClick: () => handleOpenPlayersModal()
+    },
+    icon6: {
+      icon: LibraryBooksIcon,
+      toolTip: "Submitted Games",
+      onClick: () => handleOpenSubmittedGamesModal(),
+      condition: { display: 'flex' }
     }
   },
   {
@@ -121,14 +129,14 @@ export const createGroupedIcons = (
       icon: PeopleIcon,
       toolTip: "Reveal Players",
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
-      condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
+      condition: { display: 'flex' }
     },
     icon2: {
       icon: Typography,
       toolTip: "Reveal ELO",
       onClick: handleRevealElo,
       text: 'Elo',
-      condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
+      condition: { display: 'flex' }
     },
     icon3: {
       icon: OpenInNewIcon,
