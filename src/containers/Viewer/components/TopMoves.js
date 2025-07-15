@@ -38,6 +38,12 @@ const TopMoves = ({
     }
   }, [topMoves]);
 
+  // Close panel when move changes
+  useEffect(() => {
+    setIsExpanded(false);
+    setTopMoves([]);
+  }, [currentMoveRef.current]);
+
   // Helper function to format move location
   const formatLocation = (move) => {
     if (!move.tiles || move.tiles.length === 0) {

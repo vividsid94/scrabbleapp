@@ -1066,44 +1066,67 @@ form{
 }
 
 .topMoveLocation {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  width: 24px;
-  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  font-family: 'Syne', sans-serif;
 }
 
 .topMoveWord {
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
   flex: 1;
-  font-family: 'Syne', sans-serif;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  min-width: 80px;
+  max-width: 100px;
 }
 
 .topMoveDetails {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 6px;
 }
 
 .topMoveScore {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
+  color: white;
+  background: darkcyan;
+  padding: 1px 3px;
   border-radius: 3px;
-  font-family: 'Syne', sans-serif;
+  border: 1px solid rgba(0, 139, 139, 0.3);
+  width: 22px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .topMoveLeaveValue {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .topMoveControl {
