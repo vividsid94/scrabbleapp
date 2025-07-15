@@ -1,7 +1,7 @@
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import FiberNewIcon from '@mui/icons-material/FiberNew';
+
 
 import TimelineIcon from '@mui/icons-material/Timeline';
 import HistoryIcon from '@mui/icons-material/History';
@@ -61,11 +61,7 @@ export const createIconList = (
       }
     }
   },
-  {
-    icon: FiberNewIcon,
-    toolTip: wooglesMode ? "New Woogles game" : "New game",
-    onClick: wooglesMode ? randomizeWooglesGame : randomizeGame
-  },
+
 
 ];
 

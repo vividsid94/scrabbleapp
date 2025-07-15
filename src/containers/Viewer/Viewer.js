@@ -11,6 +11,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import BookIcon from '@mui/icons-material/Book';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import InfoIcon from '@mui/icons-material/Info';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -23,7 +24,7 @@ import ColorScheme from '../../components/common/ColorScheme';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 import { ThemeContext } from '../../App';
 import ModeToggleIcon from '../../components/common/ModeToggleIcon';
-
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 
 // Import components
@@ -378,6 +379,9 @@ export default function Viewer({ onChange }){
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
                   <span>{gameDictionary}</span>
+                  <Tooltip title="Game lexicon">
+                    <InfoIcon sx={{ fontSize: 12, color: '#fff', opacity: 0.6 }} />
+                  </Tooltip>
                 </Box>
                 <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
                 <Tooltip title={wooglesMode ? 
@@ -405,6 +409,27 @@ export default function Viewer({ onChange }){
                       <PsychologyIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
                     )}
                     <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
+                  </Box>
+                </Tooltip>
+                <span style={{marginLeft: '2px', marginRight: '8px', opacity: 0.4}}>|</span>
+                <Tooltip title={wooglesMode ? "New Woogles game" : "New XT game"}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: '2px',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                    onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
+                  >
+                    <AddCircleOutlineIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                    <span style={{fontSize: '12px', fontFamily: 'Syne', fontWeight: 500, color: '#fff', opacity: 0.8, letterSpacing: '0.2px'}}>New</span>
                   </Box>
                 </Tooltip>
                 <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
@@ -455,10 +480,17 @@ export default function Viewer({ onChange }){
                 {/* Collapsible options button */}
                 <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>
                   <Box
-                    className={styles.keyBtn} 
+                    className={styles.keyBtn}
                     onClick={() => setShowOptions(!showOptions)}
-                    sx={{ 
+                    sx={{
                       ...actionButtonStyle,
+                      width: '20px',
+                      height: '20px',
+                      minWidth: '20px',
+                      minHeight: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       transform: showOptions ? 'rotate(90deg)' : 'none',
                       transition: 'transform 0.2s ease'
                     }}
@@ -587,14 +619,7 @@ export default function Viewer({ onChange }){
                               }}
                             >
                               {groupedIcons[1].icon2.icon === Typography
-                                ? React.createElement(Typography, { 
-                                    sx: { 
-                                      fontSize: 20,
-                                      fontFamily: 'Dancing Script !important',
-                                      fontWeight: 'normal',
-                                      color: '#fff'
-                                    } 
-                                  }, groupedIcons[1].icon2.text)
+                                ? <Typography sx={{ fontSize: 20, fontFamily: '"Dancing Script", cursive !important', fontWeight: 500, color: '#fff', opacity: 0.8 }}>Elo</Typography>
                                 : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
                             </Box>
                           </Tooltip>

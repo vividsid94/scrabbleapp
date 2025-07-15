@@ -152,10 +152,10 @@ form{
   animation: spin 1s ease-in-out;
 }
 .keyBtn{
-  font-size: 24px !important;
-  line-height: 24px !important;
+  font-size: 20px !important;
+  line-height: 20px !important;
   padding: 6px;
-  height: 24px;
+  height: 20px !important;
   font-family: 'Dancing Script' !important;
   cursor: pointer;
   user-select: none;
@@ -328,7 +328,7 @@ form{
 
 .Arrows{
   cursor: pointer;
-  font-size: 24px !important;
+  font-size: 20px !important;
   transition: all 0.3s ease;
   opacity: 0.7;
   padding: 6px;
