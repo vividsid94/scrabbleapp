@@ -218,19 +218,6 @@ export default function AdminSubmissions() {
                 </Box>
               </Box>
             </Box>
-            
-            <Box className={styles.rightPanel}>
-              <Box className={styles.playerPanel}>
-                <Box className={styles.poolBox}>
-                  <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
-                    Admin Access
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
-                    Review and manage game submissions
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
           </Box>
         </Box>
       </Box>
