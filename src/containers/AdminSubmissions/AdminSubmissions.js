@@ -332,19 +332,6 @@ export default function AdminSubmissions() {
               </Box>
             </Box>
           </Box>
-          
-          <Box className={styles.rightPanel}>
-            <Box className={styles.playerPanel}>
-              <Box className={styles.poolBox}>
-                <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
-                  Admin Panel
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
-                  Manage game submissions and reviews
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
         </Box>
       </Box>
 
