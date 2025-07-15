@@ -129,14 +129,14 @@ export const createGroupedIcons = (
       icon: PeopleIcon,
       toolTip: "Reveal Players",
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
-      condition: { display: 'flex' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
     },
     icon2: {
       icon: Typography,
       toolTip: "Reveal ELO",
       onClick: handleRevealElo,
       text: 'Elo',
-      condition: { display: 'flex' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
     },
     icon3: {
       icon: OpenInNewIcon,
