@@ -23,6 +23,7 @@ import { ThemeContext } from '../../App';
 // Import components
 import PlayerInfo from './components/PlayerInfo';
 import LatestMove from './components/LatestMove';
+import TopMoves from './components/TopMoves';
 import SettingsModal from './components/SettingsModal';
 import RecentGamesList from './components/RecentGamesList';
 import ViewedGamesList from './components/ViewedGamesList';
@@ -609,6 +610,26 @@ export default function Viewer({ onChange }){
                   currentMoveRef.current = turn;
                 }
               }}
+            />
+            <TopMoves
+              boardCoords={boardCoords}
+              moveSet={moveSet}
+              currentMoveRef={currentMoveRef}
+              pool={pool}
+              gameDictionary={gameDictionary}
+              onMoveSelect={(move) => {
+                console.log('Selected move:', move);
+                // You could add visualization or highlighting here
+              }}
+              onSimulateMove={(move) => {
+                console.log('Simulate move:', move);
+                // You could add simulation functionality here
+              }}
+              onGetTopMoves={() => {
+                console.log('Get top moves clicked');
+                // The component handles this internally
+              }}
+              simulatingMove={null}
             />
             <Box className={styles.poolBox} style={{color: '#fff'}}>
               {moveSet && moveSet.length > 0 ? (

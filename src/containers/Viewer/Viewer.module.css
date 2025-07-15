@@ -948,3 +948,167 @@ form{
   color: darkcyan;
 }
 
+/* TopMoves Styles */
+.topMovesPanel {
+  padding: 6px;
+  margin: 4px 6px 0 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.topMovesContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+  animation: slideInUp 0.4s ease-out;
+  transform-origin: bottom;
+}
+
+.topMovesContent.slidingOut {
+  animation: slideOutUp 0.3s ease-in forwards;
+}
+
+.topMovesContent.slidingIn {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
+.topMovesButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.topMovesButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.loadingText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
+.thinkingDots {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.thinkingDots div {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: pulse 1.4s ease-in-out infinite both;
+}
+
+.thinkingDots div:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinkingDots div:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.topMovesList {
+  max-height: 200px;
+  overflow-y: auto;
+  animation: slideInDown 0.3s ease-out;
+}
+
+.topMoveItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.topMoveItem:last-child {
+  border-bottom: none;
+}
+
+.topMoveItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 6px 4px;
+  margin: 0 -4px;
+}
+
+.topMoveRank {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: 'Syne', sans-serif;
+  margin-right: 6px;
+}
+
+.topMoveLocation {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveWord {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  flex: 1;
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveDetails {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topMoveScore {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveLeaveValue {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveControl {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Syne', sans-serif;
+}
+
