@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import TopNav from '../../components/AppContent/TopNav/TopNav.js';
 import Box from '@mui/material/Box';
 import styles from './Home.module.css';
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
@@ -19,17 +19,9 @@ export default function Home(){
   };
 
   return (
-    <Box sx={{ display: 'flex'}}>
-      <Sidenav/>
+    <Box>
+      <TopNav/>
       <Box className={styles.page}>
-        <Box className={styles.title}>
-          Tile Turnover
-          <ExtensionIcon 
-            className={`${styles.titleIcon} ${isSpinning ? styles.spinning : ''}`}
-            onClick={handleIconClick}
-            style={{ cursor: 'pointer' }}
-          />
-        </Box>
         <Box className={styles.developmentMessage}>
           {showLinks ? (
             <div className={styles.scrabbleLinks}>

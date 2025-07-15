@@ -41,7 +41,7 @@ export default function MiniDrawer() {
   };
 
   const openedMixin = () => ({
-    width: `180px`,
+    width: `120px`,
     overflowX: 'hidden',
     background: getBackgroundColor(),
     backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
@@ -49,7 +49,7 @@ export default function MiniDrawer() {
   });
 
   const closedMixin = () => ({
-    width: `65px`,
+    width: `45px`,
     overflowX: 'hidden',
     background: getBackgroundColor(),
     backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",

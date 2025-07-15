@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import TopNav from '../../components/AppContent/TopNav/TopNav.js';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
@@ -166,8 +166,8 @@ export default function AdminSubmissions() {
 
   if (!adminToken) {
     return (
-      <Box sx={{ display: 'flex' }}>
-        <Sidenav />
+      <Box>
+        <TopNav />
         <Box className={styles.page}>
           <Box className={styles.content}>
             <p>Admin Login - Enter your admin token to access game submissions</p>
@@ -248,8 +248,8 @@ export default function AdminSubmissions() {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Sidenav />
+    <Box>
+      <TopNav />
       <Box className={styles.page}>
         <Box className={styles.content}>
           <p>Game Submissions - Review and manage submitted games for GTE analysis</p>

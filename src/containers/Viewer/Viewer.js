@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import TopNav from '../../components/AppContent/TopNav/TopNav.js';
 import Box from '@mui/material/Box';
 import styles from './Viewer.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
@@ -311,9 +311,9 @@ export default function Viewer({ onChange }){
     justifyContent: 'center'
   };
 
-  return (
-    <Box sx={{ display: 'flex'}}>
-      <Sidenav/>
+      return (
+      <Box>
+        <TopNav/>
       <Modal
         open={open}
         onClose={handleClose}

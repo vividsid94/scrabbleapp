@@ -1,8 +1,7 @@
 .footer {
     display: flex;
     flex-direction: column;
-    width: calc(100% - 65px);
-    float: right;
+    width: 100%;
     padding: 10px 0px;
 }
 

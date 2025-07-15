@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import TopNav from '../../components/AppContent/TopNav/TopNav.js';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -94,8 +94,8 @@ export default function SubmitGame() {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Sidenav />
+    <Box>
+      <TopNav />
       <Box className={styles.page}>
         <Box className={styles.content}>
           <p>Submit a Woogles Game for Mack Meller to analyze for GTE!</p>
