@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -171,28 +170,67 @@ export default function AdminSubmissions() {
         <Sidenav />
         <Box className={styles.page}>
           <Box className={styles.mainPanel}>
-            <Paper className={styles.loginCard}>
-              <Typography variant="h4" gutterBottom>
-                Admin Login
-              </Typography>
-              <TextField
-                fullWidth
-                label="Admin Token"
-                type="text"
-                value={inputToken}
-                onChange={(e) => setInputToken(e.target.value)}
-                margin="normal"
-              />
-              <Button
-                variant="contained"
-                onClick={handleLogin}
-                disabled={loading}
-                sx={{ mt: 2 }}
-              >
-                {loading ? <CircularProgress size={20} /> : 'Login'}
-              </Button>
-              {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-            </Paper>
+            <Box className={styles.leftContainer}>
+              <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
+                <Box className={styles.loginContainer}>
+                  <Typography variant="h4" className={styles.title}>
+                    Admin Login
+                  </Typography>
+                  <Typography variant="body1" className={styles.description}>
+                    Enter your admin token to access game submissions
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    label="Admin Token"
+                    type="text"
+                    value={inputToken}
+                    onChange={(e) => setInputToken(e.target.value)}
+                    margin="normal"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: lightMode ? '#ccc' : '#555',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: lightMode ? '#999' : '#777',
+                        },
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleLogin}
+                    disabled={loading}
+                    className={styles.submitButton}
+                    sx={{
+                      backgroundColor: '#1976d2',
+                      '&:hover': {
+                        backgroundColor: '#1565c0',
+                      },
+                      '&:disabled': {
+                        backgroundColor: '#ccc',
+                      }
+                    }}
+                  >
+                    {loading ? <CircularProgress size={20} /> : 'Login'}
+                  </Button>
+                  {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                </Box>
+              </Box>
+            </Box>
+            
+            <Box className={styles.rightPanel}>
+              <Box className={styles.playerPanel}>
+                <Box className={styles.poolBox}>
+                  <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
+                    Admin Access
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
+                    Review and manage game submissions
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -204,86 +242,142 @@ export default function AdminSubmissions() {
       <Sidenav />
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-          <Typography variant="h4" gutterBottom>
-            Game Submissions
-          </Typography>
-          
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <CircularProgress />
+          <Box className={styles.leftContainer}>
+            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
+              <Box className={styles.adminContainer}>
+                <Typography variant="h4" className={styles.title}>
+                  Game Submissions
+                </Typography>
+                
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                
+                {loading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <TableContainer sx={{ 
+                    backgroundColor: 'transparent',
+                    boxShadow: 'none',
+                    '& .MuiTable-root': {
+                      backgroundColor: 'transparent'
+                    }
+                  }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Game URL</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Type</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Submitted By</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Submitted At</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: lightMode ? '#333' : '#fff' }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {submissions.map((submission) => (
+                          <TableRow key={submission._id} sx={{ 
+                            '&:hover': { 
+                              backgroundColor: lightMode ? 'rgba(25, 118, 210, 0.04)' : 'rgba(255, 255, 255, 0.05)' 
+                            } 
+                          }}>
+                            <TableCell sx={{ color: lightMode ? '#333' : '#fff' }}>
+                              <a 
+                                href={submission.game_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  color: '#1976d2', 
+                                  textDecoration: 'none',
+                                  '&:hover': { textDecoration: 'underline' }
+                                }}
+                              >
+                                {submission.game_url}
+                              </a>
+                            </TableCell>
+                            <TableCell sx={{ color: lightMode ? '#333' : '#fff' }}>{submission.game_type}</TableCell>
+                            <TableCell sx={{ color: lightMode ? '#333' : '#fff' }}>{submission.submitted_by}</TableCell>
+                            <TableCell sx={{ color: lightMode ? '#333' : '#fff' }}>{formatDate(submission.submitted_at)}</TableCell>
+                            <TableCell>
+                              <Chip 
+                                label={submission.status} 
+                                color={getStatusColor(submission.status)}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handleReview(submission)}
+                                disabled={submission.status !== 'pending'}
+                                sx={{
+                                  borderColor: '#1976d2',
+                                  color: '#1976d2',
+                                  '&:hover': {
+                                    borderColor: '#1565c0',
+                                    backgroundColor: 'rgba(25, 118, 210, 0.04)'
+                                  }
+                                }}
+                              >
+                                Review
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </Box>
             </Box>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Game URL</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Submitted By</TableCell>
-                    <TableCell>Submitted At</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {submissions.map((submission) => (
-                    <TableRow key={submission._id}>
-                      <TableCell>
-                        <a 
-                          href={submission.game_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ color: '#1976d2', textDecoration: 'none' }}
-                        >
-                          {submission.game_url}
-                        </a>
-                      </TableCell>
-                      <TableCell>{submission.game_type}</TableCell>
-                      <TableCell>{submission.submitted_by}</TableCell>
-                      <TableCell>{formatDate(submission.submitted_at)}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={submission.status} 
-                          color={getStatusColor(submission.status)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="small"
-                          onClick={() => handleReview(submission)}
-                          disabled={submission.status !== 'pending'}
-                        >
-                          Review
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          </Box>
+          
+          <Box className={styles.rightPanel}>
+            <Box className={styles.playerPanel}>
+              <Box className={styles.poolBox}>
+                <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
+                  Admin Panel
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
+                  Manage game submissions and reviews
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
       {/* Review Dialog */}
-      <Dialog open={reviewDialog} onClose={() => setReviewDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Review Submission</DialogTitle>
+      <Dialog 
+        open={reviewDialog} 
+        onClose={() => setReviewDialog(false)} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: lightMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(45, 45, 45, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: lightMode ? '#333' : '#fff' }}>Review Submission</DialogTitle>
         <DialogContent>
           {selectedSubmission && (
             <Box>
-              <Typography variant="body1" gutterBottom>
+              <Typography variant="body1" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
                 <strong>Game URL:</strong> {selectedSubmission.game_url}
               </Typography>
-              <Typography variant="body1" gutterBottom>
+              <Typography variant="body1" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
                 <strong>Type:</strong> {selectedSubmission.game_type}
               </Typography>
-              <Typography variant="body1" gutterBottom>
+              <Typography variant="body1" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
                 <strong>Submitted By:</strong> {selectedSubmission.submitted_by}
               </Typography>
-              <Typography variant="body1" gutterBottom>
+              <Typography variant="body1" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
                 <strong>Submitted At:</strong> {formatDate(selectedSubmission.submitted_at)}
               </Typography>
               <TextField
@@ -294,6 +388,16 @@ export default function AdminSubmissions() {
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: lightMode ? '#ccc' : '#555',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: lightMode ? '#999' : '#777',
+                    },
+                  },
+                }}
               />
             </Box>
           )}

@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeContext } from '../../App';
@@ -104,107 +103,131 @@ export default function SubmitGame() {
       <Sidenav />
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-          <Box className={styles.contentContainer}>
-            <Paper 
-              elevation={3} 
-              className={styles.submitCard}
-              sx={{
-                backgroundColor: lightMode ? '#ffffff' : '#2d2d2d',
-                color: lightMode ? '#333333' : '#ffffff'
-              }}
-            >
-              <Typography variant="h4" component="h1" gutterBottom className={styles.title}>
-                Submit a Game for Analysis
-              </Typography>
-              
-              <Typography variant="body1" className={styles.description}>
-                Submit a Cross-Tables or Woogles game URL for Mack Meller to analyze in his next video.
-                Make sure the game is publicly accessible.
-              </Typography>
+          
+          <Box className={styles.leftContainer}>
+            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
+              <Box className={styles.submitContainer}>
+                <Typography variant="h4" className={styles.title}>
+                  Submit a Game for Analysis
+                </Typography>
+                
+                <Typography variant="body1" className={styles.description}>
+                  Submit a Cross-Tables or Woogles game URL for Mack Meller to analyze in his next video.
+                  Make sure the game is publicly accessible.
+                </Typography>
 
-              <form onSubmit={handleSubmit} className={styles.form}>
-                <TextField
-                  fullWidth
-                  label="Game URL"
-                  variant="outlined"
-                  value={gameUrl}
-                  onChange={handleUrlChange}
-                  placeholder="https://cross-tables.com/results.html?g=12345 or https://woogles.io/game/abc123"
-                  disabled={submitting}
-                  className={styles.urlInput}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: lightMode ? '#ccc' : '#555',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: lightMode ? '#999' : '#777',
-                      },
-                    },
-                  }}
-                />
-
-                <Box className={styles.gameTypeInfo}>
-                  <Typography variant="body2" color="textSecondary">
-                    Detected game type: <strong>{gameType === 'cross-tables' ? 'Cross-Tables' : gameType === 'woogles' ? 'Woogles' : 'Unknown'}</strong>
-                  </Typography>
-                </Box>
-
-                {message && (
-                  <Alert 
-                    severity={messageType} 
-                    className={styles.alert}
+                <form onSubmit={handleSubmit} className={styles.form}>
+                  <TextField
+                    fullWidth
+                    label="Game URL"
+                    variant="outlined"
+                    value={gameUrl}
+                    onChange={handleUrlChange}
+                    placeholder="https://cross-tables.com/results.html?g=12345 or https://woogles.io/game/abc123"
+                    disabled={submitting}
+                    className={styles.urlInput}
                     sx={{
-                      backgroundColor: messageType === 'success' 
-                        ? (lightMode ? '#e8f5e8' : '#1b5e20') 
-                        : (lightMode ? '#ffebee' : '#c62828'),
-                      color: messageType === 'success' 
-                        ? (lightMode ? '#2e7d32' : '#a5d6a7') 
-                        : (lightMode ? '#c62828' : '#ef9a9a')
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: lightMode ? '#ccc' : '#555',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: lightMode ? '#999' : '#777',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#1976d2',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: lightMode ? '#666' : '#aaa',
+                      },
+                      '& .MuiInputBase-input': {
+                        color: lightMode ? '#333' : '#fff',
+                      },
+                    }}
+                  />
+
+                  <Box className={styles.gameTypeInfo}>
+                    <Typography variant="body2" sx={{ color: lightMode ? '#666' : '#aaa' }}>
+                      Detected game type: <strong style={{ color: lightMode ? '#1976d2' : '#64b5f6' }}>
+                        {gameType === 'cross-tables' ? 'Cross-Tables' : gameType === 'woogles' ? 'Woogles' : 'Unknown'}
+                      </strong>
+                    </Typography>
+                  </Box>
+
+                  {message && (
+                    <Alert 
+                      severity={messageType} 
+                      className={styles.alert}
+                      sx={{
+                        backgroundColor: messageType === 'success' 
+                          ? (lightMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.2)') 
+                          : (lightMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.2)'),
+                        color: messageType === 'success' 
+                          ? (lightMode ? '#2e7d32' : '#81c784') 
+                          : (lightMode ? '#c62828' : '#e57373'),
+                        border: `1px solid ${messageType === 'success' 
+                          ? (lightMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(76, 175, 80, 0.4)') 
+                          : (lightMode ? 'rgba(244, 67, 54, 0.3)' : 'rgba(244, 67, 54, 0.4)')}`,
+                        borderRadius: '8px'
+                      }}
+                    >
+                      {message}
+                    </Alert>
+                  )}
+
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={submitting || !gameUrl.trim()}
+                    className={styles.submitButton}
+                    sx={{
+                      backgroundColor: '#1976d2',
+                      '&:hover': {
+                        backgroundColor: '#1565c0',
+                      },
+                      '&:disabled': {
+                        backgroundColor: '#ccc',
+                      }
                     }}
                   >
-                    {message}
-                  </Alert>
-                )}
+                    {submitting ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CircularProgress size={20} color="inherit" />
+                        Submitting...
+                      </Box>
+                    ) : (
+                      'Submit Game'
+                    )}
+                  </Button>
+                </form>
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={submitting || !gameUrl.trim()}
-                  className={styles.submitButton}
-                  sx={{
-                    backgroundColor: '#1976d2',
-                    '&:hover': {
-                      backgroundColor: '#1565c0',
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#ccc',
-                    }
-                  }}
-                >
-                  {submitting ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={20} color="inherit" />
-                      Submitting...
-                    </Box>
-                  ) : (
-                    'Submit Game'
-                  )}
-                </Button>
-              </form>
-
-              <Box className={styles.infoSection}>
-                <Typography variant="h6" gutterBottom>
-                  What happens next?
-                </Typography>
-                <ul className={styles.infoList}>
-                  <li>Mack will review your submission</li>
-                  <li>If selected, the game will be featured in an upcoming video</li>
-                  <li>You'll be notified if your game is chosen</li>
-                  <li>Submissions are reviewed on a first-come, first-served basis</li>
-                </ul>
+                <Box className={styles.infoSection}>
+                  <Typography variant="h6" gutterBottom sx={{ color: lightMode ? '#333' : '#fff' }}>
+                    What happens next?
+                  </Typography>
+                  <ul className={styles.infoList}>
+                    <li>Mack will review your submission</li>
+                    <li>If selected, the game will be featured in an upcoming video</li>
+                    <li>You'll be notified if your game is chosen</li>
+                    <li>Submissions are reviewed on a first-come, first-served basis</li>
+                  </ul>
+                </Box>
               </Box>
-            </Paper>
+            </Box>
+          </Box>
+          
+          <Box className={styles.rightPanel}>
+            <Box className={styles.playerPanel}>
+              <Box className={styles.poolBox}>
+                <Typography variant="h6" sx={{ color: '#fff', textAlign: 'center', mb: 2 }}>
+                  Game Submission
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#fff', opacity: 0.8, textAlign: 'center' }}>
+                  Submit your favorite games for analysis
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>

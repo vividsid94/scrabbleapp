@@ -1,37 +1,136 @@
 .page {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  position: relative;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .mainPanel {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
   padding: 20px;
+  gap: 20px;
 }
 
-.loginCard {
-  max-width: 400px;
-  margin: 100px auto;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.leftContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1200px;
+}
+
+.mainBox {
+  width: 100%;
+  max-width: 1000px;
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.mainBoxContent {
+  padding: 40px;
+}
+
+.rightPanel {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.playerPanel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  color: #fff;
+}
+
+.poolBox {
+  padding: 0px 10px;
+}
+
+.loginContainer,
+.adminContainer {
+  width: 100%;
+}
+
+.title {
   text-align: center;
+  margin-bottom: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.description {
+  text-align: center;
+  margin-bottom: 32px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.submitButton {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+  margin-top: 16px;
+}
+
+.submitButton:hover {
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .description {
+    color: #aaa;
+  }
 }
 
 /* Responsive design */
+@media (max-width: 992px) {
+  .mainPanel {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .rightPanel {
+    width: 100%;
+    max-width: 1000px;
+  }
+}
+
 @media (max-width: 768px) {
   .mainPanel {
     padding: 16px;
   }
   
-  .loginCard {
-    margin: 50px 16px;
+  .mainBoxContent {
     padding: 24px;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .rightPanel {
+    width: 100%;
   }
 } 
