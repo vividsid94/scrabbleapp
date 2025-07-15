@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { getRandomNumber } from '../utils/gameUtils';
 import { origPool, origBoard } from '../components/AppContent/References/staticData';
 import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from '../axios/api';
+import { getRandomWooglesGame } from '../components/AppContent/References/wooglesGames';
 
 export const useViewerStore = create((set, get) => {
   // Initial state
@@ -51,6 +52,10 @@ export const useViewerStore = create((set, get) => {
     recentGameNums: [],
     loadingMsg: "Loading...",
     modalContent: "dictionaryTiles",
+    
+    // Woogles mode
+    wooglesMode: false,
+    currentWooglesGame: null,
   };
 
   return {
@@ -102,6 +107,10 @@ export const useViewerStore = create((set, get) => {
     setLoadingMsg: (msg) => set({ loadingMsg: msg }),
     setModalContent: (content) => set({ modalContent: content }),
     
+    // Actions - Woogles mode
+    setWooglesMode: (isWoogles) => set({ wooglesMode: isWoogles }),
+    setCurrentWooglesGame: (game) => set({ currentWooglesGame: game }),
+    
     // Utility functions
     handleClose: () => set({ open: false }),
     
@@ -134,6 +143,39 @@ export const useViewerStore = create((set, get) => {
         set({ mode: newMode });
         onChange(newMode);
       }
+    },
+    
+    toggleWooglesMode: () => {
+      const state = get();
+      const newWooglesMode = !state.wooglesMode;
+      set({ wooglesMode: newWooglesMode });
+      
+      if (newWooglesMode) {
+        // Switch to Woogles mode - load a random Woogles game
+        get().randomizeWooglesGame();
+      } else {
+        // Switch back to cross-tables mode - load a random cross-tables game
+        get().randomizeGame();
+      }
+    },
+    
+    randomizeWooglesGame: () => {
+      set({ 
+        open: true, 
+        loadingMsg: "Finding a Woogles game...", 
+        modalContent: "loading", 
+        moveDirection: "neutral" 
+      });
+      
+      const gameId = getRandomWooglesGame();
+      set({ 
+        currentMoveRef: { current: -1 },
+        currentWooglesGame: { gameId },
+        gameNum: `woogles-${gameId}`
+      });
+      
+      // Load the Woogles game data
+      get().loadWooglesGameData();
     },
     
     randomizeGame: () => {
@@ -286,6 +328,103 @@ export const useViewerStore = create((set, get) => {
       } catch (error) {
         console.error('Error loading game data:', error);
         get().randomizeGame();
+      }
+    },
+    
+    loadWooglesGameData: async () => {
+      try {
+        const state = get();
+        let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+        document.title = 'Woogles Game Viewer';
+        
+        if (!state.currentWooglesGame) {
+          console.error('No Woogles game selected');
+          get().randomizeWooglesGame();
+          return;
+        }
+        
+        set({
+          boardCoords: parsedOrigBoardCoords,
+          player1points: 0,
+          player2points: 0,
+          pointsScored: 0,
+          revealedName1: "Player 1",
+          revealedName2: "Player 2",
+          revealedElo: "",
+          revealedElo2: "",
+          pool: String(origPool),
+          recentNames: [],
+          recentDictionaries: []
+        });
+
+        // Import the Woogles API functions
+        const { getWooglesGameGCG, getWooglesGameMetadata } = await import('../axios/api');
+        
+        // Get both GCG and metadata
+        const [gcg, metadata] = await Promise.all([
+          getWooglesGameGCG(state.currentWooglesGame.gameId),
+          getWooglesGameMetadata(state.currentWooglesGame.gameId)
+        ]);
+        
+        if (!gcg) {
+          console.error('Failed to load Woogles GCG');
+          get().randomizeWooglesGame();
+          return;
+        }
+        
+        if (!metadata) {
+          console.error('Failed to load Woogles metadata');
+          get().randomizeWooglesGame();
+          return;
+        }
+        
+        // Parse moves and origPlayerRaw from GCG
+        const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
+        const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
+        const lines = gcg.split('\n');
+        let notes = [];
+        let lexicon = '';
+        let player1 = '';
+        let player2 = '';
+        
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('#note')) {
+            const count = lines.slice(0, i).filter(line => line.startsWith('>')).length;
+            notes.push([lines[i].replace('#note ', ''), count]);
+          }
+          if (lines[i].startsWith('#lexicon')) {
+            lexicon = lines[i].split(' ')[1];
+          }
+          if (lines[i].startsWith('#player1')) {
+            player1 = lines[i].split(' ').slice(2).join(' ');
+          }
+          if (lines[i].startsWith('#player2')) {
+            player2 = lines[i].split(' ').slice(2).join(' ');
+          }
+        }
+        
+        // Get dictionary from metadata
+        const dictionary = metadata.lexicon || lexicon || 'Unknown';
+        
+        set({
+          moveSet: moveSet,
+          origPlayerRaw: origPlayerRaw,
+          notes: notes,
+          name1: player1,
+          name2: player2,
+          gameDictionary: dictionary,
+          gamesViewed: [...state.gamesViewed, state.gameNum],
+          loadingMsg: "Loading the Woogles game...",
+        });
+        
+        console.log("Woogles game loaded.");
+        setTimeout(() => {
+          set({ open: false });
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error loading Woogles game data:', error);
+        get().randomizeWooglesGame();
       }
     },
     

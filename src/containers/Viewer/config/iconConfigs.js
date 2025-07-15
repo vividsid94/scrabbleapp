@@ -9,6 +9,8 @@ import TuneIcon from '@mui/icons-material/Tune';
 import PaletteIcon from '@mui/icons-material/Palette';
 import PeopleIcon from '@mui/icons-material/People';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SearchIcon from '@mui/icons-material/Search';
 import Typography from '@mui/material/Typography';
 
 export const createIconList = (
@@ -28,7 +30,9 @@ export const createIconList = (
   origBoard,
   origPool,
   setShowUnlockText,
-  setMode
+  setMode,
+  wooglesMode,
+  randomizeWooglesGame
 ) => [
   {
     icon: SkipPreviousIcon,
@@ -59,8 +63,8 @@ export const createIconList = (
   },
   {
     icon: FiberNewIcon,
-    toolTip: "New game",
-    onClick: randomizeGame
+    toolTip: wooglesMode ? "New Woogles game" : "New game",
+    onClick: wooglesMode ? randomizeWooglesGame : randomizeGame
   },
   {
     icon: SwapHorizIcon,
@@ -90,7 +94,12 @@ export const createGroupedIcons = (
   mode,
   gameNum,
   revealPlayers,
-  revealElo
+  revealElo,
+  toggleWooglesMode,
+  wooglesMode,
+  currentWooglesGame,
+  handleOpenPlayersModal,
+  handleRevealElo
 ) => [
   {
     icon1: {
@@ -112,6 +121,11 @@ export const createGroupedIcons = (
       icon: PaletteIcon,
       toolTip: "Color Scheme",
       onClick: () => handleColorSchemeOpen(setModalContent, setOpen)
+    },
+    icon5: {
+      icon: SearchIcon,
+      toolTip: "Browse Players",
+      onClick: () => handleOpenPlayersModal()
     }
   },
   {
@@ -124,14 +138,21 @@ export const createGroupedIcons = (
     icon2: {
       icon: Typography,
       toolTip: "Reveal ELO",
-      onClick: () => revealElo(tourneyNum, name1, name2, setRevealedElo, setRevealedElo2),
+      onClick: handleRevealElo,
       text: 'Elo',
       condition: { display: mode === "GUESSELO" ? 'flex' : 'none' }
     },
     icon3: {
       icon: OpenInNewIcon,
-      toolTip: "View on XT",
-      onClick: () => window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank')
-    }
+      toolTip: wooglesMode ? "View on Woogles" : "View on XT",
+      onClick: () => {
+        if (wooglesMode && currentWooglesGame) {
+          window.open('https://woogles.io/game/' + currentWooglesGame.gameId, '_blank');
+        } else {
+          window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank');
+        }
+      }
+    },
+
   }
 ]; 

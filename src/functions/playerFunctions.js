@@ -49,4 +49,36 @@ export const revealElo = (tourneyNum, name1, name2, setRevealedElo, setRevealedE
         console.log(errRes);
       });
   }
+};
+
+export const revealWooglesElo = async (gameId, setRevealedElo, setRevealedElo2) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetMetadata';
+    const requestBody = { game_id: gameId };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Game Metadata Response:', response.data);
+    
+    if (response.data && response.data.players) {
+      const players = response.data.players;
+      if (players.length >= 2) {
+        // Player 1 rating
+        if (players[0].rating) {
+          setRevealedElo(players[0].rating + " at game time");
+        }
+        // Player 2 rating  
+        if (players[1].rating) {
+          setRevealedElo2(players[1].rating + " at game time");
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error getting Woogles game metadata:', error);
+  }
 }; 

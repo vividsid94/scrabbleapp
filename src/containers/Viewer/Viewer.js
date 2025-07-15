@@ -14,12 +14,13 @@ import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
 import { removeFromPool } from '../../functions/poolFunctions';
 import { useViewerStore } from '../../stores/viewerStore';
-import { revealPlayers, revealElo } from '../../functions/playerFunctions';
+import { revealPlayers, revealElo, revealWooglesElo } from '../../functions/playerFunctions';
 import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
 import ColorScheme from '../../components/common/ColorScheme';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 import { ThemeContext } from '../../App';
-import { getWooglesGame } from '../../axios/api';
+import ModeToggleIcon from '../../components/common/ModeToggleIcon';
+
 
 
 // Import components
@@ -79,6 +80,10 @@ export default function Viewer({ onChange }){
     loadingMsg, setLoadingMsg,
     modalContent, setModalContent,
     
+    // Woogles mode
+    wooglesMode, setWooglesMode,
+    currentWooglesGame, setCurrentWooglesGame,
+    
     // Functions
     handleClose,
     switchValue,
@@ -90,7 +95,10 @@ export default function Viewer({ onChange }){
     randomizeGame,
     loadGameData,
     beginningOfGame: beginningOfGameStore,
-    chooseGame: chooseGameStore
+    chooseGame: chooseGameStore,
+    toggleWooglesMode,
+    randomizeWooglesGame,
+    loadWooglesGameData
   } = useViewerStore();
 
   const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
@@ -123,49 +131,17 @@ export default function Viewer({ onChange }){
     await loadGameData();
   };
 
-  // Add Load Woogles Game button logic
-  const handleLoadWooglesGame = async () => {
-    try {
-      const gcg = await getWooglesGame('qj3fjmdK');
-      if (!gcg) throw new Error('No GCG data returned');
-      // Parse moves and origPlayerRaw from GCG
-      const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
-      const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
-      const lines = gcg.split('\n');
-      let notes = [];
-      let lexicon = '';
-      let player1 = '';
-      let player2 = '';
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].startsWith('#note')) {
-          const count = lines.slice(0, i).filter(line => line.startsWith('>')).length;
-          notes.push([lines[i].replace('#note ', ''), count]);
-        }
-        if (lines[i].startsWith('#lexicon')) {
-          lexicon = lines[i].split(' ')[1];
-        }
-        if (lines[i].startsWith('#player1')) {
-          player1 = lines[i].split(' ').slice(2).join(' ');
-        }
-        if (lines[i].startsWith('#player2')) {
-          player2 = lines[i].split(' ').slice(2).join(' ');
-        }
-      }
-      setMoveSet(moveSet);
-      setOrigPlayerRaw(origPlayerRaw);
-      setNotes(notes);
-      setGameNum('woogles-qj3fjmdK');
-      setName1(player1);
-      setName2(player2);
-      setRevealedName1('');
-      setRevealedName2('');
-      setRevealedElo('');
-      setRevealedElo2('');
-      setGameDictionary(lexicon);
-    } catch (error) {
-      console.error('Failed to load Woogles game:', error);
+  const handleRevealElo = () => {
+    if (wooglesMode && currentWooglesGame) {
+      // Use Woogles reveal ELO for Woogles games
+      revealWooglesElo(currentWooglesGame.gameId, setRevealedElo, setRevealedElo2);
+    } else {
+      // Use Cross-Tables reveal ELO for Cross-Tables games
+      revealElo(tourneyNum, name1, name2, setRevealedElo, setRevealedElo2);
     }
   };
+
+
 
   // Load initial game data
   useEffect(() => {
@@ -282,7 +258,9 @@ export default function Viewer({ onChange }){
     origBoard,
     origPool,
     setShowUnlockText,
-    setMode
+    setMode,
+    wooglesMode,
+    randomizeWooglesGame
   );
 
   const groupedIcons = createGroupedIcons(
@@ -302,7 +280,12 @@ export default function Viewer({ onChange }){
     mode,
     gameNum,
     revealPlayers,
-    revealElo
+    revealElo,
+    toggleWooglesMode,
+    wooglesMode,
+    currentWooglesGame,
+    handleOpenPlayersModal,
+    handleRevealElo
   );
 
   const actionButtonStyle = {
@@ -388,37 +371,41 @@ export default function Viewer({ onChange }){
           </Box>
           <Box className={styles.rightPanel}>
             <Box className={styles.playerPanel} style={{color: '#fff'}}>
-              <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8}}>
-                Dictionary: {gameDictionary}
-                                <Box
-                  className={styles.bestMoveButton}
-                  onClick={handleOpenPlayersModal}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '8px',
-                    padding: '3px 8px',
-                    fontSize: '10px',
-                    fontFamily: 'Syne',
-                    fontWeight: 500,
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    minWidth: 'fit-content',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)',
-                      borderColor: 'rgba(255,255,255,0.5)'
-                    }
-                  }}
-                >
-                  Browse Players
-                </Box>
-
-
-                </Box>
+              <Box style={{color: '#fff', fontSize: '12px', marginBottom: '5px', marginTop: '5px', opacity: 0.8, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <span>Dictionary: {gameDictionary}</span>
+                <span style={{marginLeft: '12px'}}></span>
+                <Tooltip title={wooglesMode ? "Switch to Cross-Tables" : "Switch to Woogles"}>
+                  <Box
+                    className={styles.bestMoveButton}
+                    onClick={toggleWooglesMode}
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginLeft: '8px',
+                      padding: '4px 10px',
+                      fontSize: '10px',
+                      fontFamily: 'Syne',
+                      fontWeight: 500,
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      minWidth: 'fit-content',
+                      minHeight: '36px',
+                      backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
+                      borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255,255,255,0.3)',
+                      '&:hover': {
+                        backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)',
+                        borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255,255,255,0.5)'
+                      }
+                    }}
+                  >
+                    <ModeToggleIcon wooglesMode={wooglesMode} />
+                  </Box>
+                </Tooltip>
+              </Box>
               <Box className={styles.playerToggle}>
                 {/* Main navigation icons */}
                 {iconList.map((icon, index) => (
@@ -514,6 +501,21 @@ export default function Viewer({ onChange }){
                             </Box>
                           </Tooltip>
                         )}
+                        {groupedIcons[0].icon5 && (
+                          <Tooltip title={groupedIcons[0].icon5.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[0].icon5.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {React.createElement(groupedIcons[0].icon5.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
                       </>
                     )}
                   </Box>
@@ -578,33 +580,23 @@ export default function Viewer({ onChange }){
                             </Box>
                           </Tooltip>
                         )}
-                        <Tooltip title="Test Woogles Game Loading">
-                          <Box
-                            className={styles.bestMoveButton}
-                            onClick={handleLoadWooglesGame}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '12px',
-                              fontFamily: 'Syne',
-                              fontWeight: 500,
-                              color: '#fff',
-                              padding: '4px 12px',
-                              minWidth: '80px',
-                              border: '1px solid rgba(255,255,255,0.3)',
-                              borderRadius: '3px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                                borderColor: 'rgba(255,255,255,0.5)'
-                              }
-                            }}
-                          >
-                            Test Woogles
-                          </Box>
-                        </Tooltip>
+                        {groupedIcons[1].icon4 && (
+                          <Tooltip title={groupedIcons[1].icon4.toolTip}>
+                            <Box
+                              className={styles.bestMoveButton}
+                              onClick={groupedIcons[1].icon4.onClick}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                ...(groupedIcons[1].icon4.condition || {})
+                              }}
+                            >
+                              {React.createElement(groupedIcons[1].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                            </Box>
+                          </Tooltip>
+                        )}
+
                       </>
                     )}
                   </Box>

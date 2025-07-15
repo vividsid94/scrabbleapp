@@ -448,6 +448,47 @@ export const testWooglesAPI = async () => {
   }
 };
 
+// Woogles API functions
+export const getWooglesGameMetadata = async (gameId) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetMetadata';
+    const requestBody = { game_id: gameId };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Game Metadata Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting Woogles game metadata:', error);
+    throw error;
+  }
+};
+
+export const getWooglesGameGCG = async (gameId) => {
+  try {
+    const url = 'https://woogles.io/api/game_service.GameMetadataService/GetGCG';
+    const requestBody = { game_id: gameId };
+    
+    const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(url) + 
+      '&method=POST&body=' + encodeURIComponent(JSON.stringify(requestBody)), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Woogles Game GCG Response:', response.data);
+    return response.data.gcg;
+  } catch (error) {
+    console.error('Error getting Woogles game GCG:', error);
+    throw error;
+  }
+};
+
 
 
 
