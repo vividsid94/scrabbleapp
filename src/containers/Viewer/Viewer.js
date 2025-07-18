@@ -20,8 +20,7 @@ import { removeFromPool } from '../../functions/poolFunctions';
 import { useViewerStore } from '../../stores/viewerStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { revealPlayers, revealElo, revealWooglesElo } from '../../functions/playerFunctions';
-import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
-import ColorScheme from '../../components/common/ColorScheme';
+import { handleDictionaryTilesOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 import { ThemeContext } from '../../App';
 import ModeToggleIcon from '../../components/common/ModeToggleIcon';
@@ -284,7 +283,6 @@ export default function Viewer({ onChange }){
     handleGamesHistoryOpen,
     handleRecentGamesOpen,
     handleDictionaryTilesOpen,
-    handleColorSchemeOpen,
     setModalContent,
     setOpen,
     name1,
@@ -339,9 +337,7 @@ export default function Viewer({ onChange }){
               handleBoardModeChange={(e) => setBoardMode(e.target.value)}
             />
           )}
-          {modalContent === "colorScheme" && (
-            <ColorScheme />
-          )}
+
           {modalContent === "recentGames" && (
             <RecentGamesList
               recentNames={recentNames}

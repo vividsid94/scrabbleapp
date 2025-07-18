@@ -6,7 +6,6 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import HistoryIcon from '@mui/icons-material/History';
 import TuneIcon from '@mui/icons-material/Tune';
-import PaletteIcon from '@mui/icons-material/Palette';
 import PeopleIcon from '@mui/icons-material/People';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
@@ -70,7 +69,6 @@ export const createGroupedIcons = (
   handleGamesHistoryOpen,
   handleRecentGamesOpen,
   handleDictionaryTilesOpen,
-  handleColorSchemeOpen,
   setModalContent,
   setOpen,
   name1,
@@ -107,11 +105,7 @@ export const createGroupedIcons = (
       toolTip: "Settings",
       onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen)
     },
-    icon4: {
-      icon: PaletteIcon,
-      toolTip: "Color Scheme",
-      onClick: () => handleColorSchemeOpen(setModalContent, setOpen)
-    },
+
     icon5: {
       icon: SearchIcon,
       toolTip: "Browse Players",
