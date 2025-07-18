@@ -185,6 +185,7 @@ export default function Play() {
 
   // Get global color scheme - subscribe to the current value
   const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
 
   // Refs (keep these local)
   const complementaryColor = useRef('#9F7A83');
@@ -364,7 +365,7 @@ export default function Play() {
       blankTiles,
       lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates]);
 
   // Update player time states when gameTime changes
   useEffect(() => {

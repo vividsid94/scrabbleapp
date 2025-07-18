@@ -142,6 +142,7 @@ export default function Puzzle() {
 
   // Get global color scheme - subscribe to the current value
   const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
 
   // Add manual pause state
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
@@ -316,7 +317,7 @@ export default function Puzzle() {
       blankTiles,
       lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates]);
 
   // Resume after bingo challenge
   const handleResume = () => {

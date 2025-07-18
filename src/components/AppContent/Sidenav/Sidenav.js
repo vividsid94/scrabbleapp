@@ -34,7 +34,9 @@ export default function MiniDrawer() {
   const [showColorPicker, setShowColorPicker] = React.useState(false);
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
   const updateColor = useColorSchemeStore(state => state.updateColor);
+  const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
 
   const getBackgroundColor = () => {
     return '#1F2937';
@@ -96,6 +98,11 @@ export default function MiniDrawer() {
 
   const handleColorChange = (event) => {
     updateColor(event.target.value);
+  };
+
+  const handleBoardColorChange = (event) => {
+    updateBoardColor(event.target.value);
+    document.documentElement.style.setProperty('--board-color', event.target.value);
   };
 
   const getCurrentPage = () => {
@@ -302,24 +309,39 @@ export default function MiniDrawer() {
             minWidth: '200px'
           }}
         >
-          <Box sx={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
-            Color Scheme
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Box sx={{ color: '#fff', fontSize: '12px' }}>Tile Color:</Box>
-            <input
-              type="color"
-              value={color.current}
-              onChange={handleColorChange}
-              style={{
-                width: '40px',
-                height: '40px',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                backgroundColor: 'transparent'
-              }}
-            />
+          <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Tile</Box>
+              <input
+                type="color"
+                value={color.current}
+                onChange={handleColorChange}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: 'transparent'
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Board</Box>
+              <input
+                type="color"
+                value={boardColor.current}
+                onChange={handleBoardColorChange}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: 'transparent'
+                }}
+              />
+            </Box>
           </Box>
           <Box 
             sx={{ 
