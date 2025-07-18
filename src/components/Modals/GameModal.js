@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Modal } from '@mui/material';
 import { useGameStore } from '../../stores/gameStore';
-import ColorScheme from '../common/ColorScheme';
 import styles from '../../containers/Play/Play.module.css';
 
 const GameModal = () => {
@@ -64,9 +63,7 @@ const GameModal = () => {
             </Box>
           </Box>
         )}
-        {modalContent === "colorScheme" && (
-          <ColorScheme />
-        )}
+
       </Box>
     </Modal>
   );

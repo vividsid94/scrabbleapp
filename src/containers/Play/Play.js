@@ -13,7 +13,6 @@ import GameModal from '../../components/Modals/GameModal';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
 import TuneIcon from '@mui/icons-material/Tune';
-import PaletteIcon from '@mui/icons-material/Palette';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
@@ -150,7 +149,6 @@ export default function Play() {
     
     // UI handler functions
     handleSettingsOpen,
-    handleColorSchemeOpen,
     handleWordSubmitClick,
     handlePassClick,
     handleExchangeClick,
@@ -513,7 +511,6 @@ export default function Play() {
             isDictionaryLoading={isDictionaryLoading}
             isLoadingTopMoves={isLoadingTopMoves}
             onSettingsOpen={handleSettingsOpen}
-            onColorSchemeOpen={handleColorSchemeOpen}
             onBotModeToggle={handleBotModeToggleWithSounds}
             onGetTopMoves={handleGetTopMovesForExpandable}
             onWordSubmit={handleWordSubmitClick}
@@ -537,7 +534,6 @@ export default function Play() {
             pool={pool}
             icons={{
               settings: <TuneIcon className={styles.keyBtn} />,
-              colorScheme: <PaletteIcon className={styles.keyBtn} />,
               time: (
                 <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
                   <TimerIcon 

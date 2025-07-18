@@ -907,11 +907,7 @@ export const useGameStore = create((set, get) => {
       setOpen(true);
     },
 
-    handleColorSchemeOpen: () => {
-      const { setModalContent, setOpen } = get();
-      setModalContent("colorScheme");
-      setOpen(true);
-    },
+
 
     handleClose: () => {
       const { setOpen } = get();
