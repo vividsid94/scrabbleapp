@@ -9,6 +9,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import Modal from '@mui/material/Modal';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
@@ -32,6 +33,7 @@ export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [showColorPicker, setShowColorPicker] = React.useState(false);
+  const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
@@ -47,11 +49,15 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: `55px`,
+    width: isColorSectionExpanded ? '200px' : '55px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
     backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     transition: '0.3s ease',
+    '@media (max-width: 992px)': {
+      width: '100%',
+      height: 'auto',
+    },
   });
 
   const DrawerHeader = styled('div')(({ theme }) => ({
@@ -93,6 +99,7 @@ export default function MiniDrawer() {
   };
 
   const toggleColorPicker = () => {
+    setIsColorSectionExpanded(!isColorSectionExpanded);
     setShowColorPicker(!showColorPicker);
   };
 
@@ -211,6 +218,17 @@ export default function MiniDrawer() {
             }}>
               Submit Game {isCurrentPage('/submit-game') && '✓'}
             </MenuItem>
+            <MenuItem onClick={() => {
+              handleClose();
+              toggleColorPicker();
+            }} sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <PaletteIcon sx={{ fontSize: 18 }} />
+              Color Scheme
+            </MenuItem>
           </Menu>
           <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
         </MyToolbar>
@@ -273,6 +291,74 @@ export default function MiniDrawer() {
             </ListItemIcon>
           </ListItem>
         </List>
+        
+        {/* Color Picker Section - Slides out when expanded */}
+        {isColorSectionExpanded && (
+          <Box
+            sx={{
+              padding: '16px',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              minHeight: '120px',
+              justifyContent: 'center'
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Tile</Box>
+                <input
+                  type="color"
+                  value={color.current}
+                  onChange={handleColorChange}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Board</Box>
+                <input
+                  type="color"
+                  value={boardColor.current}
+                  onChange={handleBoardColorChange}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+              </Box>
+            </Box>
+            <Box 
+              sx={{ 
+                color: '#fff', 
+                fontSize: '10px', 
+                textAlign: 'center',
+                opacity: 0.7,
+                cursor: 'pointer',
+                '&:hover': { opacity: 1 }
+              }}
+              onClick={() => {
+                setIsColorSectionExpanded(false);
+                setShowColorPicker(false);
+              }}
+            >
+              Click to close
+            </Box>
+          </Box>
+        )}
         <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
@@ -288,76 +374,105 @@ export default function MiniDrawer() {
         </List>
       </Drawer>
       
-      {/* Color Picker Popup */}
-      {showColorPicker && (
+      {/* Mobile Color Picker Modal */}
+      <Modal
+        open={showColorPicker && window.innerWidth <= 992}
+        onClose={() => {
+          setShowColorPicker(false);
+          setIsColorSectionExpanded(false);
+        }}
+        aria-labelledby="mobile-color-picker-modal"
+        aria-describedby="mobile-color-picker-description"
+      >
         <Box
           sx={{
-            position: 'fixed',
-            left: '70px',
+            position: 'absolute',
             top: '50%',
-            transform: 'translateY(-50%)',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             backgroundColor: '#1F2937',
             backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
-            padding: '16px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            zIndex: 1000,
+            padding: '24px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             border: '1px solid rgba(255,255,255,0.1)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
-            minWidth: '200px'
+            gap: '20px',
+            minWidth: '280px',
+            maxWidth: '90vw'
           }}
         >
-          <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Tile</Box>
+          <Box sx={{ 
+            color: '#fff', 
+            fontSize: '18px', 
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: '8px'
+          }}>
+            Color Scheme
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <Box sx={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>Tile Color</Box>
               <input
                 type="color"
                 value={color.current}
                 onChange={handleColorChange}
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '60px',
+                  height: '60px',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   backgroundColor: 'transparent'
                 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Board</Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <Box sx={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>Board Color</Box>
               <input
                 type="color"
                 value={boardColor.current}
                 onChange={handleBoardColorChange}
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '60px',
+                  height: '60px',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   backgroundColor: 'transparent'
                 }}
               />
             </Box>
           </Box>
+          
           <Box 
             sx={{ 
               color: '#fff', 
-              fontSize: '10px', 
+              fontSize: '14px', 
               textAlign: 'center',
-              opacity: 0.7,
+              opacity: 0.8,
               cursor: 'pointer',
-              '&:hover': { opacity: 1 }
+              padding: '8px',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              '&:hover': { 
+                opacity: 1,
+                backgroundColor: 'rgba(255,255,255,0.15)'
+              }
             }}
-            onClick={() => setShowColorPicker(false)}
+            onClick={() => {
+              setShowColorPicker(false);
+              setIsColorSectionExpanded(false);
+            }}
           >
-            Click to close
+            Close
           </Box>
         </Box>
-      )}
+      </Modal>
+      
     </Box>
   );
 }
