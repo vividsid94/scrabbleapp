@@ -76,11 +76,20 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
                 left: '0',
                 right: '0',
                 bottom: '0',
-                backgroundImage: `url(${modifiedImageUrl})`,
-                backgroundSize: '100%',
-                transform: 'rotate(-15deg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#fff',
+                backgroundColor: isLastMove ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : (color || '#7878a4')),
+                borderRadius: '4px',
                 zIndex: 1
-              }} />
+              }}>
+                <span style={{ transform: 'rotate(-15deg)', zIndex: 10, position: 'relative' }}>
+                  {letter}
+                </span>
+              </div>
             )}
             
             {isBlank && (
@@ -90,9 +99,12 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
                 left: '0',
                 right: '0',
                 bottom: '0',
-                background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.6) 3px, rgba(255,255,255,0.6) 6px)',
+                borderRadius: '50%',
+                backgroundColor: lightenColor(color || '#7878a4'),
+                opacity: 0.5,
+                border: '1px solid rgba(0,0,0,0.3)',
                 pointerEvents: 'none',
-                zIndex: 2
+                zIndex: 3
               }} />
             )}
           </div>
