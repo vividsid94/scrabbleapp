@@ -7,6 +7,7 @@ import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { formatTime } from '../../functions/play/timeUtils';
 import { usePuzzleStore } from '../../stores/puzzleStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import Confetti from '../../components/Confetti/Confetti';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
@@ -28,7 +29,6 @@ import PuzzlePlayerInfo from './PuzzlePlayerInfo.js';
 
 export default function Puzzle() {
   // Refs (keep these local like Play.js)
-  const color = useRef('#7878a4');
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
@@ -139,6 +139,9 @@ export default function Puzzle() {
     clearPuzzlePlacement,
     handlePuzzleKeyDown,
   } = usePuzzleStore();
+
+  // Get global color scheme - subscribe to the current value
+  const color = useColorSchemeStore(state => state.color);
 
   // Add manual pause state
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
@@ -313,7 +316,7 @@ export default function Puzzle() {
       blankTiles,
       lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, blankTiles, lastMoveCoordinates]);
 
   // Resume after bingo challenge
   const handleResume = () => {

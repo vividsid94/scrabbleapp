@@ -10,6 +10,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Puzzle.module.css';
 
 // Memoized LatestMove component that only subscribes to what it needs
@@ -39,6 +40,9 @@ const MemoizedLatestMove = React.memo(() => {
 });
 
 const PuzzlePlayerInfo = React.memo(() => {
+  // Get global color scheme
+  const color = useColorSchemeStore(state => state.color);
+  
   // Subscribe to board-related state only where it's needed
   const selectedTiles = usePuzzleStore(state => state.selectedTiles);
   const selectedRackTiles = usePuzzleStore(state => state.selectedRackTiles);
@@ -348,7 +352,7 @@ const PuzzlePlayerInfo = React.memo(() => {
               <Box className={styles.Rack}>
                 <Rack 
                   rack={currentRack} 
-                  color="#7878a4" 
+                  color={color.current} 
                   onTileClick={handleTileClick}
                   selectedTiles={isPausedForBingo ? selectedRackTiles : tilesToExchange}
                 />

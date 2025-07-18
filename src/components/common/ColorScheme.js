@@ -1,27 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 
-const ColorScheme = ({ color, boardColor }) => {
+const ColorScheme = () => {
   const colorInputRef = useRef(null);
   const boardColorInputRef = useRef(null);
+  const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
+  const updateColor = useColorSchemeStore(state => state.updateColor);
+  const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
   const [currentColor, setCurrentColor] = useState(color.current);
   const [currentBoardColor, setCurrentBoardColor] = useState(boardColor.current);
 
   useEffect(() => {
     setCurrentColor(color.current);
     setCurrentBoardColor(boardColor.current);
-  }, []);
+  }, [color.current, boardColor.current]);
 
   const handleChange = () => {
     const newColor = colorInputRef.current.value;
     setCurrentColor(newColor);
-    color.current = newColor;
+    updateColor(newColor);
   };
 
   const handleBoardColorChange = () => {
     const newColor = boardColorInputRef.current.value;
     setCurrentBoardColor(newColor);
-    boardColor.current = newColor;
+    updateBoardColor(newColor);
     document.documentElement.style.setProperty('--board-color', newColor);
   };
 

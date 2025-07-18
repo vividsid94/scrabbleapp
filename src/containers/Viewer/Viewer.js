@@ -18,6 +18,7 @@ import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
 import { removeFromPool } from '../../functions/poolFunctions';
 import { useViewerStore } from '../../stores/viewerStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { revealPlayers, revealElo, revealWooglesElo } from '../../functions/playerFunctions';
 import { handleDictionaryTilesOpen, handleColorSchemeOpen, handleRecentGamesOpen, handleGamesHistoryOpen } from '../../utils/modalFunctions';
 import ColorScheme from '../../components/common/ColorScheme';
@@ -73,8 +74,6 @@ export default function Viewer({ onChange }){
     revealedElo2, setRevealedElo2,
     tourneyNum, setTourneyNum,
     unlockEloMode, setUnlockEloMode,
-    color,
-    boardColor,
     customPlayerMode,
     showUnlockText, setShowUnlockText,
     origPlayerRaw, setOrigPlayerRaw,
@@ -106,6 +105,10 @@ export default function Viewer({ onChange }){
     randomizeWooglesGame,
     loadWooglesGameData
   } = useViewerStore();
+
+  // Get global color scheme - subscribe to the current value
+  const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
 
   const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
     const state = {
@@ -337,10 +340,7 @@ export default function Viewer({ onChange }){
             />
           )}
           {modalContent === "colorScheme" && (
-            <ColorScheme
-              color={color}
-              boardColor={boardColor}
-            />
+            <ColorScheme />
           )}
           {modalContent === "recentGames" && (
             <RecentGamesList

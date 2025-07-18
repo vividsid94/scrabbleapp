@@ -15,8 +15,6 @@ const GameModal = () => {
     setPlayerMoveSoundType,
     setBotMoveSoundType,
     handleClose,
-    color,
-    boardColor
   } = useGameStore();
 
   return (
@@ -67,10 +65,7 @@ const GameModal = () => {
           </Box>
         )}
         {modalContent === "colorScheme" && (
-          <ColorScheme
-            color={color}
-            boardColor={boardColor}
-          />
+          <ColorScheme />
         )}
       </Box>
     </Modal>

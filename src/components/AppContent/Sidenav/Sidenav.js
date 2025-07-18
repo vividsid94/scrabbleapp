@@ -11,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
+import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -23,13 +24,17 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SendIcon from '@mui/icons-material/Send';
+import PaletteIcon from '@mui/icons-material/Palette';
 
 import styles from './Sidenav.module.css';
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [showColorPicker, setShowColorPicker] = React.useState(false);
   const location = useLocation();
+  const color = useColorSchemeStore(state => state.color);
+  const updateColor = useColorSchemeStore(state => state.updateColor);
 
   const getBackgroundColor = () => {
     return '#1F2937';
@@ -83,6 +88,14 @@ export default function MiniDrawer() {
 
   const toggleLightMode = () => {
     setLightMode(lightMode === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleColorPicker = () => {
+    setShowColorPicker(!showColorPicker);
+  };
+
+  const handleColorChange = (event) => {
+    updateColor(event.target.value);
   };
 
   const getCurrentPage = () => {
@@ -245,6 +258,15 @@ export default function MiniDrawer() {
           </a>
         </List>
         <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={toggleColorPicker} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+              <Tooltip title="Color Scheme" placement="right">
+                <PaletteIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+              </Tooltip>
+            </ListItemIcon>
+          </ListItem>
+        </List>
+        <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
               <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} placement="right">
@@ -258,6 +280,62 @@ export default function MiniDrawer() {
           </ListItem>
         </List>
       </Drawer>
+      
+      {/* Color Picker Popup */}
+      {showColorPicker && (
+        <Box
+          sx={{
+            position: 'fixed',
+            left: '70px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            backgroundColor: '#1F2937',
+            backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            zIndex: 1000,
+            border: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            minWidth: '200px'
+          }}
+        >
+          <Box sx={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
+            Color Scheme
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Box sx={{ color: '#fff', fontSize: '12px' }}>Tile Color:</Box>
+            <input
+              type="color"
+              value={color.current}
+              onChange={handleColorChange}
+              style={{
+                width: '40px',
+                height: '40px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                backgroundColor: 'transparent'
+              }}
+            />
+          </Box>
+          <Box 
+            sx={{ 
+              color: '#fff', 
+              fontSize: '10px', 
+              textAlign: 'center',
+              opacity: 0.7,
+              cursor: 'pointer',
+              '&:hover': { opacity: 1 }
+            }}
+            onClick={() => setShowColorPicker(false)}
+          >
+            Click to close
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

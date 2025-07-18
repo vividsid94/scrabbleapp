@@ -21,6 +21,7 @@ import { handleTileDrop, handleTileClick } from '../../functions/play/tileFuncti
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { formatTime } from '../../functions/play/timeUtils';
 import { useGameStore } from '../../stores/gameStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
 
@@ -182,8 +183,10 @@ export default function Play() {
     makeBotMove,
   } = useGameStore();
 
+  // Get global color scheme - subscribe to the current value
+  const color = useColorSchemeStore(state => state.color);
+
   // Refs (keep these local)
-  const color = useRef('#b064af');
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
@@ -361,7 +364,7 @@ export default function Play() {
       blankTiles,
       lastMoveCoordinates
     );
-  }, [tempBoardCoords, boardCoords, theme, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, blankTiles, lastMoveCoordinates]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
