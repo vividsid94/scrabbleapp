@@ -282,25 +282,12 @@ export default function Board({
                                             )}
                                         </td>
                                     ))}
-                                    <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
                                 </tr>
                             )}
-                            <tr> 
-                                <th className={`${styles.sideNumbering} ${styles.SWcell}`}/>
-                                {Object.keys(letterLookup).map(letter => (
-                                    <th className={styles.sideNumbering} key={letter}>{letter.toLowerCase()}</th>
-                                ))}
-                                <th className={`${styles.sideNumbering} ${styles.SEcell}`}/>
-                            </tr>
                         </tbody>
                     </table>
                 </Box>
                 <Box className={styles.Right}>
-                    {showSlip && boardMode !== "STANDARD" && (
-                        <Box className={`${styles.coloredBox} ${styles.slipBox}`} onClick={handleSlipClick}>
-                            Slip
-                        </Box>
-                    )}
                 </Box>
             </Box>
             
