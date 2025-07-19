@@ -55,7 +55,7 @@ export default function Home(){
         </Box>
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
-            <button className={styles.homeButton}>Annotated Game Viewer</button>
+            <button className={styles.homeButton}>Game Viewer</button>
           </Link>
           <Link to="/submit-game">
             <button className={styles.submitGameButton}>Submit Game</button>
