@@ -156,25 +156,6 @@ form{
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-.playModeTitle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 30px;
-  margin-top: 25px;
-  font-family: 'Preahvihear', sans-serif !important;
-  font-weight: 600;
-  background: linear-gradient(75deg, #4A4A7A 0%, #6A6A9A 50%, #4A4A7A 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-}
-
-.playModeSubtitle {
-  font-size: 14px;
-  color: #666;
-  font-weight: 400;
-}
 .mainPanel{
   display: grid;
   gap: 24px;
@@ -196,16 +177,6 @@ form{
   flex-direction: column;
 }
 
-.player2Panel{
-  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
-  color: #fff;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 10px;
-  gap: 5px;
-}
-
 .playerToggle{
   display: flex;
   justify-content: space-evenly;
@@ -213,14 +184,6 @@ form{
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.unlockText{
-  font-size: 10px;
-  font-style: italic;
-  font-family: 'Syne' !important;
-  padding: 10px;
-  justify-content: flex-end;
 }
 
 .leftContainer {
@@ -239,13 +202,6 @@ form{
   gap: 12px;
   position: relative;
   z-index: 1000;
-}
-
-.groupedBox{
-  cursor: pointer;
-  color: #fff;
-  display: flex;
-  gap: 10px;
 }
 
 .Arrows{
@@ -304,41 +260,6 @@ form{
   font-size: 13px;
   line-height: 18px;
   font-family: 'Syne';
-}
-
-.turnNumbers {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px;
-  margin: 8px 0;
-  padding: 4px;
-  position: relative;
-  z-index: 1;
-}
-
-.turnNumber {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 9px;
-  transition: all 0.3s ease;
-  opacity: 0.7;
-  padding: 2px;
-  border-radius: 4px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-  backdrop-filter: blur(5px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.turnNumber:hover {
-  opacity: 1;
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
 }
 
 @media screen and (max-width: 992px) {
@@ -420,20 +341,6 @@ form{
   100% {
     background-position: 1000px 0;
   }
-}
-
-.loading {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-  border-radius: 8px;
 }
 
 /* Modern Scrollbar Styling */
