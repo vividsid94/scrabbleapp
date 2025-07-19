@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
+
 import styles from '../Viewer.module.css';
 
 const TopMoves = ({ 
@@ -363,7 +363,17 @@ const TopMoves = ({
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-            <LightbulbIcon style={{ fontSize: 16 }} />
+            <img 
+              src="/images/t2fox.png" 
+              alt="Tango Fox" 
+              style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'grayscale(1) contrast(200%) brightness(0.5)',
+                opacity: 0.6
+              }} 
+            />
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
             <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
           <Box className={styles.loadingText}>
@@ -385,7 +395,17 @@ const TopMoves = ({
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-            <LightbulbIcon style={{ fontSize: 16 }} />
+            <img 
+              src="/images/t2fox.png" 
+              alt="Tango Fox" 
+              style={{ 
+                width: '24px', 
+                height: '24px', 
+                filter: 'grayscale(1) contrast(200%) brightness(0.5)',
+                opacity: 0.6
+              }} 
+            />
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
             <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
         </Box>
@@ -397,8 +417,18 @@ const TopMoves = ({
     <Box className={styles.topMovesPanel}>
       <Box className={`${styles.topMovesContent} ${animationClass}`}>
         <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-          <LightbulbIcon style={{ fontSize: 16 }} />
-          <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
+          <img 
+            src="/images/t2fox.png" 
+            alt="Tango Fox" 
+            style={{ 
+              width: '24px', 
+              height: '24px', 
+              filter: 'grayscale(1) contrast(200%) brightness(0.5)',
+              opacity: 0.6
+            }} 
+                      />
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
+            <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
         </Box>
         {topMoves.length > 0 && (
           <Box className={styles.expandIcon} onClick={handleExpandClick}>
