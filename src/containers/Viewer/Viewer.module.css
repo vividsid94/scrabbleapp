@@ -309,6 +309,7 @@ form{
   justify-content: flex-start;
   gap: 12px;
   position: relative;
+  z-index: 1000;
 }
 
 .topPlayerPanel{

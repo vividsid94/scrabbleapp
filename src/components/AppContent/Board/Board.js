@@ -4,6 +4,7 @@ import { Box, Tooltip } from '@mui/material';
 import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
 import { ThemeContext } from '../../../App';
+import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
 
 export default function Board({
     boardMode = "STANDARD",
@@ -26,8 +27,12 @@ export default function Board({
     commentary = null
 }) {
     const { lightMode } = useContext(ThemeContext);
+    const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
+    const showApplePolygon = useColorSchemeStore(state => state.showApplePolygon);
     let boardTheme = "Board__" + boardMode;
     let tableTheme = "Table__" + boardMode;
+    
+
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
     const [circledLetters, setCircledLetters] = useState([]);
@@ -122,6 +127,7 @@ export default function Board({
 
     return (
         <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
+
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`} style={getHeaderStyle()}>
                 <Box className={styles.headerContent}>
                     {dictionary}
@@ -135,8 +141,108 @@ export default function Board({
                     </Box>
                 )}
             </Box>
+            {/* EPIC WOODEN CIRCULAR BOARD AREA */}
+            {showWoodenCircle.current && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-100px',
+                    left: '-100px',
+                    right: '-100px',
+                    bottom: '-100px',
+                    borderRadius: '50%',
+                    background: `
+                        radial-gradient(circle at 40% 35%, 
+                            #2D1810 0%, 
+                            #4A2C1A 15%, 
+                            #6B4423 30%, 
+                            #8B5A2B 45%, 
+                            #A67C52 60%, 
+                            #C19A6B 75%, 
+                            #D4B483 90%, 
+                            #E6C99C 100%
+                        ),
+                        radial-gradient(ellipse at 50% 0%, 
+                            rgba(255, 255, 255, 0.3) 0%, 
+                            rgba(255, 255, 255, 0.1) 30%, 
+                            transparent 60%
+                        ),
+                        radial-gradient(ellipse at 50% 100%, 
+                            rgba(0, 0, 0, 0.4) 0%, 
+                            rgba(0, 0, 0, 0.2) 30%, 
+                            transparent 60%
+                        )
+                    `,
+                    boxShadow: `
+                        0 0 60px rgba(45, 24, 16, 0.9),
+                        inset 0 0 40px rgba(0, 0, 0, 0.4),
+                        0 8px 20px rgba(0, 0, 0, 0.6),
+                        0 4px 10px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 3px rgba(255, 255, 255, 0.1),
+                        inset 0 0 0 2px rgba(0, 0, 0, 0.3)
+                    `,
+                    border: '2px solid rgba(0, 0, 0, 0.2)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    transform: 'rotate(15deg)'
+                }}>
+                    {/* Rotated Wood Texture Layer */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        right: '0',
+                        bottom: '0',
+                        borderRadius: '50%',
+                        background: `url("https://www.transparenttextures.com/patterns/purty-wood.png")`,
+                        backgroundSize: 'auto',
+                        backgroundRepeat: 'repeat',
+                        transform: 'rotate(75deg)',
+                        opacity: 0.8,
+                        mixBlendMode: 'multiply'
+                    }} />
+                </div>
+            )}
+            
+            {/* EPIC APPLE CIRCLE BOARD AREA */}
+            {showApplePolygon.current && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-110px',
+                    left: '-110px',
+                    right: '-110px',
+                    bottom: '-110px',
+                    borderRadius: '50%',
+                    background: `
+                        radial-gradient(circle at 40% 35%, 
+                            rgba(255, 107, 107, 0.1) 0%, 
+                            rgba(255, 82, 82, 0.1) 20%, 
+                            rgba(229, 62, 62, 0.1) 40%, 
+                            rgba(197, 48, 48, 0.1) 60%, 
+                            rgba(155, 44, 44, 0.1) 80%, 
+                            rgba(116, 42, 42, 0.1) 100%
+                        ),
+                        radial-gradient(circle at 60% 45%, 
+                            rgba(255, 255, 255, 0.1) 0%, 
+                            rgba(255, 255, 255, 0.05) 50%, 
+                            transparent 100%
+                        )
+                    `,
+                    clipPath: 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 100%, 20% 100%, 0% 70%, 0% 35%, 20% 10%)',
+                    boxShadow: `
+                        0 0 60px rgba(197, 48, 48, 0.8),
+                        inset 0 0 40px rgba(0, 0, 0, 0.3),
+                        0 15px 40px rgba(0, 0, 0, 0.5)
+                    `,
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    transform: 'rotate(15deg)'
+                }} />
+            )}
+            
+            
+            
             <Box className={styles.innerBox}>
-                <Box className={`${styles.Board} ${styles.tableContainer} ${styles[tableTheme]} ${!animate ? styles.noAnimate : ''}`}>
+                <Box className={`${styles.Board} ${styles.tableContainer} ${styles[tableTheme]} ${!animate ? styles.noAnimate : ''}`} style={{ position: 'relative', zIndex: 100 }}>
                     <table>
                         <thead>
                             <tr> 
@@ -197,6 +303,8 @@ export default function Board({
                     )}
                 </Box>
             </Box>
+            
+            
 
             {commentary && (
                 <Box className={styles.commentaryContainer}>

@@ -253,6 +253,8 @@
   flex-direction: column;
   justify-content: flex-start;
   gap: 20px;
+  z-index: 1000;
+  position: relative;
 }
 
 .botThinking {

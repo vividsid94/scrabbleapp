@@ -26,6 +26,9 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SendIcon from '@mui/icons-material/Send';
 import PaletteIcon from '@mui/icons-material/Palette';
+import CircleIcon from '@mui/icons-material/Circle';
+import AppleIcon from '@mui/icons-material/Apple';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 import styles from './Sidenav.module.css';
 
@@ -34,11 +37,17 @@ export default function MiniDrawer() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [showColorPicker, setShowColorPicker] = React.useState(false);
   const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
+  const [showDecorations, setShowDecorations] = React.useState(false);
+  const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
+  const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
+  const showApplePolygon = useColorSchemeStore(state => state.showApplePolygon);
   const updateColor = useColorSchemeStore(state => state.updateColor);
   const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
+  const updateShowWoodenCircle = useColorSchemeStore(state => state.updateShowWoodenCircle);
+  const updateShowApplePolygon = useColorSchemeStore(state => state.updateShowApplePolygon);
 
   const getBackgroundColor = () => {
     return '#1F2937';
@@ -49,7 +58,7 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: isColorSectionExpanded ? '200px' : '55px',
+    width: (isColorSectionExpanded || isDecorationSectionExpanded) ? '200px' : '55px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
     backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
@@ -101,6 +110,11 @@ export default function MiniDrawer() {
   const toggleColorPicker = () => {
     setIsColorSectionExpanded(!isColorSectionExpanded);
     setShowColorPicker(!showColorPicker);
+  };
+
+  const toggleDecorations = () => {
+    setIsDecorationSectionExpanded(!isDecorationSectionExpanded);
+    setShowDecorations(!showDecorations);
   };
 
   const handleColorChange = (event) => {
@@ -291,6 +305,18 @@ export default function MiniDrawer() {
             </ListItemIcon>
           </ListItem>
         </List>
+        <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={toggleDecorations} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+                              <Tooltip title="Board Decorations" placement="right">
+                  <AutoAwesomeIcon className={styles.homeLogo} sx={{ 
+                    color: (showWoodenCircle.current || showApplePolygon.current) ? '#8B4513' : getTextColor(),
+                    opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
+                  }}/>
+                </Tooltip>
+            </ListItemIcon>
+          </ListItem>
+        </List>
         
         {/* Color Picker Section - Slides out when expanded */}
         {isColorSectionExpanded && (
@@ -359,6 +385,126 @@ export default function MiniDrawer() {
             </Box>
           </Box>
         )}
+        
+        {/* Decorations Section - Slides out when expanded */}
+        {isDecorationSectionExpanded && (
+          <Box
+            sx={{
+              padding: '16px',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              minHeight: '120px',
+              justifyContent: 'center'
+            }}
+          >
+            <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
+              Board Decoration
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '8px', 
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: showWoodenCircle.current ? 'rgba(139, 69, 19, 0.3)' : 'transparent',
+                  border: showWoodenCircle.current ? '1px solid rgba(139, 69, 19, 0.5)' : '1px solid transparent',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                }}
+                onClick={() => {
+                  updateShowWoodenCircle(true);
+                  updateShowApplePolygon(false);
+                }}
+              >
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(45deg, #8B4513, #A0522D, #CD853F)',
+                  border: '1px solid rgba(255,255,255,0.3)'
+                }} />
+                <Box sx={{ color: '#fff', fontSize: '11px' }}>Wooden Circle</Box>
+              </Box>
+              
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '8px', 
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: showApplePolygon.current ? 'rgba(139, 0, 0, 0.3)' : 'transparent',
+                  border: showApplePolygon.current ? '1px solid rgba(139, 0, 0, 0.5)' : '1px solid transparent',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                }}
+                onClick={() => {
+                  updateShowWoodenCircle(false);
+                  updateShowApplePolygon(true);
+                }}
+              >
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(45deg, #FF6B6B, #E53E3E, #C53030)',
+                  border: '1px solid rgba(255,255,255,0.3)'
+                }} />
+                <Box sx={{ color: '#fff', fontSize: '11px' }}>Polygon</Box>
+              </Box>
+              
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '8px', 
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: (!showWoodenCircle.current && !showApplePolygon.current) ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  border: (!showWoodenCircle.current && !showApplePolygon.current) ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                }}
+                onClick={() => {
+                  updateShowWoodenCircle(false);
+                  updateShowApplePolygon(false);
+                }}
+              >
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.5)'
+                }} />
+                <Box sx={{ color: '#fff', fontSize: '11px' }}>None</Box>
+              </Box>
+            </Box>
+            <Box 
+              sx={{ 
+                color: '#fff', 
+                fontSize: '10px', 
+                textAlign: 'center',
+                opacity: 0.7,
+                cursor: 'pointer',
+                '&:hover': { opacity: 1 }
+              }}
+              onClick={() => {
+                setIsDecorationSectionExpanded(false);
+                setShowDecorations(false);
+              }}
+            >
+              Click to close
+            </Box>
+          </Box>
+        )}
+        
         <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
@@ -469,6 +615,128 @@ export default function MiniDrawer() {
             }}
           >
             Close
+          </Box>
+        </Box>
+      </Modal>
+      
+      {/* Mobile Decorations Modal */}
+      <Modal
+        open={showDecorations && window.innerWidth <= 992}
+        onClose={() => {
+          setShowDecorations(false);
+          setIsDecorationSectionExpanded(false);
+        }}
+        aria-labelledby="mobile-decorations-modal"
+        aria-describedby="mobile-decorations-description"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: '#1F2937',
+            backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
+            padding: '24px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            minWidth: '280px'
+          }}
+        >
+          <Box sx={{ color: '#fff', fontSize: '16px', textAlign: 'center', fontWeight: 'bold' }}>
+            Board Decoration
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '12px', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                backgroundColor: showWoodenCircle.current ? 'rgba(139, 69, 19, 0.3)' : 'transparent',
+                border: showWoodenCircle.current ? '1px solid rgba(139, 69, 19, 0.5)' : '1px solid transparent',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+              }}
+              onClick={() => {
+                updateShowWoodenCircle(true);
+                updateShowApplePolygon(false);
+                setShowDecorations(false);
+                setIsDecorationSectionExpanded(false);
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: 'linear-gradient(45deg, #8B4513, #A0522D, #CD853F)',
+                border: '1px solid rgba(255,255,255,0.3)'
+              }} />
+              <Box sx={{ color: '#fff', fontSize: '14px' }}>Wood</Box>
+            </Box>
+            
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '12px', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                backgroundColor: showApplePolygon.current ? 'rgba(139, 0, 0, 0.3)' : 'transparent',
+                border: showApplePolygon.current ? '1px solid rgba(139, 0, 0, 0.5)' : '1px solid transparent',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+              }}
+              onClick={() => {
+                updateShowWoodenCircle(false);
+                updateShowApplePolygon(true);
+                setShowDecorations(false);
+                setIsDecorationSectionExpanded(false);
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: 'linear-gradient(45deg, #FF6B6B, #E53E3E, #C53030)',
+                border: '1px solid rgba(255,255,255,0.3)'
+              }} />
+              <Box sx={{ color: '#fff', fontSize: '14px' }}>Red Circle</Box>
+            </Box>
+            
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '12px', 
+                borderRadius: '8px',
+                cursor: 'pointer',
+                backgroundColor: (!showWoodenCircle.current && !showApplePolygon.current) ? 'rgba(255,255,255,0.2)' : 'transparent',
+                border: (!showWoodenCircle.current && !showApplePolygon.current) ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+              }}
+              onClick={() => {
+                updateShowWoodenCircle(false);
+                updateShowApplePolygon(false);
+                setShowDecorations(false);
+                setIsDecorationSectionExpanded(false);
+              }}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.5)'
+              }} />
+              <Box sx={{ color: '#fff', fontSize: '14px' }}>None</Box>
+            </Box>
           </Box>
         </Box>
       </Modal>

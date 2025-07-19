@@ -5,6 +5,8 @@ export const useColorSchemeStore = create((set, get) => {
   const initialState = {
     color: { current: '#7878a4' },
     boardColor: { current: '#ffffff' },
+    showWoodenCircle: { current: false },
+    showApplePolygon: { current: false },
   };
 
   return {
@@ -13,6 +15,8 @@ export const useColorSchemeStore = create((set, get) => {
     // Actions
     setColor: (colorRef) => set({ color: colorRef }),
     setBoardColor: (colorRef) => set({ boardColor: colorRef }),
+    setShowWoodenCircle: (showRef) => set({ showWoodenCircle: showRef }),
+    setShowApplePolygon: (showRef) => set({ showApplePolygon: showRef }),
     
     // Helper function to update color values
     updateColor: (newColor) => {
@@ -21,6 +25,14 @@ export const useColorSchemeStore = create((set, get) => {
     
     updateBoardColor: (newBoardColor) => {
       set({ boardColor: { current: newBoardColor } });
+    },
+    
+    updateShowWoodenCircle: (show) => {
+      set({ showWoodenCircle: { current: show } });
+    },
+    
+    updateShowApplePolygon: (show) => {
+      set({ showApplePolygon: { current: show } });
     },
   };
 }); 
