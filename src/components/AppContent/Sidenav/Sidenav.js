@@ -19,16 +19,18 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { Tooltip } from "@mui/material";
 
-import CastleIcon from '@mui/icons-material/Castle';
-import EyeIcon from '@mui/icons-material/Search';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import SendIcon from '@mui/icons-material/Send';
-import PaletteIcon from '@mui/icons-material/Palette';
+import { 
+  House, 
+  Binoculars, 
+  Upload, 
+  Clock, 
+  Palette, 
+  Star,
+  Sun,
+  Moon
+} from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 import styles from './Sidenav.module.css';
 
@@ -240,7 +242,7 @@ export default function MiniDrawer() {
               alignItems: 'center',
               gap: '8px'
             }}>
-              <PaletteIcon sx={{ fontSize: 18 }} />
+                              <Palette style={{ fontSize: 18 }} />
               Color Scheme
             </MenuItem>
           </Menu>
@@ -257,7 +259,14 @@ export default function MiniDrawer() {
             <ListItem className={`${styles.listItem} ${isCurrentPage('/') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Home" placement="right">
-                  <CastleIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <House 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/') ? '#60A5FA' : getTextColor(),
+                      fontSize: isCurrentPage('/') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/') ? "fill" : "regular"} 
+                  />
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
@@ -268,7 +277,14 @@ export default function MiniDrawer() {
             <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Game Viewer" placement="right">
-                  <EyeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <Binoculars 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/viewer') ? '#34D399' : getTextColor(),
+                      fontSize: isCurrentPage('/viewer') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/viewer') ? "fill" : "regular"} 
+                  />
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
@@ -279,7 +295,14 @@ export default function MiniDrawer() {
             <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Submit Game" placement="right">
-                  <SendIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <Upload 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
+                      fontSize: isCurrentPage('/submit-game') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/submit-game') ? "fill" : "regular"} 
+                  />
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
@@ -290,7 +313,14 @@ export default function MiniDrawer() {
             <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Changelog" placement="right">
-                  <RocketLaunchIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <Clock 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/changelog') ? '#EC4899' : getTextColor(),
+                      fontSize: isCurrentPage('/changelog') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/changelog') ? "fill" : "regular"} 
+                  />
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
@@ -300,7 +330,14 @@ export default function MiniDrawer() {
           <ListItem className={styles.listItem} onClick={toggleColorPicker} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
               <Tooltip title="Color Scheme" placement="right">
-                <PaletteIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                                  <Palette 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isColorSectionExpanded ? '#8B5CF6' : getTextColor(),
+                      fontSize: isColorSectionExpanded ? '24px' : '20px'
+                    }} 
+                    weight={isColorSectionExpanded ? "fill" : "regular"} 
+                  />
               </Tooltip>
             </ListItemIcon>
           </ListItem>
@@ -309,10 +346,16 @@ export default function MiniDrawer() {
           <ListItem className={styles.listItem} onClick={toggleDecorations} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
                               <Tooltip title="Board Decorations" placement="right">
-                  <AutoAwesomeIcon className={styles.homeLogo} sx={{ 
-                    color: (showWoodenCircle.current || showApplePolygon.current) ? '#8B4513' : getTextColor(),
-                    opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
-                  }}/>
+                  <Star 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isDecorationSectionExpanded ? '#F97316' : 
+                             (showWoodenCircle.current || showApplePolygon.current) ? '#8B4513' : getTextColor(),
+                      fontSize: isDecorationSectionExpanded ? '24px' : '20px',
+                      opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
+                    }} 
+                    weight={isDecorationSectionExpanded ? "fill" : "regular"} 
+                  />
                 </Tooltip>
             </ListItemIcon>
           </ListItem>
@@ -510,9 +553,23 @@ export default function MiniDrawer() {
             <ListItemIcon sx={iconStyle}>
               <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} placement="right">
                 {lightMode === 'dark' ? (
-                  <LightModeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <Sun 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: '#F59E0B', 
+                      fontSize: '22px'
+                    }} 
+                    weight="fill" 
+                  />
                 ) : (
-                  <DarkModeIcon className={styles.homeLogo} sx={{ color: getTextColor() }}/>
+                  <Moon 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: '#6366F1', 
+                      fontSize: '22px'
+                    }} 
+                    weight="fill" 
+                  />
                 )}
               </Tooltip>
             </ListItemIcon>
