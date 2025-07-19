@@ -20,16 +20,86 @@
   gap: 12px;
 }
 
-.titleIcon {
-  font-size: 32px !important;
-  color: #1F2937;
-  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
-  transition: all 0.3s ease;
-  transform-origin: center;
+.titleContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.titleIcon:hover {
-  filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.2));
+.stencilBackground {
+  position: fixed;
+  z-index: 0;
+  opacity: 0.04;
+  filter: grayscale(1) contrast(200%) brightness(0.5);
+  pointer-events: auto;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  transform: translate(-50%, -50%);
+  animation: stencilFloat 8s ease-in-out infinite, stencilPulse 4s ease-in-out infinite;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+@keyframes stencilFloat {
+  0%, 100% { transform: translate(-50%, -50%) scale(8) translateX(0px); }
+  50% { transform: translate(-50%, -50%) scale(8) translateX(15px); }
+}
+
+@keyframes stencilPulse {
+  0%, 100% { opacity: 0; filter: grayscale(1) contrast(200%) brightness(0.5); }
+  50% { opacity: 0.08; filter: grayscale(1) contrast(250%) brightness(0.6); }
+}
+
+@keyframes hoverPulse {
+  0%, 100% { opacity: 0.15; filter: grayscale(1) contrast(250%) brightness(0.7); }
+  50% { opacity: 0.25; filter: grayscale(1) contrast(300%) brightness(0.8); }
+}
+
+
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.3), 0 0 40px rgba(255, 107, 53, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.5), 0 0 60px rgba(255, 107, 53, 0.4);
+  }
+}
+
+@keyframes headTilt {
+  0%, 100% {
+    transform: rotate(0deg) scale(1.1);
+  }
+  25% {
+    transform: rotate(-8deg) scale(1.1);
+  }
+  75% {
+    transform: rotate(8deg) scale(1.1);
+  }
 }
 
 .spinning {

@@ -31,10 +31,7 @@
     width: 100% !important;
 }
 
-.listItem:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
+
 
 .activePage {
     background-color: rgba(255, 255, 255, 0.15) !important;
@@ -63,6 +60,13 @@
     padding: 20px !important;
     display: flex !important;
     justify-content: center !important;
+}
+
+.cfLogo {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
 }
 .btnContainer{
     margin: 0 !important;

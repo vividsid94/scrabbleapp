@@ -41,6 +41,7 @@ export default function MiniDrawer() {
   const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
   const [showDecorations, setShowDecorations] = React.useState(false);
   const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
+  const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
@@ -246,12 +247,12 @@ export default function MiniDrawer() {
               Color Scheme
             </MenuItem>
           </Menu>
-          <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="50" height="50"/>
+          <img src={'/images/t2fox.png'} className={styles.cfLogo} id="logo" width="58" height="58"/>
         </MyToolbar>
       </MyAppBar>
       <Drawer className={styles.myDrawer} variant="permanent">
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img src={'/images/favicon.png'} className={styles.cfLogo} id="logo" width="40" height="40"/>
+          <img src={'/images/t2fox.png'} className={styles.cfLogo} id="logo" width="48" height="48"/>
         </DrawerHeader>
         
         <List className={styles.btnContainer}>
@@ -265,7 +266,9 @@ export default function MiniDrawer() {
                       color: isCurrentPage('/') ? '#60A5FA' : getTextColor(),
                       fontSize: isCurrentPage('/') ? '24px' : '20px'
                     }} 
-                    weight={isCurrentPage('/') ? "fill" : "regular"} 
+                    weight={isCurrentPage('/') ? "fill" : (hoveredIcon === 'home' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('home')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
               </ListItemIcon>
@@ -283,7 +286,9 @@ export default function MiniDrawer() {
                       color: isCurrentPage('/viewer') ? '#34D399' : getTextColor(),
                       fontSize: isCurrentPage('/viewer') ? '24px' : '20px'
                     }} 
-                    weight={isCurrentPage('/viewer') ? "fill" : "regular"} 
+                    weight={isCurrentPage('/viewer') ? "fill" : (hoveredIcon === 'viewer' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('viewer')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
               </ListItemIcon>
@@ -301,7 +306,9 @@ export default function MiniDrawer() {
                       color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
                       fontSize: isCurrentPage('/submit-game') ? '24px' : '20px'
                     }} 
-                    weight={isCurrentPage('/submit-game') ? "fill" : "regular"} 
+                    weight={isCurrentPage('/submit-game') ? "fill" : (hoveredIcon === 'submit-game' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('submit-game')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
               </ListItemIcon>
@@ -319,7 +326,9 @@ export default function MiniDrawer() {
                       color: isCurrentPage('/changelog') ? '#EC4899' : getTextColor(),
                       fontSize: isCurrentPage('/changelog') ? '24px' : '20px'
                     }} 
-                    weight={isCurrentPage('/changelog') ? "fill" : "regular"} 
+                    weight={isCurrentPage('/changelog') ? "fill" : (hoveredIcon === 'changelog' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('changelog')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
               </ListItemIcon>
@@ -336,7 +345,9 @@ export default function MiniDrawer() {
                       color: isColorSectionExpanded ? '#8B5CF6' : getTextColor(),
                       fontSize: isColorSectionExpanded ? '24px' : '20px'
                     }} 
-                    weight={isColorSectionExpanded ? "fill" : "regular"} 
+                    weight={isColorSectionExpanded ? "fill" : (hoveredIcon === 'color-scheme' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('color-scheme')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
               </Tooltip>
             </ListItemIcon>
@@ -354,7 +365,9 @@ export default function MiniDrawer() {
                       fontSize: isDecorationSectionExpanded ? '24px' : '20px',
                       opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
                     }} 
-                    weight={isDecorationSectionExpanded ? "fill" : "regular"} 
+                    weight={isDecorationSectionExpanded ? "fill" : (hoveredIcon === 'decorations' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('decorations')}
+                    onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
             </ListItemIcon>

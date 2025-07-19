@@ -7,13 +7,20 @@ import { Rocket } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
 export default function Home(){
-  const devMessage = "Hi! I'm Tile Turnover™, a front-end focused project. Development has restarted! Check out the changelog for updates! New features will gradually appear as buttons here.";
+  const devMessage = "🦊 Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Development has restarted! Check changelog for updates!";
 
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
       <Box className={styles.page}>
         <Box className={styles.title}>
+          <Box className={styles.titleContainer}>
+            <img 
+              src="/images/t2fox.png" 
+              alt="Tile Turnover Fox Stencil" 
+              className={styles.stencilBackground}
+            />
+          </Box>
           Tile Turnover™
         </Box>
         <Box className={styles.developmentMessage}>
