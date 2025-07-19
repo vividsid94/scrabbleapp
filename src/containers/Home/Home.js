@@ -2,14 +2,13 @@ import React, { useState, useContext } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Home.module.css';
-import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import { Rocket } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
-  const devMessage = "Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!";
+  const devMessage = "Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!\n\nOur official release will be after 2025 Nationals, but more buttons are being added to homepage!";
 
   return (
     <Box sx={{ display: 'flex'}}>
@@ -35,13 +34,15 @@ export default function Home(){
             color: lightMode === 'dark' ? '#fff' : '#000'
           }}
         >
-          {devMessage.split("changelog")[0]}
+          Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check{" "}
           <Link to="/changelog" style={{
             color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
             textDecoration: 'none', 
             fontWeight: 'bold'
           }}>changelog</Link>
-          {devMessage.split("changelog")[1]}
+          {" "}for all the latest updates!
+          <br /><br />
+          Our official release will be after 2025 Nationals, but more beta features are being added to homepage!
           <Rocket 
             style={{ 
               color: '#F59E0B', 
