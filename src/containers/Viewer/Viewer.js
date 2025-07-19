@@ -867,7 +867,10 @@ export default function Viewer({ onChange }){
                     paddingTop: '8px'
                   }}>
                     {moveSet && moveSet.length > 0 ? (
-                      <Pool board={getCurrentPool()}/>  
+                      <Pool 
+                        board={getCurrentPool()}
+                        rack={createRack(moveSet, currentMoveRef.current)}
+                      />  
                     ) : (
                       <div>Loading pool...</div>
                     )}

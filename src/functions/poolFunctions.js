@@ -7,7 +7,8 @@ export const calculatePoolFromBoard = (boardCoords, origPool) => {
       const cell = boardCoords[row][col];
       if (typeof cell === 'string' && cell !== '') {
         // This is a tile on the board, remove it from pool
-        if (cell === '?') {
+        if (cell === '?' || (cell >= 'a' && cell <= 'z')) {
+          // Remove a blank tile from pool (either '?' or lowercase letter)
           pool = pool.replace("?", "");
         } else {
           pool = pool.replace(cell, "");
