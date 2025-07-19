@@ -307,7 +307,7 @@ export default function Play() {
   // Update player2Name when isBotMode changes
   useEffect(() => {
     setPlayer1Name(isBotMode ? 'You' : 'Player 1');
-    setPlayer2Name(isBotMode ? 'SidBot' : 'Player 2');
+          setPlayer2Name(isBotMode ? 'T²' : 'Player 2');
   }, [isBotMode]);
 
   // Start timer when game starts or player changes

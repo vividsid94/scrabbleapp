@@ -518,7 +518,7 @@ describe('Play Component', () => {
       render(<Play />);
       
       expect(mockStore.setPlayer1Name).toHaveBeenCalledWith('You');
-      expect(mockStore.setPlayer2Name).toHaveBeenCalledWith('SidBot');
+      expect(mockStore.setPlayer2Name).toHaveBeenCalledWith('T²');
     });
 
     test('starts timer when game starts', () => {

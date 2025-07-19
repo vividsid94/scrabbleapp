@@ -411,7 +411,7 @@ describe('Play Component - Integration Tests', () => {
       mockStore.isBotThinking = false;
       mockStore.gameEnded = false;
       mockStore.player1Name = 'You';
-      mockStore.player2Name = 'SidBot';
+      mockStore.player2Name = 'T²';
       
       render(<Play />);
       
@@ -427,7 +427,7 @@ describe('Play Component - Integration Tests', () => {
       
       // Verify bot mode behavior
       expect(mockStore.player1Name).toBe('You');
-      expect(mockStore.player2Name).toBe('SidBot');
+      expect(mockStore.player2Name).toBe('T²');
       expect(mockStore.makeBotMove).toHaveBeenCalled();
     });
 

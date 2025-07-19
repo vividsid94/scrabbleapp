@@ -37,7 +37,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
 
   // Helper function to get player icon
   const getPlayerIcon = (playerName) => {
-    if (playerName === 'SidBot' || playerName === 'Bot') {
+    if (playerName === 'T²' || playerName === 'Bot') {
       return <SmartToyIcon style={{ fontSize: 16 }} />;
     } else {
       return <PersonIcon style={{ fontSize: 16 }} />;

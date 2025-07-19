@@ -144,7 +144,7 @@ const PuzzlePlayerInfo = React.memo(() => {
         }}>
           {null} {/* No time icon in puzzle mode */}
         </Box>
-        <Tooltip title={gameStarted ? "Start New SidBot vs SidBot Game" : "Start SidBot vs SidBot Game"}>
+        <Tooltip title={gameStarted ? "Start New T² vs T² Game" : "Start T² vs T² Game"}>
           <Box
             onClick={() => handleBotModeToggle()}
             sx={{
@@ -309,20 +309,20 @@ const PuzzlePlayerInfo = React.memo(() => {
       <Box sx={{
         marginTop: '16px',
         padding: '8px 12px',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        backgroundColor: 'transparent',
         color: 'white',
         fontSize: '12px',
         fontWeight: '500',
         textAlign: 'center',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
+        border: 'none',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         {gameStarted && !isPausedForBingo && !gameEnded ? (
-          <><strong>Solve puzzles as SidBot plays itself</strong>
+          <><strong>Solve puzzles as T² plays itself</strong>
             <Box className={styles.thinkingDots}>
               <div></div>
               <div></div>
@@ -330,7 +330,7 @@ const PuzzlePlayerInfo = React.memo(() => {
             </Box>
           </>
         ) : (
-          <><strong>Solve puzzles as SidBot plays itself</strong></>
+          <><strong>Solve puzzles as T² plays itself</strong></>
         )}
       </Box>
 
@@ -370,7 +370,7 @@ const PuzzlePlayerInfo = React.memo(() => {
           marginTop: '16px',
           padding: '16px',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          border: 'none',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
         }}>
           <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
@@ -576,7 +576,7 @@ const PuzzlePlayerInfo = React.memo(() => {
           marginTop: '16px',
           padding: '16px',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+          border: 'none'
         }}>
           <Box style={{ textAlign: 'center' }}>
             <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
@@ -595,7 +595,7 @@ const PuzzlePlayerInfo = React.memo(() => {
           marginTop: '16px',
           padding: '16px',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          border: 'none',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
         }}>
           <Box style={{ marginBottom: '12px' }}>
