@@ -7,11 +7,14 @@ import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import BookIcon from '@mui/icons-material/Book';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import InfoIcon from '@mui/icons-material/Info';
+import { 
+  DotsThree,
+  Book,
+  Eye,
+  Brain,
+  Info,
+  PlusCircle
+} from '@phosphor-icons/react';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -24,7 +27,7 @@ import { handleDictionaryTilesOpen, handleRecentGamesOpen, handleGamesHistoryOpe
 import { createIconList, createGroupedIcons } from './config/iconConfigs';
 import { ThemeContext } from '../../App';
 import ModeToggleIcon from '../../components/common/ModeToggleIcon';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+
 
 
 // Import components
@@ -43,6 +46,19 @@ export default function Viewer({ onChange }){
   const [showOptions, setShowOptions] = useState(false);
   const [showPlayersModal, setShowPlayersModal] = useState(false);
   const [showSubmittedGamesModal, setShowSubmittedGamesModal] = useState(false);
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+
+  // Helper function to render icons with hover state
+  const renderIcon = (iconConfig, hoverId) => {
+    const IconComponent = iconConfig.icon;
+    return (
+      <IconComponent 
+        size={iconConfig.size} 
+        color={iconConfig.color}
+        weight={hoveredIcon === hoverId ? 'fill' : 'regular'}
+      />
+    );
+  };
 
   // Use Zustand Viewer Store
   const {
@@ -400,10 +416,24 @@ export default function Viewer({ onChange }){
               boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <BookIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                <Book 
+                  size={18} 
+                  color="#fff" 
+                  style={{ opacity: 0.8 }} 
+                  weight="regular"
+                />
                 <span>{gameDictionary}</span>
                 <Tooltip title="Game lexicon">
-                  <InfoIcon sx={{ fontSize: 12, color: '#fff', opacity: 0.6 }} />
+                  <Box className={styles.headerIcon}>
+                    <Info 
+                      size={12} 
+                      color="#fff" 
+                      style={{ opacity: 0.6 }} 
+                      weight={hoveredIcon === 'info' ? 'fill' : 'regular'}
+                      onMouseEnter={() => setHoveredIcon('info')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    />
+                  </Box>
                 </Tooltip>
               </Box>
               <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
@@ -427,9 +457,27 @@ export default function Viewer({ onChange }){
                   onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
                 >
                   {mode === "VIEWER" ? (
-                    <VisibilityIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                    <Box className={styles.headerIcon}>
+                      <Eye 
+                        size={18} 
+                        color="#fff" 
+                        style={{ opacity: 0.8 }} 
+                        weight={hoveredIcon === 'eye' ? 'fill' : 'regular'}
+                        onMouseEnter={() => setHoveredIcon('eye')}
+                        onMouseLeave={() => setHoveredIcon(null)}
+                      />
+                    </Box>
                   ) : (
-                    <PsychologyIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                    <Box className={styles.headerIcon}>
+                      <Brain 
+                        size={18} 
+                        color="#fff" 
+                        style={{ opacity: 0.8 }} 
+                        weight={hoveredIcon === 'brain' ? 'fill' : 'regular'}
+                        onMouseEnter={() => setHoveredIcon('brain')}
+                        onMouseLeave={() => setHoveredIcon(null)}
+                      />
+                    </Box>
                   )}
                   <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
                 </Box>
@@ -451,7 +499,16 @@ export default function Viewer({ onChange }){
                   }}
                   onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
                 >
-                  <AddCircleOutlineIcon sx={{ fontSize: 18, color: '#fff', opacity: 0.8 }} />
+                  <Box className={styles.headerIcon}>
+                    <PlusCircle 
+                      size={18} 
+                      color="#fff" 
+                      style={{ opacity: 0.8 }} 
+                      weight={hoveredIcon === 'plus' ? 'fill' : 'regular'}
+                      onMouseEnter={() => setHoveredIcon('plus')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    />
+                  </Box>
                   <span style={{fontSize: '12px', fontFamily: 'Syne', fontWeight: 500, color: '#fff', opacity: 0.8, letterSpacing: '0.2px'}}>New</span>
                 </Box>
               </Tooltip>
@@ -493,11 +550,18 @@ export default function Viewer({ onChange }){
                 {/* Main navigation icons */}
                 {iconList.map((icon, index) => (
                   <Tooltip key={`icon-${index}`} title={icon.toolTip}>
-                    <icon.icon
+                    <Box
                       className={styles.Arrows} 
                       onClick={icon.onClick}
-                      sx={{color: '#fff'}}
-                    />
+                      onMouseEnter={() => setHoveredIcon(`nav-${index}`)}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    >
+                      <icon.icon 
+                        size={icon.size} 
+                        color={icon.color}
+                        weight={hoveredIcon === `nav-${index}` ? 'fill' : 'regular'}
+                      />
+                    </Box>
                   </Tooltip>
                 ))}
                 
@@ -519,7 +583,13 @@ export default function Viewer({ onChange }){
                       transition: 'transform 0.2s ease'
                     }}
                   >
-                    <MoreHorizIcon sx={{ fontSize: 20 }} />
+                    <DotsThree 
+                      size={20} 
+                      color="#fff" 
+                      weight={hoveredIcon === 'dots' ? 'fill' : 'regular'}
+                      onMouseEnter={() => setHoveredIcon('dots')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    />
                   </Box>
                 </Tooltip>
               </Box>
@@ -536,13 +606,15 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[0].icon1.onClick}
+                              onMouseEnter={() => setHoveredIcon('group1-icon1')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}
                             >
-                              {React.createElement(groupedIcons[0].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[0].icon1, 'group1-icon1')}
                             </Box>
                           </Tooltip>
                         )}
@@ -551,13 +623,15 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[0].icon2.onClick}
+                              onMouseEnter={() => setHoveredIcon('group1-icon2')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}
                             >
-                              {React.createElement(groupedIcons[0].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[0].icon2, 'group1-icon2')}
                             </Box>
                           </Tooltip>
                         )}
@@ -566,13 +640,15 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[0].icon3.onClick}
+                              onMouseEnter={() => setHoveredIcon('group1-icon3')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}
                             >
-                              {React.createElement(groupedIcons[0].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[0].icon3, 'group1-icon3')}
                             </Box>
                           </Tooltip>
                         )}
@@ -596,13 +672,15 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[0].icon5.onClick}
+                              onMouseEnter={() => setHoveredIcon('group1-icon5')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}
                             >
-                              {React.createElement(groupedIcons[0].icon5.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[0].icon5, 'group1-icon5')}
                             </Box>
                           </Tooltip>
                         )}
@@ -611,6 +689,8 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[0].icon6.onClick}
+                              onMouseEnter={() => setHoveredIcon('group1-icon6')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -618,7 +698,7 @@ export default function Viewer({ onChange }){
                                 ...(groupedIcons[0].icon6.condition || {})
                               }}
                             >
-                              {React.createElement(groupedIcons[0].icon6.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[0].icon6, 'group1-icon6')}
                             </Box>
                           </Tooltip>
                         )}
@@ -635,6 +715,8 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[1].icon1.onClick}
+                              onMouseEnter={() => setHoveredIcon('group2-icon1')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -642,7 +724,7 @@ export default function Viewer({ onChange }){
                                 ...(groupedIcons[1].icon1.condition || {})
                               }}
                             >
-                              {React.createElement(groupedIcons[1].icon1.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[1].icon1, 'group2-icon1')}
                             </Box>
                           </Tooltip>
                         )}
@@ -669,13 +751,15 @@ export default function Viewer({ onChange }){
                             <Box
                               className={styles.bestMoveButton}
                               onClick={groupedIcons[1].icon3.onClick}
+                              onMouseEnter={() => setHoveredIcon('group2-icon3')}
+                              onMouseLeave={() => setHoveredIcon(null)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                               }}
                             >
-                              {React.createElement(groupedIcons[1].icon3.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                              {renderIcon(groupedIcons[1].icon3, 'group2-icon3')}
                             </Box>
                           </Tooltip>
                         )}

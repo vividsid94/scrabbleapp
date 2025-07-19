@@ -1,19 +1,17 @@
-import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import { 
   CaretLeft, 
-  CaretRight 
+  CaretRight,
+  SkipBack,
+  ChartLine,
+  Clock,
+  Gear,
+  Users,
+  ArrowSquareOut,
+  GameController,
+  MagnifyingGlass,
+  Books
 } from '@phosphor-icons/react';
-
-
-import TimelineIcon from '@mui/icons-material/Timeline';
-import HistoryIcon from '@mui/icons-material/History';
-import TuneIcon from '@mui/icons-material/Tune';
-import PeopleIcon from '@mui/icons-material/People';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import SearchIcon from '@mui/icons-material/Search';
 import Typography from '@mui/material/Typography';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 export const createIconList = (
   beginningOfGame,
@@ -37,9 +35,11 @@ export const createIconList = (
   randomizeWooglesGame
 ) => [
   {
-    icon: SkipPreviousIcon,
+    icon: SkipBack,
     toolTip: "Beginning of game",
-    onClick: () => beginningOfGame()
+    onClick: () => beginningOfGame(),
+    size: 20,
+    color: '#fff'
   },
   {
     icon: CaretLeft,
@@ -50,7 +50,9 @@ export const createIconList = (
         setMoveDirection("backward");
         handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");
       }
-    }
+    },
+    size: 20,
+    color: '#fff'
   },
   {
     icon: CaretRight,
@@ -61,7 +63,9 @@ export const createIconList = (
         setMoveDirection("forward");
         handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");
       }
-    }
+    },
+    size: 20,
+    color: '#fff'
   },
 
 
@@ -93,49 +97,63 @@ export const createGroupedIcons = (
 ) => [
   {
     icon1: {
-      icon: TimelineIcon,
+      icon: ChartLine,
       toolTip: "Games History",
-      onClick: () => handleGamesHistoryOpen(setModalContent, setOpen)
+      onClick: () => handleGamesHistoryOpen(setModalContent, setOpen),
+      size: 20,
+      color: '#fff'
     },
     icon2: {
-      icon: HistoryIcon,
+      icon: Clock,
       toolTip: "Recent Games",
-      onClick: () => handleRecentGamesOpen(setModalContent, setOpen)
+      onClick: () => handleRecentGamesOpen(setModalContent, setOpen),
+      size: 20,
+      color: '#fff'
     },
     icon3: {
-      icon: TuneIcon,
+      icon: Gear,
       toolTip: "Settings",
-      onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen)
+      onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen),
+      size: 20,
+      color: '#fff'
     },
 
     icon5: {
-      icon: SearchIcon,
+      icon: MagnifyingGlass,
       toolTip: "Browse Players",
-      onClick: () => handleOpenPlayersModal()
+      onClick: () => handleOpenPlayersModal(),
+      size: 20,
+      color: '#fff'
     },
     icon6: {
-      icon: LibraryBooksIcon,
+      icon: Books,
       toolTip: "Submitted Games",
       onClick: () => handleOpenSubmittedGamesModal(),
-      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
+      size: 20,
+      color: '#fff'
     }
   },
   {
     icon1: {
-      icon: PeopleIcon,
+      icon: Users,
       toolTip: "Reveal Players",
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
-      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
+      size: 20,
+      color: '#fff'
     },
     icon2: {
       icon: Typography,
       toolTip: "Reveal ELO",
       onClick: handleRevealElo,
       text: 'Elo',
-      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' }
+      condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
+      size: 20,
+      color: '#fff'
     },
     icon3: {
-      icon: OpenInNewIcon,
+      icon: ArrowSquareOut,
       toolTip: wooglesMode ? "View on Woogles" : "View on XT",
       onClick: () => {
         if (wooglesMode && currentWooglesGame) {
@@ -143,7 +161,9 @@ export const createGroupedIcons = (
         } else {
           window.open('https://www.cross-tables.com/annotated.php?u=' + gameNum, '_blank');
         }
-      }
+      },
+      size: 20,
+      color: '#fff'
     },
 
   }
