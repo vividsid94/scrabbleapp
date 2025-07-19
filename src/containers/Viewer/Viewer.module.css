@@ -3,26 +3,6 @@
 .underlinedText{
   cursor: pointer;
 }
-
-.questionMark{
-  font-size: 22px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0.7;
-  padding: 6px;
-  border-radius: 8px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-  backdrop-filter: blur(5px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.questionMark:hover {
-  opacity: 1;
-  transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-}
-
 .poolBox{
 	padding: 0px 10px;
 }
@@ -133,24 +113,7 @@ form{
   touch-action: manipulation;
   font-family: 'Syne' !important;
 }
-.settingsBtn{
-  font-size: 24px !important;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0.7;
-  padding: 6px;
-  border-radius: 8px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-  backdrop-filter: blur(5px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-.settingsBtn:hover {
-  opacity: 1;
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-  animation: spin 1s ease-in-out;
-}
+
 .keyBtn{
   font-size: 20px !important;
   line-height: 20px !important;
@@ -193,28 +156,6 @@ form{
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-.gameTitle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.gameTitleText {
-  font-size: 32px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.gameSubtitle {
-  font-size: 14px;
-  color: #666;
-  font-weight: 400;
-}
-
 .playModeTitle {
   display: flex;
   justify-content: center;
@@ -234,20 +175,9 @@ form{
   color: #666;
   font-weight: 400;
 }
-
-.mainBoxContent {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.mainBox {
-  flex-grow: 1;
-  padding: 24px;
-}
-
 .mainPanel{
   display: grid;
+  gap: 24px;
   grid-template-columns: 1fr 380px;
   grid-template-rows: auto 1fr;
   grid-template-areas: 
@@ -297,27 +227,18 @@ form{
   grid-area: board;
   display: flex;
   flex-direction: column;
+  align-items: center;
   height: 100%;
 }
 
 .rightPanel{
 	grid-area: panel;
-	width: 380px;
-	padding: 24px;
 	display: flex;
 	flex-direction: column;
   justify-content: flex-start;
   gap: 12px;
   position: relative;
   z-index: 1000;
-}
-
-.topPlayerPanel{
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 380px;
-  padding-bottom: 24px;
 }
 
 .groupedBox{
@@ -430,14 +351,7 @@ form{
       "panel";
   }
   .rightPanel{
-    padding: 12px;
-  }
-  .topPlayerPanel{
-    padding-bottom: 24px;
-    height: auto;
-  }
-  .page{
-    margin-top: 100px;
+    width: 90vw;
   }
   .playerPanel{
     width: 100%;
@@ -454,22 +368,9 @@ form{
       "board"
       "panel";
   }
-  .rightPanel{
-    padding: 12px;
-  }
-  .questionMark{
-    display: none;
-  }
-  .topPlayerPanel{
-    padding-bottom: 12px;
-    height: auto;
-  }
   .title{
     margin: auto;
     font-size: 15px;
-  }
-  .page{
-    margin-top: 80px;
   }
   body{
     font-size: 10px;
@@ -498,14 +399,6 @@ form{
     width: 16px;
     height: 16px;
     font-size: 8px;
-  }
-}
-
-@media screen and (max-width: 380px) {
-  .rightPanel{
-    width: auto;
-    min-width: 0;
-    padding: 12px;
   }
 }
 

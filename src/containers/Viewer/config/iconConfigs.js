@@ -1,6 +1,8 @@
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import { 
+  CaretLeft, 
+  CaretRight 
+} from '@phosphor-icons/react';
 
 
 import TimelineIcon from '@mui/icons-material/Timeline';
@@ -40,7 +42,7 @@ export const createIconList = (
     onClick: () => beginningOfGame()
   },
   {
-    icon: KeyboardArrowLeftIcon,
+    icon: CaretLeft,
     toolTip: "Move back",
     onClick: () => {
       if (currentMoveRef.current > -1) {
@@ -51,7 +53,7 @@ export const createIconList = (
     }
   },
   {
-    icon: KeyboardArrowRightIcon,
+    icon: CaretRight,
     toolTip: "Move forward",
     onClick: () => {
       if (currentMoveRef.current + 1 < moveSet.length) {

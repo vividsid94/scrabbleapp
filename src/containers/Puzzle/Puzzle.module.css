@@ -368,10 +368,6 @@
 }
 
 @media screen and (max-width: 676px) {
-
-  .questionMark{
-    display: none;
-  }
   .title{
     margin: auto;
     font-size: 15px;

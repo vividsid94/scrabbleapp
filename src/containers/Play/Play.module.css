@@ -361,10 +361,6 @@
 }
 
 @media screen and (max-width: 676px) {
-
-  .questionMark{
-    display: none;
-  }
   .title{
     margin: auto;
     font-size: 15px;
@@ -471,21 +467,6 @@
 
 .bestMoveButton.active {
   background-color: rgba(76, 175, 80, 0.2);
-}
-
-.gameTitle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.gameTitleText {
-  font-size: 24px;
-  font-weight: bold;
-  background: linear-gradient(75deg, #4B5563 0%, #6B7280 50%, #4B5563 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .gameSubtitle {

@@ -371,7 +371,7 @@ export default function Viewer({ onChange }){
         <Box className={styles.mainPanel}>
           
           <Box className={styles.leftContainer}>
-            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
+            <Box className={styles.mainBox}>
             <Board 
               board={board} 
               points={pointsScored} 
