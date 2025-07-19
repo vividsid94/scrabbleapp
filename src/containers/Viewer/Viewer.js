@@ -13,7 +13,8 @@ import {
   Eye,
   Brain,
   Info,
-  PlusCircle
+  Plus,
+  ArrowsLeftRight
 } from '@phosphor-icons/react';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
@@ -404,150 +405,33 @@ export default function Viewer({ onChange }){
             </Box>
           </Box>
           <Box className={styles.rightPanel}>
-            <Box style={{
-              color: '#fff',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '40px',
-              backgroundImage: 'url("https://www.transparenttextures.com/patterns/bright-squares.png")',
-              borderBottom: '1px solid rgba(0,0,0,0.12)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Book 
-                  size={18} 
-                  color="#fff" 
-                  style={{ opacity: 0.8 }} 
-                  weight="regular"
-                />
-                <span>{gameDictionary}</span>
-                <Tooltip title="Game lexicon">
-                  <Box className={styles.headerIcon}>
-                    <Info 
-                      size={12} 
-                      color="#fff" 
-                      style={{ opacity: 0.6 }} 
-                      weight={hoveredIcon === 'info' ? 'fill' : 'regular'}
-                      onMouseEnter={() => setHoveredIcon('info')}
-                      onMouseLeave={() => setHoveredIcon(null)}
-                    />
-                  </Box>
-                </Tooltip>
-              </Box>
-              <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
-              <Tooltip title={wooglesMode ? 
-                (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
-                (mode === "VIEWER" ? "Switch to Guess ELO (XT)" : "Switch to Viewer (XT)")
-              }>
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '4px',
-                    cursor: 'pointer',
-                    padding: '2px 4px',
-                    borderRadius: '2px',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)'
-                    }
-                  }}
-                  onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
-                >
-                  {mode === "VIEWER" ? (
-                    <Box className={styles.headerIcon}>
-                      <Eye 
-                        size={18} 
-                        color="#fff" 
-                        style={{ opacity: 0.8 }} 
-                        weight={hoveredIcon === 'eye' ? 'fill' : 'regular'}
-                        onMouseEnter={() => setHoveredIcon('eye')}
-                        onMouseLeave={() => setHoveredIcon(null)}
-                      />
-                    </Box>
-                  ) : (
-                    <Box className={styles.headerIcon}>
-                      <Brain 
-                        size={18} 
-                        color="#fff" 
-                        style={{ opacity: 0.8 }} 
-                        weight={hoveredIcon === 'brain' ? 'fill' : 'regular'}
-                        onMouseEnter={() => setHoveredIcon('brain')}
-                        onMouseLeave={() => setHoveredIcon(null)}
-                      />
-                    </Box>
-                  )}
-                  <span>{mode === "VIEWER" ? "Viewer" : "Guess ELO"}</span>
-                </Box>
-              </Tooltip>
-              <span style={{marginLeft: '2px', marginRight: '8px', opacity: 0.4}}>|</span>
-              <Tooltip title={wooglesMode ? "New Woogles game" : "New XT game"}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    cursor: 'pointer',
-                    padding: '2px 4px',
-                    borderRadius: '2px',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)'
-                    }
-                  }}
-                  onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
-                >
-                  <Box className={styles.headerIcon}>
-                    <PlusCircle 
-                      size={18} 
-                      color="#fff" 
-                      style={{ opacity: 0.8 }} 
-                      weight={hoveredIcon === 'plus' ? 'fill' : 'regular'}
-                      onMouseEnter={() => setHoveredIcon('plus')}
-                      onMouseLeave={() => setHoveredIcon(null)}
-                    />
-                  </Box>
-                  <span style={{fontSize: '12px', fontFamily: 'Syne', fontWeight: 500, color: '#fff', opacity: 0.8, letterSpacing: '0.2px'}}>New</span>
-                </Box>
-              </Tooltip>
-              <span style={{marginLeft: '8px', marginRight: '8px', opacity: 0.4}}>|</span>
-              <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
-                <Box
-                  className={styles.bestMoveButton}
-                  onClick={toggleWooglesMode}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '8px',
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    fontFamily: 'Syne',
-                    fontWeight: 500,
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '2px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    minWidth: 'fit-content',
-                    minHeight: '24px',
-                    backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
-                    borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255,255,255,0.3)',
-                    '&:hover': {
-                      backgroundColor: wooglesMode ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)',
-                      borderColor: wooglesMode ? 'rgba(76, 175, 80, 0.7)' : 'rgba(255,255,255,0.5)'
-                    }
-                  }}
-                >
-                  <ModeToggleIcon wooglesMode={wooglesMode} />
-                </Box>
-              </Tooltip>
-            </Box>
+
             <Box className={styles.playerPanel} style={{color: '#fff', paddingTop: '0px'}}>
+              {/* Dictionary and Platform Info */}
+              <Box style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '8px 0',
+                fontSize: '14px',
+                fontWeight: 500
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Book 
+                    size={16} 
+                    color="#fff" 
+                    style={{ opacity: 0.8 }} 
+                    weight="regular"
+                  />
+                  <span>{gameDictionary}</span>
+                </Box>
+                <span style={{opacity: 0.4}}>•</span>
+                <span>{wooglesMode ? 'Woogles' : 'Cross-Tables'}</span>
+              </Box>
+              
               <Box className={styles.playerToggle}>
-                {/* Main navigation icons */}
+                {/* Main navigation icons - Row 1 */}
                 {iconList.map((icon, index) => (
                   <Tooltip key={`icon-${index}`} title={icon.toolTip}>
                     <Box
@@ -596,192 +480,248 @@ export default function Viewer({ onChange }){
 
               {/* Collapsible options section */}
               <Collapse in={showOptions}>
-                <Box className={styles.bestMoveSection} sx={{ display: 'flex', gap: '50px', padding: '8px 0' }}>
-                  {/* First group of icons */}
-                  <Box sx={{ display: 'flex', gap: '4px' }}>
-                    {groupedIcons[0] && (
-                      <>
-                        {groupedIcons[0].icon1 && (
-                          <Tooltip title={groupedIcons[0].icon1.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon1.onClick}
-                              onMouseEnter={() => setHoveredIcon('group1-icon1')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {renderIcon(groupedIcons[0].icon1, 'group1-icon1')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[0].icon2 && (
-                          <Tooltip title={groupedIcons[0].icon2.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon2.onClick}
-                              onMouseEnter={() => setHoveredIcon('group1-icon2')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {renderIcon(groupedIcons[0].icon2, 'group1-icon2')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[0].icon3 && (
-                          <Tooltip title={groupedIcons[0].icon3.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon3.onClick}
-                              onMouseEnter={() => setHoveredIcon('group1-icon3')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {renderIcon(groupedIcons[0].icon3, 'group1-icon3')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[0].icon4 && (
-                          <Tooltip title={groupedIcons[0].icon4.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon4.onClick}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[0].icon5 && (
-                          <Tooltip title={groupedIcons[0].icon5.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon5.onClick}
-                              onMouseEnter={() => setHoveredIcon('group1-icon5')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {renderIcon(groupedIcons[0].icon5, 'group1-icon5')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[0].icon6 && (
-                          <Tooltip title={groupedIcons[0].icon6.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[0].icon6.onClick}
-                              onMouseEnter={() => setHoveredIcon('group1-icon6')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...(groupedIcons[0].icon6.condition || {})
-                              }}
-                            >
-                              {renderIcon(groupedIcons[0].icon6, 'group1-icon6')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                      </>
-                    )}
+                <Box className={styles.bestMoveSection} sx={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
+                  
+                  {/* Tier 1 - Crucial Controls */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                    <Box sx={{ fontSize: '12px', color: '#fff', opacity: 0.7, fontWeight: 500 }}>Main</Box>
+                    <Box sx={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                      <Tooltip title={wooglesMode ? 
+                        (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
+                        (mode === "VIEWER" ? "Switch to Guess ELO (XT)" : "Switch to Viewer (XT)")
+                      }>
+                        <Box
+                          className={styles.bestMoveButton}
+                          onClick={() => (!unlockEloMode ? setShowUnlockText(true) : switchModeStore(onChange))}
+                          onMouseEnter={() => setHoveredIcon('mode')}
+                          onMouseLeave={() => setHoveredIcon(null)}
+                        >
+                          <ArrowsLeftRight 
+                            size={20} 
+                            color="#fff" 
+                            weight={hoveredIcon === 'mode' ? 'fill' : 'regular'}
+                          />
+                        </Box>
+                      </Tooltip>
+                      
+                      <Tooltip title={wooglesMode ? "New Woogles game" : "New XT game"}>
+                        <Box
+                          className={styles.bestMoveButton}
+                          onClick={wooglesMode ? randomizeWooglesGame : randomizeGame}
+                          onMouseEnter={() => setHoveredIcon('new')}
+                          onMouseLeave={() => setHoveredIcon(null)}
+                        >
+                          <Plus 
+                            size={20} 
+                            color="#fff" 
+                            weight={hoveredIcon === 'new' ? 'fill' : 'regular'}
+                          />
+                        </Box>
+                      </Tooltip>
+                      
+                      <Tooltip title={wooglesMode ? "Switch to XT" : "Switch to Woogles"}>
+                        <Box
+                          className={styles.bestMoveButton}
+                          onClick={toggleWooglesMode}
+                          onMouseEnter={() => setHoveredIcon('platform')}
+                          onMouseLeave={() => setHoveredIcon(null)}
+                        >
+                          <ModeToggleIcon wooglesMode={wooglesMode} />
+                        </Box>
+                      </Tooltip>
+                    </Box>
                   </Box>
                   
-                  {/* Second group of icons */}
-                  <Box sx={{ display: 'flex', gap: '16px' }}>
-                    {groupedIcons[1] && (
-                      <>
-                        {groupedIcons[1].icon1 && (
-                          <Tooltip title={groupedIcons[1].icon1.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[1].icon1.onClick}
-                              onMouseEnter={() => setHoveredIcon('group2-icon1')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...(groupedIcons[1].icon1.condition || {})
-                              }}
-                            >
-                              {renderIcon(groupedIcons[1].icon1, 'group2-icon1')}
-                            </Box>
-                          </Tooltip>
+                  {/* Tier 2 - Additional Controls */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                    <Box sx={{ fontSize: '12px', color: '#fff', opacity: 0.7, fontWeight: 500 }}>Additional</Box>
+                    <Box sx={{ display: 'flex', gap: '50px', justifyContent: 'center' }}>
+                      {/* First group of icons */}
+                      <Box sx={{ display: 'flex', gap: '4px' }}>
+                        {groupedIcons[0] && (
+                          <>
+                            {groupedIcons[0].icon1 && (
+                              <Tooltip title={groupedIcons[0].icon1.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon1.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group1-icon1')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[0].icon1, 'group1-icon1')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[0].icon2 && (
+                              <Tooltip title={groupedIcons[0].icon2.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon2.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group1-icon2')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[0].icon2, 'group1-icon2')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[0].icon3 && (
+                              <Tooltip title={groupedIcons[0].icon3.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon3.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group1-icon3')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[0].icon3, 'group1-icon3')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[0].icon4 && (
+                              <Tooltip title={groupedIcons[0].icon4.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon4.onClick}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[0].icon5 && (
+                              <Tooltip title={groupedIcons[0].icon5.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon5.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group1-icon5')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[0].icon5, 'group1-icon5')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[0].icon6 && (
+                              <Tooltip title={groupedIcons[0].icon6.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[0].icon6.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group1-icon6')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...(groupedIcons[0].icon6.condition || {})
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[0].icon6, 'group1-icon6')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                          </>
                         )}
-                        {groupedIcons[1].icon2 && (
-                          <Tooltip title={groupedIcons[1].icon2.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[1].icon2.onClick}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...(groupedIcons[1].icon2.condition || {})
-                              }}
-                            >
-                              {groupedIcons[1].icon2.icon === Typography
-                                ? <Typography sx={{ fontSize: 20, fontFamily: '"Dancing Script", cursive !important', fontWeight: 500, color: '#fff', opacity: 0.8 }}>Elo</Typography>
-                                : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                            </Box>
-                          </Tooltip>
+                      </Box>
+                      
+                      {/* Second group of icons */}
+                      <Box sx={{ display: 'flex', gap: '16px' }}>
+                        {groupedIcons[1] && (
+                          <>
+                            {groupedIcons[1].icon1 && (
+                              <Tooltip title={groupedIcons[1].icon1.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[1].icon1.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group2-icon1')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...(groupedIcons[1].icon1.condition || {})
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[1].icon1, 'group2-icon1')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[1].icon2 && (
+                              <Tooltip title={groupedIcons[1].icon2.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[1].icon2.onClick}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...(groupedIcons[1].icon2.condition || {})
+                                  }}
+                                >
+                                  {groupedIcons[1].icon2.icon === Typography
+                                    ? <Typography sx={{ fontSize: 20, fontFamily: '"Dancing Script", cursive !important', fontWeight: 500, color: '#fff', opacity: 0.8 }}>Elo</Typography>
+                                    : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[1].icon3 && (
+                              <Tooltip title={groupedIcons[1].icon3.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[1].icon3.onClick}
+                                  onMouseEnter={() => setHoveredIcon('group2-icon3')}
+                                  onMouseLeave={() => setHoveredIcon(null)}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  {renderIcon(groupedIcons[1].icon3, 'group2-icon3')}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {groupedIcons[1].icon4 && (
+                              <Tooltip title={groupedIcons[1].icon4.toolTip}>
+                                <Box
+                                  className={styles.bestMoveButton}
+                                  onClick={groupedIcons[1].icon4.onClick}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...(groupedIcons[1].icon4.condition || {})
+                                  }}
+                                >
+                                  {React.createElement(groupedIcons[1].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                </Box>
+                              </Tooltip>
+                            )}
+                          </>
                         )}
-                        {groupedIcons[1].icon3 && (
-                          <Tooltip title={groupedIcons[1].icon3.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[1].icon3.onClick}
-                              onMouseEnter={() => setHoveredIcon('group2-icon3')}
-                              onMouseLeave={() => setHoveredIcon(null)}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              {renderIcon(groupedIcons[1].icon3, 'group2-icon3')}
-                            </Box>
-                          </Tooltip>
-                        )}
-                        {groupedIcons[1].icon4 && (
-                          <Tooltip title={groupedIcons[1].icon4.toolTip}>
-                            <Box
-                              className={styles.bestMoveButton}
-                              onClick={groupedIcons[1].icon4.onClick}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...(groupedIcons[1].icon4.condition || {})
-                              }}
-                            >
-                              {React.createElement(groupedIcons[1].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
-                            </Box>
-                          </Tooltip>
-                        )}
-
-                      </>
-                    )}
+                      </Box>
+                    </Box>
                   </Box>
                 </Box>
               </Collapse>
