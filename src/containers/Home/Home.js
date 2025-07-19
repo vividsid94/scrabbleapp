@@ -1,19 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Home.module.css';
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import { Rocket } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
+import { ThemeContext } from '../../App';
 
 export default function Home(){
+  const { lightMode } = useContext(ThemeContext);
   const devMessage = "🦊 Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Development has restarted! Check changelog for updates!";
 
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
       <Box className={styles.page}>
-        <Box className={styles.title}>
+        <Box 
+          className={styles.title}
+          style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
+        >
           <Box className={styles.titleContainer}>
             <img 
               src="/images/t2fox.png" 
@@ -23,9 +28,19 @@ export default function Home(){
           </Box>
           Tile Turnover™
         </Box>
-        <Box className={styles.developmentMessage}>
+        <Box 
+          className={styles.developmentMessage}
+          style={{ 
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#f0f0f0',
+            color: lightMode === 'dark' ? '#fff' : '#000'
+          }}
+        >
           {devMessage.split("changelog")[0]}
-          <Link to="/changelog" style={{color: '#3D5A80', textDecoration: 'none', fontWeight: 'bold'}}>changelog</Link>
+          <Link to="/changelog" style={{
+            color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
+            textDecoration: 'none', 
+            fontWeight: 'bold'
+          }}>changelog</Link>
           {devMessage.split("changelog")[1]}
           <Rocket 
             style={{ 
