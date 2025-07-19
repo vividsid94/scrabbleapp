@@ -54,7 +54,8 @@
 
 .sideNumbering{
   font-size: 7px;
-  background:rgb(185, 174, 166);
+  background: transparent;
+  color: white;
 }
 
 .tableContainer {
@@ -63,7 +64,6 @@
 
 .tableContainer table{
 	border-spacing: 0px !important;
-	border: 1.5px solid darkgray;
 	background-color: lightgray;
   border-radius: 10px;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   BrowserRouter as Router, Route, Routes, useLocation
 } from "react-router-dom";
@@ -18,6 +18,7 @@ import WidgetPage from "./containers/Widget/WidgetPage";
 import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
 import SubmitGame from "./containers/SubmitGame/SubmitGame";
 import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
+import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
 
@@ -62,6 +63,16 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 function App() {
   const [appState, setAppState] = useState('VIEWER');
   const [lightMode, setLightMode] = useState('light');
+  
+  // Get the colors from the store
+  const boardColor = useColorSchemeStore(state => state.boardColor);
+  const tileColor = useColorSchemeStore(state => state.color);
+  
+  // Initialize CSS custom properties when the app starts
+  useEffect(() => {
+    document.documentElement.style.setProperty('--board-color', boardColor.current);
+    document.documentElement.style.setProperty('--tile-color', tileColor.current);
+  }, [boardColor.current, tileColor.current]);
 
   return (
     <ThemeContext.Provider value={{ lightMode, setLightMode }}>

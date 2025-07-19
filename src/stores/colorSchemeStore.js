@@ -3,8 +3,8 @@ import { create } from 'zustand';
 export const useColorSchemeStore = create((set, get) => {
   // Initial state - using the viewer's color scheme as the global default
   const initialState = {
-    color: { current: '#7878a4' },
-    boardColor: { current: '#ffffff' },
+    color: { current: '#8a91b8' },
+    boardColor: { current: '#fff' },
     showWoodenCircle: { current: false },
     showApplePolygon: { current: false },
   };
