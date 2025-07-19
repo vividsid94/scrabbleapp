@@ -9,7 +9,7 @@ import { ThemeContext } from '../../App';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
-  const devMessage = "🦊 Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Development has restarted! Check changelog for updates!";
+  const devMessage = "Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!";
 
   return (
     <Box sx={{ display: 'flex'}}>
