@@ -14,13 +14,15 @@ import {
   Brain,
   Info,
   Plus,
-  ArrowsLeftRight
+  ArrowsLeftRight,
+  CaretDown,
+  CaretUp
 } from '@phosphor-icons/react';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
-import { removeFromPool } from '../../functions/poolFunctions';
+import { calculatePoolFromBoard } from '../../functions/poolFunctions';
 import { useViewerStore } from '../../stores/viewerStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { revealPlayers, revealElo, revealWooglesElo } from '../../functions/playerFunctions';
@@ -48,6 +50,7 @@ export default function Viewer({ onChange }){
   const [showPlayersModal, setShowPlayersModal] = useState(false);
   const [showSubmittedGamesModal, setShowSubmittedGamesModal] = useState(false);
   const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [poolExpanded, setPoolExpanded] = useState(false);
 
   // Helper function to render icons with hover state
   const renderIcon = (iconConfig, hoverId) => {
@@ -71,7 +74,6 @@ export default function Viewer({ onChange }){
     player1points, setPlayer1points,
     player2points, setPlayer2points,
     pointsScored, setPointsScored,
-    pool, setPool,
     mode, setMode,
     moveDirection, setMoveDirection,
     boardMode, setBoardMode,
@@ -129,13 +131,11 @@ export default function Viewer({ onChange }){
   const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
     const state = {
       setBoardCoords,
-      setPool,
       setCurrentMoveCoords,
       setPlayer1points,
       setPlayer2points,
       setPointsScored,
       boardCoords,
-      pool,
       moveSet, 
       origBoard
     };
@@ -174,6 +174,10 @@ export default function Viewer({ onChange }){
     }
   };
 
+  // Calculate current pool from board
+  const getCurrentPool = () => {
+    return calculatePoolFromBoard(boardCoords, origPool);
+  };
 
 
   // Load initial game data
@@ -287,7 +291,6 @@ export default function Viewer({ onChange }){
     mode,
     onChange,
     setBoardCoords,
-    setPool,
     origBoard,
     origPool,
     setShowUnlockText,
@@ -748,30 +751,7 @@ export default function Viewer({ onChange }){
                   setPlayer2points(0);
                   setPointsScored(0);
                   
-                  // Calculate pool state by applying all moves up to the selected turn
-                  let currentPool = origPool;
-                  for (let i = 0; i <= turn; i++) {
-                    const move = moveSet[i];
-                    if (move) {
-                      const parts = move.split(" ");
-                      const play = parts[3];
-                      if (play && play !== "--") {
-                        currentPool = removeFromPool(play, currentPool);
-                      }
-                    }
-                  }                
-                  // First remove all moves after the selected turn
-                  for (let i = moveSet.length - 1; i > turn; i--) {
-                    handleMoveWrapper(
-                      moveSet[i - 3],
-                      moveSet[i - 2],
-                      moveSet[i - 1],
-                      moveSet[i],
-                      "previous"
-                    );
-                  }
-                  
-                  // Then apply all moves up to the selected turn
+                  // Apply all moves up to the selected turn
                   for (let i = 0; i <= turn; i++) {
                     handleMoveWrapper(
                       moveSet[i - 2],
@@ -781,9 +761,6 @@ export default function Viewer({ onChange }){
                       "next"
                     );
                   }
-                  
-                  // Set the pool state after all moves are processed
-                  setPool(currentPool);
                   
                   currentMoveRef.current = turn;
                 }
@@ -795,7 +772,6 @@ export default function Viewer({ onChange }){
               name1={name1}
               name2={name2}
               boardCoords={boardCoords}
-              pool={pool}
               currentMoveCoords={currentMoveCoords}
               onTurnClick={(turn) => {
                 if (turn >= 0 && turn < moveSet.length) {
@@ -805,30 +781,7 @@ export default function Viewer({ onChange }){
                   setPlayer2points(0);
                   setPointsScored(0);
                   
-                  // Calculate pool state by applying all moves up to the selected turn
-                  let currentPool = origPool;
-                  for (let i = 0; i <= turn; i++) {
-                    const move = moveSet[i];
-                    if (move) {
-                      const parts = move.split(" ");
-                      const play = parts[3];
-                      if (play && play !== "--") {
-                        currentPool = removeFromPool(play, currentPool);
-                      }
-                    }
-                  }                
-                  // First remove all moves after the selected turn
-                  for (let i = moveSet.length - 1; i > turn; i--) {
-                    handleMoveWrapper(
-                      moveSet[i - 3],
-                      moveSet[i - 2],
-                      moveSet[i - 1],
-                      moveSet[i],
-                      "previous"
-                    );
-                  }
-                  
-                  // Then apply all moves up to the selected turn
+                  // Apply all moves up to the selected turn
                   for (let i = 0; i <= turn; i++) {
                     handleMoveWrapper(
                       moveSet[i - 2],
@@ -839,9 +792,6 @@ export default function Viewer({ onChange }){
                     );
                   }
                   
-                  // Set the pool state after all moves are processed
-                  setPool(currentPool);
-                  
                   currentMoveRef.current = turn;
                 }
               }}
@@ -850,7 +800,6 @@ export default function Viewer({ onChange }){
               boardCoords={boardCoords}
               moveSet={moveSet}
               currentMoveRef={currentMoveRef}
-              pool={pool}
               gameDictionary={gameDictionary}
               onMoveSelect={(move) => {
                 console.log('Selected move:', move);
@@ -866,11 +815,64 @@ export default function Viewer({ onChange }){
               }}
               simulatingMove={null}
             />
-            <Box className={styles.poolBox} style={{color: '#fff'}}>
-              {moveSet && moveSet.length > 0 ? (
-                <Pool board={pool} rack={createRack(moveSet, currentMoveRef.current)}/>  
-              ) : (
-                <div>Loading pool...</div>
+            {/* Collapsible Pool Section */}
+            <Box 
+              className={styles.poolBox} 
+              style={{
+                color: '#fff',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setPoolExpanded(!poolExpanded)}
+            >
+              {/* Pool Header */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: poolExpanded ? '8px' : '0'
+              }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}>
+                  {moveSet && moveSet.length > 0 ? (
+                    <span>
+                      {getCurrentPool().length}
+                      {createRack(moveSet, currentMoveRef.current).length > 0 && (
+                        <span style={{ opacity: 0.7 }}> • {createRack(moveSet, currentMoveRef.current).length} on rack</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span>Pool</span>
+                  )}
+                </Box>
+                {poolExpanded ? (
+                  <CaretUp size={16} color="#fff" weight="regular" />
+                ) : (
+                  <CaretDown size={16} color="#fff" weight="regular" />
+                )}
+              </Box>
+              
+              {/* Pool Content */}
+              {poolExpanded && (
+                <Collapse in={poolExpanded}>
+                  <Box sx={{ 
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                    paddingTop: '8px'
+                  }}>
+                    {moveSet && moveSet.length > 0 ? (
+                      <Pool board={getCurrentPool()}/>  
+                    ) : (
+                      <div>Loading pool...</div>
+                    )}
+                  </Box>
+                </Collapse>
               )}
             </Box>
           </Box>

@@ -16,7 +16,6 @@ export const useViewerStore = create((set, get) => {
     player1points: 0,
     player2points: 0,
     pointsScored: 0,
-    pool: String(origPool),
     mode: "VIEWER",
     resetCount: 0,
     moveDirection: "neutral",
@@ -68,7 +67,6 @@ export const useViewerStore = create((set, get) => {
     setPlayer1points: (points) => set({ player1points: points }),
     setPlayer2points: (points) => set({ player2points: points }),
     setPointsScored: (points) => set({ pointsScored: points }),
-    setPool: (newPool) => set({ pool: String(newPool) }),
     setMode: (newMode) => set({ mode: newMode }),
     setResetCount: (count) => set({ resetCount: count }),
     setMoveDirection: (direction) => set({ moveDirection: direction }),
@@ -231,7 +229,6 @@ export const useViewerStore = create((set, get) => {
           revealedName2: "Player 2",
           revealedElo: "",
           revealedElo2: "",
-          pool: String(origPool),
           recentNames: [],
           recentDictionaries: []
         });
@@ -347,7 +344,6 @@ export const useViewerStore = create((set, get) => {
           revealedName2: "Player 2",
           revealedElo: "",
           revealedElo2: "",
-          pool: String(origPool),
           recentNames: [],
           recentDictionaries: [],
           open: true,
@@ -467,7 +463,6 @@ export const useViewerStore = create((set, get) => {
           revealedName2: "Player 2",
           revealedElo: "",
           revealedElo2: "",
-          pool: String(origPool),
           recentNames: [],
           recentDictionaries: []
         });
@@ -550,7 +545,6 @@ export const useViewerStore = create((set, get) => {
         player1points: 0,
         player2points: 0,
         pointsScored: 0,
-        pool: String(origPool),
         currentMoveRef: { current: -1 }
       });
     },
@@ -568,7 +562,6 @@ export const useViewerStore = create((set, get) => {
       set({ 
         boardCoords: parsedOrigBoardCoords,
         currentMoveRef: { current: -1 },
-        pool: String(origPool)
       });
     },
     

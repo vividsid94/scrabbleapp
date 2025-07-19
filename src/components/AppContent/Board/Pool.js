@@ -1,30 +1,22 @@
 import styles from './Pool.module.css';
 
 export default function Pool(props) {
-  const board = [];
-  let currentChar = null;
-  let currentSpan = [];
-  
-  // Ensure props.rack is an array
-  const rack = Array.isArray(props.rack) ? props.rack.map(val => val === " " ? "?" : val) : [];
+  const { board } = props;
   
   // Ensure props.board is a string and iterable
-  const boardString = String(props.board || "");
+  const boardString = String(board || "");
+  
+  // Display logic for the pool
+  const boardArray = [];
+  let currentChar = null;
+  let currentSpan = [];
   
   for (let i = 0; i < boardString.length; i++) {
     const char = boardString[i];
     if (char !== currentChar) {
       if (currentSpan.length > 0) {
-        let className = styles.charGroup;
-        if (rack.includes(currentChar)) {
-          // Only apply the "red" class to the first X characters in the span
-          const charCount = rack.filter(c => c === currentChar).length;
-          for (let j = 0; j < Math.min(charCount, currentSpan.length); j++) {
-            currentSpan[j] = <span key={`${currentChar}-${j}-${i}`} className={`${styles.red}`}>{currentSpan[j]}</span>;
-          }
-        }
-        board.push(
-          <span key={`${currentChar}-${i}`} className={className}>{currentSpan}</span>
+        boardArray.push(
+          <span key={`${currentChar}-${i}`} className={styles.charGroup}>{currentSpan}</span>
         );
       }
       currentChar = char;
@@ -35,19 +27,14 @@ export default function Pool(props) {
   }
 
   if (currentSpan.length > 0) {
-    let className = styles.charGroup;
-    if (rack.includes(currentChar)) {
-      // Only apply the "red" class to the first character in the span
-      currentSpan[0] = <span key={`${currentChar}-last`} className={`${styles.red}`}>{currentSpan[0]}</span>;
-    }
-    board.push(
-      <span key={`${currentChar}-final`} className={className}>{currentSpan}</span>
+    boardArray.push(
+      <span key={`${currentChar}-final`} className={styles.charGroup}>{currentSpan}</span>
     );
   }
 
   return (
     <div className={styles.poolTbl}>
-      {board} <br/>({boardString.length} - {rack.length} unseen)
+      {boardArray} <br/>({boardString.length} remaining)
     </div>
   );
 }

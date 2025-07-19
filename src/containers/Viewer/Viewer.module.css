@@ -8,6 +8,26 @@
 	padding: 0px 10px;
 }
 
+.poolBox:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.poolBox:active {
+  transform: translateY(0px);
+  transition: transform 0.1s ease;
+}
+
+/* Pool transition animations */
+.poolBox .MuiCollapse-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.poolBox .MuiCollapse-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 .page{
   display: flex;
   flex-direction: column;

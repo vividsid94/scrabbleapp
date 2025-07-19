@@ -1,29 +1,20 @@
-export const addToPool = (play, pool) => {
-  let newPool = pool;
-  for (let i = 0; i < play.length; i++) {
-    const char = play[i];
-    if (char.toLowerCase() === char && char !== ".") {
-      newPool += "?";
-    } else if (char !== ".") {
-      newPool += char;
+export const calculatePoolFromBoard = (boardCoords, origPool) => {
+  let pool = origPool;
+  
+  // Go through the board and remove tiles that are placed
+  for (let row = 0; row < boardCoords.length; row++) {
+    for (let col = 0; col < boardCoords[row].length; col++) {
+      const cell = boardCoords[row][col];
+      if (typeof cell === 'string' && cell !== '') {
+        // This is a tile on the board, remove it from pool
+        if (cell === '?') {
+          pool = pool.replace("?", "");
+        } else {
+          pool = pool.replace(cell, "");
+        }
+      }
     }
   }
-  newPool = newPool.split('').sort((a, b) => {
-    if (a === '?') return 1;
-    if (b === '?') return -1;
-    return a.localeCompare(b);
-  }).join('');
-  return newPool;
-}
-export const removeFromPool = (play, pool) => {
-  let newPool = pool;
-  for (let i = 0; i < play.length; i++) {
-    const char = play[i];
-    if (char.toLowerCase() === char && char !== ".") {
-      newPool = newPool.replace("?", "");
-    } else {
-      newPool = newPool.replace(char, "");
-    }
-  }
-  return newPool;
+  
+  return pool;
 }

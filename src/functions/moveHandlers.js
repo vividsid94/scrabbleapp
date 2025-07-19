@@ -1,5 +1,4 @@
 import { highlightPreviousMove, updateBoard } from "./boardFunctions";
-import { addToPool, removeFromPool } from "./poolFunctions";
 
 export const handleMove = (superLastMove, lastMove, thisMove, nextMove, type, state) => {
   // Clean up move strings
@@ -42,7 +41,7 @@ const cleanMove = (move) => {
 };
 
 const handlePreviousMove = (moves, state) => {
-  const { setBoardCoords, setPool, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, pool, origBoard, moveSet } = state;
+  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
   
   const moveName = moves['thismove'].move ? moves['thismove'].parts[0] : 'empty';
   const nextMoveName = moves['nextmove'].move ? moves['nextmove'].parts[0] : 'empty';
@@ -51,15 +50,15 @@ const handlePreviousMove = (moves, state) => {
 
   // Handle board updates
   if (moveName === nextMoveName && moves['thismove'].location === "--") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, pool => removeFromPool(moves['thismove'].play, pool), pool);
+    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   } else if (moves['nextmove'].location && moves['nextmove'].location[0] !== "-") {
-    updateBoardAndPool("remove", moves['nextmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, pool => addToPool(moves['nextmove'].play, pool), pool);
+    updateBoardAndPool("remove", moves['nextmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
     
     if (moves['thismove'].move && moves['thismove'].location[0] !== "-") {
       setCurrentMoveCoords(highlightPreviousMove(moves['thismove'].location, moves['thismove'].play, boardCoords));
     }
   } else if (moves['nextmove'].location === "--") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, pool => removeFromPool(moves['thismove'].play, pool), pool);
+    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   }
 
   // Update scores
@@ -68,7 +67,7 @@ const handlePreviousMove = (moves, state) => {
 };
 
 const handleNextMove = (moves, state) => {
-  const { setBoardCoords, setPool, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, pool, origBoard, moveSet } = state;
+  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
   
   const moveName = moves['thismove'].move ? moves['thismove'].parts[0] : 'empty';
   const lastMoveName = moves['lastmove'].move ? moves['lastmove'].parts[0] : 'empty';
@@ -77,9 +76,9 @@ const handleNextMove = (moves, state) => {
 
   // Handle board updates
   if (moveName === lastMoveName && moves['thismove'].location === "--") {
-    updateBoardAndPool("remove", moves['lastmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, pool => addToPool(moves['lastmove'].play, pool), pool);
+    updateBoardAndPool("remove", moves['lastmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   } else if (moves['thismove'].location && moves['thismove'].location[0] !== "-") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, pool => removeFromPool(moves['thismove'].play, pool), pool);
+    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   }
 
   // Update scores
@@ -100,15 +99,11 @@ const handleNextMove = (moves, state) => {
   setPointsScored(moves['thismove'].points);
 };
 
-const updateBoardAndPool = (type, move, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords, setPool, poolUpdater, currentPool) => {
+const updateBoardAndPool = (type, move, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords) => {
   const props = { location: move.location, play: move.play, type, boardCoords, origBoard };
   const board = updateBoard(props);
   setCurrentMoveCoords(board[0]);
   setBoardCoords(board[1]);
-  
-  // Update the pool using the provided function
-  const newPool = poolUpdater(currentPool);
-  setPool(newPool);
 };
 
 const updateScores = (moves, moveName, nextMoveName, thisMovePlayerName, firstMovePlayerName, setPlayer1points, setPlayer2points) => {
