@@ -710,7 +710,7 @@ const Scrabble3D = () => {
   const createTile = (letter, row, col, player, moveIndex) => {
     // Enhanced tile geometry
     const tileGeometry = new THREE.BoxGeometry(0.8, 0.15, 0.8);
-    const tileColor = 0xC0C0C0; // Silver tile color
+    const tileColor = 0xE8D5B5; // More beige tile color
     const tileMaterial = new THREE.MeshPhongMaterial({ 
       color: tileColor,
       transparent: true,
