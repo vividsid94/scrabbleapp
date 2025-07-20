@@ -993,8 +993,10 @@ export const useSandboxStore = create((set, get) => {
             data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
           }
 
-          console.log('Bot moves response:', {
+          console.log('🤖 BOT API RESPONSE:', {
+            player: currentName,
             moves: data.moves,
+            bestMove: data.moves ? data.moves[0] : null,
             poolSize: pool.length,
             exchangesConsidered: pool.length >= 7
           });
@@ -1085,7 +1087,7 @@ export const useSandboxStore = create((set, get) => {
                 boardDiff: [],
                 player: currentName,
                 score: 0,
-                rack: newRack.join(''),
+                rack: currentRack.join(''),
                 total: currentPoints,
                 word: 'Exchange'
               };
@@ -1145,10 +1147,11 @@ export const useSandboxStore = create((set, get) => {
                 boardDiff: boardDiff,
                 player: currentName,
                 score: bestMove.score,
-                rack: newRack.join(''),
+                rack: currentRack.join(''),
                 total: currentPoints + bestMove.score,
                 word: bestMove.word
               };
+        
               const currentHistory = get().moveHistory || [];
               setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
               

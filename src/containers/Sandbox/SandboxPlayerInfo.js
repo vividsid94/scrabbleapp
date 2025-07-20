@@ -32,8 +32,6 @@ const MemoizedLatestMove = React.memo(() => {
       player2Name={player2Name}
       allMoves={moveHistory}
       boardCoords={boardCoords}
-      player1Rack={player1Rack}
-      player2Rack={player2Rack}
       pool={pool}
     />
   );
