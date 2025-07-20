@@ -5,6 +5,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import styles from '../Viewer.module.css';
+import { processParsedMove } from '../../../functions/boardFunctions';
 
 
 const LatestMove = ({ 
@@ -36,21 +37,30 @@ const LatestMove = ({
     return location;
   };
 
-  // Extract word from pre-parsed moves ONLY
+  // Extract word from pre-parsed moves with through letter processing
   const extractWord = (moveString, moveIndex = 0) => {
     if (!parsedMoves || !parsedMoves[moveIndex]) {
       return "N/A";
     }
     
     const move = parsedMoves[moveIndex];
+    const processedMove = processParsedMove(move, currentMoveCoords);
     
-    if (move.location === '--') {
+    // Extract just the word part from the processed move
+    const processedParts = processedMove.split(" ");
+    
+    // If it's a challenge, return "Challenge"
+    if (processedMove === "Challenge") {
       return "Challenge";
-    } else if (move.word) {
-      return move.word;
-    } else {
-      return "Pass";
     }
+    
+    // If it's an exchange, return the exchange info
+    if (processedMove.startsWith("Exchange")) {
+      return processedMove;
+    }
+    
+    // For normal plays, return the word part (second part after location)
+    return processedParts.length >= 2 ? processedParts[1] : processedMove;
   };
 
   // Helper function to extract score from move string

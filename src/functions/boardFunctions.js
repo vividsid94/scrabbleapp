@@ -3,77 +3,58 @@ import Cell from "../components/AppContent/Board/Cell";
 import cellType from "../components/AppContent/Board/cellType";
 import { parseGCG } from "../utils/gcgParser.js";
 
+// Process a parsed move with through letter logic
+export const processParsedMove = (parsedMove, currentMoveCoords) => {
+  if (!parsedMove) return "N/A";
+  
+  let play;
+  
+  // Handle different move types
+  if (parsedMove.location === '--') {
+    // Challenge
+    play = "Challenge";
+  } else if (parsedMove.word) {
+    // Normal play
+    play = parsedMove.location + " " + parsedMove.word;
+  } else {
+    // Pass or other special case
+    play = parsedMove.location || "Pass";
+  }
+  
+  // Apply through letter processing
+  const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
+  let result = play;
+  letters.forEach((letter) => {
+    result = result.replace(".", "(" + letter + ")");
+    result = result.replace(")(", "");
+  });
+  
+  return result;
+};
+
 export const getMove = (moveString, currentMoveCoords, parsedMoves = null, moveIndex = 0) => {
-    let play;
+    let move;
     
     // Handle negative moveIndex (initial state)
     if (moveIndex < 0) {
       if (moveString) {
         const parsedMoves = parseGCG(moveString);
-        if (parsedMoves.length > 0) {
-          const move = parsedMoves[0];
-          if (move.location === '--') {
-            play = "Challenge";
-          } else if (move.word) {
-            play = move.location + " " + move.word;
-          } else {
-            play = move.location || "Pass";
-          }
-        } else {
-          play = "N/A";
-        }
+        move = parsedMoves.length > 0 ? parsedMoves[0] : null;
       } else {
-        play = "N/A";
+        move = null;
       }
     } else if (parsedMoves && parsedMoves[moveIndex]) {
       // Use pre-parsed move data
-      console.log(`🔍 getMove using pre-parsed data for move ${moveIndex}`);
-      const move = parsedMoves[moveIndex];
-    
-      // Handle different move types
-      if (move.location === '--') {
-        // Challenge
-        play = "Challenge";
-      } else if (move.word) {
-        // Normal play
-        play = move.location + " " + move.word;
-      } else {
-        // Pass or other special case
-        play = move.location || "Pass";
-      }
+      move = parsedMoves[moveIndex];
     } else if (moveString) {
       // Fallback to parsing (for backward compatibility)
-      console.log(`🔍 getMove falling back to parsing for move ${moveIndex}`);
       const parsedMoves = parseGCG(moveString);
-      
-      if (parsedMoves.length > 0) {
-        const move = parsedMoves[0]; // Get first move from the string
-        
-        // Handle different move types
-        if (move.location === '--') {
-          // Challenge
-          play = "Challenge";
-        } else if (move.word) {
-          // Normal play
-          play = move.location + " " + move.word;
-        } else {
-          // Pass or other special case
-          play = move.location || "Pass";
-        }
-      } else {
-        play = "N/A";
-      }
+      move = parsedMoves.length > 0 ? parsedMoves[0] : null;
     } else {
-      play = "N/A";
+      move = null;
     }
     
-    const letters = currentMoveCoords.filter(element => /^\s*[A-Za-z]\s*$/.test(element));
-    let result = play;
-    letters.forEach((letter) => {
-      result = result.replace(".", "(" + letter + ")");
-      result = result.replace(")(", "");
-    });
-    return result;
+    return processParsedMove(move, currentMoveCoords);
 }
 
 export const extractLocation = (str) => {
