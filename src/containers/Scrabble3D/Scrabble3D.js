@@ -1013,7 +1013,7 @@ const Scrabble3D = () => {
     const startZ = -(15 * 1) / 2 + 1 / 2;
     tile.position.set(
       startX + col * 1,
-      0.125, // Lower position to sit in the grooves
+      0.15, // Medium position - above board squares but not floating
       startZ + row * 1
     );
     tile.castShadow = true;
