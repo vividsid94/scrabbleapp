@@ -105,7 +105,7 @@ const Scrabble3D = () => {
       0.1,
       1000
     );
-    camera.position.set(0, 15, 15);
+    camera.position.set(0, 25, 0); // Bird's eye view - directly above
     camera.lookAt(0, 0, 0);
 
     // Renderer setup with HD settings
@@ -567,10 +567,11 @@ const Scrabble3D = () => {
     const boardRadius = 10.8;
     const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.3, 64);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xB0B0B0, // Light gray (neutral)
+      color: 0xC0C0C0, // Slightly lighter gray
       transparent: true,
-      opacity: 0.95,
-      shininess: 30
+      opacity: 0.8, // Much more transparent for acrylic look
+      shininess: 100, // High shininess for glossy acrylic
+      reflectivity: 0.8 // High reflectivity for acrylic
     });
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
