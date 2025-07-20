@@ -72,6 +72,20 @@ function preloadTextures() {
   });
 }
 
+// Cleanup function for preloaded resources
+function cleanupPreloadedResources() {
+  // Dispose all preloaded textures
+  Object.values(preloadedTextures).forEach(texture => {
+    if (texture && texture.dispose) {
+      texture.dispose();
+    }
+  });
+  
+  // Clear references
+  preloadedTextures = {};
+  preloadedImages = {};
+}
+
 // Initialize preloading
 preloadProtiles();
 
@@ -107,6 +121,14 @@ const Scrabble3D = () => {
     animationId: null
   });
 
+  // Shared geometries to reduce memory usage
+  const sharedGeometriesRef = useRef({
+    boxGeometry: new THREE.BoxGeometry(1, 1, 1),
+    planeGeometry: new THREE.PlaneGeometry(1, 1),
+    cylinderGeometry: new THREE.CylinderGeometry(1, 1, 1, 8),
+    sphereGeometry: new THREE.SphereGeometry(1, 8, 6)
+  });
+
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -126,12 +148,16 @@ const Scrabble3D = () => {
     camera.position.set(0, 25, 0); // Bird's eye view - directly above
     camera.lookAt(0, 0, 0);
 
-    // Renderer setup with HD settings
-    const renderer = new THREE.WebGLRenderer({antialias: true});
+    // Renderer setup with optimized settings
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // HD pixel ratio
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0)); // Balanced quality vs performance
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false; // Only update shadows when needed
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);
 
@@ -155,8 +181,8 @@ const Scrabble3D = () => {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // Clean white directional light
     directionalLight.position.set(15, 15, 10);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 4096;
-    directionalLight.shadow.mapSize.height = 4096;
+    directionalLight.shadow.mapSize.width = 2048; // Reduced shadow map size for better performance
+    directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = 0.5;
     directionalLight.shadow.camera.far = 50;
     directionalLight.shadow.camera.left = -20;
@@ -166,26 +192,16 @@ const Scrabble3D = () => {
     scene.add(directionalLight);
     resourcesRef.current.lights.push(directionalLight);
 
-    // Magical colored point lights (balanced with lamps)
-    const whiteLight1 = new THREE.PointLight(0xffffff, 0.6, 40);
+    // Reduced number of point lights for better performance
+    const whiteLight1 = new THREE.PointLight(0xffffff, 0.8, 50);
     whiteLight1.position.set(-20, 15, -20);
     scene.add(whiteLight1);
     resourcesRef.current.lights.push(whiteLight1);
 
-    const whiteLight2 = new THREE.PointLight(0xffffff, 0.6, 40);
+    const whiteLight2 = new THREE.PointLight(0xffffff, 0.8, 50);
     whiteLight2.position.set(20, 15, 20);
     scene.add(whiteLight2);
     resourcesRef.current.lights.push(whiteLight2);
-
-    const whiteLight3 = new THREE.PointLight(0xffffff, 0.6, 40);
-    whiteLight3.position.set(0, 20, -25);
-    scene.add(whiteLight3);
-    resourcesRef.current.lights.push(whiteLight3);
-
-    const whiteLight4 = new THREE.PointLight(0xffffff, 0.5, 35);
-    whiteLight4.position.set(-15, 10, 15);
-    scene.add(whiteLight4);
-    resourcesRef.current.lights.push(whiteLight4);
 
     // Create magical environment
     createMagicalEnvironment(scene);
@@ -196,14 +212,25 @@ const Scrabble3D = () => {
     // Create 3D board
     createBoard(scene);
 
-    // Animation loop
-    const animate = () => {
+    // Animation loop with frame rate limiting
+    let lastTime = 0;
+    const targetFPS = 60;
+    const frameInterval = 1000 / targetFPS;
+    
+    const animate = (currentTime) => {
       resourcesRef.current.animationId = requestAnimationFrame(animate);
+      
+      // Frame rate limiting
+      if (currentTime - lastTime < frameInterval) {
+        return;
+      }
+      lastTime = currentTime;
+      
       controls.update();
       
       // Animate environment elements
       if (sceneRef.current.lamps) {
-        const time = Date.now() * 0.001;
+        const time = currentTime * 0.001;
         sceneRef.current.lamps.forEach((lamp, index) => {
           // Gentle flickering
           lamp.material.emissiveIntensity = 0.4 + Math.sin(time * 2 + index) * 0.05;
@@ -216,7 +243,7 @@ const Scrabble3D = () => {
         setNeedsRender(false);
       }
     };
-    animate();
+    animate(0);
 
     // Handle window resize
     const handleResize = () => {
@@ -246,6 +273,13 @@ const Scrabble3D = () => {
       // Dispose all geometries
       resourcesRef.current.geometries.forEach(geometry => {
         geometry.dispose();
+      });
+
+      // Dispose shared geometries
+      Object.values(sharedGeometriesRef.current).forEach(geometry => {
+        if (geometry && geometry.dispose) {
+          geometry.dispose();
+        }
       });
 
       // Dispose all materials
@@ -294,6 +328,9 @@ const Scrabble3D = () => {
         controls: null,
         animationId: null
       };
+      
+      // Cleanup preloaded resources
+      cleanupPreloadedResources();
     };
   }, []);
 
@@ -354,6 +391,11 @@ const Scrabble3D = () => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
       updateBoardToMove(currentMoveIndex);
       setNeedsRender(true); // Trigger render after board update
+      
+      // Update shadows when board changes significantly
+      if (rendererRef.current && rendererRef.current.shadowMap) {
+        rendererRef.current.shadowMap.needsUpdate = true;
+      }
     }
   }, [currentMoveIndex, gameData]);
 
@@ -387,6 +429,9 @@ const Scrabble3D = () => {
           }
         });
       });
+      
+      // Cleanup preloaded resources
+      cleanupPreloadedResources();
     };
   }, [tiles]);
 
