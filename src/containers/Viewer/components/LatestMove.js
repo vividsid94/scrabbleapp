@@ -24,17 +24,14 @@ const LatestMove = ({
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Helper function to format move location from GCG format
-  const formatLocation = (moveString) => {
-    if (!moveString) return null;
+  // Extract location from pre-parsed moves
+  const formatLocation = (moveString, moveIndex = 0) => {
+    if (!parsedMoves || !parsedMoves[moveIndex]) {
+      return null;
+    }
     
-    const parts = moveString.split(" ");
-    if (parts.length < 4) return null;
-    
-    const location = parts[2];
-    if (location === "--") return null;
-    
-    return location;
+    const move = parsedMoves[moveIndex];
+    return move.location === '--' ? null : move.location;
   };
 
   // Extract word from pre-parsed moves with through letter processing
@@ -63,14 +60,14 @@ const LatestMove = ({
     return processedParts.length >= 2 ? processedParts[1] : processedMove;
   };
 
-  // Helper function to extract score from move string
-  const extractScore = (moveString) => {
-    if (!moveString) return 0;
+  // Extract score from pre-parsed moves
+  const extractScore = (moveString, moveIndex = 0) => {
+    if (!parsedMoves || !parsedMoves[moveIndex]) {
+      return 0;
+    }
     
-    const parts = moveString.split(" ");
-    if (parts.length < 5) return 0;
-    
-    return parseInt(parts[4]) || 0;
+    const move = parsedMoves[moveIndex];
+    return move.score || 0;
   };
 
   // Helper function to get player name from move string
@@ -122,8 +119,8 @@ const LatestMove = ({
     
     const playerName = getPlayerName(move);
     const word = extractWord(move, index);
-    const score = extractScore(move);
-    const location = formatLocation(move);
+    const score = extractScore(move, index);
+    const location = formatLocation(move, index);
     const turnNumber = index + 1;
     const turnIndex = currentMoveIndex - index - 1; // Calculate the actual turn index
 
@@ -172,8 +169,8 @@ const LatestMove = ({
 
   const playerName = getPlayerName(currentMove);
   const word = extractWord(currentMove, currentMoveIndex);
-  const score = extractScore(currentMove);
-  const location = formatLocation(currentMove);
+  const score = extractScore(currentMove, currentMoveIndex);
+  const location = formatLocation(currentMove, currentMoveIndex);
   const turnNumber = currentMoveIndex + 1;
 
   return (
