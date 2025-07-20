@@ -205,6 +205,7 @@ const Scrabble3D = () => {
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
     letterMesh.position.y = 0.11; // On top of the 3D text block
+    letterMesh.rotation.x = -Math.PI / 2; // Rotate to lay flat on tile surface
     textMesh.add(letterMesh);
     
     tile.add(textMesh);
