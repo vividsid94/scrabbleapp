@@ -462,6 +462,9 @@ const Scrabble3D = () => {
     table.receiveShadow = true;
     scene.add(table);
 
+    // Create 3D racks for both players
+    createPlayerRacks(scene);
+
     // Create table legs
     const legGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
     const legMaterial = new THREE.MeshPhongMaterial({ 
@@ -720,6 +723,45 @@ const Scrabble3D = () => {
       if (board[row][col + i] !== 0) return false;
     }
     return true;
+  };
+
+  const createPlayerRacks = (scene) => {
+    const rackMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x8B4513, // Dark brown wood
+      transparent: true,
+      opacity: 0.9,
+      shininess: 15
+    });
+
+    // Create L-shaped rack for Player 1 (bottom of board)
+    // Base of the L
+    const rack1Base = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 0.8), rackMaterial);
+    rack1Base.position.set(0, 0.05, -12);
+    rack1Base.castShadow = true;
+    rack1Base.receiveShadow = true;
+    scene.add(rack1Base);
+
+    // Back of the L
+    const rack1Back = new THREE.Mesh(new THREE.BoxGeometry(8, 0.6, 0.1), rackMaterial);
+    rack1Back.position.set(0, 0.35, -11.65);
+    rack1Back.castShadow = true;
+    rack1Back.receiveShadow = true;
+    scene.add(rack1Back);
+
+    // Create L-shaped rack for Player 2 (top of board)
+    // Base of the L
+    const rack2Base = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 0.8), rackMaterial);
+    rack2Base.position.set(0, 0.05, 12);
+    rack2Base.castShadow = true;
+    rack2Base.receiveShadow = true;
+    scene.add(rack2Base);
+
+    // Back of the L
+    const rack2Back = new THREE.Mesh(new THREE.BoxGeometry(8, 0.6, 0.1), rackMaterial);
+    rack2Back.position.set(0, 0.35, 11.65);
+    rack2Back.castShadow = true;
+    rack2Back.receiveShadow = true;
+    scene.add(rack2Back);
   };
 
   const createTile = (letter, row, col, player, moveIndex) => {
