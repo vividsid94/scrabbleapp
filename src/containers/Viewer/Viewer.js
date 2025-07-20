@@ -106,6 +106,7 @@ export default function Viewer({ onChange }){
     // Woogles mode
     wooglesMode, setWooglesMode,
     currentWooglesGame, setCurrentWooglesGame,
+    parsedMoves,
     
     // Functions
     handleClose,
@@ -123,6 +124,8 @@ export default function Viewer({ onChange }){
     randomizeWooglesGame,
     loadWooglesGameData
   } = useViewerStore();
+
+
 
   // Get global color scheme - subscribe to the current value
   const color = useColorSchemeStore(state => state.color);
@@ -199,7 +202,6 @@ export default function Viewer({ onChange }){
         
         if (play && play !== "--" && parts[2]) {
           // Get the coordinates for this move
-          console.log('Calling highlightPreviousMove with:', { location: parts[2], play, parts });
           const moveCoords = highlightPreviousMove(parts[2], play, boardCoords);
           
           // Check if any of the moveCoords contain lowercase letters
@@ -396,8 +398,8 @@ export default function Viewer({ onChange }){
               board={board} 
               points={pointsScored} 
               boardMode={boardMode}
-              rack={createRack(moveSet, currentMoveRef.current - 1).map(char => char === ' ' ? '?' : char).join('')} 
-              move={getMove(moveSet[currentMoveRef.current], currentMoveCoords)}
+              rack={createRack(moveSet, currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
+              move={currentMoveRef.current >= 0 ? getMove(moveSet[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
@@ -743,6 +745,7 @@ export default function Viewer({ onChange }){
               origPlayerRaw={origPlayerRaw}
               tiles={tiles}
               color={color}
+              parsedMoves={parsedMoves}
               onTurnClick={(turn) => {
                 if (turn >= 0 && turn < moveSet.length) {
                   // Reset board to initial state
@@ -773,6 +776,7 @@ export default function Viewer({ onChange }){
               name2={name2}
               boardCoords={boardCoords}
               currentMoveCoords={currentMoveCoords}
+              parsedMoves={parsedMoves}
               onTurnClick={(turn) => {
                 if (turn >= 0 && turn < moveSet.length) {
                   // Reset board to initial state
@@ -844,8 +848,8 @@ export default function Viewer({ onChange }){
                   {moveSet && moveSet.length > 0 ? (
                     <span>
                       {getCurrentPool().length}
-                      {createRack(moveSet, currentMoveRef.current).length > 0 && (
-                        <span style={{ opacity: 0.7 }}> • {createRack(moveSet, currentMoveRef.current).length} on rack</span>
+                      {createRack(moveSet, currentMoveRef.current, parsedMoves).length > 0 && (
+                        <span style={{ opacity: 0.7 }}> • {createRack(moveSet, currentMoveRef.current, parsedMoves).length} on rack</span>
                       )}
                     </span>
                   ) : (
@@ -869,7 +873,7 @@ export default function Viewer({ onChange }){
                     {moveSet && moveSet.length > 0 ? (
                       <Pool 
                         board={getCurrentPool()}
-                        rack={createRack(moveSet, currentMoveRef.current)}
+                        rack={createRack(moveSet, currentMoveRef.current, parsedMoves)}
                       />  
                     ) : (
                       <div>Loading pool...</div>

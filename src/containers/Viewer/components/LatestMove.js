@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import styles from '../Viewer.module.css';
-import { getMove } from '../../../functions/boardFunctions';
+
 
 const LatestMove = ({ 
   moveSet = [], 
@@ -16,7 +16,8 @@ const LatestMove = ({
   pool = [],
   onMoveHistoryClick,
   currentMoveCoords = [],
-  onTurnClick
+  onTurnClick,
+  parsedMoves = []
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
@@ -35,29 +36,21 @@ const LatestMove = ({
     return location;
   };
 
-  // Helper function to extract word from move string
-  const extractWord = (moveString) => {
-    if (!moveString) return null;
-    
-    const parts = moveString.split(" ");
-    if (parts.length < 4) return null;
-    
-    const play = parts[3];
-    if (play === "--") return "Pass";
-    
-    // Check if this is a challenged move (negative score)
-    const score = extractScore(moveString);
-    if (score < 0) {
-      return "Challenged off";
+  // Extract word from pre-parsed moves ONLY
+  const extractWord = (moveString, moveIndex = 0) => {
+    if (!parsedMoves || !parsedMoves[moveIndex]) {
+      return "N/A";
     }
     
-    // Use the getMove function to handle dots properly
-    // This will replace dots with actual letters in parentheses
-    const processedMove = getMove(moveString, currentMoveCoords);
+    const move = parsedMoves[moveIndex];
     
-    // Extract just the word part from the processed move
-    const processedParts = processedMove.split(" ");
-    return processedParts.length >= 2 ? processedParts[1] : play;
+    if (move.location === '--') {
+      return "Challenge";
+    } else if (move.word) {
+      return move.word;
+    } else {
+      return "Pass";
+    }
   };
 
   // Helper function to extract score from move string
@@ -118,7 +111,7 @@ const LatestMove = ({
     if (!move) return null;
     
     const playerName = getPlayerName(move);
-    const word = extractWord(move);
+    const word = extractWord(move, index);
     const score = extractScore(move);
     const location = formatLocation(move);
     const turnNumber = index + 1;
@@ -168,7 +161,7 @@ const LatestMove = ({
   }
 
   const playerName = getPlayerName(currentMove);
-  const word = extractWord(currentMove);
+  const word = extractWord(currentMove, currentMoveIndex);
   const score = extractScore(currentMove);
   const location = formatLocation(currentMove);
   const turnNumber = currentMoveIndex + 1;

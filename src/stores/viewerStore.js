@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { getRandomNumber } from '../utils/gameUtils';
 import { origPool, origBoard } from '../components/AppContent/References/staticData';
 import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from '../axios/api';
+import { parseGCG } from '../utils/gcgParser';
 import { getRandomWooglesGame } from '../components/AppContent/References/wooglesGames';
 
 export const useViewerStore = create((set, get) => {
@@ -53,6 +54,7 @@ export const useViewerStore = create((set, get) => {
     // Woogles mode
     wooglesMode: false,
     currentWooglesGame: null,
+    parsedMoves: [],
   };
 
   return {
@@ -104,6 +106,7 @@ export const useViewerStore = create((set, get) => {
     // Actions - Woogles mode
     setWooglesMode: (isWoogles) => set({ wooglesMode: isWoogles }),
     setCurrentWooglesGame: (game) => set({ currentWooglesGame: game }),
+    setParsedMoves: (parsed) => set({ parsedMoves: parsed }),
     
     // Utility functions
     handleClose: () => set({ open: false }),
@@ -240,8 +243,12 @@ export const useViewerStore = create((set, get) => {
           return;
         }
         
+        // Parse the entire GCG once and store the parsed moves
+        const rawGCG = moveRes[0].join('\n');
+        const parsedMoves = parseGCG(rawGCG);
         set({
           moveSet: moveRes[0],
+          parsedMoves: parsedMoves,
           origPlayerRaw: moveRes[1],
           notes: moveRes[2]
         });

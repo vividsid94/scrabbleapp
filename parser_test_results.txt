@@ -1,0 +1,102 @@
+=== Testing Parser with Individual Moves ===
+
+Move 1: ">Josh: ?DFGOTU H7 FUG +14 14"
+Parsed result: [
+  {
+    player: 'Josh',
+    rack: '?DFGOTU',
+    location: 'H7',
+    word: 'FUG',
+    score: 14,
+    total: 14
+  }
+]
+  player: Josh
+  rack: ?DFGOTU
+  location: H7
+  word: FUG
+  score: 14
+  total: 14
+  getMove would return: H7 FUG
+
+Move 2: ">Noah: ACEEHIT I7 AHI +23 23"
+Parsed result: [
+  {
+    player: 'Noah',
+    rack: 'ACEEHIT',
+    location: 'I7',
+    word: 'AHI',
+    score: 23,
+    total: 23
+  }
+]
+  player: Noah
+  rack: ACEEHIT
+  location: I7
+  word: AHI
+  score: 23
+  total: 23
+  getMove would return: I7 AHI
+
+Move 3: ">Josh: ?ADEOOT J1 TAbOOED +68 82"
+Parsed result: [
+  {
+    player: 'Josh',
+    rack: '?ADEOOT',
+    location: 'J1',
+    word: 'TAbOOED',
+    score: 68,
+    total: 82
+  }
+]
+  player: Josh
+  rack: ?ADEOOT
+  location: J1
+  word: TAbOOED
+  score: 68
+  total: 82
+  getMove would return: J1 TAbOOED
+
+Move 4: ">Josh: EEOPRTU 1H OU.PETER +149 231"
+Parsed result: [
+  {
+    player: 'Josh',
+    rack: 'EEOPRTU',
+    location: '1H',
+    word: 'OU.PETER',
+    score: 149,
+    total: 231
+  }
+]
+  player: Josh
+  rack: EEOPRTU
+  location: 1H
+  word: OU.PETER
+  score: 149
+  total: 231
+  getMove would return: 1H OU.PETER
+
+Move 5: ">Josh: EEOPRTU --  -149 82"
+Parsed result: [
+  {
+    player: 'Josh',
+    rack: 'EEOPRTU',
+    location: '--',
+    word: null,
+    score: -149,
+    total: 82
+  }
+]
+  player: Josh
+  rack: EEOPRTU
+  location: --
+  word: null
+  score: -149
+  total: 82
+  getMove would return: Challenge
+
+=== Summary ===
+The parser is working correctly:
+- Normal plays: location + word (e.g., "H7 FUG", "1H OU.PETER")
+- Challenges: "Challenge" (when location is "--")
+- All fields are parsed correctly (player, rack, location, word, score, total) 
