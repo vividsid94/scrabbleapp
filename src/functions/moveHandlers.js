@@ -1,127 +1,113 @@
 import { highlightPreviousMove, updateBoard } from "./boardFunctions";
 
-export const handleMove = (superLastMove, lastMove, thisMove, nextMove, type, state) => {
-  // Clean up move strings
+// Main handleMove function that uses pre-parsed moves
+export const handleMove = (superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, parsedMoves) => {
+  // Get move objects from parsed moves
   const moves = {
-    superlastmove: cleanMove(superLastMove),
-    lastmove: cleanMove(lastMove),
-    thismove: cleanMove(thisMove),
-    nextmove: cleanMove(nextMove)
+    superlastmove: parsedMoves[superLastMoveIndex] || null,
+    lastmove: parsedMoves[lastMoveIndex] || null,
+    thismove: parsedMoves[thisMoveIndex] || null,
+    nextmove: parsedMoves[nextMoveIndex] || null
   };
-
-  // Parse move details
-  for (const id in moves) {
-    const move = moves[id];
-    if (move.parts) {
-      move.location = move.parts[2];
-      move.play = move.parts[3];
-      move.points = move.parts[4];
-      move.score = move.parts[5];
-    }
-  }
 
   // Handle move based on type 
   if (type === "previous") {
-    handlePreviousMove(moves, state);
+    handlePreviousMoveWithParsedMoves(moves, state, parsedMoves);
   } else {
-    handleNextMove(moves, state);
+    handleNextMoveWithParsedMoves(moves, state, parsedMoves);
   }
 };
 
-const cleanMove = (move) => {
-  const cleanedMove = move ? move.replace(/\s+/g, ' ') : null;
-  return {
-    move: cleanedMove,
-    parts: cleanedMove ? cleanedMove.split(" ") : null,
-    location: null,
-    play: null,
-    points: null,
-    score: null 
-  };
-};
-
-const handlePreviousMove = (moves, state) => {
+const handlePreviousMoveWithParsedMoves = (moves, state, parsedMoves) => {
   const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
   
-  const moveName = moves['thismove'].move ? moves['thismove'].parts[0] : 'empty';
-  const nextMoveName = moves['nextmove'].move ? moves['nextmove'].parts[0] : 'empty';
-  const firstMovePlayerName = moveSet[0].split(" ")[0];
-  const thisMovePlayerName = moves['thismove'].move ? moves['thismove'].parts[0] : 'empty';
+  const thisMove = moves['thismove'];
+  const nextMove = moves['nextmove'];
+  const firstMovePlayerName = parsedMoves[0]?.player || 'empty';
+  const thisMovePlayerName = thisMove?.player || 'empty';
 
   // Handle board updates
-  if (moveName === nextMoveName && moves['thismove'].location === "--") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
-  } else if (moves['nextmove'].location && moves['nextmove'].location[0] !== "-") {
-    updateBoardAndPool("remove", moves['nextmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
+  if (thisMove?.player === nextMove?.player && thisMove?.location === "--") {
+    updateBoardAndPoolWithParsedMove("add", thisMove, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
+  } else if (nextMove?.location && nextMove.location[0] !== "-") {
+    updateBoardAndPoolWithParsedMove("remove", nextMove, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
     
-    if (moves['thismove'].move && moves['thismove'].location[0] !== "-") {
-      setCurrentMoveCoords(highlightPreviousMove(moves['thismove'].location, moves['thismove'].play, boardCoords));
+    if (thisMove && thisMove.location && thisMove.location[0] !== "-") {
+      setCurrentMoveCoords(highlightPreviousMove(thisMove.location, thisMove.word, boardCoords));
     }
-  } else if (moves['nextmove'].location === "--") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
+  } else if (nextMove?.location === "--") {
+    updateBoardAndPoolWithParsedMove("add", thisMove, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   }
 
   // Update scores
-  updateScores(moves, moveName, nextMoveName, thisMovePlayerName, firstMovePlayerName, setPlayer1points, setPlayer2points);
-  setPointsScored(moves['thismove'].points);
+  updateScoresWithParsedMoves(moves, thisMovePlayerName, firstMovePlayerName, setPlayer1points, setPlayer2points);
+  setPointsScored(thisMove?.score || 0);
 };
 
-const handleNextMove = (moves, state) => {
+const handleNextMoveWithParsedMoves = (moves, state, parsedMoves) => {
   const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
   
-  const moveName = moves['thismove'].move ? moves['thismove'].parts[0] : 'empty';
-  const lastMoveName = moves['lastmove'].move ? moves['lastmove'].parts[0] : 'empty';
-  const firstMovePlayerName = moveSet[0].split(" ")[0];
-  const thisMovePlayerName = moves['thismove'].parts[0];
+  const thisMove = moves['thismove'];
+  const lastMove = moves['lastmove'];
+  const firstMovePlayerName = parsedMoves[0]?.player || 'empty';
+  const thisMovePlayerName = thisMove?.player || 'empty';
 
   // Handle board updates
-  if (moveName === lastMoveName && moves['thismove'].location === "--") {
-    updateBoardAndPool("remove", moves['lastmove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
-  } else if (moves['thismove'].location && moves['thismove'].location[0] !== "-") {
-    updateBoardAndPool("add", moves['thismove'], boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
+  if (thisMove?.player === lastMove?.player && thisMove?.location === "--") {
+    updateBoardAndPoolWithParsedMove("remove", lastMove, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
+  } else if (thisMove?.location && thisMove.location[0] !== "-") {
+    updateBoardAndPoolWithParsedMove("add", thisMove, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords);
   }
 
   // Update scores
-  if (moveName !== lastMoveName) {
+  if (thisMove?.player !== lastMove?.player) {
     if (thisMovePlayerName === firstMovePlayerName) {
-      setPlayer1points(moves['thismove'].score);
+      setPlayer1points(thisMove?.total || 0);
     } else {
-      setPlayer2points(moves['thismove'].score);
+      setPlayer2points(thisMove?.total || 0);
     }
   } else {
     if (thisMovePlayerName === firstMovePlayerName) {
-      setPlayer1points(moves['thismove'].score || moves['thismove'].points);
+      setPlayer1points(thisMove?.total || thisMove?.score || 0);
     } else {
-      setPlayer2points(moves['thismove'].points || moves['thismove'].score);
+      setPlayer2points(thisMove?.score || thisMove?.total || 0);
     }
   }
 
-  setPointsScored(moves['thismove'].points);
+  setPointsScored(thisMove?.score || 0);
 };
 
-const updateBoardAndPool = (type, move, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords) => {
-  const props = { location: move.location, play: move.play, type, boardCoords, origBoard };
+const updateBoardAndPoolWithParsedMove = (type, move, boardCoords, origBoard, setCurrentMoveCoords, setBoardCoords) => {
+  if (!move) return;
+  
+  const props = { location: move.location, play: move.word, type, boardCoords, origBoard };
   const board = updateBoard(props);
   setCurrentMoveCoords(board[0]);
   setBoardCoords(board[1]);
 };
 
-const updateScores = (moves, moveName, nextMoveName, thisMovePlayerName, firstMovePlayerName, setPlayer1points, setPlayer2points) => {
-  if (moveName !== nextMoveName) {
+const updateScoresWithParsedMoves = (moves, thisMovePlayerName, firstMovePlayerName, setPlayer1points, setPlayer2points) => {
+  const thisMove = moves['thismove'];
+  const nextMove = moves['nextmove'];
+  const lastMove = moves['lastmove'];
+  
+  if (thisMove?.player !== nextMove?.player) {
     if (thisMovePlayerName === firstMovePlayerName) {
-      setPlayer2points(moves['lastmove'].move ? (moves['lastmove'].score || moves['lastmove'].points) : 0);
+      setPlayer2points(lastMove?.total || lastMove?.score || 0);
     } else {
-      if (moveName !== moves['lastmove'].parts[0]) {
-        setPlayer1points(moves['lastmove'].move ? (moves['lastmove'].score || moves['lastmove'].points) : 0);
+      if (thisMove?.player !== lastMove?.player) {
+        setPlayer1points(lastMove?.total || lastMove?.score || 0);
       } else {
-        setPlayer1points(moves['superlastmove'].move ? moves['superlastmove'].score : 0);
+        setPlayer1points(moves['superlastmove']?.total || 0);
       }
     }
   } else {
     if (thisMovePlayerName === firstMovePlayerName) {
-      setPlayer1points(moves['thismove'].score);
+      setPlayer1points(thisMove?.total || 0);
     } else {
-      setPlayer2points(moves['thismove'].score);
+      setPlayer2points(thisMove?.total || 0);
     }
   }
-}; 
+};
+
+ 

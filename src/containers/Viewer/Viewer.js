@@ -142,7 +142,14 @@ export default function Viewer({ onChange }){
       moveSet, 
       origBoard
     };
-    handleMove(superLastMove, lastMove, thisMove, nextMove, type, state);
+    
+    // Calculate move indices
+    const superLastMoveIndex = superLastMove ? moveSet.indexOf(superLastMove) : -1;
+    const lastMoveIndex = lastMove ? moveSet.indexOf(lastMove) : -1;
+    const thisMoveIndex = thisMove ? moveSet.indexOf(thisMove) : -1;
+    const nextMoveIndex = nextMove ? moveSet.indexOf(nextMove) : -1;
+    
+    handleMove(superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, parsedMoves);
   };
 
   const handleOpenPlayersModal = () => {
