@@ -969,6 +969,22 @@ export const useSandboxStore = create((set, get) => {
           }
         });
 
+        // Fix blank tiles in board state for bot API - convert display letters to actual lowercase values
+        blankTiles.forEach(blankTile => {
+          const { row, col } = blankTile;
+          if (boardCopy[row] && boardCopy[row][col]) {
+            // Convert the display letter (e.g., 'P') to lowercase (e.g., 'p') for proper scoring
+            boardCopy[row][col] = boardCopy[row][col].toLowerCase();
+          }
+        });
+
+        // Log the board state being sent to bot API
+        console.log('🤖 NORMAL MODE - Board state sent to bot API:', {
+          board: boardCopy,
+          letters: apiRack,
+          pool: pool
+        });
+
         // Call the bot API
         fetch('/.netlify/functions/botLogic', {
           method: 'POST',
@@ -1407,7 +1423,24 @@ export const useSandboxStore = create((set, get) => {
         const rackCopy = [...currentRack];
         const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
 
+        // Fix blank tiles in board state for bot API - convert display letters to actual lowercase values
+        // Fix blank tiles in board state for bot API - convert display letters to actual lowercase values
+        currentState.blankTiles.forEach(blankTile => {
+          const { row, col } = blankTile;
+          if (boardCopy[row] && boardCopy[row][col]) {
+            // Convert the display letter (e.g., 'P') to lowercase (e.g., 'p') for proper scoring
+            boardCopy[row][col] = boardCopy[row][col].toLowerCase();
+          }
+        });
+
         try {
+          // Log the board state being sent to bot API
+          console.log('⚡ FAST PLAY MODE - Board state sent to bot API:', {
+            board: boardCopy,
+            letters: apiRack,
+            pool: currentState.pool
+          });
+
           // Call the bot API
           const response = await fetch('/.netlify/functions/botLogic', {
             method: 'POST',
