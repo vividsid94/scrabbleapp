@@ -25,7 +25,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import { Snackbar, Alert } from "@mui/material";
-import PuzzlePlayerInfo from './PuzzlePlayerInfo.js';
+import SandboxPlayerInfo from './SandboxPlayerInfo.js';
 
 export default function Sandbox() {
   // Refs (keep these local like Play.js)
@@ -383,7 +383,7 @@ export default function Sandbox() {
           </Box>
           <Box className={styles.rightPanel}>
             {/* Player Info Panel */}
-            <PuzzlePlayerInfo />
+            <SandboxPlayerInfo />
             
             {/* Player info and pool */}
             {/* <Box className={styles.playerPanel}>

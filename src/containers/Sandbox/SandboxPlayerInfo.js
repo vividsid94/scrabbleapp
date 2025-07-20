@@ -39,7 +39,7 @@ const MemoizedLatestMove = React.memo(() => {
   );
 });
 
-const PuzzlePlayerInfo = React.memo(() => {
+const SandboxPlayerInfo = React.memo(() => {
   // Get global color scheme
   const color = useColorSchemeStore(state => state.color);
   
@@ -306,4 +306,4 @@ const PuzzlePlayerInfo = React.memo(() => {
   );
 });
 
-export default PuzzlePlayerInfo; 
+export default SandboxPlayerInfo; 
