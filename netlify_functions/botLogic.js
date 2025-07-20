@@ -177,8 +177,23 @@ async function callGoGenerateMoves(board, letters) {
                   }
                 }
                 
+                // Log what the Go service actually returned
+                console.log('🔍 GO SERVICE RAW WORD:', {
+                  actualWord: actualWord,
+                  position: goMove.position,
+                  direction: direction,
+                  row: row,
+                  col: col
+                });
+                
                 // Convert dots to actual letters in parentheses
                 const displayWord = convertWordWithDots(actualWord, board, row, col, direction);
+                
+                // Log what convertWordWithDots produced
+                console.log('🔍 CONVERTED WORD:', {
+                  original: actualWord,
+                  converted: displayWord
+                });
                 
                 // Create tiles array - for now, we'll create a simple representation
                 // since the Go service doesn't provide detailed tile placement info

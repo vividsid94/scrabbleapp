@@ -1029,19 +1029,26 @@ export const useSandboxStore = create((set, get) => {
             setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
             setConsecutivePasses(prev => prev + 1);
           } else {
-            // Log the API response to see what location was actually returned
-            console.log('🤖 BOT API RESPONSE - Best Move:', {
-              word: data.moves[0]?.word,
-              startPosition: data.moves[0]?.startPosition,
-              direction: data.moves[0]?.direction,
-              tiles: data.moves[0]?.tiles,
-              boardDiff: data.moves[0]?.boardDiff
-            });
+
             
             // Sort moves by totalValue (points + leave) from the backend
             console.log(`🤖 NORMAL MODE: Sorting ${data.moves.length} moves by totalValue`);
             const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
             const bestMove = sortedMoves[0];
+            
+            // Log the top sorted move that will be executed
+            console.log('🤖 TOP SORTED MOVE (will be executed):', {
+              word: bestMove.word,
+              score: bestMove.score,
+              startPosition: bestMove.startPosition,
+              direction: bestMove.direction,
+              tiles: bestMove.tiles,
+              isExchange: bestMove.isExchange,
+              leave: bestMove.leave,
+              leaveValue: bestMove.leaveValue,
+              totalValue: bestMove.totalValue,
+              player: currentName
+            });
             
 
 
@@ -1155,7 +1162,9 @@ export const useSandboxStore = create((set, get) => {
                 score: bestMove.score,
                 rack: currentRack.join(''),
                 total: currentPoints + bestMove.score,
-                word: bestMove.word
+                word: bestMove.word,
+                startPosition: bestMove.startPosition,
+                direction: bestMove.direction
               };
         
               const currentHistory = get().moveHistory || [];
@@ -1431,19 +1440,26 @@ export const useSandboxStore = create((set, get) => {
             break;
           }
 
-          // Log the API response to see what location was actually returned
-          console.log('⚡ FAST PLAY BOT API RESPONSE - Best Move:', {
-            word: data.moves[0]?.word,
-            startPosition: data.moves[0]?.startPosition,
-            direction: data.moves[0]?.direction,
-            tiles: data.moves[0]?.tiles,
-            boardDiff: data.moves[0]?.boardDiff
-          });
+
           
           // Sort moves by totalValue
           console.log(`⚡ FAST PLAY MODE: Sorting ${data.moves.length} moves by totalValue`);
           const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
           const bestMove = sortedMoves[0];
+          
+          // Log the top sorted move that will be executed
+          console.log('⚡ FAST PLAY TOP SORTED MOVE (will be executed):', {
+            word: bestMove.word,
+            score: bestMove.score,
+            startPosition: bestMove.startPosition,
+            direction: bestMove.direction,
+            tiles: bestMove.tiles,
+            isExchange: bestMove.isExchange,
+            leave: bestMove.leave,
+            leaveValue: bestMove.leaveValue,
+            totalValue: bestMove.totalValue,
+            player: currentName
+          });
           
 
 
@@ -1747,7 +1763,9 @@ export const useSandboxStore = create((set, get) => {
               score: move.score,
               rack: rackBeforeMove.join(''),
               total: movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points,
-              word: move.word
+              word: move.word,
+              startPosition: move.startPosition,
+              direction: move.direction
             };
             
 

@@ -8,13 +8,13 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
-import LatestMove from '../Play/components/LatestMove.js';
+import SandboxLatestMove from './SandboxLatestMove.js';
 import { useSandboxStore } from '../../stores/sandboxStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from '../Puzzle/Puzzle.module.css';
 
-// Memoized LatestMove component that only subscribes to what it needs
-const MemoizedLatestMove = React.memo(() => {
+// Memoized SandboxLatestMove component that only subscribes to what it needs
+const MemoizedSandboxLatestMove = React.memo(() => {
   const moveHistory = useSandboxStore(state => state.moveHistory);
   const player1Name = useSandboxStore(state => state.player1Name);
   const player2Name = useSandboxStore(state => state.player2Name);
@@ -26,12 +26,14 @@ const MemoizedLatestMove = React.memo(() => {
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
 
   return (
-    <LatestMove 
+    <SandboxLatestMove 
       latestMove={latestMove} 
       player1Name={player1Name} 
       player2Name={player2Name}
       allMoves={moveHistory}
       boardCoords={boardCoords}
+      player1Rack={player1Rack}
+      player2Rack={player2Rack}
       pool={pool}
     />
   );
@@ -276,7 +278,7 @@ const SandboxPlayerInfo = React.memo(() => {
         </Box>
       )}
 
-      <MemoizedLatestMove />
+              <MemoizedSandboxLatestMove />
 
 
 
