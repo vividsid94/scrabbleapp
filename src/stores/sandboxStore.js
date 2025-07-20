@@ -993,13 +993,7 @@ export const useSandboxStore = create((set, get) => {
             data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
           }
 
-          console.log('🤖 BOT API RESPONSE:', {
-            player: currentName,
-            moves: data.moves,
-            bestMove: data.moves ? data.moves[0] : null,
-            poolSize: pool.length,
-            exchangesConsidered: pool.length >= 7
-          });
+
 
           // Stop game if exchanges are no longer considered (pool < 7 tiles)
           if (pool.length < 7) {
@@ -1360,7 +1354,7 @@ export const useSandboxStore = create((set, get) => {
       let shouldPause = false;
       let pauseReason = null;
 
-      console.log('🚀 Starting fast play mode');
+      
 
       // Collect moves until we hit a pause condition
       while (!shouldPause && !currentState.gameEnded) {
@@ -1456,7 +1450,8 @@ export const useSandboxStore = create((set, get) => {
               type: 'move',
               move: bestMove,
               player: currentName,
-              currentPlayer: currentPlayer
+              currentPlayer: currentPlayer,
+              rack: currentRack.join('') // Store the rack BEFORE the move
             });
 
             // Simulate the move to update state for next iteration (don't update real state yet)
@@ -1628,7 +1623,7 @@ export const useSandboxStore = create((set, get) => {
         getBoardDiff
       } = get();
 
-      console.log('⚡ Executing', moves.length, 'moves in fast play mode');
+
 
       let currentBoard = JSON.parse(JSON.stringify(boardCoords));
       let currentPlayer1Rack = [...player1Rack];
@@ -1641,10 +1636,17 @@ export const useSandboxStore = create((set, get) => {
       const moveHistoryEntries = [];
 
       for (const moveData of moves) {
+
+        
         if (moveData.type === 'move') {
-          const { move, player, currentPlayer: movePlayer } = moveData;
+          const { move, player, currentPlayer: movePlayer, rack } = moveData;
           const currentRack = movePlayer === 1 ? currentPlayer1Rack : currentPlayer2Rack;
           const currentPoints = movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points;
+          
+          // Use the rack that was stored when the move was created
+          const rackBeforeMove = rack ? rack.split('') : [...currentRack];
+          
+
 
           if (move.isExchange) {
             // Handle exchange
@@ -1668,7 +1670,7 @@ export const useSandboxStore = create((set, get) => {
               boardDiff: [],
               player: player,
               score: 0,
-              rack: newRack.join(''),
+              rack: rackBeforeMove.join(''),
               total: currentPoints,
               word: 'Exchange'
             });
@@ -1715,14 +1717,17 @@ export const useSandboxStore = create((set, get) => {
               currentPlayer2Points += move.score;
             }
 
-            moveHistoryEntries.push({
+            const moveHistoryEntry = {
               boardDiff: boardDiff,
               player: player,
               score: move.score,
-              rack: newRack.join(''),
+              rack: rackBeforeMove.join(''),
               total: movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points,
               word: move.word
-            });
+            };
+            
+
+            moveHistoryEntries.push(moveHistoryEntry);
           }
 
           currentPlayer = movePlayer === 1 ? 2 : 1;
@@ -1760,7 +1765,7 @@ export const useSandboxStore = create((set, get) => {
         botMoveSound.play();
       }
 
-      console.log('✅ Fast play execution completed');
+
       
       // Clear fast play moves after a short delay to show the summary
       setTimeout(() => {
