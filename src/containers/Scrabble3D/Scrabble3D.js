@@ -108,9 +108,10 @@ const Scrabble3D = () => {
     camera.position.set(0, 15, 15);
     camera.lookAt(0, 0, 0);
 
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer setup with HD settings
+    const renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // HD pixel ratio
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
@@ -123,14 +124,14 @@ const Scrabble3D = () => {
     controlsRef.current = controls;
 
     // Magical lighting setup
-    const ambientLight = new THREE.AmbientLight(0x4040ff, 0.3); // Good ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Soft white ambient light
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // Clean white directional light
     directionalLight.position.set(15, 15, 10);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.height = 4096;
     directionalLight.shadow.camera.near = 0.5;
     directionalLight.shadow.camera.far = 50;
     directionalLight.shadow.camera.left = -20;
@@ -140,21 +141,21 @@ const Scrabble3D = () => {
     scene.add(directionalLight);
 
     // Magical colored point lights (balanced with lamps)
-    const purpleLight = new THREE.PointLight(0x9933ff, 0.5, 40);
-    purpleLight.position.set(-20, 15, -20);
-    scene.add(purpleLight);
+    const whiteLight1 = new THREE.PointLight(0xffffff, 0.6, 40);
+    whiteLight1.position.set(-20, 15, -20);
+    scene.add(whiteLight1);
 
-    const cyanLight = new THREE.PointLight(0x00ffff, 0.5, 40);
-    cyanLight.position.set(20, 15, 20);
-    scene.add(cyanLight);
+    const whiteLight2 = new THREE.PointLight(0xffffff, 0.6, 40);
+    whiteLight2.position.set(20, 15, 20);
+    scene.add(whiteLight2);
 
-    const pinkLight = new THREE.PointLight(0xff69b4, 0.5, 40);
-    pinkLight.position.set(0, 20, -25);
-    scene.add(pinkLight);
+    const whiteLight3 = new THREE.PointLight(0xffffff, 0.6, 40);
+    whiteLight3.position.set(0, 20, -25);
+    scene.add(whiteLight3);
 
-    const goldLight = new THREE.PointLight(0xffd700, 0.4, 35);
-    goldLight.position.set(-15, 10, 15);
-    scene.add(goldLight);
+    const whiteLight4 = new THREE.PointLight(0xffffff, 0.5, 35);
+    whiteLight4.position.set(-15, 10, 15);
+    scene.add(whiteLight4);
 
     // Create magical environment
     createMagicalEnvironment(scene);
@@ -448,10 +449,10 @@ const Scrabble3D = () => {
   };
 
   const createTableAndChairs = (scene) => {
-    // Create magical wooden table
+    // Create magical white table
     const tableGeometry = new THREE.BoxGeometry(50, 0.3, 25);
     const tableMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xD2B48C, // Tan (subtle brown)
+      color: 0xFFFFFF, // Pure white
       transparent: true,
       opacity: 0.9,
       shininess: 20
@@ -766,7 +767,7 @@ const Scrabble3D = () => {
 
   const createTile = (letter, row, col, player, moveIndex) => {
     // Enhanced tile geometry
-    const tileGeometry = new THREE.BoxGeometry(0.8, 0.15, 0.8);
+    const tileGeometry = new THREE.BoxGeometry(0.9, 0.15, 0.9);
     const tileColor = 0xE8D5B5; // More beige tile color
     const tileMaterial = new THREE.MeshPhongMaterial({ 
       color: tileColor,
@@ -787,93 +788,36 @@ const Scrabble3D = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Use preloaded textures for instant loading
-    const getProtileTexture = (letter) => {
-      // Handle blank tiles (lowercase letters) - same logic as Cell component
-      const imageLetter = /[a-z]/.test(letter) ? '_' : letter;
-      
-      // Check if we have a preloaded texture
-      if (preloadedTextures[imageLetter]) {
-        return Promise.resolve(preloadedTextures[imageLetter]);
-      }
-      
-      // Fallback to creating texture on demand if not preloaded
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = `/images/compressed-clean-protiles/${imageLetter}.png`;
-        
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.width = 128;
-          canvas.height = 128;
-          
-          context.clearRect(0, 0, 128, 128);
-          context.drawImage(img, 0, 0, 128, 128);
-          
-          // Use the same logic as modifyImageColor function
-          const imageData = context.getImageData(0, 0, 128, 128);
-          const data = new Uint32Array(imageData.data.buffer);
-          const len = data.length;
-          
-          // For silver tiles, we want white letters (since silver is light)
-          const isDark = false; // Silver is light, so we want white letters
-          const r = isDark ? 255 : 255; // White letters
-          const g = isDark ? 255 : 255;
-          const b = isDark ? 255 : 255;
-          const colorValue = (255 << 24) | (b << 16) | (g << 8) | r;
-          
-          // Process pixels - only modify non-transparent pixels
-          for (let i = 0; i < len; i++) {
-            if (data[i] & 0xff000000) { // Check alpha channel
-              data[i] = colorValue;
-            }
-          }
-          
-          context.putImageData(imageData, 0, 0);
-          
-          const texture = new THREE.CanvasTexture(canvas);
-          resolve(texture);
-        };
-        
-        img.onerror = () => {
-          // Fallback to text if image fails to load
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.width = 128;
-          canvas.height = 128;
-          
-          context.clearRect(0, 0, 128, 128);
-          context.fillStyle = '#FFFFFF';
-          context.font = 'bold 100px Arial';
-          context.textAlign = 'center';
-          context.textBaseline = 'middle';
-          context.fillText(letter, 64, 64);
-          
-          const texture = new THREE.CanvasTexture(canvas);
-          resolve(texture);
-        };
-      });
-    };
-
-    // Add protile texture
-    getProtileTexture(letter).then(texture => {
-      const letterGeometry = new THREE.PlaneGeometry(0.75, 0.75); // Bigger geometry
-      const letterMaterial = new THREE.MeshBasicMaterial({ 
-        map: texture,
-        transparent: true,
-        alphaTest: 0.01
-      });
-      const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-      letterMesh.position.y = 0.11;
-      letterMesh.rotation.x = -Math.PI / 2;
-      tile.add(letterMesh);
-      
-      // Make sure the letter is visible
-      letterMesh.renderOrder = 1;
-      letterMaterial.depthTest = false;
+    // Create clean white lettering
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 128;
+    canvas.height = 128;
+    
+    context.clearRect(0, 0, 128, 128);
+    
+    // Add white fill
+    context.fillStyle = '#FFFFFF';
+    context.font = 'bold 100px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(letter, 64, 64);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const letterGeometry = new THREE.PlaneGeometry(0.7, 0.7);
+    const letterMaterial = new THREE.MeshBasicMaterial({ 
+      map: texture,
+      transparent: true,
+      alphaTest: 0.01
     });
+    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
+    letterMesh.position.y = 0.11;
+    letterMesh.rotation.x = -Math.PI / 2;
+    tile.add(letterMesh);
+    
+    // Make sure the letter is visible
+    letterMesh.renderOrder = 1;
+    letterMaterial.depthTest = false;
 
     // Add move index for animation
     tile.userData = { moveIndex, player, letter };
