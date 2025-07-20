@@ -689,7 +689,7 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(cushion);
 
       // Futon back cushion (folded up)
-      const backCushionGeometry = new THREE.BoxGeometry(5.0, 3.5, 1.0);
+      const backCushionGeometry = new THREE.BoxGeometry(5.0, 4.5, 1.0); // Increased height to extend down to base
       const backCushionMaterial = new THREE.MeshPhongMaterial({ 
         color: 0x4682B4,
         transparent: true,
@@ -697,7 +697,7 @@ const Scrabble3D = () => {
         shininess: 10
       });
       const backCushion = new THREE.Mesh(backCushionGeometry, backCushionMaterial);
-      backCushion.position.set(pos.x, 0.65, pos.z + (pos.rotation === 0 ? -2.15 : 2.15));
+      backCushion.position.set(pos.x, 0.65, pos.z + (pos.rotation === 0 ? -3.0 : 3.0)); // Lowered position so it connects to base
       backCushion.castShadow = true;
       backCushion.receiveShadow = true;
       scene.add(backCushion);
@@ -714,7 +714,7 @@ const Scrabble3D = () => {
         shininess: 20
       });
       const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-      frame.position.set(pos.x, -1.0, pos.z);
+      frame.position.set(pos.x, -1.2, pos.z); // Moved down to avoid collision with cushion
       frame.castShadow = true;
       frame.receiveShadow = true;
       scene.add(frame);
@@ -738,7 +738,7 @@ const Scrabble3D = () => {
 
       pillowPositions.forEach(pillowPos => {
         const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
-        pillow.position.set(pos.x + pillowPos.x, -0.2, pos.z + pillowPos.z);
+        pillow.position.set(pos.x + pillowPos.x, 0.1, pos.z + pillowPos.z); // Raised to sit on top of base cushion
         pillow.castShadow = true;
         pillow.receiveShadow = true;
         scene.add(pillow);
