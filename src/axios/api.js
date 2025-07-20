@@ -224,7 +224,7 @@ export const getWooglesGame = async (gameId) => {
 };
 
 // Parse Woogles GCG data into structured format
-export const parseWooglesGCG = (gcgData) => {
+export const parseWooglesGCG = async (gcgData) => {
   try {
     const lines = gcgData.split('\n');
     const gameInfo = {
@@ -237,6 +237,7 @@ export const parseWooglesGCG = (gcgData) => {
       winner: ''
     };
     
+    // Parse headers
     for (const line of lines) {
       if (line.startsWith('#id')) {
         gameInfo.id = line.split(' ')[1];
@@ -250,20 +251,20 @@ export const parseWooglesGCG = (gcgData) => {
         const parts = line.split(' ');
         gameInfo.player2.username = parts[1];
         gameInfo.player2.name = parts.slice(2).join(' ');
-      } else if (line.startsWith('>') && line.includes(':')) {
-        // Parse move line
-        const moveMatch = line.match(/^>([^:]+):\s*([A-Z?]+\s+\w+\s+[A-Z.]+)\s+\+(\d+)\s+(\d+)$/);
-        if (moveMatch) {
-          const [, player, play, points, runningTotal] = moveMatch;
-          gameInfo.moves.push({
-            player: player.trim(),
-            play: play.trim(),
-            points: parseInt(points),
-            runningTotal: parseInt(runningTotal)
-          });
-        }
       }
     }
+    
+    // Use NEW content-based parser for moves
+    const { parseGCG } = await import('../utils/gcgParser');
+    const parsedMoves = parseGCG(gcgData);
+    
+    // Convert to the format expected by this function
+    gameInfo.moves = parsedMoves.map(move => ({
+      player: move.player,
+      play: `${move.rack} ${move.location || ''} ${move.word || ''}`.trim(),
+      points: move.score || 0,
+      runningTotal: move.total || 0
+    }));
     
     // Get final scores from last moves
     if (gameInfo.moves.length > 0) {
