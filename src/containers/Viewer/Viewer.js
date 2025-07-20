@@ -812,6 +812,7 @@ export default function Viewer({ onChange }){
               moveSet={moveSet}
               currentMoveRef={currentMoveRef}
               parsedMoves={parsedMoves}
+              pool={getCurrentPool()}
               gameDictionary={gameDictionary}
               onMoveSelect={(move) => {
                 console.log('Selected move:', move);

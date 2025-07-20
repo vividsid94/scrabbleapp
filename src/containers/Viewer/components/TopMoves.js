@@ -95,7 +95,7 @@ const TopMoves = ({
       const currentPlayer = currentMoveRef.current % 2 === 0 ? 1 : 2;
       
       // Get the current rack for the player whose turn it is
-      const currentRack = createRack(currentMoveRef.current, parsedMoves);
+      const currentRack = createRack(currentMoveRef.current + 1, parsedMoves);
       
       // Convert any '?' in the rack to '*' for the API
       const apiRack = currentRack.map(tile => tile === '?' ? '*' : tile);
@@ -157,7 +157,7 @@ const TopMoves = ({
       }
       
       // Generate exchange moves only if we have enough tiles in the pool
-      const exchangeMoves = pool.length >= 7 ? generateExchangeCombinations(currentRack).map(tiles => {
+      const exchangeMoves = (pool && pool.length >= 7) ? generateExchangeCombinations(currentRack).map(tiles => {
         const leave = calculateExchangeLeave(currentRack, tiles);
         return {
           word: `Exchange ${tiles.join('')}`,
