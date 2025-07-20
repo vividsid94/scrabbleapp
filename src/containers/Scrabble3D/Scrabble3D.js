@@ -563,9 +563,9 @@ const Scrabble3D = () => {
   };
 
   const createBoard = (scene) => {
-    // Create circular board base
+    // Create circular board base (raised to create groove effect)
     const boardRadius = 11.5;
-    const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.2, 64);
+    const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.3, 64);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
       color: 0xB0B0B0, // Light gray (neutral)
       transparent: true,
@@ -574,10 +574,10 @@ const Scrabble3D = () => {
     });
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
-    board.position.y = -0.1;
+    board.position.y = -0.1; // Raised higher to create groove effect
     scene.add(board);
 
-    // Create colored squares on the board surface (no grooves to avoid glitching)
+    // Create colored squares on the board surface (simple boxes to avoid rendering issues)
     const squareSize = 1;
     const gridSize = 15;
     const startX = -(gridSize * squareSize) / 2 + squareSize / 2;
