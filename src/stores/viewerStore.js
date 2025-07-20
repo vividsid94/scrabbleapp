@@ -236,21 +236,37 @@ export const useViewerStore = create((set, get) => {
           recentDictionaries: []
         });
 
-        const moveRes = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', state.gameNum);
-        if (!moveRes || !moveRes[0]) {
+        // 1. Fetch raw GCG from Cross-Tables API
+        const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', state.gameNum);
+        if (!rawGCG) {
           console.error('Failed to load move set');
           get().randomizeGame();
           return;
         }
         
-        // Parse the entire GCG once and store the parsed moves
-        const rawGCG = moveRes[0].join('\n');
+        // 2. Use NEW content-based parser for game logic
         const parsedMoves = parseGCG(rawGCG);
+        
+        // 3. Extract display data from raw GCG (for UI purposes)
+        const lines = rawGCG.split('\n');
+        const moveSet = lines.filter(str => str.startsWith(">")); // Raw move strings for display
+        const origPlayerRaw = moveSet[0]?.split(':')[0] || ''; // Player name for display
+        const notes = [];
+        
+        // Extract notes for display
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#note")) {
+            const count = lines.slice(0, i).filter(line => line.startsWith(">")).length;
+            notes.push([lines[i].replace("#note ", ""), count]);
+          }
+        }
+        
+        // 4. Set state with both parsed moves (for logic) and display data
         set({
-          moveSet: moveRes[0],
-          parsedMoves: parsedMoves,
-          origPlayerRaw: moveRes[1],
-          notes: moveRes[2]
+          moveSet: moveSet,        // Raw strings for UI display
+          parsedMoves: parsedMoves, // Structured data for game logic
+          origPlayerRaw: origPlayerRaw, // Player name for display
+          notes: notes             // Notes for display
         });
 
         const infoRes = await getRecentGameInfo('https://www.cross-tables.com/annolistself.php');

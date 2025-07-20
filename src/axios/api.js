@@ -3,22 +3,10 @@ import axios from 'axios';
 export const getMoveSet = async (baseURL, gameNum) => {
     let first3 = Math.floor(gameNum / 100).toString().substring(0, 3);
     let fullLink = baseURL + first3 + '/anno' + gameNum + '.gcg'
-    let returnMoveSet = [];
-    let returnOrigPlayerRaw = [];
     try {
       const response = await axios.get('/.netlify/functions/proxy?url=' + encodeURIComponent(fullLink))
       console.log("Game reset");
-      returnMoveSet = response.data.toString().split("\n").filter(str => str.startsWith(">"));
-      returnOrigPlayerRaw = response.data.toString().split("\n").filter(str => str.startsWith(">"))[0].split(':')[0];
-      var lines = response.data.toString().split("\n");
-      var notes = [];
-      for (var i = 0; i < lines.length; i++) {
-          if (lines[i].startsWith("#note")) {
-              var count = lines.slice(0,i).filter(line => line.startsWith(">")).length;
-              notes.push([lines[i].replace("#note ", ""), count]);
-          }
-      }
-      return [returnMoveSet, returnOrigPlayerRaw, notes];  
+      return response.data.toString(); // Return raw GCG string
     } catch(err) {
       console.log(err)
     }

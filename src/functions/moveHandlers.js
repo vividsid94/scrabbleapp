@@ -2,6 +2,7 @@ import { highlightPreviousMove, updateBoard } from "./boardFunctions";
 
 // Main handleMove function that uses pre-parsed moves
 export const handleMove = (superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, parsedMoves) => {
+  console.log(parsedMoves);
   // Get move objects from parsed moves
   const moves = {
     superlastmove: parsedMoves[superLastMoveIndex] || null,
