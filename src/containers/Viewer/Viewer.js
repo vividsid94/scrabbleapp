@@ -143,10 +143,10 @@ export default function Viewer({ onChange }){
     };
     
     // Calculate move indices - these are now just the move indices directly
-    const superLastMoveIndex = superLastMove ? superLastMove : -1;
-    const lastMoveIndex = lastMove ? lastMove : -1;
-    const thisMoveIndex = thisMove ? thisMove : -1;
-    const nextMoveIndex = nextMove ? nextMove : -1;
+    const superLastMoveIndex = superLastMove !== null && superLastMove !== undefined ? superLastMove : -1;
+    const lastMoveIndex = lastMove !== null && lastMove !== undefined ? lastMove : -1;
+    const thisMoveIndex = thisMove !== null && thisMove !== undefined ? thisMove : -1;
+    const nextMoveIndex = nextMove !== null && nextMove !== undefined ? nextMove : -1;
     
     handleMove(superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, parsedMoves);
   };
