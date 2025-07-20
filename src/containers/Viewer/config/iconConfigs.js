@@ -18,7 +18,7 @@ export const createIconList = (
   currentMoveRef,
   setMoveDirection,
   handleMoveWrapper,
-  moveSet,
+  parsedMoves,
   randomizeGame,
   unlockEloMode,
   showUnlockText,
@@ -48,7 +48,7 @@ export const createIconList = (
       if (currentMoveRef.current > -1) {
         currentMoveRef.current -= 1;
         setMoveDirection("backward");
-        handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "previous");
+        handleMoveWrapper(currentMoveRef.current - 2, currentMoveRef.current - 1, currentMoveRef.current, currentMoveRef.current + 1, "previous");
       }
     },
     size: 20,
@@ -58,10 +58,10 @@ export const createIconList = (
     icon: CaretRight,
     toolTip: "Move forward",
     onClick: () => {
-      if (currentMoveRef.current + 1 < moveSet.length) {
+      if (currentMoveRef.current + 1 < parsedMoves.length) {
         currentMoveRef.current += 1;
         setMoveDirection("forward");
-        handleMoveWrapper(moveSet[currentMoveRef.current - 2], moveSet[currentMoveRef.current - 1], moveSet[currentMoveRef.current], moveSet[currentMoveRef.current + 1], "next");
+        handleMoveWrapper(currentMoveRef.current - 2, currentMoveRef.current - 1, currentMoveRef.current, currentMoveRef.current + 1, "next");
       }
     },
     size: 20,

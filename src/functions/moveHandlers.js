@@ -20,7 +20,7 @@ export const handleMove = (superLastMoveIndex, lastMoveIndex, thisMoveIndex, nex
 };
 
 const handlePreviousMoveWithParsedMoves = (moves, state, parsedMoves) => {
-  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
+  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard } = state;
   
   const thisMove = moves['thismove'];
   const nextMove = moves['nextmove'];
@@ -46,7 +46,7 @@ const handlePreviousMoveWithParsedMoves = (moves, state, parsedMoves) => {
 };
 
 const handleNextMoveWithParsedMoves = (moves, state, parsedMoves) => {
-  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard, moveSet } = state;
+  const { setBoardCoords, setCurrentMoveCoords, setPlayer1points, setPlayer2points, setPointsScored, boardCoords, origBoard } = state;
   
   const thisMove = moves['thismove'];
   const lastMove = moves['lastmove'];

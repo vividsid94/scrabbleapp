@@ -9,7 +9,6 @@ import { processParsedMove } from '../../../functions/boardFunctions';
 
 
 const LatestMove = ({ 
-  moveSet = [], 
   currentMoveRef, 
   name1, 
   name2, 
@@ -24,61 +23,7 @@ const LatestMove = ({
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Extract location from pre-parsed moves
-  const formatLocation = (moveString, moveIndex = 0) => {
-    if (!parsedMoves || !parsedMoves[moveIndex]) {
-      return null;
-    }
-    
-    const move = parsedMoves[moveIndex];
-    return move.location === '--' ? null : move.location;
-  };
 
-  // Extract word from pre-parsed moves with through letter processing
-  const extractWord = (moveString, moveIndex = 0) => {
-    if (!parsedMoves || !parsedMoves[moveIndex]) {
-      return "N/A";
-    }
-    
-    const move = parsedMoves[moveIndex];
-    const processedMove = processParsedMove(move, currentMoveCoords);
-    
-    // Extract just the word part from the processed move
-    const processedParts = processedMove.split(" ");
-    
-    // If it's a challenge, return "Challenge"
-    if (processedMove === "Challenge") {
-      return "Challenge";
-    }
-    
-    // If it's an exchange, return the exchange info
-    if (processedMove.startsWith("Exchange")) {
-      return processedMove;
-    }
-    
-    // For normal plays, return the word part (second part after location)
-    return processedParts.length >= 2 ? processedParts[1] : processedMove;
-  };
-
-  // Extract score from pre-parsed moves
-  const extractScore = (moveString, moveIndex = 0) => {
-    if (!parsedMoves || !parsedMoves[moveIndex]) {
-      return 0;
-    }
-    
-    const move = parsedMoves[moveIndex];
-    return move.score || 0;
-  };
-
-  // Helper function to get player name from move string
-  const getPlayerName = (moveString) => {
-    if (!moveString) return null;
-    
-    const parts = moveString.split(" ");
-    if (parts.length < 1) return null;
-    
-    return parts[0];
-  };
 
   // Helper function to get player icon
   const getPlayerIcon = (playerName) => {
@@ -95,7 +40,7 @@ const LatestMove = ({
 
   // Simple animation when moves change
   useEffect(() => {
-    if (moveSet.length > 0) {
+    if (parsedMoves.length > 0) {
       setIsAnimating(true);
       setAnimationClass(styles.slidingIn);
       
@@ -117,10 +62,10 @@ const LatestMove = ({
   const renderMoveItem = (move, index) => {
     if (!move) return null;
     
-    const playerName = getPlayerName(move);
-    const word = extractWord(move, index);
-    const score = extractScore(move, index);
-    const location = formatLocation(move, index);
+    const playerName = move.player;
+    const word = move.word || 'Pass';
+    const score = move.score || 0;
+    const location = move.location === '--' ? null : move.location;
     const turnNumber = index + 1;
     const turnIndex = currentMoveIndex - index - 1; // Calculate the actual turn index
 
@@ -143,7 +88,7 @@ const LatestMove = ({
     );
   };
 
-  if (moveSet.length === 0) {
+  if (parsedMoves.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
         <Box className={`${styles.latestMoveContent} ${animationClass}`}>
@@ -155,7 +100,7 @@ const LatestMove = ({
 
   // Get the current move (based on currentMoveRef)
   const currentMoveIndex = currentMoveRef.current;
-  const currentMove = currentMoveIndex >= 0 && currentMoveIndex < moveSet.length ? moveSet[currentMoveIndex] : null;
+  const currentMove = currentMoveIndex >= 0 && currentMoveIndex < parsedMoves.length ? parsedMoves[currentMoveIndex] : null;
   
   if (!currentMove) {
     return (
@@ -167,10 +112,10 @@ const LatestMove = ({
     );
   }
 
-  const playerName = getPlayerName(currentMove);
-  const word = extractWord(currentMove, currentMoveIndex);
-  const score = extractScore(currentMove, currentMoveIndex);
-  const location = formatLocation(currentMove, currentMoveIndex);
+  const playerName = currentMove.player;
+  const word = currentMove.word || 'Pass';
+  const score = currentMove.score || 0;
+  const location = currentMove.location === '--' ? null : currentMove.location;
   const turnNumber = currentMoveIndex + 1;
 
   return (
@@ -190,7 +135,7 @@ const LatestMove = ({
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
         </Box>
         <Box className={styles.moveHistoryActions}>
-          {moveSet.length > 1 && (
+          {parsedMoves.length > 1 && (
             <Box className={styles.expandIcon} onClick={handleExpandClick}>
               {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
             </Box>
@@ -198,9 +143,9 @@ const LatestMove = ({
         </Box>
       </Box>
       
-      {isExpanded && moveSet.length > 1 && (
+      {isExpanded && parsedMoves.length > 1 && (
         <Box className={styles.moveHistoryList}>
-          {moveSet.slice(0, currentMoveIndex).reverse().map((move, index) => 
+          {parsedMoves.slice(0, currentMoveIndex).reverse().map((move, index) => 
             renderMoveItem(move, currentMoveIndex - index - 1)
           )}
         </Box>

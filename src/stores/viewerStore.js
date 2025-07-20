@@ -11,7 +11,7 @@ export const useViewerStore = create((set, get) => {
     // Game state
     gameNum: 37033,
     boardClickCount: 0,
-    moveSet: [],
+  
     currentMoveCoords: [],
     boardCoords: [],
     player1points: 0,
@@ -63,7 +63,7 @@ export const useViewerStore = create((set, get) => {
     // Actions - Game state
     setGameNum: (num) => set({ gameNum: num }),
     setBoardClickCount: (count) => set({ boardClickCount: count }),
-    setMoveSet: (moves) => set({ moveSet: moves }),
+
     setCurrentMoveCoords: (coords) => set({ currentMoveCoords: coords }),
     setBoardCoords: (coords) => set({ boardCoords: coords }),
     setPlayer1points: (points) => set({ player1points: points }),
@@ -247,9 +247,8 @@ export const useViewerStore = create((set, get) => {
         // 2. Use NEW content-based parser for game logic
         const parsedMoves = parseGCG(rawGCG);
         
-        // 3. Extract display data from raw GCG (for UI purposes)
+        // 3. Extract notes for display
         const lines = rawGCG.split('\n');
-        const moveSet = lines.filter(str => str.startsWith(">")); // Raw move strings for display
         const origPlayerRaw = parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : ''; // Player name from NEW parsing
         const notes = [];
         
@@ -261,9 +260,8 @@ export const useViewerStore = create((set, get) => {
           }
         }
         
-        // 4. Set state with both parsed moves (for logic) and display data
+        // 4. Set state with parsed moves (for logic) and display data
         set({
-          moveSet: moveSet,        // Raw strings for UI display
           parsedMoves: parsedMoves, // Structured data for game logic
           origPlayerRaw: origPlayerRaw, // Player name for display
           notes: notes             // Notes for display
@@ -403,8 +401,7 @@ export const useViewerStore = create((set, get) => {
           throw new Error('Failed to load Woogles metadata');
         }
         
-        // Parse moves and origPlayerRaw from GCG
-        const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
+        // Parse header info and notes from GCG
         const lines = gcg.split('\n');
         let notes = [];
         let lexicon = '';
@@ -439,7 +436,6 @@ export const useViewerStore = create((set, get) => {
           wooglesMode: true,
           currentWooglesGame: { gameId },
           gameNum: `woogles-${gameId}`,
-          moveSet: moveSet,
           parsedMoves: parsedMoves,
           origPlayerRaw: origPlayerRaw,
           notes: notes,
@@ -516,8 +512,7 @@ export const useViewerStore = create((set, get) => {
           return;
         }
         
-        // Parse moves and origPlayerRaw from GCG
-        const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
+        // Parse header info and notes from GCG
         const lines = gcg.split('\n');
         let notes = [];
         let lexicon = '';
@@ -550,7 +545,6 @@ export const useViewerStore = create((set, get) => {
         const dictionary = metadata.lexicon || lexicon || 'Unknown';
         
         set({
-          moveSet: moveSet,
           parsedMoves: parsedMoves,
           origPlayerRaw: origPlayerRaw,
           notes: notes,
@@ -585,7 +579,7 @@ export const useViewerStore = create((set, get) => {
     
     updateCurrentMove: (moveIndex) => {
       const state = get();
-      if (moveIndex >= 0 && moveIndex < state.moveSet.length) {
+      if (moveIndex >= 0 && moveIndex < state.parsedMoves.length) {
         set({ currentMoveRef: { current: moveIndex } });
       }
     },

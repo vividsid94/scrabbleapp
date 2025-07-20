@@ -68,7 +68,7 @@ export default function Viewer({ onChange }){
   const {
     // Game state
     gameNum, setGameNum,
-    moveSet, setMoveSet,
+  
     currentMoveCoords, setCurrentMoveCoords,
     boardCoords, setBoardCoords,
     player1points, setPlayer1points,
@@ -139,15 +139,14 @@ export default function Viewer({ onChange }){
       setPlayer2points,
       setPointsScored,
       boardCoords,
-      moveSet, 
       origBoard
     };
     
-    // Calculate move indices
-    const superLastMoveIndex = superLastMove ? moveSet.indexOf(superLastMove) : -1;
-    const lastMoveIndex = lastMove ? moveSet.indexOf(lastMove) : -1;
-    const thisMoveIndex = thisMove ? moveSet.indexOf(thisMove) : -1;
-    const nextMoveIndex = nextMove ? moveSet.indexOf(nextMove) : -1;
+    // Calculate move indices - these are now just the move indices directly
+    const superLastMoveIndex = superLastMove ? superLastMove : -1;
+    const lastMoveIndex = lastMove ? lastMove : -1;
+    const thisMoveIndex = thisMove ? thisMove : -1;
+    const nextMoveIndex = nextMove ? nextMove : -1;
     
     handleMove(superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, parsedMoves);
   };
@@ -202,14 +201,13 @@ export default function Viewer({ onChange }){
     
     // Go through all moves up to the current move to find all blank tiles
     for (let moveIndex = 0; moveIndex <= currentMoveRef.current; moveIndex++) {
-      const move = moveSet[moveIndex];
+      const move = parsedMoves[moveIndex];
       if (move) {
-        const parts = move.split(" ");
-        const play = parts[3];
+        const play = move.word;
         
-        if (play && play !== "--" && parts[2]) {
+        if (play && play !== "--" && move.location) {
           // Get the coordinates for this move
-          const moveCoords = highlightPreviousMove(parts[2], play, boardCoords);
+          const moveCoords = highlightPreviousMove(move.location, play, boardCoords);
           
           // Check if any of the moveCoords contain lowercase letters
           moveCoords.forEach((coord, index) => {
@@ -252,7 +250,7 @@ export default function Viewer({ onChange }){
       calculatedBlankTiles
     );
     return result;
-  }, [boardCoords, currentMoveCoords, tiles, lightMode, color.current, currentMoveRef.current, moveSet]);
+  }, [boardCoords, currentMoveCoords, tiles, lightMode, color.current, currentMoveRef.current, parsedMoves]);
 
 
 
@@ -271,10 +269,10 @@ export default function Viewer({ onChange }){
           currentMoveRef.current -= 1;
           setMoveDirection("backward");
           handleMoveWrapper(
-            moveSet[currentMoveRef.current - 2], 
-            moveSet[currentMoveRef.current - 1], 
-            moveSet[currentMoveRef.current], 
-            moveSet[currentMoveRef.current + 1], 
+            currentMoveRef.current - 2, 
+            currentMoveRef.current - 1, 
+            currentMoveRef.current, 
+            currentMoveRef.current + 1, 
             "previous"
           );
         }
@@ -285,14 +283,14 @@ export default function Viewer({ onChange }){
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentMoveRef, moveSet, setMoveDirection, handleMoveWrapper]);
+  }, [currentMoveRef, setMoveDirection, handleMoveWrapper]);
 
   const iconList = createIconList(
     beginningOfGameStore,
     currentMoveRef,
     setMoveDirection,
     handleMoveWrapper,
-    moveSet,
+    parsedMoves,
     randomizeGame,
     unlockEloMode,
     showUnlockText,
@@ -406,7 +404,7 @@ export default function Viewer({ onChange }){
               points={pointsScored} 
               boardMode={boardMode}
               rack={createRack(currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
-              move={currentMoveRef.current >= 0 ? getMove(moveSet[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
+              move={currentMoveRef.current >= 0 ? getMove(parsedMoves[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
               onBoardChildClick={() => {}}
@@ -763,10 +761,10 @@ export default function Viewer({ onChange }){
                   // Apply all moves up to the selected turn
                   for (let i = 0; i <= turn; i++) {
                     handleMoveWrapper(
-                      moveSet[i - 2],
-                      moveSet[i - 1],
-                      moveSet[i],
-                      moveSet[i + 1],
+                      i - 2,
+                      i - 1,
+                      i,
+                      i + 1,
                       "next"
                     );
                   }
@@ -793,10 +791,10 @@ export default function Viewer({ onChange }){
                   // Apply all moves up to the selected turn
                   for (let i = 0; i <= turn; i++) {
                     handleMoveWrapper(
-                      moveSet[i - 2],
-                      moveSet[i - 1],
-                      moveSet[i],
-                      moveSet[i + 1],
+                      i - 2,
+                      i - 1,
+                      i,
+                      i + 1,
                       "next"
                     );
                   }
