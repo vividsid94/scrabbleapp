@@ -27,7 +27,8 @@ const Scrabble3D = () => {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    scene.background = new THREE.Color(0x000033); // Deep blue background
+    scene.fog = new THREE.Fog(0x000033, 20, 100); // Magical fog
     sceneRef.current = scene;
 
     // Camera setup
@@ -37,7 +38,7 @@ const Scrabble3D = () => {
       0.1,
       1000
     );
-    camera.position.set(0, 20, 20);
+    camera.position.set(0, 15, 15);
     camera.lookAt(0, 0, 0);
 
     // Renderer setup
@@ -54,11 +55,11 @@ const Scrabble3D = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Enhanced lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+    // Magical lighting setup
+    const ambientLight = new THREE.AmbientLight(0x4040ff, 0.3); // Good ambient light
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
     directionalLight.position.set(15, 15, 10);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -71,10 +72,28 @@ const Scrabble3D = () => {
     directionalLight.shadow.camera.bottom = -20;
     scene.add(directionalLight);
 
-    // Add point light for dramatic effect
-    const pointLight = new THREE.PointLight(0xff6b6b, 0.5, 30);
-    pointLight.position.set(0, 10, 0);
-    scene.add(pointLight);
+    // Magical colored point lights (balanced with lamps)
+    const purpleLight = new THREE.PointLight(0x9933ff, 0.5, 40);
+    purpleLight.position.set(-20, 15, -20);
+    scene.add(purpleLight);
+
+    const cyanLight = new THREE.PointLight(0x00ffff, 0.5, 40);
+    cyanLight.position.set(20, 15, 20);
+    scene.add(cyanLight);
+
+    const pinkLight = new THREE.PointLight(0xff69b4, 0.5, 40);
+    pinkLight.position.set(0, 20, -25);
+    scene.add(pinkLight);
+
+    const goldLight = new THREE.PointLight(0xffd700, 0.4, 35);
+    goldLight.position.set(-15, 10, 15);
+    scene.add(goldLight);
+
+    // Create magical environment
+    createMagicalEnvironment(scene);
+
+    // Create magical table and chairs
+    createTableAndChairs(scene);
 
     // Create 3D board
     createBoard(scene);
@@ -83,6 +102,16 @@ const Scrabble3D = () => {
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
+      
+      // Animate environment elements
+      if (sceneRef.current.lamps) {
+        const time = Date.now() * 0.001;
+        sceneRef.current.lamps.forEach((lamp, index) => {
+          // Gentle flickering
+          lamp.material.emissiveIntensity = 0.4 + Math.sin(time * 2 + index) * 0.05;
+        });
+      }
+      
       renderer.render(scene, camera);
     };
     animate();
@@ -154,11 +183,300 @@ const Scrabble3D = () => {
     }
   }, [isPlaying, currentMoveIndex, gameData, playbackSpeed]);
 
+  const createMagicalEnvironment = (scene) => {
+    // Create stone floor
+    const floorGeometry = new THREE.PlaneGeometry(80, 80);
+    const floorMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x696969, // Dim gray
+      transparent: true,
+      opacity: 0.9,
+      shininess: 10
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.5;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Create stone walls
+    const wallGeometry = new THREE.BoxGeometry(80, 32, 1);
+    const wallMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x8B7355, // Saddle brown
+      transparent: true,
+      opacity: 0.9,
+      shininess: 5
+    });
+
+    // Back wall
+    const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
+    backWall.position.set(0, 14, -40);
+    backWall.receiveShadow = true;
+    scene.add(backWall);
+
+    // Side walls
+    const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+    leftWall.position.set(-40, 14, 0);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.receiveShadow = true;
+    scene.add(leftWall);
+
+    const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+    rightWall.position.set(40, 14, 0);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.receiveShadow = true;
+    scene.add(rightWall);
+
+    // Create ceiling
+    const ceilingGeometry = new THREE.BoxGeometry(80, 0.5, 80);
+    const ceilingMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xF5DEB3, // Light wheat color
+      transparent: true,
+      opacity: 1.0,
+      shininess: 5
+    });
+    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+    ceiling.position.y = 30;
+    ceiling.receiveShadow = true;
+    scene.add(ceiling);
+
+    // Create stone pillars
+    const pillarGeometry = new THREE.CylinderGeometry(0.8, 0.8, 8, 8);
+    const pillarMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x696969,
+      transparent: true,
+      opacity: 0.9,
+      shininess: 15
+    });
+
+    const pillarPositions = [
+      [-30, 4, -30], [30, 4, -30],
+      [-30, 4, 30], [30, 4, 30]
+    ];
+
+    pillarPositions.forEach(pos => {
+      const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+      pillar.position.set(...pos);
+      pillar.castShadow = true;
+      pillar.receiveShadow = true;
+      scene.add(pillar);
+    });
+
+    // Create grounded lamps around the room
+    const lamps = [];
+    const lampPositions = [
+      [-25, 0, -25], [25, 0, -25], [-25, 0, 25], [25, 0, 25]
+    ];
+
+    lampPositions.forEach(pos => {
+      // Lamp base
+      const baseGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.2, 8);
+      const baseMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x654321, // Dark brown
+        transparent: true,
+        opacity: 0.9,
+        shininess: 20
+      });
+      const base = new THREE.Mesh(baseGeometry, baseMaterial);
+      base.position.set(pos[0], -1.4, pos[2]);
+      base.castShadow = true;
+      base.receiveShadow = true;
+      scene.add(base);
+
+      // Lamp pole
+      const poleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8);
+      const poleMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x8B4513, // Saddle brown
+        transparent: true,
+        opacity: 0.9,
+        shininess: 30
+      });
+      const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+      pole.position.set(pos[0], -0.15, pos[2]);
+      pole.castShadow = true;
+      pole.receiveShadow = true;
+      scene.add(pole);
+
+      // Lamp shade
+      const shadeGeometry = new THREE.CylinderGeometry(0.8, 0.6, 0.4, 8);
+      const shadeMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xF5DEB3, // Wheat
+        transparent: true,
+        opacity: 0.7,
+        shininess: 10
+      });
+      const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
+      shade.position.set(pos[0], 1.1, pos[2]);
+      shade.castShadow = true;
+      shade.receiveShadow = true;
+      scene.add(shade);
+
+      // Lamp light bulb
+      const bulbGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+      const bulbMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xFFFFE0,
+        emissive: 0xFFFFE0,
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.9
+      });
+      const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
+      bulb.position.set(pos[0], 1.1, pos[2]);
+      bulb.castShadow = true;
+      scene.add(bulb);
+
+      // Add lamp light
+      const lampLight = new THREE.PointLight(0xFFFFE0, 3.0, 40);
+      lampLight.position.set(pos[0], 1.1, pos[2]);
+      scene.add(lampLight);
+
+      lamps.push(bulb);
+    });
+
+    // Store lamps for animation
+    sceneRef.current.lamps = lamps;
+
+    // Add some magical books on the table
+    const bookGeometry = new THREE.BoxGeometry(0.8, 0.1, 1.2);
+    const bookMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x8B4513,
+      transparent: true,
+      opacity: 0.9,
+      shininess: 10
+    });
+
+    const bookPositions = [
+      { x: -6, z: -6, rotation: 0.3 },
+      { x: 6, z: -6, rotation: -0.2 },
+      { x: -6, z: 6, rotation: 0.1 }
+    ];
+
+    bookPositions.forEach(pos => {
+      const book = new THREE.Mesh(bookGeometry, bookMaterial);
+      book.position.set(pos.x, -0.1, pos.z);
+      book.rotation.y = pos.rotation;
+      book.castShadow = true;
+      book.receiveShadow = true;
+      scene.add(book);
+    });
+  };
+
+  const createTableAndChairs = (scene) => {
+    // Create magical wooden table
+    const tableGeometry = new THREE.BoxGeometry(50, 0.3, 25);
+    const tableMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xD2B48C, // Tan (subtle brown)
+      transparent: true,
+      opacity: 0.9,
+      shininess: 20
+    });
+    const table = new THREE.Mesh(tableGeometry, tableMaterial);
+    table.position.y = -0.5;
+    table.castShadow = true;
+    table.receiveShadow = true;
+    scene.add(table);
+
+    // Create table legs
+    const legGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+    const legMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x654321, // Dark brown
+      transparent: true,
+      opacity: 0.9,
+      shininess: 15
+    });
+
+    // Position legs at corners
+    const legPositions = [
+      [-9.5, -1.1, -9.5], [9.5, -1.1, -9.5],
+      [-9.5, -1.1, 9.5], [9.5, -1.1, 9.5]
+    ];
+
+    legPositions.forEach(pos => {
+      const leg = new THREE.Mesh(legGeometry, legMaterial);
+      leg.position.set(...pos);
+      leg.castShadow = true;
+      leg.receiveShadow = true;
+      scene.add(leg);
+    });
+
+    // Create two cozy futons
+    const futonPositions = [
+      { x: 0, z: -16, rotation: 0 },    // Futon facing the board
+      { x: 0, z: 16, rotation: Math.PI } // Futon behind the board
+    ];
+
+    futonPositions.forEach((pos, index) => {
+      // Futon base/cushion
+      const cushionGeometry = new THREE.BoxGeometry(5.0, 1.0, 5.0);
+      const cushionMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x4682B4, // Steel blue
+        transparent: true,
+        opacity: 0.9,
+        shininess: 10
+      });
+      const cushion = new THREE.Mesh(cushionGeometry, cushionMaterial);
+      cushion.position.set(pos.x, -0.6, pos.z);
+      cushion.castShadow = true;
+      cushion.receiveShadow = true;
+      scene.add(cushion);
+
+      // Futon back cushion (folded up)
+      const backCushionGeometry = new THREE.BoxGeometry(5.0, 3.5, 1.0);
+      const backCushionMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x4682B4,
+        transparent: true,
+        opacity: 0.9,
+        shininess: 10
+      });
+      const backCushion = new THREE.Mesh(backCushionGeometry, backCushionMaterial);
+      backCushion.position.set(pos.x, 0.65, pos.z + (pos.rotation === 0 ? -2.15 : 2.15));
+      backCushion.castShadow = true;
+      backCushion.receiveShadow = true;
+      scene.add(backCushion);
+
+      // Futon frame/legs (low profile)
+      const frameGeometry = new THREE.BoxGeometry(5.3, 0.4, 5.3);
+      const frameMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x191970, // Midnight blue
+        transparent: true,
+        opacity: 0.9,
+        shininess: 20
+      });
+      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+      frame.position.set(pos.x, -1.0, pos.z);
+      frame.castShadow = true;
+      frame.receiveShadow = true;
+      scene.add(frame);
+
+      // Add some decorative pillows
+      const pillowGeometry = new THREE.BoxGeometry(1.2, 0.4, 1.2);
+      const pillowMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xFF69B4, // Hot pink
+        transparent: true,
+        opacity: 0.9,
+        shininess: 5
+      });
+
+      // Two pillows on each futon
+      const pillowPositions = [
+        { x: -1.5, z: 0.8 }, { x: 1.5, z: 0.8 }
+      ];
+
+      pillowPositions.forEach(pillowPos => {
+        const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
+        pillow.position.set(pos.x + pillowPos.x, -0.2, pos.z + pillowPos.z);
+        pillow.castShadow = true;
+        pillow.receiveShadow = true;
+        scene.add(pillow);
+      });
+    });
+  };
+
   const createBoard = (scene) => {
-    // Board base with better material
-    const boardGeometry = new THREE.BoxGeometry(15, 0.2, 15);
+    // Create circular board base
+    const boardRadius = 11.5;
+    const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.2, 64);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xFFFFFF, // Default white board color
+      color: 0xB0B0B0, // Light gray (neutral)
       transparent: true,
       opacity: 0.95,
       shininess: 30
@@ -168,7 +486,7 @@ const Scrabble3D = () => {
     board.position.y = -0.1;
     scene.add(board);
 
-    // Create grid of squares with better spacing
+    // Create grid of squares inside the circular board
     const squareSize = 1;
     const gridSize = 15;
     const startX = -(gridSize * squareSize) / 2 + squareSize / 2;
@@ -192,6 +510,8 @@ const Scrabble3D = () => {
           squareColor = 0x7269D6; // Triple letter - purple (from cellColors)
         } else if (boardValue === 1) {
           squareColor = 0x7ED6DD; // Double letter - cyan (from cellColors)
+        } else if (boardValue === 0) {
+          squareColor = 0xFFFFFF; // Empty squares - white
         }
         
         const squareMaterial = new THREE.MeshPhongMaterial({ 
