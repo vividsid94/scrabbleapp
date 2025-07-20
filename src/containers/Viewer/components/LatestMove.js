@@ -22,6 +22,7 @@ const LatestMove = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [processedWords, setProcessedWords] = useState([]);
 
 
 
@@ -53,6 +54,21 @@ const LatestMove = ({
     }
   }, [currentMoveRef.current]);
 
+  // Update processed words when current move changes
+  useEffect(() => {
+    if (parsedMoves.length > 0 && currentMoveRef.current >= 0) {
+      const currentMove = parsedMoves[currentMoveRef.current];
+      if (currentMove) {
+        const processedWord = processParsedMove(currentMove, currentMoveCoords);
+        setProcessedWords(prev => {
+          const newWords = [...prev];
+          newWords[currentMoveRef.current] = processedWord;
+          return newWords;
+        });
+      }
+    }
+  }, [currentMoveRef.current, currentMoveCoords, parsedMoves]);
+
 
 
   const handleExpandClick = () => {
@@ -63,11 +79,11 @@ const LatestMove = ({
     if (!move) return null;
     
     const playerName = move.player;
-    const processedWord = processParsedMove(move, currentMoveCoords);
+    const turnIndex = currentMoveIndex - index - 1; // Calculate the actual turn index
+    const processedWord = processedWords[turnIndex] || move.word || 'Pass';
     const score = move.score || 0;
     const location = move.location === '--' ? null : move.location;
     const turnNumber = index + 1;
-    const turnIndex = currentMoveIndex - index - 1; // Calculate the actual turn index
 
     return (
       <Box key={index} className={styles.moveHistoryItem}>
@@ -113,7 +129,7 @@ const LatestMove = ({
   }
 
   const playerName = currentMove.player;
-  const processedWord = processParsedMove(currentMove, currentMoveCoords);
+  const processedWord = processedWords[currentMoveIndex] || processParsedMove(currentMove, currentMoveCoords);
   const score = currentMove.score || 0;
   const location = currentMove.location === '--' ? null : currentMove.location;
   const turnNumber = currentMoveIndex + 1;
