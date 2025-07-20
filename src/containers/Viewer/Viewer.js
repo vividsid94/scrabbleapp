@@ -877,7 +877,7 @@ export default function Viewer({ onChange }){
                     {parsedMoves && parsedMoves.length > 0 ? (
                       <Pool 
                         board={getCurrentPool()}
-                        rack={createRack(currentMoveRef.current, parsedMoves)}
+                        rack={createRack(currentMoveRef.current + 1, parsedMoves)}
                       />  
                     ) : (
                       <div>Loading pool...</div>
