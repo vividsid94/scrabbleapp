@@ -244,18 +244,37 @@ const PuzzlePlayerInfo = React.memo(() => {
 
       {gameStarted && (
         <Box className={styles.playerPanel}>
-          <Box className={styles.playerInfo}>
+          {/* Player 1 Score */}
+          <Box className={styles.playerInfo} style={{ marginBottom: '8px' }}>
             <Box className={styles.playerName} style={{ minWidth: '120px', textAlign: 'center' }}>
-              {currentName}
+              {player1Name}
               <Box component="span" className={styles.thinkingEmoji} style={{ 
-                visibility: isBotThinking ? 'visible' : 'hidden',
+                visibility: (isBotThinking && currentPlayer === 1) ? 'visible' : 'hidden',
                 marginLeft: '4px'
               }}>
-                {currentPlayer === 1 ? '🤔' : '🧠'}
+                🤔
               </Box>
             </Box>
+            <Box className={styles.points} style={{ fontSize: '18px', fontWeight: 'bold' }}>
+              {player1points}
+            </Box>
           </Box>
-
+          
+          {/* Player 2 Score */}
+          <Box className={styles.playerInfo}>
+            <Box className={styles.playerName} style={{ minWidth: '120px', textAlign: 'center' }}>
+              {player2Name}
+              <Box component="span" className={styles.thinkingEmoji} style={{ 
+                visibility: (isBotThinking && currentPlayer === 2) ? 'visible' : 'hidden',
+                marginLeft: '4px'
+              }}>
+                🧠
+              </Box>
+            </Box>
+            <Box className={styles.points} style={{ fontSize: '18px', fontWeight: 'bold' }}>
+              {player2points}
+            </Box>
+          </Box>
         </Box>
       )}
 

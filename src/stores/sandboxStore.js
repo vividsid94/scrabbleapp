@@ -1136,6 +1136,7 @@ export const useSandboxStore = create((set, get) => {
               setTempBoardCoords(newBoard);
               setCurrentRack(newRack);
               setPool(newPool);
+              console.log(`🔢 Normal Bot Score Update - Player ${currentPlayer}: ${currentPoints} + ${bestMove.score} = ${currentPoints + bestMove.score}`);
               setCurrentPoints(currentPoints + bestMove.score);
               setBlankTiles(newBlankTiles);
               
@@ -1511,10 +1512,10 @@ export const useSandboxStore = create((set, get) => {
 
               if (currentPlayer === 1) {
                 currentState.player1Rack = newRack;
-                currentState.player1points += bestMove.score;
+                // Don't update score here - it will be updated during execution
               } else {
                 currentState.player2Rack = newRack;
-                currentState.player2points += bestMove.score;
+                // Don't update score here - it will be updated during execution
               }
             }
 
@@ -1716,7 +1717,7 @@ export const useSandboxStore = create((set, get) => {
               player: player,
               score: move.score,
               rack: newRack.join(''),
-              total: currentPoints + move.score,
+              total: movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points,
               word: move.word
             });
           }
