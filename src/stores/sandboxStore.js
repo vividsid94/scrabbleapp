@@ -1029,6 +1029,15 @@ export const useSandboxStore = create((set, get) => {
             setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
             setConsecutivePasses(prev => prev + 1);
           } else {
+            // Log the API response to see what location was actually returned
+            console.log('🤖 BOT API RESPONSE - Best Move:', {
+              word: data.moves[0]?.word,
+              startPosition: data.moves[0]?.startPosition,
+              direction: data.moves[0]?.direction,
+              tiles: data.moves[0]?.tiles,
+              boardDiff: data.moves[0]?.boardDiff
+            });
+            
             // Sort moves by totalValue (points + leave) from the backend
             console.log(`🤖 NORMAL MODE: Sorting ${data.moves.length} moves by totalValue`);
             const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
@@ -1422,6 +1431,15 @@ export const useSandboxStore = create((set, get) => {
             break;
           }
 
+          // Log the API response to see what location was actually returned
+          console.log('⚡ FAST PLAY BOT API RESPONSE - Best Move:', {
+            word: data.moves[0]?.word,
+            startPosition: data.moves[0]?.startPosition,
+            direction: data.moves[0]?.direction,
+            tiles: data.moves[0]?.tiles,
+            boardDiff: data.moves[0]?.boardDiff
+          });
+          
           // Sort moves by totalValue
           console.log(`⚡ FAST PLAY MODE: Sorting ${data.moves.length} moves by totalValue`);
           const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
