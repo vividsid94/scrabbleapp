@@ -1030,8 +1030,11 @@ export const useSandboxStore = create((set, get) => {
             setConsecutivePasses(prev => prev + 1);
           } else {
             // Sort moves by totalValue (points + leave) from the backend
+            console.log(`🤖 NORMAL MODE: Sorting ${data.moves.length} moves by totalValue`);
             const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
             const bestMove = sortedMoves[0];
+            
+
 
             // Check if the best move is a bingo (7 tiles) AND NONE of the other moves are bingos
             const isBestMoveBingo = bestMove.tiles && bestMove.tiles.length === 7 && !bestMove.isExchange;
@@ -1420,8 +1423,11 @@ export const useSandboxStore = create((set, get) => {
           }
 
           // Sort moves by totalValue
+          console.log(`⚡ FAST PLAY MODE: Sorting ${data.moves.length} moves by totalValue`);
           const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
           const bestMove = sortedMoves[0];
+          
+
 
           // Check pause conditions
           const isBestMoveBingo = isBingo(bestMove);
