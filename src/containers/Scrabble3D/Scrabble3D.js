@@ -560,7 +560,7 @@ const Scrabble3D = () => {
     board.position.y = -0.1;
     scene.add(board);
 
-    // Create grid of squares inside the circular board
+    // Create colored squares on the board surface (no grooves to avoid glitching)
     const squareSize = 1;
     const gridSize = 15;
     const startX = -(gridSize * squareSize) / 2 + squareSize / 2;
@@ -568,6 +568,7 @@ const Scrabble3D = () => {
 
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
+        // Create colored square boxes on the board surface
         const squareGeometry = new THREE.BoxGeometry(squareSize * 0.9, 0.1, squareSize * 0.9);
         
         // Get the actual board value from origBoard
@@ -585,18 +586,19 @@ const Scrabble3D = () => {
         } else if (boardValue === 1) {
           squareColor = 0x7ED6DD; // Double letter - cyan (from cellColors)
         } else if (boardValue === 0) {
-          squareColor = 0xFFFFFF; // Empty squares - white
+          squareColor = 0xFFFFFF; // Empty squares - bright white
         }
         
         const squareMaterial = new THREE.MeshPhongMaterial({ 
           color: squareColor,
+          shininess: 100,
           transparent: true,
-          opacity: 0.8
+          opacity: 0.9
         });
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
         square.position.set(
           startX + col * squareSize,
-          0.1,
+          0.025, // Slightly above the board surface
           startZ + row * squareSize
         );
         square.castShadow = true;
@@ -724,7 +726,7 @@ const Scrabble3D = () => {
     const startZ = -(15 * 1) / 2 + 1 / 2;
     tile.position.set(
       startX + col * 1,
-      0.175,
+      0.125, // Lower position to sit in the grooves
       startZ + row * 1
     );
     tile.castShadow = true;
