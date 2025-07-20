@@ -520,11 +520,15 @@ export const useViewerStore = create((set, get) => {
           }
         }
         
+        // Parse the entire GCG once and store the parsed moves
+        const parsedMoves = parseGCG(gcg);
+        
         // Get dictionary from metadata
         const dictionary = metadata.lexicon || lexicon || 'Unknown';
         
         set({
           moveSet: moveSet,
+          parsedMoves: parsedMoves,
           origPlayerRaw: origPlayerRaw,
           notes: notes,
           name1: player1,
