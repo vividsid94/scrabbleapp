@@ -43,9 +43,9 @@ const PlayerInfo = ({
   const totalTurns = moveSet ? moveSet.length : 0;
   const textColor = lightMode === 'dark' ? '#fff' : '#000';
 
-  // Determine which player is currently active
-  const currentPlayer = moveSet[currentMoveRef.current + 1] ? 
-    moveSet[currentMoveRef.current + 1].split(':')[0] : null;
+  // Determine which player is currently active using NEW content-based parsing
+  const currentMove = parsedMoves && parsedMoves[currentMoveRef.current + 1];
+  const currentPlayer = currentMove ? currentMove.player : null;
   const isPlayer1Active = currentPlayer === origPlayerRaw;
 
   const player1Name = mode === "VIEWER" ? name1 : revealedName1;
