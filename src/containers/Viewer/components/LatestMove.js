@@ -4,6 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { Cube } from '@phosphor-icons/react';
 import styles from '../Viewer.module.css';
 import { processParsedMove } from '../../../functions/boardFunctions';
 
@@ -17,12 +18,14 @@ const LatestMove = ({
   onMoveHistoryClick,
   currentMoveCoords = [],
   onTurnClick,
-  parsedMoves = []
+  parsedMoves = [],
+  gameNum = null
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [processedWords, setProcessedWords] = useState([]);
+  const [is3DHovered, setIs3DHovered] = useState(false);
 
 
 
@@ -154,6 +157,18 @@ const LatestMove = ({
           {parsedMoves.length > 1 && (
             <Box className={styles.expandIcon} onClick={handleExpandClick}>
               {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
+            </Box>
+          )}
+          {gameNum && (
+            <Box 
+              className={styles.expandIcon} 
+              onClick={() => window.open(`/3d?gameId=${gameNum}`, '_blank')}
+              onMouseEnter={() => setIs3DHovered(true)}
+              onMouseLeave={() => setIs3DHovered(false)}
+              style={{ cursor: 'pointer', marginLeft: '8px' }}
+              title="View in 3D"
+            >
+              <Cube size={16} weight={is3DHovered ? "fill" : "regular"} />
             </Box>
           )}
         </Box>

@@ -176,6 +176,25 @@
   margin-right: 20px;
 }
 
+.threeDButton {
+  padding: 0px 25px;
+  cursor: pointer;
+  height: 50px; 
+  background: linear-gradient(45deg, transparent 5%, #27518b 5%);
+  border: 0;
+  color: #fff;
+  letter-spacing: 2px;
+  box-shadow: 6px 0px 0px #3d71b9;
+  outline: transparent;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 15px;
+}
+
 .easterEgg {
   position: fixed;
   top: 50%;

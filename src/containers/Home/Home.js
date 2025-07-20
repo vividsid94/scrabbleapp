@@ -43,7 +43,7 @@ export default function Home(){
           {" "}for all the latest updates!
           <br /><br />
           <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
-            Our official release will be after 2025 Nationals, but more beta features are being added to homepage!
+            Our official release will be after 2025 Nationals, but more beta features are being added to homepage! Try our new 3D Viewer!
           </span>
           <Rocket 
             style={{ 
@@ -58,6 +58,9 @@ export default function Home(){
         <Box className={styles.homeButtonContainer}>
           <Link to="/viewer">
             <button className={styles.homeButton}>Game Viewer</button>
+          </Link>
+          <Link to="/3d">
+            <button className={styles.threeDButton}>3D Viewer (Beta)</button>
           </Link>
           <Link to="/submit-game">
             <button className={styles.submitGameButton}>Submit Game</button>

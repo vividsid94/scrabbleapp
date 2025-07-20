@@ -5,6 +5,7 @@ import styles from './Scrabble3D.module.css';
 import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
+import { useSearchParams } from 'react-router-dom';
 import { 
   Play,
   Pause,
@@ -14,7 +15,9 @@ import {
   CaretLeft,
   CaretRight,
   CaretUp,
-  CaretDown
+  CaretDown,
+  House,
+  Binoculars
 } from '@phosphor-icons/react';
 import LatestMove from './components/LatestMove';
 
@@ -73,6 +76,9 @@ function preloadTextures() {
 preloadProtiles();
 
 const Scrabble3D = () => {
+  const [searchParams] = useSearchParams();
+  const gameId = searchParams.get('gameId');
+  
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -88,6 +94,7 @@ const Scrabble3D = () => {
   const [tiles, setTiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [needsRender, setNeedsRender] = useState(true);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -122,6 +129,11 @@ const Scrabble3D = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
+    
+    // Trigger render on camera movement
+    controls.addEventListener('change', () => {
+      setNeedsRender(true);
+    });
 
     // Magical lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Soft white ambient light
@@ -180,7 +192,11 @@ const Scrabble3D = () => {
         });
       }
       
-      renderer.render(scene, camera);
+      // Only render when needed
+      if (needsRender) {
+        renderer.render(scene, camera);
+        setNeedsRender(false);
+      }
     };
     animate();
 
@@ -189,6 +205,7 @@ const Scrabble3D = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      setNeedsRender(true); // Trigger render after resize
     };
     window.addEventListener('resize', handleResize);
 
@@ -228,8 +245,11 @@ const Scrabble3D = () => {
     const loadGame = async () => {
       try {
         setLoading(true);
-        // Load a sample game (you can change this to any game number)
-        const gameNum = 37033;
+        
+        // Use gameId from URL if provided, otherwise use default
+        const gameNum = gameId ? parseInt(gameId) : 37033;
+        console.log('Loading game:', gameNum);
+        
         const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
         
         if (rawGCG) {
@@ -250,12 +270,13 @@ const Scrabble3D = () => {
     };
 
     loadGame();
-  }, []);
+  }, [gameId]); // Add gameId as dependency
 
   // Update board when move changes
   useEffect(() => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
       updateBoardToMove(currentMoveIndex);
+      setNeedsRender(true); // Trigger render after board update
     }
   }, [currentMoveIndex, gameData]);
 
@@ -882,8 +903,42 @@ const Scrabble3D = () => {
         <div className={styles.moveInfoOverlay}>
           {/* Header with Title and Dictionary Info */}
           <div className={styles.panelHeader}>
-            <div className={styles.panelTitle}>3D Viewer • NWL20</div>
+            <div className={styles.panelTitle}>
+              3D Viewer • NWL20 • 
+              {gameId && <span style={{ opacity: 0.7, marginLeft: '8px' }}>• Game {gameId}</span>}
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginTop: '4px',
+              marginLeft: '8px'
+            }}>
+              <a href="/" style={{ color: '#60A5FA', textDecoration: 'none' }}>
+                <House size={14} weight="regular" />
+              </a>
+              <a href="/viewer" style={{ color: '#34D399', textDecoration: 'none' }}>
+                <Binoculars size={14} weight="regular" />
+              </a>
+            </div>
           </div>
+          
+          {/* Sample Game Message */}
+          {!gameId && (
+            <div style={{
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '6px',
+              padding: '8px 12px',
+              margin: '8px 0',
+              fontSize: '12px',
+              color: '#60A5FA',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span>Sample game loaded. Pick a game from the Viewer!</span>
+            </div>
+          )}
           
           <LatestMove 
             latestMove={currentMove}

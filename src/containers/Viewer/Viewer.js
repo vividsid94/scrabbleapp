@@ -780,6 +780,7 @@ export default function Viewer({ onChange }){
               boardCoords={boardCoords}
               currentMoveCoords={currentMoveCoords}
               parsedMoves={parsedMoves}
+              gameNum={gameNum}
               onTurnClick={(turn) => {
                 if (turn >= 0 && turn < parsedMoves.length) {
                   // Reset board to initial state

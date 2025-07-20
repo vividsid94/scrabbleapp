@@ -27,7 +27,8 @@ import {
   Palette, 
   Star,
   Sun,
-  Moon
+  Moon,
+  Cube
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -223,6 +224,12 @@ export default function MiniDrawer() {
             }}>
               Annotated Game Viewer {isCurrentPage('/viewer') && '✓'}
             </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/3d" sx={{ 
+              backgroundColor: isCurrentPage('/3d') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/3d') ? '600' : '400'
+            }}>
+              3D Viewer (Beta) {isCurrentPage('/3d') && '✓'}
+            </MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
               backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
               fontWeight: isCurrentPage('/changelog') ? '600' : '400'
@@ -288,6 +295,26 @@ export default function MiniDrawer() {
                     }} 
                     weight={isCurrentPage('/viewer') ? "fill" : (hoveredIcon === 'viewer' ? "fill" : "regular")}
                     onMouseEnter={() => setHoveredIcon('viewer')}
+                    onMouseLeave={() => setHoveredIcon(null)}
+                  />
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <a id="3dViewerBtn" className={styles.link} href="/3d">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/3d') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="3D Viewer (Beta)" placement="right">
+                  <Cube 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/3d') ? '#8B5CF6' : getTextColor(),
+                      fontSize: isCurrentPage('/3d') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/3d') ? "fill" : (hoveredIcon === '3d-viewer' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('3d-viewer')}
                     onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
