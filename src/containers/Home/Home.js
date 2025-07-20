@@ -59,7 +59,7 @@ export default function Home(){
           <Link to="/viewer">
             <button className={styles.homeButton}>Game Viewer</button>
           </Link>
-          <Link to="/3d">
+          <Link to="/3dviewer">
             <button className={styles.threeDButton}>3D Viewer (Beta)</button>
           </Link>
           <Link to="/submit-game">

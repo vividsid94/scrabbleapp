@@ -134,6 +134,7 @@ export default function MiniDrawer() {
     const path = location.pathname;
     if (path === '/') return 'Home';
     if (path === '/viewer') return 'Viewer';
+    if (path === '/3dviewer') return '3D Viewer';
     if (path === '/playground' || path === '/play') return 'Play';
     if (path === '/puzzle') return 'Puzzle';
     if (path === '/changelog') return 'Changelog';
@@ -150,6 +151,7 @@ export default function MiniDrawer() {
     const path = location.pathname;
     if (pagePath === '/' && path === '/') return true;
     if (pagePath === '/viewer' && path === '/viewer') return true;
+    if (pagePath === '/3dviewer' && path === '/3dviewer') return true;
     if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
     if (pagePath === '/puzzle' && path === '/puzzle') return true;
     if (pagePath === '/changelog' && path === '/changelog') return true;
@@ -224,11 +226,11 @@ export default function MiniDrawer() {
             }}>
               Annotated Game Viewer {isCurrentPage('/viewer') && '✓'}
             </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/3d" sx={{ 
-              backgroundColor: isCurrentPage('/3d') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/3d') ? '600' : '400'
+            <MenuItem onClick={handleClose} component={Link} to="/3dviewer" sx={{ 
+              backgroundColor: isCurrentPage('/3dviewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/3dviewer') ? '600' : '400'
             }}>
-              3D Viewer (Beta) {isCurrentPage('/3d') && '✓'}
+              3D Viewer (Beta) {isCurrentPage('/3dviewer') && '✓'}
             </MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
               backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
@@ -303,17 +305,17 @@ export default function MiniDrawer() {
           </a>
         </List>
         <List className={styles.btnContainer}>
-          <a id="3dViewerBtn" className={styles.link} href="/3d">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/3d') ? styles.activePage : ''}`} sx={listItemStyle}>
+          <a id="3dViewerBtn" className={styles.link} href="/3dviewer">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/3dviewer') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="3D Viewer (Beta)" placement="right">
                   <Cube 
                     className={styles.homeLogo} 
                     style={{ 
-                      color: isCurrentPage('/3d') ? '#8B5CF6' : getTextColor(),
-                      fontSize: isCurrentPage('/3d') ? '24px' : '20px'
+                      color: isCurrentPage('/3dviewer') ? '#8B5CF6' : getTextColor(),
+                      fontSize: isCurrentPage('/3dviewer') ? '24px' : '20px'
                     }} 
-                    weight={isCurrentPage('/3d') ? "fill" : (hoveredIcon === '3d-viewer' ? "fill" : "regular")}
+                    weight={isCurrentPage('/3dviewer') ? "fill" : (hoveredIcon === '3d-viewer' ? "fill" : "regular")}
                     onMouseEnter={() => setHoveredIcon('3d-viewer')}
                     onMouseLeave={() => setHoveredIcon(null)}
                   />
