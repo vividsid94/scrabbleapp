@@ -1,0 +1,118 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: hidden;
+}
+
+.header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.controls button {
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #ff5252, #26a69a);
+}
+
+.controls button:active {
+  transform: translateY(0);
+}
+
+/* Loading animation */
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 1.5rem;
+  z-index: 1000;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 15px;
+  }
+  
+  .header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .header p {
+    font-size: 1rem;
+  }
+  
+  .controls {
+    bottom: 10px;
+    right: 10px;
+  }
+  
+  .controls button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+} 
