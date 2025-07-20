@@ -796,15 +796,30 @@ const Scrabble3D = () => {
     
     context.clearRect(0, 0, 128, 128);
     
-    // Add white fill
+    // Add white fill for main letter
     context.fillStyle = '#FFFFFF';
     context.font = 'bold 100px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(letter, 64, 64);
     
+    // Add point value in bottom right
+    const pointValues = {
+      'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3,
+      'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '_': 0
+    };
+    
+    const pointValue = pointValues[letter] || 0;
+    if (pointValue > 0) {
+      context.fillStyle = '#FFFFFF';
+      context.font = 'bold 45px Arial';
+      context.textAlign = 'right';
+      context.textBaseline = 'bottom';
+      context.fillText(pointValue.toString(), 128, 128);
+    }
+    
     const texture = new THREE.CanvasTexture(canvas);
-    const letterGeometry = new THREE.PlaneGeometry(0.7, 0.7);
+    const letterGeometry = new THREE.PlaneGeometry(0.8, 0.8);
     const letterMaterial = new THREE.MeshBasicMaterial({ 
       map: texture,
       transparent: true,
