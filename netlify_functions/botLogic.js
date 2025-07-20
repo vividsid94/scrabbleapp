@@ -234,6 +234,7 @@ async function callGoGenerateMoves(board, letters) {
                 
                 return {
                   word: displayWord,
+                  actualWord: actualWord, // Add the raw word from Go service
                   score: goMove.score || 0,
                   tiles: tiles,
                   direction: direction,

@@ -1039,6 +1039,7 @@ export const useSandboxStore = create((set, get) => {
             // Log the top sorted move that will be executed
             console.log('🤖 TOP SORTED MOVE (will be executed):', {
               word: bestMove.word,
+              actualWord: bestMove.actualWord, // Add the raw word from Go service
               score: bestMove.score,
               startPosition: bestMove.startPosition,
               direction: bestMove.direction,
@@ -1163,6 +1164,7 @@ export const useSandboxStore = create((set, get) => {
                 rack: currentRack.join(''),
                 total: currentPoints + bestMove.score,
                 word: bestMove.word,
+                actualWord: bestMove.actualWord, // Add the raw word from Go service
                 startPosition: bestMove.startPosition,
                 direction: bestMove.direction
               };
@@ -1450,6 +1452,7 @@ export const useSandboxStore = create((set, get) => {
           // Log the top sorted move that will be executed
           console.log('⚡ FAST PLAY TOP SORTED MOVE (will be executed):', {
             word: bestMove.word,
+            actualWord: bestMove.actualWord, // Add the raw word from Go service
             score: bestMove.score,
             startPosition: bestMove.startPosition,
             direction: bestMove.direction,
@@ -1764,6 +1767,7 @@ export const useSandboxStore = create((set, get) => {
               rack: rackBeforeMove.join(''),
               total: movePlayer === 1 ? currentPlayer1Points : currentPlayer2Points,
               word: move.word,
+              actualWord: move.actualWord, // Add the raw word from Go service
               startPosition: move.startPosition,
               direction: move.direction
             };

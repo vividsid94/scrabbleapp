@@ -64,14 +64,14 @@ export const generateGCGContentForBotMoves = (moveHistory, player1Name, player2N
   
   // Process each move
   moveHistory.forEach((move, index) => {
-    const { score, player, word, boardDiff, rack, startPosition, direction } = move;
+    const { score, player, word, actualWord, boardDiff, rack, startPosition, direction } = move;
     
     // Determine which player made the move
     const isPlayer1 = player === player1Name;
     const playerName = formatPlayerName(player);
     
     // Handle special cases
-    let displayWord = word;
+    let displayWord = actualWord; // Use actualWord directly from bot API
     let displayScore = score;
     
     if (score === 0 && player && player.includes('exchanged')) {
@@ -79,9 +79,6 @@ export const generateGCGContentForBotMoves = (moveHistory, player1Name, player2N
     } else if (score === 0 && (!displayWord || displayWord === '')) {
       displayWord = 'Pass';
     }
-    
-    // Convert word to .gcg format (replace parentheses with dots)
-    displayWord = convertWordToGCGFormat(displayWord);
     
     // Get location - use perfect startPosition from bot API
     let location = '--'; // Default for passes/exchanges
