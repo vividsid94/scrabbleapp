@@ -39,7 +39,7 @@ const parseMoveLine = (line) => {
   const rack = parts[1];
   
   // Parse remaining fields by content
-  const remainingParts = parts.slice(2);
+  const remainingParts = parts.slice(2).map(part => part.trim());
   
   let location = null;
   let word = null;
