@@ -564,7 +564,7 @@ const Scrabble3D = () => {
 
   const createBoard = (scene) => {
     // Create circular board base (raised to create groove effect)
-    const boardRadius = 11.5;
+    const boardRadius = 10.8;
     const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.3, 64);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
       color: 0xB0B0B0, // Light gray (neutral)
