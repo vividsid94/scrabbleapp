@@ -31,7 +31,7 @@ const PlayerInfo = ({
   revealedElo2,
   player1points,
   player2points,
-  moveSet,
+
   currentMoveRef,
   origPlayerRaw,
   tiles,
@@ -40,7 +40,7 @@ const PlayerInfo = ({
   parsedMoves
 }) => {
   const { lightMode } = useContext(ThemeContext);
-  const totalTurns = moveSet ? moveSet.length : 0;
+  const totalTurns = parsedMoves ? parsedMoves.length : 0;
   const textColor = lightMode === 'dark' ? '#fff' : '#000';
 
   // Determine which player is currently active using NEW content-based parsing

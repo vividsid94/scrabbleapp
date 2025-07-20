@@ -747,14 +747,13 @@ export default function Viewer({ onChange }){
               revealedElo2={revealedElo2}
               player1points={player1points}
               player2points={player2points}
-              moveSet={moveSet}
               currentMoveRef={currentMoveRef}
               origPlayerRaw={origPlayerRaw}
               tiles={tiles}
               color={color}
               parsedMoves={parsedMoves}
               onTurnClick={(turn) => {
-                if (turn >= 0 && turn < moveSet.length) {
+                if (turn >= 0 && turn < parsedMoves.length) {
                   // Reset board to initial state
                   setBoardCoords(JSON.parse(origBoard));
                   setPlayer1points(0);
@@ -777,7 +776,6 @@ export default function Viewer({ onChange }){
               }}
             />
             <LatestMove
-              moveSet={moveSet}
               currentMoveRef={currentMoveRef}
               name1={name1}
               name2={name2}
@@ -785,7 +783,7 @@ export default function Viewer({ onChange }){
               currentMoveCoords={currentMoveCoords}
               parsedMoves={parsedMoves}
               onTurnClick={(turn) => {
-                if (turn >= 0 && turn < moveSet.length) {
+                if (turn >= 0 && turn < parsedMoves.length) {
                   // Reset board to initial state
                   setBoardCoords(JSON.parse(origBoard));
                   setPlayer1points(0);
@@ -809,7 +807,6 @@ export default function Viewer({ onChange }){
             />
             <TopMoves
               boardCoords={boardCoords}
-              moveSet={moveSet}
               currentMoveRef={currentMoveRef}
               parsedMoves={parsedMoves}
               pool={getCurrentPool()}
@@ -854,7 +851,7 @@ export default function Viewer({ onChange }){
                   fontSize: '14px',
                   fontWeight: 500
                 }}>
-                  {moveSet && moveSet.length > 0 ? (
+                  {parsedMoves && parsedMoves.length > 0 ? (
                     <span>
                       {getCurrentPool().length}
                       {createRack(currentMoveRef.current, parsedMoves).length > 0 && (
@@ -879,7 +876,7 @@ export default function Viewer({ onChange }){
                     borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                     paddingTop: '8px'
                   }}>
-                    {moveSet && moveSet.length > 0 ? (
+                    {parsedMoves && parsedMoves.length > 0 ? (
                       <Pool 
                         board={getCurrentPool()}
                         rack={createRack(currentMoveRef.current, parsedMoves)}

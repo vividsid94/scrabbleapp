@@ -9,7 +9,7 @@ import styles from '../Viewer.module.css';
 
 const TopMoves = ({ 
   boardCoords,
-  moveSet,
+
   currentMoveRef,
   parsedMoves,
   pool,
