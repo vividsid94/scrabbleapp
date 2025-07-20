@@ -6,36 +6,6 @@
   overflow: hidden;
 }
 
-.header {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 1000;
-  color: white;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  background: rgba(0, 0, 0, 0.3);
-  padding: 20px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.header h1 {
-  margin: 0 0 10px 0;
-  font-size: 2.5rem;
-  font-weight: bold;
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.header p {
-  margin: 0;
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
 .canvas {
   width: 100%;
   height: 100%;
@@ -44,38 +14,6 @@
 
 .canvas:active {
   cursor: grabbing;
-}
-
-.controls {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-}
-
-.controls button {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  border: none;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.controls button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(45deg, #ff5252, #26a69a);
-}
-
-.controls button:active {
-  transform: translateY(0);
 }
 
 /* Loading animation */
@@ -87,121 +25,480 @@
   color: white;
   font-size: 1.5rem;
   z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
 }
 
-/* Timeline Controls */
-.timeline {
+/* Overlay Controls */
+.overlayControls {
   position: absolute;
   bottom: 20px;
   left: 20px;
   right: 20px;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.timeline .controls {
+.controlGroup {
   display: flex;
   gap: 10px;
   justify-content: center;
-  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .controlBtn {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  padding: 8px;
+  border-radius: 4px;
+  background: none;
   border: none;
   color: white;
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .controlBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(45deg, #ff5252, #26a69a);
-}
-
-.speedControls {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 15px;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .speedBtn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  user-select: none;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
 }
 
 .speedBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.moveInfo {
-  text-align: center;
-  color: white;
-  font-size: 0.9rem;
-}
-
-.moveInfo span {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.moveDetails {
-  margin-top: 10px;
-  padding: 10px;
+  opacity: 1;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+}
+
+/* Move Info Overlay */
+.moveInfoOverlay {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 250px;
+  text-align: center;
+}
+
+/* Panel Header */
+.panelHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panelTitle {
+  font-size: 12px;
+  color: white;
+  opacity: 0.7;
+}
+
+.dictionaryInfo {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.moveDetails span {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 0.8rem;
+/* Latest Move Panel Styles */
+.latestMovePanel {
+  padding: 6px;
+  margin: 4px 6px 0 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.latestMoveTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Syne', sans-serif;
+}
+
+.latestMoveContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-family: 'Syne', sans-serif;
+  animation: slideInUp 0.4s ease-out;
+  transform-origin: bottom;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideOutUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.latestMoveContent.slidingOut {
+  animation: slideOutUp 0.3s ease-in forwards;
+}
+
+.latestMoveContent.slidingIn {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
+.latestMovePosition {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.noMoveText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  padding: 4px 0;
+  font-family: 'Syne', sans-serif;
+}
+
+.expandIcon {
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.expandIcon:hover {
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+}
+
+.moveHistoryList {
+  max-height: 200px;
+  overflow-y: auto;
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+.moveHistoryItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+}
+
+.moveHistoryItem:last-child {
+  border-bottom: none;
+}
+
+.moveHistoryWord {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  min-width: 80px;
+  max-width: 100px;
+}
+
+.moveHistoryDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.moveHistoryScore {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: darkcyan;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 139, 139, 0.3);
+  width: 22px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moveHistoryPlayer {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.moveHistoryLocation {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moveHistoryTurnNumber {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moveHistoryActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.downloadIcon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.downloadIcon:hover {
+  transform: scale(1.05);
+}
+
+/* Control Icons within LatestMove Panel */
+.controlIcons {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlIcons .controlGroup {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.controlIcons .controlBtn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  padding: 6px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controlIcons .controlBtn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.controlIcons .speedBtn {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 12px;
+}
+
+.controlIcons .speedBtn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Expandable Content */
+.expandableContent {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+.moveInfoTitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 10px;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.moveInfoContent {
+  color: white;
+}
+
+.moveInfoWord {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00E6F6;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.moveInfoDetails {
+  font-size: 0.9rem;
   opacity: 0.9;
+}
+
+.moveInfoDetails div {
+  margin-bottom: 4px;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .header {
-    top: 10px;
+  .overlayControls {
+    bottom: 10px;
     left: 10px;
     right: 10px;
+    gap: 10px;
+  }
+  
+  .controlGroup {
+    gap: 8px;
+  }
+  
+  .controlBtn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .speedBtn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .moveInfoOverlay {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 15px;
+    min-width: 200px;
   }
   
-  .header h1 {
-    font-size: 1.8rem;
-  }
-  
-  .header p {
+  .moveInfoTitle {
     font-size: 1rem;
   }
   
-  .controls {
-    bottom: 10px;
-    right: 10px;
-  }
-  
-  .controls button {
-    padding: 10px 20px;
-    font-size: 0.9rem;
+  .moveInfoWord {
+    font-size: 1.1rem;
   }
 } 

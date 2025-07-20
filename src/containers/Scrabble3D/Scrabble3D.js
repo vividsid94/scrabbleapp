@@ -5,6 +5,18 @@ import styles from './Scrabble3D.module.css';
 import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
+import { 
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  ArrowClockwise,
+  CaretLeft,
+  CaretRight,
+  CaretUp,
+  CaretDown
+} from '@phosphor-icons/react';
+import LatestMove from './components/LatestMove';
 
 // Preload all protile images like the Cell component does
 let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
@@ -75,6 +87,7 @@ const Scrabble3D = () => {
   const [boardState, setBoardState] = useState([]);
   const [tiles, setTiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -856,53 +869,72 @@ const Scrabble3D = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>🎮 3D Annotated Game Viewer</h1>
-        <p>Watch Scrabble games come to life in 3D!</p>
-        {loading && <div className={styles.loading}>Loading game data...</div>}
-      </div>
-      
       <div ref={mountRef} className={styles.canvas} />
       
-      {/* Timeline Controls */}
-      <div className={styles.timeline}>
-        <div className={styles.controls}>
-          <button onClick={handleReset} className={styles.controlBtn}>
-            ⏮️ Reset
-          </button>
-          <button onClick={handlePrevMove} className={styles.controlBtn}>
-            ⏪ Previous
-          </button>
-          <button onClick={handlePlayPause} className={styles.controlBtn}>
-            {isPlaying ? '⏸️ Pause' : '▶️ Play'}
-          </button>
-          <button onClick={handleNextMove} className={styles.controlBtn}>
-            ⏩ Next
-          </button>
-        </div>
-        
-        <div className={styles.speedControls}>
-          <button onClick={() => handleSpeedChange(500)} className={styles.speedBtn}>Fast</button>
-          <button onClick={() => handleSpeedChange(1000)} className={styles.speedBtn}>Normal</button>
-          <button onClick={() => handleSpeedChange(2000)} className={styles.speedBtn}>Slow</button>
-        </div>
-        
-        <div className={styles.moveInfo}>
-          <span>Move {currentMoveIndex + 1} of {gameData?.length || 0}</span>
-          {currentMove && (
-            <div className={styles.moveDetails}>
-              <span>Player {currentMove.player}: {currentMove.word}</span>
-              <span>Location: {currentMove.location}</span>
+      {loading && <div className={styles.loading}>Loading game data...</div>}
+      
+
+      
+      {/* Latest Move Component with Controls */}
+      {gameData && gameData.length > 0 && (
+        <div className={styles.moveInfoOverlay}>
+          {/* Header with Title and Dictionary Info */}
+          <div className={styles.panelHeader}>
+            <div className={styles.panelTitle}>3D Viewer • NWL20</div>
+          </div>
+          
+          <LatestMove 
+            latestMove={currentMove}
+            player1Name="Player 1"
+            player2Name="Player 2"
+            allMoves={gameData.slice(0, currentMoveIndex + 1)} // Only show moves up to current view
+            boardCoords={[]}
+            player1Rack={[]}
+            player2Rack={[]}
+            pool={[]}
+          />
+          
+          {/* Control Icons */}
+          <div className={styles.controlIcons}>
+            <div className={styles.controlGroup}>
+              <button onClick={handleReset} className={styles.controlBtn}>
+                <SkipBack size={16} />
+              </button>
+              <button onClick={handlePrevMove} className={styles.controlBtn}>
+                <CaretLeft size={16} />
+              </button>
+              <button onClick={handlePlayPause} className={styles.controlBtn}>
+                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+              </button>
+              <button onClick={handleNextMove} className={styles.controlBtn}>
+                <CaretRight size={16} />
+              </button>
+              <button onClick={() => setIsExpanded(!isExpanded)} className={styles.controlBtn}>
+                {isExpanded ? <CaretUp size={16} /> : <CaretDown size={16} />}
+              </button>
+            </div>
+            
+
+            
+          </div>
+          
+          {/* Expandable Content */}
+          {isExpanded && (
+            <div className={styles.expandableContent}>
+              <div className={styles.controlGroup}>
+                <button onClick={() => handleSpeedChange(500)} className={styles.speedBtn}>Fast</button>
+                <button onClick={() => handleSpeedChange(1000)} className={styles.speedBtn}>Normal</button>
+                <button onClick={() => handleSpeedChange(2000)} className={styles.speedBtn}>Slow</button>
+              </div>
+              <div className={styles.controlGroup}>
+                <button onClick={() => controlsRef.current?.reset()} className={styles.controlBtn}>
+                  <ArrowClockwise size={16} />
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
-      
-      <div className={styles.controls}>
-        <button onClick={() => controlsRef.current?.reset()}>
-          Reset View
-        </button>
-      </div>
+      )}
     </div>
   );
 };
