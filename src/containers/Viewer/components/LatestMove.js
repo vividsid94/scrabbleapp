@@ -63,7 +63,7 @@ const LatestMove = ({
     if (!move) return null;
     
     const playerName = move.player;
-    const word = move.word || 'Pass';
+    const processedWord = processParsedMove(move, currentMoveCoords);
     const score = move.score || 0;
     const location = move.location === '--' ? null : move.location;
     const turnNumber = index + 1;
@@ -79,7 +79,7 @@ const LatestMove = ({
           {turnNumber}
         </Box>
         <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{word || 'Pass'}</Box>
+        <Box className={styles.moveHistoryWord}>{processedWord || 'Pass'}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
@@ -113,7 +113,7 @@ const LatestMove = ({
   }
 
   const playerName = currentMove.player;
-  const word = currentMove.word || 'Pass';
+  const processedWord = processParsedMove(currentMove, currentMoveCoords);
   const score = currentMove.score || 0;
   const location = currentMove.location === '--' ? null : currentMove.location;
   const turnNumber = currentMoveIndex + 1;
@@ -129,7 +129,7 @@ const LatestMove = ({
           {turnNumber}
         </Box>
         <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{word || 'Pass'}</Box>
+        <Box className={styles.moveHistoryWord}>{processedWord || 'Pass'}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>

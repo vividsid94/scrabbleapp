@@ -15,7 +15,7 @@ export const processParsedMove = (parsedMove, currentMoveCoords) => {
     play = "Challenge";
   } else if (parsedMove.word) {
     // Normal play
-    play = parsedMove.location + " " + parsedMove.word;
+    play = parsedMove.word;
   } else {
     // Pass or other special case
     play = parsedMove.location || "Pass";
