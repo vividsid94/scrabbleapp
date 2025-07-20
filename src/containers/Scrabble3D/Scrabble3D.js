@@ -6,6 +6,60 @@ import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 
+// Preload all protile images like the Cell component does
+let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
+let preloadedImages = {};
+let preloadedTextures = {};
+
+function preloadProtiles() {
+  allLetters.forEach(letter => {
+    let srcString = '/images/compressed-clean-protiles/' + letter + '.png';
+    preloadedImages[letter] = new Image();
+    preloadedImages[letter].src = srcString;
+  });
+}
+
+// Preload all textures once
+function preloadTextures() {
+  allLetters.forEach(letter => {
+    const img = preloadedImages[letter];
+    if (img && img.complete && img.naturalWidth > 0) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = 128;
+      canvas.height = 128;
+      
+      context.clearRect(0, 0, 128, 128);
+      context.drawImage(img, 0, 0, 128, 128);
+      
+      // Use the same logic as modifyImageColor function
+      const imageData = context.getImageData(0, 0, 128, 128);
+      const data = new Uint32Array(imageData.data.buffer);
+      const len = data.length;
+      
+      // For silver tiles, we want white letters (since silver is light)
+      const isDark = false; // Silver is light, so we want white letters
+      const r = isDark ? 255 : 255; // White letters
+      const g = isDark ? 255 : 255;
+      const b = isDark ? 255 : 255;
+      const colorValue = (255 << 24) | (b << 16) | (g << 8) | r;
+      
+      // Process pixels - only modify non-transparent pixels
+      for (let i = 0; i < len; i++) {
+        if (data[i] & 0xff000000) { // Check alpha channel
+          data[i] = colorValue;
+        }
+      }
+      
+      context.putImageData(imageData, 0, 0);
+      preloadedTextures[letter] = new THREE.CanvasTexture(canvas);
+    }
+  });
+}
+
+// Initialize preloading
+preloadProtiles();
+
 const Scrabble3D = () => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
@@ -133,6 +187,26 @@ const Scrabble3D = () => {
       }
       renderer.dispose();
     };
+  }, []);
+
+  // Preload textures once images are ready
+  useEffect(() => {
+    const checkAndPreloadTextures = () => {
+      const allImagesLoaded = allLetters.every(letter => {
+        const img = preloadedImages[letter];
+        return img && img.complete && img.naturalWidth > 0;
+      });
+      
+      if (allImagesLoaded) {
+        preloadTextures();
+        console.log('All protile textures preloaded!');
+      } else {
+        // Check again in 100ms
+        setTimeout(checkAndPreloadTextures, 100);
+      }
+    };
+    
+    checkAndPreloadTextures();
   }, []);
 
   // Load game data
@@ -656,37 +730,93 @@ const Scrabble3D = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Add letter texture with better visibility
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = 128;
-    canvas.height = 128;
-    
-    // Clear canvas with transparent background
-    context.clearRect(0, 0, 128, 128);
-    
-    // Add main letter - clean and clear
-    context.fillStyle = '#FFFFFF';
-    context.font = 'bold 100px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(letter, 64, 64);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    const letterGeometry = new THREE.PlaneGeometry(0.6, 0.6);
-    const letterMaterial = new THREE.MeshBasicMaterial({ 
-      map: texture,
-      transparent: true,
-      alphaTest: 0.01
+    // Use preloaded textures for instant loading
+    const getProtileTexture = (letter) => {
+      // Handle blank tiles (lowercase letters) - same logic as Cell component
+      const imageLetter = /[a-z]/.test(letter) ? '_' : letter;
+      
+      // Check if we have a preloaded texture
+      if (preloadedTextures[imageLetter]) {
+        return Promise.resolve(preloadedTextures[imageLetter]);
+      }
+      
+      // Fallback to creating texture on demand if not preloaded
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = `/images/compressed-clean-protiles/${imageLetter}.png`;
+        
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = 128;
+          canvas.height = 128;
+          
+          context.clearRect(0, 0, 128, 128);
+          context.drawImage(img, 0, 0, 128, 128);
+          
+          // Use the same logic as modifyImageColor function
+          const imageData = context.getImageData(0, 0, 128, 128);
+          const data = new Uint32Array(imageData.data.buffer);
+          const len = data.length;
+          
+          // For silver tiles, we want white letters (since silver is light)
+          const isDark = false; // Silver is light, so we want white letters
+          const r = isDark ? 255 : 255; // White letters
+          const g = isDark ? 255 : 255;
+          const b = isDark ? 255 : 255;
+          const colorValue = (255 << 24) | (b << 16) | (g << 8) | r;
+          
+          // Process pixels - only modify non-transparent pixels
+          for (let i = 0; i < len; i++) {
+            if (data[i] & 0xff000000) { // Check alpha channel
+              data[i] = colorValue;
+            }
+          }
+          
+          context.putImageData(imageData, 0, 0);
+          
+          const texture = new THREE.CanvasTexture(canvas);
+          resolve(texture);
+        };
+        
+        img.onerror = () => {
+          // Fallback to text if image fails to load
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = 128;
+          canvas.height = 128;
+          
+          context.clearRect(0, 0, 128, 128);
+          context.fillStyle = '#FFFFFF';
+          context.font = 'bold 100px Arial';
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillText(letter, 64, 64);
+          
+          const texture = new THREE.CanvasTexture(canvas);
+          resolve(texture);
+        };
+      });
+    };
+
+    // Add protile texture
+    getProtileTexture(letter).then(texture => {
+      const letterGeometry = new THREE.PlaneGeometry(0.75, 0.75); // Bigger geometry
+      const letterMaterial = new THREE.MeshBasicMaterial({ 
+        map: texture,
+        transparent: true,
+        alphaTest: 0.01
+      });
+      const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
+      letterMesh.position.y = 0.11;
+      letterMesh.rotation.x = -Math.PI / 2;
+      tile.add(letterMesh);
+      
+      // Make sure the letter is visible
+      letterMesh.renderOrder = 1;
+      letterMaterial.depthTest = false;
     });
-    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = 0.11;
-    letterMesh.rotation.x = -Math.PI / 2;
-    tile.add(letterMesh);
-    
-    // Make sure the letter is visible
-    letterMesh.renderOrder = 1;
-    letterMaterial.depthTest = false;
 
     // Add move index for animation
     tile.userData = { moveIndex, player, letter };
