@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import styles from './Scrabble3D.module.css';
+import { getMoveSet } from '../../axios/api';
+import { parseGCG } from '../../utils/gcgParser';
+import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 
 const Scrabble3D = () => {
   const mountRef = useRef(null);
@@ -9,13 +12,22 @@ const Scrabble3D = () => {
   const rendererRef = useRef(null);
   const controlsRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Game state
+  const [gameData, setGameData] = useState(null);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1000); // ms per move
+  const [boardState, setBoardState] = useState([]);
+  const [tiles, setTiles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2c3e50);
+    scene.background = new THREE.Color(0x1a1a2e);
     sceneRef.current = scene;
 
     // Camera setup
@@ -25,7 +37,7 @@ const Scrabble3D = () => {
       0.1,
       1000
     );
-    camera.position.set(0, 15, 15);
+    camera.position.set(0, 20, 20);
     camera.lookAt(0, 0, 0);
 
     // Renderer setup
@@ -42,16 +54,27 @@ const Scrabble3D = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    // Enhanced lighting
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 10, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(15, 15, 10);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
     scene.add(directionalLight);
+
+    // Add point light for dramatic effect
+    const pointLight = new THREE.PointLight(0xff6b6b, 0.5, 30);
+    pointLight.position.set(0, 10, 0);
+    scene.add(pointLight);
 
     // Create 3D board
     createBoard(scene);
@@ -83,20 +106,69 @@ const Scrabble3D = () => {
     };
   }, []);
 
+  // Load game data
+  useEffect(() => {
+    const loadGame = async () => {
+      try {
+        setLoading(true);
+        // Load a sample game (you can change this to any game number)
+        const gameNum = 37033;
+        const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
+        
+        if (rawGCG) {
+          const parsedMoves = parseGCG(rawGCG);
+          console.log('Raw GCG:', rawGCG.substring(0, 500)); // Debug first 500 chars
+          console.log('Parsed moves:', parsedMoves); // Debug parsed moves
+          setGameData(parsedMoves);
+          
+          // Initialize board state
+          const initialBoard = JSON.parse(origBoard).map(row => row.map(Number));
+          setBoardState(initialBoard);
+        }
+      } catch (error) {
+        console.error('Failed to load game:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadGame();
+  }, []);
+
+  // Update board when move changes
+  useEffect(() => {
+    if (gameData && gameData.length > 0 && sceneRef.current) {
+      updateBoardToMove(currentMoveIndex);
+    }
+  }, [currentMoveIndex, gameData]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (isPlaying && gameData && currentMoveIndex < gameData.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentMoveIndex(prev => prev + 1);
+      }, playbackSpeed);
+      return () => clearTimeout(timer);
+    } else if (isPlaying && currentMoveIndex >= gameData?.length - 1) {
+      setIsPlaying(false);
+    }
+  }, [isPlaying, currentMoveIndex, gameData, playbackSpeed]);
+
   const createBoard = (scene) => {
-    // Board base
+    // Board base with better material
     const boardGeometry = new THREE.BoxGeometry(15, 0.5, 15);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
       color: 0x8B4513,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.95,
+      shininess: 30
     });
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
     board.position.y = -0.25;
     scene.add(board);
 
-    // Create grid of squares
+    // Create grid of squares with better spacing
     const squareSize = 1;
     const gridSize = 15;
     const startX = -(gridSize * squareSize) / 2 + squareSize / 2;
@@ -105,8 +177,16 @@ const Scrabble3D = () => {
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         const squareGeometry = new THREE.BoxGeometry(squareSize * 0.9, 0.1, squareSize * 0.9);
+        
+        // Different colors for different square types
+        let squareColor = 0xF5DEB3; // Default light brown
+        if ((row === 0 || row === 14) && (col === 0 || col === 7 || col === 14)) squareColor = 0xFF6B6B; // Triple word
+        else if ((row === 1 || row === 13) && (col === 1 || col === 13)) squareColor = 0x4ECDC4; // Double word
+        else if ((row === 2 || row === 12) && (col === 2 || col === 12)) squareColor = 0x45B7D1; // Triple letter
+        else if ((row === 3 || row === 11) && (col === 3 || col === 11)) squareColor = 0x96CEB4; // Double letter
+        
         const squareMaterial = new THREE.MeshPhongMaterial({ 
-          color: 0xF5DEB3,
+          color: squareColor,
           transparent: true,
           opacity: 0.8
         });
@@ -121,31 +201,118 @@ const Scrabble3D = () => {
         scene.add(square);
       }
     }
-
-    // Add some sample 3D tiles
-    const sampleTiles = [
-      { letter: 'S', x: 0, z: 0, color: 0xDAA520 },
-      { letter: 'C', x: 1, z: 0, color: 0xDAA520 },
-      { letter: 'R', x: 2, z: 0, color: 0xDAA520 },
-      { letter: 'A', x: 3, z: 0, color: 0xDAA520 },
-      { letter: 'B', x: 4, z: 0, color: 0xDAA520 },
-      { letter: 'B', x: 5, z: 0, color: 0xDAA520 },
-      { letter: 'L', x: 6, z: 0, color: 0xDAA520 },
-      { letter: 'E', x: 7, z: 0, color: 0xDAA520 },
-    ];
-
-    sampleTiles.forEach((tile, index) => {
-      createTile(scene, tile.letter, tile.x, tile.z, tile.color, index);
-    });
   };
 
-  const createTile = (scene, letter, x, z, color, index) => {
-    // Tile geometry
+  const updateBoardToMove = (moveIndex) => {
+    if (!gameData || !sceneRef.current) return;
+
+    console.log(`Updating to move ${moveIndex}, total moves: ${gameData.length}`);
+
+    // Clear existing tiles
+    tiles.forEach(tile => {
+      sceneRef.current.remove(tile);
+    });
+    setTiles([]);
+
+    // Start with a fresh board
+    const newBoard = JSON.parse(origBoard).map(row => row.map(Number));
+    const newTiles = [];
+
+    // Apply moves one by one, building up the board state
+    for (let i = 0; i <= moveIndex && i < gameData.length; i++) {
+      const move = gameData[i];
+      console.log(`Processing move ${i}:`, move);
+      if (move && move.word && move.word !== "--" && move.location) {
+        const moveTiles = applyMoveToBoard(newBoard, move, i);
+        newTiles.push(...moveTiles);
+      }
+    }
+
+    setBoardState(newBoard);
+    setTiles(newTiles);
+  };
+
+  const applyMoveToBoard = (board, move, moveIndex) => {
+    const tiles = [];
+    const { location, word, player } = move;
+    
+    console.log(`Applying move: word="${word}", location="${location}", player=${player}`);
+    
+    // Parse location - handle both "H7" and "7H" formats
+    let locationParts = location.match(/([A-O])(\d+)/); // Letter first: "H7"
+    let col, row, direction;
+    
+    if (locationParts) {
+      // Format: "H7" (letter first, then number) = VERTICAL play
+      col = locationParts[1].charCodeAt(0) - 65; // A=0, B=1, etc.
+      row = parseInt(locationParts[2]) - 1;
+      direction = 'vertical';
+    } else {
+      // Try format: "7H" (number first, then letter) = HORIZONTAL play
+      locationParts = location.match(/(\d+)([A-O])/);
+      if (locationParts) {
+        row = parseInt(locationParts[1]) - 1;
+        col = locationParts[2].charCodeAt(0) - 65; // A=0, B=1, etc.
+        direction = 'horizontal';
+      } else {
+        console.log('Failed to parse location:', location);
+        return tiles;
+      }
+    }
+    
+    console.log(`Parsed location: row=${row}, col=${col}, direction=${direction}`);
+    
+    console.log(`Direction: ${direction}, word length: ${word.length}`);
+
+    // Place each letter
+    for (let i = 0; i < word.length; i++) {
+      const letter = word[i];
+      let tileRow, tileCol;
+
+      if (direction === 'horizontal') {
+        tileRow = row;
+        tileCol = col + i;
+      } else {
+        tileRow = row + i;
+        tileCol = col;
+      }
+
+      console.log(`Placing letter "${letter}" at (${tileRow}, ${tileCol}), current board value: ${board[tileRow][tileCol]}`);
+
+      // Only place tile if position is empty (0) or has a multiplier (1-4)
+      // Board values: 0=empty, 1=double letter, 2=triple letter, 3=double word, 4=triple word
+      if (board[tileRow][tileCol] <= 4) {
+        board[tileRow][tileCol] = letter;
+        
+        const tile = createTile(letter, tileRow, tileCol, player, moveIndex);
+        tiles.push(tile);
+        sceneRef.current.add(tile);
+      } else {
+        console.log(`Position (${tileRow}, ${tileCol}) already occupied with letter: ${board[tileRow][tileCol]}`);
+      }
+    }
+
+    return tiles;
+  };
+
+  const canPlaceWordHorizontally = (board, row, col, word) => {
+    // Check if word can fit horizontally
+    for (let i = 0; i < word.length; i++) {
+      if (col + i >= 15) return false;
+      if (board[row][col + i] !== 0) return false;
+    }
+    return true;
+  };
+
+  const createTile = (letter, row, col, player, moveIndex) => {
+    // Enhanced tile geometry
     const tileGeometry = new THREE.BoxGeometry(0.8, 0.3, 0.8);
+    const tileColor = player === 1 ? 0xDAA520 : 0xCD853F; // Different colors for players
     const tileMaterial = new THREE.MeshPhongMaterial({ 
-      color: color,
+      color: tileColor,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.95,
+      shininess: 50
     });
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
     
@@ -153,126 +320,128 @@ const Scrabble3D = () => {
     const startX = -(15 * 1) / 2 + 1 / 2;
     const startZ = -(15 * 1) / 2 + 1 / 2;
     tile.position.set(
-      startX + x * 1,
+      startX + col * 1,
       0.25,
-      startZ + z * 1
+      startZ + row * 1
     );
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Add extruded letter text (3D letters carved into tile)
-    
-    // Create 3D text geometry
-    const textGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.4);
-    const textMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x2C1810, // Dark brown for carved letters
-      transparent: true,
-      opacity: 0.9
-    });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.y = 0.05; // Slightly above tile surface
-    
-    // Add letter texture on top
+    // Add letter texture with better visibility
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.width = 128;
     canvas.height = 128;
     
-    // Create embossed effect
-    context.fillStyle = '#2C1810'; // Dark brown background
-    context.fillRect(0, 0, 128, 128);
+    // Clear canvas with transparent background
+    context.clearRect(0, 0, 128, 128);
     
-    // Add shadow for embossed look
-    context.fillStyle = '#1A0F08';
-    context.font = 'bold 80px Arial';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(letter, 66, 66);
-    
-    // Add main letter
-    context.fillStyle = '#8B4513'; // Wooden color
-    context.font = 'bold 80px Arial';
+    // Add main letter with high contrast
+    context.fillStyle = '#000000';
+    context.font = 'bold 90px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(letter, 64, 64);
     
+    // Add white outline for better visibility
+    context.strokeStyle = '#FFFFFF';
+    context.lineWidth = 3;
+    context.strokeText(letter, 64, 64);
+    
     const texture = new THREE.CanvasTexture(canvas);
-    const letterGeometry = new THREE.PlaneGeometry(0.5, 0.5);
+    const letterGeometry = new THREE.PlaneGeometry(0.6, 0.6);
     const letterMaterial = new THREE.MeshBasicMaterial({ 
       map: texture,
       transparent: true,
-      alphaTest: 0.1
+      alphaTest: 0.01
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = 0.11; // On top of the 3D text block
-    letterMesh.rotation.x = -Math.PI / 2; // Rotate to lay flat on tile surface
-    textMesh.add(letterMesh);
+    letterMesh.position.y = 0.11;
+    letterMesh.rotation.x = -Math.PI / 2;
+    tile.add(letterMesh);
     
-    tile.add(textMesh);
+    // Make sure the letter is visible
+    letterMesh.renderOrder = 1;
+    letterMaterial.depthTest = false;
 
-    scene.add(tile);
+    // Add move index for animation
+    tile.userData = { moveIndex, player, letter };
 
-    // Add hover effect
-    tile.userData = { originalColor: color, letter: letter };
-    
-    // Add click handler
-    tile.userData.onClick = () => {
-      console.log(`Clicked tile: ${letter}`);
-      // Add bounce animation
-      const originalY = tile.position.y;
-      const bounceHeight = 0.5;
-      const duration = 500; // ms
-      const startTime = Date.now();
-      
-      const bounce = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
-        
-        if (progress < 1) {
-          const bounceY = originalY + bounceHeight * Math.sin(progress * Math.PI);
-          tile.position.y = bounceY;
-          requestAnimationFrame(bounce);
-        } else {
-          tile.position.y = originalY;
-        }
-      };
-      bounce();
-    };
+    return tile;
   };
 
-  // Add click handler
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Timeline controls
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
 
-    const handleClick = (event) => {
-      const mouse = new THREE.Vector2();
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  const handleNextMove = () => {
+    if (gameData && currentMoveIndex < gameData.length - 1) {
+      setCurrentMoveIndex(currentMoveIndex + 1);
+    }
+  };
 
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, rendererRef.current.camera);
+  const handlePrevMove = () => {
+    if (currentMoveIndex > 0) {
+      setCurrentMoveIndex(currentMoveIndex - 1);
+    }
+  };
 
-      const intersects = raycaster.intersectObjects(sceneRef.current.children, true);
-      
-      if (intersects.length > 0) {
-        const object = intersects[0].object;
-        if (object.userData.onClick) {
-          object.userData.onClick();
-        }
-      }
-    };
+  const handleReset = () => {
+    setCurrentMoveIndex(0);
+    setIsPlaying(false);
+  };
 
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, [isLoaded]);
+  const handleSpeedChange = (speed) => {
+    setPlaybackSpeed(speed);
+  };
+
+  const currentMove = gameData?.[currentMoveIndex];
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>🎮 3D Scrabble Board</h1>
-        <p>Click tiles to see them bounce! Use mouse to rotate and zoom.</p>
+        <h1>🎮 3D Annotated Game Viewer</h1>
+        <p>Watch Scrabble games come to life in 3D!</p>
+        {loading && <div className={styles.loading}>Loading game data...</div>}
       </div>
+      
       <div ref={mountRef} className={styles.canvas} />
+      
+      {/* Timeline Controls */}
+      <div className={styles.timeline}>
+        <div className={styles.controls}>
+          <button onClick={handleReset} className={styles.controlBtn}>
+            ⏮️ Reset
+          </button>
+          <button onClick={handlePrevMove} className={styles.controlBtn}>
+            ⏪ Previous
+          </button>
+          <button onClick={handlePlayPause} className={styles.controlBtn}>
+            {isPlaying ? '⏸️ Pause' : '▶️ Play'}
+          </button>
+          <button onClick={handleNextMove} className={styles.controlBtn}>
+            ⏩ Next
+          </button>
+        </div>
+        
+        <div className={styles.speedControls}>
+          <button onClick={() => handleSpeedChange(500)} className={styles.speedBtn}>Fast</button>
+          <button onClick={() => handleSpeedChange(1000)} className={styles.speedBtn}>Normal</button>
+          <button onClick={() => handleSpeedChange(2000)} className={styles.speedBtn}>Slow</button>
+        </div>
+        
+        <div className={styles.moveInfo}>
+          <span>Move {currentMoveIndex + 1} of {gameData?.length || 0}</span>
+          {currentMove && (
+            <div className={styles.moveDetails}>
+              <span>Player {currentMove.player}: {currentMove.word}</span>
+              <span>Location: {currentMove.location}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
       <div className={styles.controls}>
         <button onClick={() => controlsRef.current?.reset()}>
           Reset View
