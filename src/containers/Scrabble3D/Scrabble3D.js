@@ -96,6 +96,17 @@ const Scrabble3D = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
 
+  // Store references to all created resources for cleanup
+  const resourcesRef = useRef({
+    geometries: [],
+    materials: [],
+    textures: [],
+    meshes: [],
+    lights: [],
+    controls: null,
+    animationId: null
+  });
+
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -129,6 +140,7 @@ const Scrabble3D = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
+    resourcesRef.current.controls = controls;
     
     // Trigger render on camera movement
     controls.addEventListener('change', () => {
@@ -138,6 +150,7 @@ const Scrabble3D = () => {
     // Magical lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Soft white ambient light
     scene.add(ambientLight);
+    resourcesRef.current.lights.push(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // Clean white directional light
     directionalLight.position.set(15, 15, 10);
@@ -151,23 +164,28 @@ const Scrabble3D = () => {
     directionalLight.shadow.camera.top = 20;
     directionalLight.shadow.camera.bottom = -20;
     scene.add(directionalLight);
+    resourcesRef.current.lights.push(directionalLight);
 
     // Magical colored point lights (balanced with lamps)
     const whiteLight1 = new THREE.PointLight(0xffffff, 0.6, 40);
     whiteLight1.position.set(-20, 15, -20);
     scene.add(whiteLight1);
+    resourcesRef.current.lights.push(whiteLight1);
 
     const whiteLight2 = new THREE.PointLight(0xffffff, 0.6, 40);
     whiteLight2.position.set(20, 15, 20);
     scene.add(whiteLight2);
+    resourcesRef.current.lights.push(whiteLight2);
 
     const whiteLight3 = new THREE.PointLight(0xffffff, 0.6, 40);
     whiteLight3.position.set(0, 20, -25);
     scene.add(whiteLight3);
+    resourcesRef.current.lights.push(whiteLight3);
 
     const whiteLight4 = new THREE.PointLight(0xffffff, 0.5, 35);
     whiteLight4.position.set(-15, 10, 15);
     scene.add(whiteLight4);
+    resourcesRef.current.lights.push(whiteLight4);
 
     // Create magical environment
     createMagicalEnvironment(scene);
@@ -180,7 +198,7 @@ const Scrabble3D = () => {
 
     // Animation loop
     const animate = () => {
-      requestAnimationFrame(animate);
+      resourcesRef.current.animationId = requestAnimationFrame(animate);
       controls.update();
       
       // Animate environment elements
@@ -212,11 +230,70 @@ const Scrabble3D = () => {
     setIsLoaded(true);
 
     return () => {
+      // Cancel animation frame
+      if (resourcesRef.current.animationId) {
+        cancelAnimationFrame(resourcesRef.current.animationId);
+      }
+
+      // Remove event listeners
       window.removeEventListener('resize', handleResize);
+      
+      // Dispose controls
+      if (resourcesRef.current.controls) {
+        resourcesRef.current.controls.dispose();
+      }
+
+      // Dispose all geometries
+      resourcesRef.current.geometries.forEach(geometry => {
+        geometry.dispose();
+      });
+
+      // Dispose all materials
+      resourcesRef.current.materials.forEach(material => {
+        if (material.map) material.map.dispose();
+        if (material.lightMap) material.lightMap.dispose();
+        if (material.bumpMap) material.bumpMap.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.specularMap) material.specularMap.dispose();
+        if (material.envMap) material.envMap.dispose();
+        material.dispose();
+      });
+
+      // Dispose all textures
+      resourcesRef.current.textures.forEach(texture => {
+        texture.dispose();
+      });
+
+      // Remove all meshes from scene
+      resourcesRef.current.meshes.forEach(mesh => {
+        if (mesh.parent) {
+          mesh.parent.remove(mesh);
+        }
+      });
+
+      // Clear scene
+      if (sceneRef.current) {
+        sceneRef.current.clear();
+      }
+
+      // Remove renderer from DOM
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
       }
+
+      // Dispose renderer
       renderer.dispose();
+
+      // Clear resources reference
+      resourcesRef.current = {
+        geometries: [],
+        materials: [],
+        textures: [],
+        meshes: [],
+        lights: [],
+        controls: null,
+        animationId: null
+      };
     };
   }, []);
 
@@ -292,6 +369,27 @@ const Scrabble3D = () => {
     }
   }, [isPlaying, currentMoveIndex, gameData, playbackSpeed]);
 
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      // Clear all tiles and their resources
+      tiles.forEach(tile => {
+        if (tile.geometry) tile.geometry.dispose();
+        if (tile.material) {
+          if (tile.material.map) tile.material.map.dispose();
+          tile.material.dispose();
+        }
+        tile.children.forEach(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+        });
+      });
+    };
+  }, [tiles]);
+
   const createMagicalEnvironment = (scene) => {
     // Create stone floor
     const floorGeometry = new THREE.PlaneGeometry(80, 80);
@@ -306,6 +404,9 @@ const Scrabble3D = () => {
     floor.position.y = -1.5;
     floor.receiveShadow = true;
     scene.add(floor);
+    resourcesRef.current.geometries.push(floorGeometry);
+    resourcesRef.current.materials.push(floorMaterial);
+    resourcesRef.current.meshes.push(floor);
 
     // Create stone walls
     const wallGeometry = new THREE.BoxGeometry(80, 32, 1);
@@ -321,6 +422,9 @@ const Scrabble3D = () => {
     backWall.position.set(0, 14, -40);
     backWall.receiveShadow = true;
     scene.add(backWall);
+    resourcesRef.current.geometries.push(wallGeometry);
+    resourcesRef.current.materials.push(wallMaterial);
+    resourcesRef.current.meshes.push(backWall);
 
     // Side walls
     const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
@@ -328,12 +432,14 @@ const Scrabble3D = () => {
     leftWall.rotation.y = Math.PI / 2;
     leftWall.receiveShadow = true;
     scene.add(leftWall);
+    resourcesRef.current.meshes.push(leftWall);
 
     const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
     rightWall.position.set(40, 14, 0);
     rightWall.rotation.y = -Math.PI / 2;
     rightWall.receiveShadow = true;
     scene.add(rightWall);
+    resourcesRef.current.meshes.push(rightWall);
 
     // Create ceiling
     const ceilingGeometry = new THREE.BoxGeometry(80, 0.5, 80);
@@ -347,6 +453,9 @@ const Scrabble3D = () => {
     ceiling.position.y = 30;
     ceiling.receiveShadow = true;
     scene.add(ceiling);
+    resourcesRef.current.geometries.push(ceilingGeometry);
+    resourcesRef.current.materials.push(ceilingMaterial);
+    resourcesRef.current.meshes.push(ceiling);
 
     // Create stone pillars
     const pillarGeometry = new THREE.CylinderGeometry(0.8, 0.8, 8, 8);
@@ -368,7 +477,11 @@ const Scrabble3D = () => {
       pillar.castShadow = true;
       pillar.receiveShadow = true;
       scene.add(pillar);
+      resourcesRef.current.meshes.push(pillar);
     });
+    
+    resourcesRef.current.geometries.push(pillarGeometry);
+    resourcesRef.current.materials.push(pillarMaterial);
 
     // Create grounded lamps around the room
     const lamps = [];
@@ -390,6 +503,9 @@ const Scrabble3D = () => {
       base.castShadow = true;
       base.receiveShadow = true;
       scene.add(base);
+      resourcesRef.current.geometries.push(baseGeometry);
+      resourcesRef.current.materials.push(baseMaterial);
+      resourcesRef.current.meshes.push(base);
 
       // Lamp pole
       const poleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8);
@@ -404,6 +520,9 @@ const Scrabble3D = () => {
       pole.castShadow = true;
       pole.receiveShadow = true;
       scene.add(pole);
+      resourcesRef.current.geometries.push(poleGeometry);
+      resourcesRef.current.materials.push(poleMaterial);
+      resourcesRef.current.meshes.push(pole);
 
       // Lamp shade
       const shadeGeometry = new THREE.CylinderGeometry(0.8, 0.6, 0.4, 8);
@@ -418,6 +537,9 @@ const Scrabble3D = () => {
       shade.castShadow = true;
       shade.receiveShadow = true;
       scene.add(shade);
+      resourcesRef.current.geometries.push(shadeGeometry);
+      resourcesRef.current.materials.push(shadeMaterial);
+      resourcesRef.current.meshes.push(shade);
 
       // Lamp light bulb
       const bulbGeometry = new THREE.SphereGeometry(0.2, 8, 6);
@@ -432,41 +554,21 @@ const Scrabble3D = () => {
       bulb.position.set(pos[0], 1.1, pos[2]);
       bulb.castShadow = true;
       scene.add(bulb);
+      resourcesRef.current.geometries.push(bulbGeometry);
+      resourcesRef.current.materials.push(bulbMaterial);
+      resourcesRef.current.meshes.push(bulb);
 
       // Add lamp light
       const lampLight = new THREE.PointLight(0xFFFFE0, 3.0, 40);
       lampLight.position.set(pos[0], 1.1, pos[2]);
       scene.add(lampLight);
+      resourcesRef.current.lights.push(lampLight);
 
       lamps.push(bulb);
     });
 
     // Store lamps for animation
     sceneRef.current.lamps = lamps;
-
-    // Add some magical books on the table
-    const bookGeometry = new THREE.BoxGeometry(0.8, 0.1, 1.2);
-    const bookMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B4513,
-      transparent: true,
-      opacity: 0.9,
-      shininess: 10
-    });
-
-    const bookPositions = [
-      { x: -6, z: -6, rotation: 0.3 },
-      { x: 6, z: -6, rotation: -0.2 },
-      { x: -6, z: 6, rotation: 0.1 }
-    ];
-
-    bookPositions.forEach(pos => {
-      const book = new THREE.Mesh(bookGeometry, bookMaterial);
-      book.position.set(pos.x, -0.1, pos.z);
-      book.rotation.y = pos.rotation;
-      book.castShadow = true;
-      book.receiveShadow = true;
-      scene.add(book);
-    });
   };
 
   const createTableAndChairs = (scene) => {
@@ -483,6 +585,9 @@ const Scrabble3D = () => {
     table.castShadow = true;
     table.receiveShadow = true;
     scene.add(table);
+    resourcesRef.current.geometries.push(tableGeometry);
+    resourcesRef.current.materials.push(tableMaterial);
+    resourcesRef.current.meshes.push(table);
 
     // Create 3D racks for both players
     createPlayerRacks(scene);
@@ -508,7 +613,11 @@ const Scrabble3D = () => {
       leg.castShadow = true;
       leg.receiveShadow = true;
       scene.add(leg);
+      resourcesRef.current.meshes.push(leg);
     });
+    
+    resourcesRef.current.geometries.push(legGeometry);
+    resourcesRef.current.materials.push(legMaterial);
 
     // Create two cozy futons
     const futonPositions = [
@@ -530,6 +639,9 @@ const Scrabble3D = () => {
       cushion.castShadow = true;
       cushion.receiveShadow = true;
       scene.add(cushion);
+      resourcesRef.current.geometries.push(cushionGeometry);
+      resourcesRef.current.materials.push(cushionMaterial);
+      resourcesRef.current.meshes.push(cushion);
 
       // Futon back cushion (folded up)
       const backCushionGeometry = new THREE.BoxGeometry(5.0, 3.5, 1.0);
@@ -544,6 +656,9 @@ const Scrabble3D = () => {
       backCushion.castShadow = true;
       backCushion.receiveShadow = true;
       scene.add(backCushion);
+      resourcesRef.current.geometries.push(backCushionGeometry);
+      resourcesRef.current.materials.push(backCushionMaterial);
+      resourcesRef.current.meshes.push(backCushion);
 
       // Futon frame/legs (low profile)
       const frameGeometry = new THREE.BoxGeometry(5.3, 0.4, 5.3);
@@ -558,6 +673,9 @@ const Scrabble3D = () => {
       frame.castShadow = true;
       frame.receiveShadow = true;
       scene.add(frame);
+      resourcesRef.current.geometries.push(frameGeometry);
+      resourcesRef.current.materials.push(frameMaterial);
+      resourcesRef.current.meshes.push(frame);
 
       // Add some decorative pillows
       const pillowGeometry = new THREE.BoxGeometry(1.2, 0.4, 1.2);
@@ -579,7 +697,11 @@ const Scrabble3D = () => {
         pillow.castShadow = true;
         pillow.receiveShadow = true;
         scene.add(pillow);
+        resourcesRef.current.meshes.push(pillow);
       });
+      
+      resourcesRef.current.geometries.push(pillowGeometry);
+      resourcesRef.current.materials.push(pillowMaterial);
     });
   };
 
@@ -598,6 +720,9 @@ const Scrabble3D = () => {
     board.receiveShadow = true;
     board.position.y = -0.1; // Raised higher to create groove effect
     scene.add(board);
+    resourcesRef.current.geometries.push(boardGeometry);
+    resourcesRef.current.materials.push(boardMaterial);
+    resourcesRef.current.meshes.push(board);
 
     // Create colored squares on the board surface (simple boxes to avoid rendering issues)
     const squareSize = 1;
@@ -643,6 +768,9 @@ const Scrabble3D = () => {
         square.castShadow = true;
         square.receiveShadow = true;
         scene.add(square);
+        resourcesRef.current.geometries.push(squareGeometry);
+        resourcesRef.current.materials.push(squareMaterial);
+        resourcesRef.current.meshes.push(square);
       }
     }
   };
@@ -652,9 +780,28 @@ const Scrabble3D = () => {
 
     console.log(`Updating to move ${moveIndex}, total moves: ${gameData.length}`);
 
-    // Clear existing tiles
+    // Clear existing tiles and dispose their resources
     tiles.forEach(tile => {
+      // Remove from scene
       sceneRef.current.remove(tile);
+      
+      // Dispose tile resources
+      if (tile.geometry) {
+        tile.geometry.dispose();
+      }
+      if (tile.material) {
+        if (tile.material.map) tile.material.map.dispose();
+        tile.material.dispose();
+      }
+      
+      // Dispose child meshes (letter textures)
+      tile.children.forEach(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (child.material.map) child.material.map.dispose();
+          child.material.dispose();
+        }
+      });
     });
     setTiles([]);
 
@@ -731,6 +878,7 @@ const Scrabble3D = () => {
         const tile = createTile(letter, tileRow, tileCol, player, moveIndex);
         tiles.push(tile);
         sceneRef.current.add(tile);
+        resourcesRef.current.meshes.push(tile);
       } else {
         console.log(`Position (${tileRow}, ${tileCol}) already occupied with letter: ${board[tileRow][tileCol]}`);
       }
@@ -758,33 +906,46 @@ const Scrabble3D = () => {
 
     // Create L-shaped rack for Player 1 (bottom of board)
     // Base of the L
-    const rack1Base = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 0.8), rackMaterial);
+    const rack1BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
+    const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
     rack1Base.position.set(0, 0.05, -12);
     rack1Base.castShadow = true;
     rack1Base.receiveShadow = true;
     scene.add(rack1Base);
+    resourcesRef.current.geometries.push(rack1BaseGeometry);
+    resourcesRef.current.materials.push(rackMaterial);
+    resourcesRef.current.meshes.push(rack1Base);
 
     // Back of the L
-    const rack1Back = new THREE.Mesh(new THREE.BoxGeometry(8, 0.6, 0.1), rackMaterial);
+    const rack1BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
+    const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
     rack1Back.position.set(0, 0.35, -11.65);
     rack1Back.castShadow = true;
     rack1Back.receiveShadow = true;
     scene.add(rack1Back);
+    resourcesRef.current.geometries.push(rack1BackGeometry);
+    resourcesRef.current.meshes.push(rack1Back);
 
     // Create L-shaped rack for Player 2 (top of board)
     // Base of the L
-    const rack2Base = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 0.8), rackMaterial);
+    const rack2BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
+    const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
     rack2Base.position.set(0, 0.05, 12);
     rack2Base.castShadow = true;
     rack2Base.receiveShadow = true;
     scene.add(rack2Base);
+    resourcesRef.current.geometries.push(rack2BaseGeometry);
+    resourcesRef.current.meshes.push(rack2Base);
 
     // Back of the L
-    const rack2Back = new THREE.Mesh(new THREE.BoxGeometry(8, 0.6, 0.1), rackMaterial);
+    const rack2BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
+    const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
     rack2Back.position.set(0, 0.35, 11.65);
     rack2Back.castShadow = true;
     rack2Back.receiveShadow = true;
     scene.add(rack2Back);
+    resourcesRef.current.geometries.push(rack2BackGeometry);
+    resourcesRef.current.meshes.push(rack2Back);
   };
 
   const createTile = (letter, row, col, player, moveIndex) => {
@@ -798,6 +959,9 @@ const Scrabble3D = () => {
       shininess: 50
     });
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+    resourcesRef.current.geometries.push(tileGeometry);
+    resourcesRef.current.materials.push(tileMaterial);
+    resourcesRef.current.meshes.push(tile);
     
     // Position tile on board
     const startX = -(15 * 1) / 2 + 1 / 2;
@@ -851,6 +1015,10 @@ const Scrabble3D = () => {
     letterMesh.position.y = 0.11;
     letterMesh.rotation.x = -Math.PI / 2;
     tile.add(letterMesh);
+    resourcesRef.current.geometries.push(letterGeometry);
+    resourcesRef.current.materials.push(letterMaterial);
+    resourcesRef.current.textures.push(texture);
+    resourcesRef.current.meshes.push(letterMesh);
     
     // Make sure the letter is visible
     letterMesh.renderOrder = 1;
