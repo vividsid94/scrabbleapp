@@ -250,7 +250,7 @@ export const useViewerStore = create((set, get) => {
         // 3. Extract display data from raw GCG (for UI purposes)
         const lines = rawGCG.split('\n');
         const moveSet = lines.filter(str => str.startsWith(">")); // Raw move strings for display
-        const origPlayerRaw = moveSet[0]?.split(':')[0] || ''; // Player name for display
+        const origPlayerRaw = parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : ''; // Player name from NEW parsing
         const notes = [];
         
         // Extract notes for display
@@ -405,7 +405,6 @@ export const useViewerStore = create((set, get) => {
         
         // Parse moves and origPlayerRaw from GCG
         const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
-        const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
         const lines = gcg.split('\n');
         let notes = [];
         let lexicon = '';
@@ -428,16 +427,22 @@ export const useViewerStore = create((set, get) => {
           }
         }
         
-        const moveRes = [moveSet, origPlayerRaw, notes];
+        // Parse the entire GCG once and store the parsed moves
+        const parsedMoves = parseGCG(gcg);
+        
+        // Get origPlayerRaw from NEW content-based parsing
+        const origPlayerRaw = parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : '';
+        
         const dictionary = metadata.lexicon || lexicon || 'Unknown';
         
         set({
           wooglesMode: true,
           currentWooglesGame: { gameId },
           gameNum: `woogles-${gameId}`,
-          moveSet: moveRes[0],
-          origPlayerRaw: moveRes[1],
-          notes: moveRes[2],
+          moveSet: moveSet,
+          parsedMoves: parsedMoves,
+          origPlayerRaw: origPlayerRaw,
+          notes: notes,
           name1: name1,
           name2: name2,
           tourneyNum: 0,
@@ -513,7 +518,6 @@ export const useViewerStore = create((set, get) => {
         
         // Parse moves and origPlayerRaw from GCG
         const moveSet = gcg.split('\n').filter(str => str.startsWith('>'));
-        const origPlayerRaw = gcg.split('\n').filter(str => str.startsWith('>'))[0]?.split(':')[0];
         const lines = gcg.split('\n');
         let notes = [];
         let lexicon = '';
@@ -538,6 +542,9 @@ export const useViewerStore = create((set, get) => {
         
         // Parse the entire GCG once and store the parsed moves
         const parsedMoves = parseGCG(gcg);
+        
+        // Get origPlayerRaw from NEW content-based parsing
+        const origPlayerRaw = parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : '';
         
         // Get dictionary from metadata
         const dictionary = metadata.lexicon || lexicon || 'Unknown';

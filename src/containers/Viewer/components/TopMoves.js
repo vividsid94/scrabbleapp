@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { createRack } from '../../../functions/rackFunctions.js';
 
 import styles from '../Viewer.module.css';
 
@@ -10,6 +11,7 @@ const TopMoves = ({
   boardCoords,
   moveSet,
   currentMoveRef,
+  parsedMoves,
   pool,
   onMoveSelect,
   onSimulateMove,
@@ -93,7 +95,7 @@ const TopMoves = ({
       const currentPlayer = currentMoveRef.current % 2 === 0 ? 1 : 2;
       
       // Get the current rack for the player whose turn it is
-      const currentRack = createRack(moveSet, currentMoveRef.current);
+      const currentRack = createRack(currentMoveRef.current, parsedMoves);
       
       // Convert any '?' in the rack to '*' for the API
       const apiRack = currentRack.map(tile => tile === '?' ? '*' : tile);
@@ -237,13 +239,7 @@ const TopMoves = ({
     return remainingTiles.sort().join('');
   };
 
-  // Helper function to create rack (simplified version)
-  const createRack = (moveSet, currentMoveRef) => {
-    const move = moveSet ? moveSet[currentMoveRef + 1] : null;
-    const parts = move ? move.split(" ") : '';
-    const rack = parts ? parts[1].split('') : [];
-    return rack;
-  };
+
 
   // Helper function to calculate leave for a move
   const calculateLeave = (move, currentRack) => {

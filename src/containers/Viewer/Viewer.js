@@ -405,7 +405,7 @@ export default function Viewer({ onChange }){
               board={board} 
               points={pointsScored} 
               boardMode={boardMode}
-              rack={createRack(moveSet, currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
+              rack={createRack(currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
               move={currentMoveRef.current >= 0 ? getMove(moveSet[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
               moveDirection={moveDirection} 
               dictionary={gameDictionary} 
@@ -811,6 +811,7 @@ export default function Viewer({ onChange }){
               boardCoords={boardCoords}
               moveSet={moveSet}
               currentMoveRef={currentMoveRef}
+              parsedMoves={parsedMoves}
               gameDictionary={gameDictionary}
               onMoveSelect={(move) => {
                 console.log('Selected move:', move);
@@ -855,8 +856,8 @@ export default function Viewer({ onChange }){
                   {moveSet && moveSet.length > 0 ? (
                     <span>
                       {getCurrentPool().length}
-                      {createRack(moveSet, currentMoveRef.current, parsedMoves).length > 0 && (
-                        <span style={{ opacity: 0.7 }}> • {createRack(moveSet, currentMoveRef.current, parsedMoves).length} on rack</span>
+                      {createRack(currentMoveRef.current, parsedMoves).length > 0 && (
+                        <span style={{ opacity: 0.7 }}> • {createRack(currentMoveRef.current, parsedMoves).length} on rack</span>
                       )}
                     </span>
                   ) : (
@@ -880,7 +881,7 @@ export default function Viewer({ onChange }){
                     {moveSet && moveSet.length > 0 ? (
                       <Pool 
                         board={getCurrentPool()}
-                        rack={createRack(moveSet, currentMoveRef.current, parsedMoves)}
+                        rack={createRack(currentMoveRef.current, parsedMoves)}
                       />  
                     ) : (
                       <div>Loading pool...</div>

@@ -53,8 +53,8 @@ const PlayerInfo = ({
   const player1FullName = revealedElo ? `${player1Name}, ${revealedElo}` : player1Name;
   const player2FullName = revealedElo2 ? `${player2Name}, ${revealedElo2}` : player2Name;
 
-  const player1Rack = isPlayer1Active ? createRack(moveSet, currentMoveRef.current, parsedMoves) : null;
-  const player2Rack = !isPlayer1Active ? createRack(moveSet, currentMoveRef.current, parsedMoves) : null;
+  const player1Rack = isPlayer1Active ? createRack(currentMoveRef.current + 1, parsedMoves) : null;
+  const player2Rack = !isPlayer1Active ? createRack(currentMoveRef.current + 1, parsedMoves) : null;
 
   return (
     <>
