@@ -156,16 +156,16 @@ const Scrabble3D = () => {
 
   const createBoard = (scene) => {
     // Board base with better material
-    const boardGeometry = new THREE.BoxGeometry(15, 0.5, 15);
+    const boardGeometry = new THREE.BoxGeometry(15, 0.2, 15);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B4513,
+      color: 0xFFFFFF, // Default white board color
       transparent: true,
       opacity: 0.95,
       shininess: 30
     });
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
-    board.position.y = -0.25;
+    board.position.y = -0.1;
     scene.add(board);
 
     // Create grid of squares with better spacing
@@ -178,12 +178,21 @@ const Scrabble3D = () => {
       for (let col = 0; col < gridSize; col++) {
         const squareGeometry = new THREE.BoxGeometry(squareSize * 0.9, 0.1, squareSize * 0.9);
         
-        // Different colors for different square types
-        let squareColor = 0xF5DEB3; // Default light brown
-        if ((row === 0 || row === 14) && (col === 0 || col === 7 || col === 14)) squareColor = 0xFF6B6B; // Triple word
-        else if ((row === 1 || row === 13) && (col === 1 || col === 13)) squareColor = 0x4ECDC4; // Double word
-        else if ((row === 2 || row === 12) && (col === 2 || col === 12)) squareColor = 0x45B7D1; // Triple letter
-        else if ((row === 3 || row === 11) && (col === 3 || col === 11)) squareColor = 0x96CEB4; // Double letter
+        // Get the actual board value from origBoard
+        const boardValue = JSON.parse(origBoard)[row][col];
+        
+        // Different colors for different square types - using Viewer defaults
+        let squareColor = 0xFFFFFF; // Default white
+        
+        if (boardValue === 4) {
+          squareColor = 0xCE2222; // Triple word - red (from cellColors)
+        } else if (boardValue === 3) {
+          squareColor = 0xF49FD4; // Double word - pink (from cellColors)
+        } else if (boardValue === 2) {
+          squareColor = 0x7269D6; // Triple letter - purple (from cellColors)
+        } else if (boardValue === 1) {
+          squareColor = 0x7ED6DD; // Double letter - cyan (from cellColors)
+        }
         
         const squareMaterial = new THREE.MeshPhongMaterial({ 
           color: squareColor,
@@ -306,8 +315,8 @@ const Scrabble3D = () => {
 
   const createTile = (letter, row, col, player, moveIndex) => {
     // Enhanced tile geometry
-    const tileGeometry = new THREE.BoxGeometry(0.8, 0.3, 0.8);
-    const tileColor = player === 1 ? 0xDAA520 : 0xCD853F; // Different colors for players
+    const tileGeometry = new THREE.BoxGeometry(0.8, 0.15, 0.8);
+    const tileColor = 0xC0C0C0; // Silver tile color
     const tileMaterial = new THREE.MeshPhongMaterial({ 
       color: tileColor,
       transparent: true,
@@ -321,7 +330,7 @@ const Scrabble3D = () => {
     const startZ = -(15 * 1) / 2 + 1 / 2;
     tile.position.set(
       startX + col * 1,
-      0.25,
+      0.175,
       startZ + row * 1
     );
     tile.castShadow = true;
@@ -336,17 +345,12 @@ const Scrabble3D = () => {
     // Clear canvas with transparent background
     context.clearRect(0, 0, 128, 128);
     
-    // Add main letter with high contrast
-    context.fillStyle = '#000000';
-    context.font = 'bold 90px Arial';
+    // Add main letter - clean and clear
+    context.fillStyle = '#FFFFFF';
+    context.font = 'bold 100px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(letter, 64, 64);
-    
-    // Add white outline for better visibility
-    context.strokeStyle = '#FFFFFF';
-    context.lineWidth = 3;
-    context.strokeText(letter, 64, 64);
     
     const texture = new THREE.CanvasTexture(canvas);
     const letterGeometry = new THREE.PlaneGeometry(0.6, 0.6);
