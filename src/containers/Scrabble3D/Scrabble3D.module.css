@@ -130,8 +130,8 @@
 
 /* Latest Move Panel Styles */
 .latestMovePanel {
-  padding: 6px;
-  margin: 4px 6px 0 6px;
+  padding: 3px;
+  margin: 2px 6px 0 6px;
   overflow: hidden;
   position: relative;
 }
