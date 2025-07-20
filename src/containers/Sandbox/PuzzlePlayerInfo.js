@@ -4,10 +4,10 @@ import { Tooltip } from "@mui/material";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
+
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import Rack from '../../components/AppContent/Board/Rack.js';
+
 import LatestMove from '../Play/components/LatestMove.js';
 import { useSandboxStore } from '../../stores/sandboxStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
@@ -44,11 +44,7 @@ const PuzzlePlayerInfo = React.memo(() => {
   const color = useColorSchemeStore(state => state.color);
   
   // Subscribe to board-related state only where it's needed
-  const selectedTiles = useSandboxStore(state => state.selectedTiles);
-  const selectedRackTiles = useSandboxStore(state => state.selectedRackTiles);
-  const tilesToExchange = useSandboxStore(state => state.tilesToExchange);
-  const selectedBoardPosition = useSandboxStore(state => state.selectedBoardPosition);
-  const arrowDirection = useSandboxStore(state => state.arrowDirection);
+
   
   // Subscribe to other needed state
   const currentPlayer = useSandboxStore(state => state.currentPlayer);
@@ -62,9 +58,8 @@ const PuzzlePlayerInfo = React.memo(() => {
   const player2Time = useSandboxStore(state => state.player2Time);
   const gameStarted = useSandboxStore(state => state.gameStarted);
   const isBotThinking = useSandboxStore(state => state.isBotThinking);
-  const isPausedForBingo = useSandboxStore(state => state.isPausedForBingo);
-  const puzzleMode = useSandboxStore(state => state.puzzleMode);
-  const storedTopMoves = useSandboxStore(state => state.storedTopMoves);
+
+
   const isFastPlayMode = useSandboxStore(state => state.isFastPlayMode);
   const isExecutingFastPlay = useSandboxStore(state => state.isExecutingFastPlay);
   const gameEnded = useSandboxStore(state => state.gameEnded);
@@ -72,67 +67,25 @@ const PuzzlePlayerInfo = React.memo(() => {
   
   // Subscribe to actions
   const {
-    handlePuzzleTileClick,
-    handleBoardPositionSelect,
-    submitPuzzleGuess,
     clearPuzzlePlacement,
     setShowAllBingos,
     setIsFastPlayMode,
     setIsManuallyPaused,
-    setShowSettingsPanel,
     handleBotModeToggle,
-    continueBingoMove,
-    setBingoMove,
-    setIsPausedForBingo,
-    setPuzzleMode,
     startBotGame,
   } = useSandboxStore();
 
   // Local state
   const [isManuallyPaused, setIsManuallyPausedLocal] = React.useState(false);
-  const [showSettingsPanel, setShowSettingsPanelLocal] = React.useState(false);
 
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
   const currentName = currentPlayer === 1 ? player1Name : player2Name;
   const currentPoints = currentPlayer === 1 ? player1points : player2points;
   const currentTime = currentPlayer === 1 ? player1Time : player2Time;
   
-  // Conditional tile click handler - only allow when paused for puzzle
-  const handleTileClick = (tile, index) => {
-    console.log('🎯 Tile clicked:', { tile, index, isPausedForBingo });
-    if (isPausedForBingo) {
-      handlePuzzleTileClick(tile, index);
-    }
-  };
 
-  // Resume after bingo challenge
-  const handleResume = () => {
-    
-    if (isPausedForBingo) {
-      // Continue the bingo move
-      console.log('🎯 Continuing bingo move');
-      continueBingoMove();
-    } else {
-      // Resume from manual pause
-      console.log('⏸️ Resuming from manual pause');
-      setIsPausedForBingo(false);
-      setBingoMove(null);
-    }
-    
-    // Hide the bingos list when resuming
-    setShowAllBingos(false);
-  };
 
-  // Handle puzzle mode change
-  const handlePuzzleModeChange = (newMode) => {
-    if (newMode !== puzzleMode) {
-      setPuzzleMode(newMode);
-      setShowSettingsPanelLocal(false);
-      setIsManuallyPausedLocal(false); // Resume game
-      // Start a new game with the new mode
-      startBotGame();
-    }
-  };
+
 
   return (
     <Box className={styles.playerPanel}>
@@ -163,51 +116,6 @@ const PuzzlePlayerInfo = React.memo(() => {
                 color: gameStarted ? '#FF9800' : '#4CAF50'
               }}
             />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Puzzle Mode">
-          <Box
-            onClick={() => {
-              const newShowSettings = !showSettingsPanel;
-              setShowSettingsPanelLocal(newShowSettings);
-              // Pause game when settings open, resume when closed
-              setIsManuallyPausedLocal(newShowSettings);
-            }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '4px',
-              cursor: 'pointer',
-              position: 'relative'
-            }}
-          >
-            <ViewModuleIcon 
-              className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''}`}
-              style={{ 
-                fontSize: 24, 
-                cursor: 'pointer'
-              }}
-            />
-            <Box sx={{
-              position: 'absolute',
-              top: '-2px',
-              right: '-2px',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              borderRadius: '50%',
-              width: '16px',
-              height: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '10px',
-              fontWeight: 'bold'
-            }}>
-              {puzzleMode === 'bingo' ? '1' : 
-               puzzleMode === 'only-bingo' ? '2' : 
-               puzzleMode === 'significant-best' ? '3' : '4'}
-            </Box>
           </Box>
         </Tooltip>
         <Tooltip title={isFastPlayMode ? "Fast Play On" : "Fast Play Off"}>
@@ -321,8 +229,8 @@ const PuzzlePlayerInfo = React.memo(() => {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        {gameStarted && !isPausedForBingo && !gameEnded ? (
-          <><strong>Solve puzzles as T² plays itself</strong>
+        {gameStarted && !gameEnded ? (
+          <><strong>Watch T² play itself</strong>
             <Box className={styles.thinkingDots}>
               <div></div>
               <div></div>
@@ -330,7 +238,7 @@ const PuzzlePlayerInfo = React.memo(() => {
             </Box>
           </>
         ) : (
-          <><strong>Solve puzzles as T² plays itself</strong></>
+          <><strong>Watch T² play itself</strong></>
         )}
       </Box>
 
@@ -347,228 +255,13 @@ const PuzzlePlayerInfo = React.memo(() => {
               </Box>
             </Box>
           </Box>
-          <Box style={{ marginTop: '12px' }}>
-            {currentRack && currentRack.length > 0 && (
-              <Box className={styles.Rack}>
-                <Rack 
-                  rack={currentRack} 
-                  color={color.current} 
-                  onTileClick={handleTileClick}
-                  selectedTiles={isPausedForBingo ? selectedRackTiles : tilesToExchange}
-                />
-              </Box>
-            )}
-          </Box>
+
         </Box>
       )}
 
       <MemoizedLatestMove />
 
-      {/* Bingo challenge section */}
-      {isPausedForBingo && (
-        <Box className={styles.playerPanel} style={{ 
-          marginTop: '16px',
-          padding: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
-        }}>
-          <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
-            <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
-              {currentPlayer === 1 ? player1Name : player2Name} found a {puzzleMode === 'bingo' || puzzleMode === 'only-bingo' ? 'bingo' : 'significant play'}!
-            </Box>
-            <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
-              {puzzleMode === 'only-bingo' 
-                ? 'There is only one. Can you find it?'
-                : puzzleMode === 'bingo'
-                ? 'Can you find the best one?'
-                : puzzleMode === 'significant-best'
-                ? 'The best move is significant. Can you find it?'
-                : puzzleMode === 'non-bingo-significant'
-                ? 'The best non-bingo move is significant. Can you find it?'
-                : 'Can you find the best move?'
-              }
-            </Box>
-            
-            {/* Instructions */}
-            <Box style={{ 
-              fontSize: '11px', 
-              marginBottom: '12px', 
-              opacity: 0.7,
-              padding: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '4px'
-            }}>
-              <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
-              <Box>• Place your guess on the board, or reveal the answer by clicking the button below.</Box>
-            </Box>
-            
-            <Box style={{ 
-              display: 'flex', 
-              gap: '8px', 
-              justifyContent: 'center',
-              flexWrap: 'wrap'
-            }}>
-              <button 
-                onClick={handleResume} 
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                  e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                  e.target.style.transform = 'scale(1) translateY(0)';
-                }}
-                style={{ 
-                  flex: '1',
-                  minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
-                  cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                  color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontWeight: 'bold',
-                  backdropFilter: 'blur(5px)',
-                  transition: 'all 0.3s ease',
-                  fontFamily: 'Syne, sans-serif',
-                  textAlign: 'center',
-                  whiteSpace: 'nowrap',
-                  position: 'relative'
-                }}
-              >
-                Reveal/Skip
-                <Box sx={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
-                  backgroundColor: '#FF9800',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '20px',
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'bold'
-                }}>
-                  1
-                </Box>
-              </button>
-              <button 
-                onClick={() => {
-                  console.log('🎯 Submit button clicked');
-                  submitPuzzleGuess();
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.3), rgba(76,175,80,0.2))';
-                  e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))';
-                  e.target.style.transform = 'scale(1) translateY(0)';
-                }}
-                style={{ 
-                  flex: '1',
-                  minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
-                  cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))',
-                  color: 'white',
-                  border: '1px solid rgba(76, 175, 80, 0.3)',
-                  fontWeight: 'bold',
-                  backdropFilter: 'blur(5px)',
-                  transition: 'all 0.3s ease',
-                  fontFamily: 'Syne, sans-serif',
-                  textAlign: 'center',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Submit Guess
-              </button>
-              <button 
-                onClick={() => setShowAllBingos(!showAllBingos)}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
-                  e.target.style.transform = 'scale(1.05) translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
-                  e.target.style.transform = 'scale(1) translateY(0)';
-                }}
-                style={{ 
-                  flex: '1',
-                  minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
-                  cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                  color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontWeight: 'bold',
-                  backdropFilter: 'blur(5px)',
-                  transition: 'all 0.3s ease',
-                  fontFamily: 'Syne, sans-serif',
-                  textAlign: 'center',
-                  whiteSpace: 'nowrap',
-                  position: 'relative'
-                }}
-              >
-                {showAllBingos ? (
-                  <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
-                    {puzzleMode === 'bingo' ? (
-                      storedTopMoves?.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).map((move, index) => (
-                        <Box key={index} style={{ fontSize: '10px', fontWeight: 'normal' }}>
-                          {move.startPosition} {move.word} ({move.score} pts)
-                        </Box>
-                      ))
-                    ) : (puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant') ? (
-                      storedTopMoves?.slice(0, 2).map((move, index) => (
-                        <Box key={index} style={{ fontSize: '10px', fontWeight: index === 0 ? 'bold' : 'normal' }}>
-                          {index + 1}. {move.startPosition} {move.word} ({move.score} pts)
-                        </Box>
-                      ))
-                    ) : null}
-                  </Box>
-                ) : (
-                  puzzleMode === 'bingo' 
-                    ? `Show ${storedTopMoves ? storedTopMoves.filter(move => move.tiles && move.tiles.length === 7 && !move.isExchange).length : 0} bingos`
-                    : puzzleMode === 'significant-best' || puzzleMode === 'non-bingo-significant'
-                    ? 'Show Top 2 Moves'
-                    : 'Show Moves'
-                )}
-                <Box 
-                  onClick={() => setShowAllBingos(!showAllBingos)}
-                  style={{
-                    position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
-                    backgroundColor: '#FF9800',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                  }}
-                >
-                  2
-                </Box>
-              </button>
-            </Box>
-          </Box>
-        </Box>
-      )}
+
 
       {/* Game ended message */}
       {gameEnded && (
@@ -589,160 +282,7 @@ const PuzzlePlayerInfo = React.memo(() => {
         </Box>
       )}
 
-      {/* Settings panel */}
-      {showSettingsPanel && (
-        <Box className={styles.playerPanel} style={{ 
-          marginTop: '16px',
-          padding: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
-        }}>
-          <Box style={{ marginBottom: '12px' }}>
-            <Box style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
-              Puzzle Challenge Mode
-            </Box>
-            <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
-              Choose when to pause for puzzle challenges
-            </Box>
-          </Box>
-          
-          <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Box 
-              onClick={() => handlePuzzleModeChange('bingo')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                backgroundColor: puzzleMode === 'bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                fontSize: '14px',
-                position: 'relative'
-              }}
-            >
-              <Box style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
-                1
-              </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>All Bingos</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when a bingo is found</Box>
-            </Box>
-            <Box 
-              onClick={() => handlePuzzleModeChange('only-bingo')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                backgroundColor: puzzleMode === 'only-bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'only-bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                fontSize: '14px',
-                position: 'relative'
-              }}
-            >
-              <Box style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
-                2
-              </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Only Bingo</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when there's exactly 1 bingo available</Box>
-            </Box>
-            <Box 
-              onClick={() => handlePuzzleModeChange('significant-best')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                backgroundColor: puzzleMode === 'significant-best' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'significant-best' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                fontSize: '14px',
-                position: 'relative'
-              }}
-            >
-              <Box style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
-                3
-              </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Move</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is 10+ equity better than next best move</Box>
-            </Box>
-            <Box 
-              onClick={() => handlePuzzleModeChange('non-bingo-significant')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                backgroundColor: puzzleMode === 'non-bingo-significant' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'non-bingo-significant' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
-                fontSize: '14px',
-                position: 'relative'
-              }}
-            >
-              <Box style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
-                4
-              </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Non-Bingo Move</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
-            </Box>
-          </Box>
-        </Box>
-      )}
+
     </Box>
   );
 });

@@ -264,16 +264,7 @@ export default function Sandbox() {
     }
   }, [gameStarted, isPausedForBingo, gameEnded]);
 
-  // Check for bingos in top moves
-  useEffect(() => {
-    if (topMoves && topMoves.length > 0 && !isPausedForBingo && gameStarted && !gameEnded) {
-      const topMove = topMoves[0];
-        if (isBingo(topMove)) {
-          setIsPausedForBingo(true);
-          setBingoMove(topMove);
-      }
-    }
-  }, [topMoves, isPausedForBingo, gameStarted, gameEnded]);
+
 
   // Get the latest move from move history
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;

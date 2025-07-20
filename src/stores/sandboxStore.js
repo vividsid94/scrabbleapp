@@ -1050,41 +1050,6 @@ export const useSandboxStore = create((set, get) => {
             // Determine whether to pause based on puzzle mode
             let shouldPause = false;
             const puzzleMode = get().puzzleMode;
-            
-            if (puzzleMode === 'bingo') {
-              shouldPause = isBestMoveBingo;
-            } else if (puzzleMode === 'only-bingo') {
-              shouldPause = isBestMoveBingo && !otherMovesHaveBingos;
-            } else if (puzzleMode === 'significant-best') {
-              shouldPause = hasSignificantGap;
-            } else if (puzzleMode === 'non-bingo-significant') {
-              shouldPause = hasSignificantGap && !isBestMoveBingo;
-            }
-            
-            if (shouldPause) {
-              // Auto-pause for challenge
-              const { setIsPausedForBingo, setBingoMove, setStoredTopMoves } = get();
-              setIsPausedForBingo(true);
-              setBingoMove(bestMove);
-              
-              // Store the moves for display
-              setStoredTopMoves(sortedMoves);
-              
-              // Play game start sound to indicate it's player's turn to guess
-              if (gameStartSound && gameStartSound.play) {
-                gameStartSound.play();
-              }
-              
-              // Don't make the move yet - wait for user to find it
-              // Don't add to move history yet - wait for user to continue
-              setIsBotThinking(false);
-              setTopMoves([]);
-              setSelectedBoardPosition(null);
-              setSelectedTiles([]);
-              setSelectedRackTiles([]);
-              setArrowDirection('right');
-              return;
-            }
 
             // Create a copy of the board with the bot's move
             const newBoard = JSON.parse(JSON.stringify(boardCoords));
@@ -1466,19 +1431,7 @@ export const useSandboxStore = create((set, get) => {
           const hasSignificantGap = sortedMoves.length > 1 && 
             (bestMove.totalValue - sortedMoves[1].totalValue) >= 10;
 
-          if (puzzleMode === 'bingo' && isBestMoveBingo) {
-            shouldPause = true;
-            pauseReason = 'bingo';
-          } else if (puzzleMode === 'only-bingo' && isBestMoveBingo && !otherMovesHaveBingos) {
-            shouldPause = true;
-            pauseReason = 'only-bingo';
-          } else if (puzzleMode === 'significant-best' && hasSignificantGap) {
-            shouldPause = true;
-            pauseReason = 'significant-best';
-          } else if (puzzleMode === 'non-bingo-significant' && hasSignificantGap && !isBestMoveBingo) {
-            shouldPause = true;
-            pauseReason = 'non-bingo-significant';
-          }
+
 
           if (shouldPause) {
             // Store the moves for the puzzle challenge
