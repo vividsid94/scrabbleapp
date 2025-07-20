@@ -246,6 +246,7 @@ export const useViewerStore = create((set, get) => {
         
         // 2. Use NEW content-based parser for game logic
         const parsedMoves = parseGCG(rawGCG);
+        console.log('parsedMoves:', parsedMoves);
         
         // 3. Extract notes for display
         const lines = rawGCG.split('\n');
