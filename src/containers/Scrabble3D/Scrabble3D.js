@@ -408,6 +408,7 @@ const Scrabble3D = () => {
   useEffect(() => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
       updateBoardToMove(currentMoveIndex);
+      updateScoresheet(); // Update scoresheet with current game state
       setNeedsRender(true); // Trigger render after board update
       
       // Update shadows when board changes significantly
@@ -646,6 +647,9 @@ const Scrabble3D = () => {
 
     // Create 3D racks for both players
     createPlayerRacks(scene);
+
+    // Create scoresheet on the table
+    createScoresheet(scene);
 
     // Create table legs
     const legGeometry = new THREE.BoxGeometry(TABLE.LEG.WIDTH, TABLE.LEG.HEIGHT, TABLE.LEG.DEPTH);
@@ -1060,6 +1064,312 @@ const Scrabble3D = () => {
     scene.add(rack2Back);
     resourcesRef.current.geometries.push(rack2BackGeometry);
     resourcesRef.current.meshes.push(rack2Back);
+  };
+
+  const createScoresheet = (scene) => {
+    // Create simple paper scoresheet
+    const scoresheetGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH, TABLE.SCORESHEET.HEIGHT);
+    const scoresheetMaterial = new THREE.MeshPhongMaterial({ 
+      color: TABLE.SCORESHEET.MATERIAL.COLOR,
+      transparent: true,
+      opacity: TABLE.SCORESHEET.MATERIAL.OPACITY,
+      shininess: TABLE.SCORESHEET.MATERIAL.SHININESS
+    });
+    const scoresheet = new THREE.Mesh(scoresheetGeometry, scoresheetMaterial);
+    scoresheet.rotation.x = -Math.PI / 2; // Lay flat on table
+    scoresheet.position.set(
+      TABLE.SCORESHEET.POSITION.x, 
+      TABLE.SCORESHEET.Y_POSITION, 
+      TABLE.SCORESHEET.POSITION.z
+    );
+    scoresheet.castShadow = true;
+    scoresheet.receiveShadow = true;
+    scene.add(scoresheet);
+    resourcesRef.current.geometries.push(scoresheetGeometry);
+    resourcesRef.current.materials.push(scoresheetMaterial);
+    resourcesRef.current.meshes.push(scoresheet);
+
+    // Store reference to scoresheet for updates
+    sceneRef.current.scoresheet = {
+      base: scoresheet,
+      scores: null // Will be set when texture is created
+    };
+
+    // Create scores text with high-DPI scaling
+    const scoresCanvas = document.createElement('canvas');
+    const scoresContext = scoresCanvas.getContext('2d');
+    
+    // High-DPI scaling for crisp text
+    const scale = window.devicePixelRatio || 1;
+    scoresCanvas.width = 360 * scale;
+    scoresCanvas.height = 416 * scale;
+    scoresCanvas.style.width = '360px';
+    scoresCanvas.style.height = '416px';
+    
+    // Scale the context to match the device pixel ratio
+    scoresContext.scale(scale, scale);
+    
+    // White background
+    scoresContext.fillStyle = '#F5F5DC';
+    scoresContext.fillRect(0, 0, 360, 416);
+    
+    // Draw grid lines
+    scoresContext.strokeStyle = '#000000';
+    scoresContext.lineWidth = 1;
+    
+    // Vertical lines for columns
+    scoresContext.beginPath();
+    scoresContext.moveTo(80, 0);
+    scoresContext.lineTo(80, 416);
+    scoresContext.moveTo(160, 0);
+    scoresContext.lineTo(160, 416);
+    scoresContext.moveTo(200, 0);
+    scoresContext.lineTo(200, 416);
+    scoresContext.moveTo(280, 0);
+    scoresContext.lineTo(280, 416);
+    scoresContext.moveTo(360, 0);
+    scoresContext.lineTo(360, 416);
+    scoresContext.stroke();
+    
+    // Horizontal lines for rows
+    scoresContext.beginPath();
+    for (let i = 0; i <= 21; i++) {
+      scoresContext.moveTo(0, 20 + i * 18);
+      scoresContext.lineTo(360, 20 + i * 18);
+    }
+    scoresContext.stroke();
+    
+    // Draw all text after font loads (see loadModernFont function below)
+    
+    // Function to create and apply texture
+    const createTexture = () => {
+      const scoresTexture = new THREE.CanvasTexture(scoresCanvas);
+      const scoresGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH - 0.5, TABLE.SCORESHEET.HEIGHT - 0.5);
+      const scoresMaterial = new THREE.MeshBasicMaterial({ 
+        map: scoresTexture,
+        transparent: true,
+        alphaTest: 0.01
+      });
+      const scoresMesh = new THREE.Mesh(scoresGeometry, scoresMaterial);
+      scoresMesh.position.set(
+        TABLE.SCORESHEET.POSITION.x,
+        TABLE.SCORESHEET.Y_POSITION + 0.01, // Slightly above paper
+        TABLE.SCORESHEET.POSITION.z
+      );
+      scoresMesh.rotation.x = -Math.PI / 2;
+      scene.add(scoresMesh);
+      resourcesRef.current.geometries.push(scoresGeometry);
+      resourcesRef.current.materials.push(scoresMaterial);
+      resourcesRef.current.textures.push(scoresTexture);
+      resourcesRef.current.meshes.push(scoresMesh);
+
+      // Store reference to scoresheet for updates
+      sceneRef.current.scoresheet = {
+        base: scoresheet,
+        scores: scoresMesh
+      };
+    };
+    
+    // Draw text with system fonts that actually work
+    const drawText = () => {
+      // Set text color and draw all text
+      scoresContext.fillStyle = '#000000';
+      scoresContext.font = 'bold 14px monospace';
+      scoresContext.textAlign = 'center';
+      scoresContext.textBaseline = 'middle';
+      
+      // Get player names from game data
+      const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+      const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+      
+      // Player name headers
+      scoresContext.fillText(player1Name, 120, 10);
+      scoresContext.fillText(player2Name, 320, 10);
+      
+      // Column headers
+      scoresContext.fillText('Word(s)', 40, 29);   // Center of 0-80 column
+      scoresContext.fillText('Score', 120, 29);         // Center of 80-160 column
+      scoresContext.fillText('Turn', 180, 29);          // Center of 160-200 column
+      scoresContext.fillText('Word(s)', 240, 29);  // Center of 200-280 column
+      scoresContext.fillText('Score', 320, 29);         // Center of 280-360 column
+      
+      scoresContext.font = '12px monospace';
+      for (let i = 1; i <= 20; i++) {
+        scoresContext.fillText(i.toString(), 180, 29 + i * 18);  // Center of 160-200 column
+      }
+      scoresContext.fillText('+', 180, 29 + 21 * 18);  // Center of 160-200 column
+      
+      // Draw real game data
+      if (gameData && gameData.length > 0) {
+        scoresContext.textAlign = 'center';
+        scoresContext.textBaseline = 'middle';
+        
+        // Calculate running totals
+        let player1Total = 0;
+        let player2Total = 0;
+        
+        gameData.forEach((move, index) => {
+          if (index >= 20) return; // Only show first 20 moves
+          
+          const row = index + 1;
+          const y = 29 + row * 18;
+          const score = move.score || 0;
+          const word = move.word || 'Pass';
+          
+          // Determine which player this move belongs to
+          const isPlayer1 = move.player === player1Name;
+          
+          if (isPlayer1) {
+            player1Total += score;
+            scoresContext.fillText(word, 40, y);  // Player 1 word column
+            scoresContext.fillText(`+${score}`, 120, y);  // Player 1 score column
+          } else {
+            player2Total += score;
+            scoresContext.fillText(word, 240, y);  // Player 2 word column
+            scoresContext.fillText(`+${score}`, 320, y);  // Player 2 score column
+          }
+        });
+        
+        // Draw totals in the last row
+        const totalY = 29 + 21 * 18;
+        scoresContext.fillText(player1Total.toString(), 120, totalY);
+        scoresContext.fillText(player2Total.toString(), 320, totalY);
+      }
+      
+      createTexture();
+    };
+    
+    // Draw immediately with system fonts
+    drawText();
+  };
+
+  // Function to update scoresheet with current game data
+  const updateScoresheet = () => {
+    if (sceneRef.current.scoresheet && sceneRef.current.scoresheet.scores) {
+      // Recreate the texture with updated data
+      const scoresCanvas = document.createElement('canvas');
+      const scoresContext = scoresCanvas.getContext('2d');
+      
+      // High-DPI scaling for crisp text
+      const scale = window.devicePixelRatio || 1;
+      scoresCanvas.width = 360 * scale;
+      scoresCanvas.height = 416 * scale;
+      scoresCanvas.style.width = '360px';
+      scoresCanvas.style.height = '416px';
+      
+      // Scale the context to match the device pixel ratio
+      scoresContext.scale(scale, scale);
+      
+      // White background
+      scoresContext.fillStyle = '#F5F5DC';
+      scoresContext.fillRect(0, 0, 360, 416);
+      
+      // Draw grid lines
+      scoresContext.strokeStyle = '#000000';
+      scoresContext.lineWidth = 1;
+      
+      // Vertical lines for columns
+      scoresContext.beginPath();
+      scoresContext.moveTo(80, 0);
+      scoresContext.lineTo(80, 416);
+      scoresContext.moveTo(160, 0);
+      scoresContext.lineTo(160, 416);
+      scoresContext.moveTo(200, 0);
+      scoresContext.lineTo(200, 416);
+      scoresContext.moveTo(280, 0);
+      scoresContext.lineTo(280, 416);
+      scoresContext.moveTo(360, 0);
+      scoresContext.lineTo(360, 416);
+      scoresContext.stroke();
+      
+      // Horizontal lines for rows
+      scoresContext.beginPath();
+      for (let i = 0; i <= 21; i++) {
+        scoresContext.moveTo(0, 20 + i * 18);
+        scoresContext.lineTo(360, 20 + i * 18);
+      }
+      scoresContext.stroke();
+      
+      // Draw updated text
+      const drawUpdatedText = () => {
+        scoresContext.fillStyle = '#000000';
+        scoresContext.font = 'bold 14px monospace';
+        scoresContext.textAlign = 'center';
+        scoresContext.textBaseline = 'middle';
+        
+        // Get player names from game data
+        const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+        const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+        
+        // Player name headers
+        scoresContext.fillText(player1Name, 120, 10);
+        scoresContext.fillText(player2Name, 320, 10);
+        
+        // Column headers
+        scoresContext.fillText('Word(s)', 40, 29);
+        scoresContext.fillText('Score', 120, 29);
+        scoresContext.fillText('Turn', 180, 29);
+        scoresContext.fillText('Word(s)', 240, 29);
+        scoresContext.fillText('Score', 320, 29);
+        
+        scoresContext.font = '12px monospace';
+        for (let i = 1; i <= 20; i++) {
+          scoresContext.fillText(i.toString(), 180, 29 + i * 18);
+        }
+        scoresContext.fillText('+', 180, 29 + 21 * 18);
+        
+        // Draw real game data up to current move
+        if (gameData && gameData.length > 0) {
+          scoresContext.textAlign = 'center';
+          scoresContext.textBaseline = 'middle';
+          
+          // Track the latest totals for each player
+          let player1LatestTotal = 0;
+          let player2LatestTotal = 0;
+          
+          gameData.slice(0, currentMoveIndex + 1).forEach((move, index) => {
+            if (index >= 20) return; // Only show first 20 moves
+            
+            const row = index + 1;
+            const y = 29 + row * 18;
+            const score = move.score || 0;
+            const total = move.total || 0;
+            const word = move.word || 'Pass';
+            
+            // Determine which player this move belongs to
+            const isPlayer1 = move.player === player1Name;
+            
+            if (isPlayer1) {
+              player1LatestTotal = total; // Use the total from the move data
+              scoresContext.fillText(word, 40, y);
+              scoresContext.fillText(`+${score}`, 120, y);
+            } else {
+              player2LatestTotal = total; // Use the total from the move data
+              scoresContext.fillText(word, 240, y);
+              scoresContext.fillText(`+${score}`, 320, y);
+            }
+          });
+          
+          // Draw totals in the last row using the latest totals from move data
+          const totalY = 29 + 21 * 18;
+          scoresContext.fillText(player1LatestTotal.toString(), 120, totalY);
+          scoresContext.fillText(player2LatestTotal.toString(), 320, totalY);
+        }
+      };
+      
+      drawUpdatedText();
+      
+      // Update the texture
+      const newTexture = new THREE.CanvasTexture(scoresCanvas);
+      sceneRef.current.scoresheet.scores.material.map = newTexture;
+      sceneRef.current.scoresheet.scores.material.needsUpdate = true;
+      
+      // Clean up old texture
+      if (sceneRef.current.scoresheet.scores.material.map) {
+        sceneRef.current.scoresheet.scores.material.map.dispose();
+      }
+      sceneRef.current.scoresheet.scores.material.map = newTexture;
+    }
   };
 
   const createRackTile = (letter, position, player) => {

@@ -187,6 +187,17 @@ export const TABLE = {
       [-9.5, -1.1, 9.5],
       [9.5, -1.1, 9.5]
     ]
+  },
+  SCORESHEET: {
+    WIDTH: 10,
+    HEIGHT: 11.5,
+    Y_POSITION: -0.2, // Slightly above table surface
+    POSITION: { x: -18, z: 0 }, // Position on table - centered and on the table
+    MATERIAL: {
+      COLOR: 0xF5F5DC, // Beige paper color
+      OPACITY: 0.95,
+      SHININESS: 5
+    }
   }
 };
 
