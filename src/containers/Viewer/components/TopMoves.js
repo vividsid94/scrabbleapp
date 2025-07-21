@@ -360,7 +360,7 @@ const TopMoves = ({
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <img 
-              src="/images/t2fox.png" 
+              src="/images/theomascot.png" 
               alt="Theo Fox" 
               style={{ 
                 width: '24px', 
@@ -392,7 +392,7 @@ const TopMoves = ({
         <Box className={styles.topMovesContent}>
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <img 
-              src="/images/t2fox.png" 
+              src="/images/theomascot.png" 
               alt="Theo Fox" 
               style={{ 
                 width: '24px', 
@@ -414,7 +414,7 @@ const TopMoves = ({
       <Box className={`${styles.topMovesContent} ${animationClass}`}>
         <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
           <img 
-            src="/images/t2fox.png" 
+            src="/images/theomascot.png" 
             alt="Theo Fox" 
             style={{ 
               width: '24px', 
