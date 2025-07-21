@@ -617,6 +617,17 @@ export default function MiniDrawer() {
             </ListItemIcon>
           </ListItem>
         </List>
+        <List className={styles.btnContainer}>
+          <a id="aboutBtn" className={styles.link} href="/about">
+            <ListItem className={styles.listItem}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="About" placement="right">
+                  <CircleIcon style={{ color: '#f59e0b', fontSize: '20px' }} />
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
       </Drawer>
       
       {/* Mobile Color Picker Modal */}

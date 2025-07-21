@@ -1,0 +1,121 @@
+.aboutPageWrapper {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+}
+
+.aboutPage {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1 1 auto;
+  min-height: 80vh;
+  padding: 40px 10px 60px 10px;
+  gap: 40px;
+}
+
+.leftCol, .rightCol {
+  flex: 1 1 320px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.profileBox {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(31, 41, 55, 0.08);
+  padding: 32px 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 380px;
+  height: 100%;
+  justify-content: center;
+}
+
+.sidImgPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin: 0 auto 18px auto;
+  border: 3px dashed #fbbf24;
+  font-family: 'Preahvihear', sans-serif;
+}
+
+.sidImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 18px;
+  border: 3px solid #fbbf24;
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.18), 0 2px 8px #fbbf24;
+  background: #fffbe6;
+  transition: transform 0.2s;
+}
+.sidImg:hover {
+  transform: scale(1.07) rotate(3deg);
+  box-shadow: 0 12px 40px rgba(245, 158, 11, 0.28), 0 4px 16px #fbbf24;
+}
+
+.mascotImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.18), 0 2px 8px #fbbf24;
+  margin-bottom: 18px;
+  background: #fffbe6;
+  border: 3px solid #fbbf24;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+.mascotImg:hover {
+  transform: scale(1.07) rotate(-3deg);
+  box-shadow: 0 12px 40px rgba(245, 158, 11, 0.28), 0 4px 16px #fbbf24;
+}
+
+.name {
+  font-size: 1.4rem;
+  color: #f59e0b;
+  margin-bottom: 8px;
+  font-family: 'Preahvihear', sans-serif;
+}
+
+.bio {
+  font-size: 1.05rem;
+  color: #374151;
+  line-height: 1.6;
+  font-family: 'Preahvihear', sans-serif;
+}
+
+@media (max-width: 900px) {
+  .aboutPageWrapper {
+    flex-direction: column;
+  }
+  .aboutPage {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .leftCol, .rightCol {
+    justify-content: center;
+    width: 100%;
+    align-items: stretch;
+  }
+  .profileBox {
+    margin-bottom: 24px;
+    min-height: 320px;
+  }
+} 

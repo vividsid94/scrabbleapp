@@ -20,6 +20,7 @@ import WidgetPage from "./containers/Widget/WidgetPage";
 import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
 import SubmitGame from "./containers/SubmitGame/SubmitGame";
 import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
+import About from "./containers/About/About";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
@@ -57,6 +58,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/widget-landing" element={<WidgetLanding/>}/>
           <Route path="/submit-game" element={<SubmitGame/>}/>
           <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
+          <Route path="/about" element={<About/>} />
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}
