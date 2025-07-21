@@ -473,61 +473,28 @@ const Scrabble3D = () => {
     resourcesRef.current.materials.push(floorMaterial);
     resourcesRef.current.meshes.push(floor);
 
-    // Create stone walls
-    const wallGeometry = new THREE.BoxGeometry(ENVIRONMENT.WALL.WIDTH, ENVIRONMENT.WALL.HEIGHT, ENVIRONMENT.WALL.DEPTH);
-    const wallMaterial = new THREE.MeshPhongMaterial({ 
-      color: MATERIALS.WALL.COLOR,
+    // Create carpet on top of the floor
+    const carpetGeometry = new THREE.PlaneGeometry(60, 45); // Much larger carpet
+    const carpetMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x8B0000, // Lighter red carpet color
       transparent: true,
-      opacity: MATERIALS.WALL.OPACITY,
-      shininess: MATERIALS.WALL.SHININESS
-    });
-
-    // Back wall
-    const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    backWall.position.set(0, ENVIRONMENT.WALL.Y_POSITION, ENVIRONMENT.WALL.Z_POSITION);
-    backWall.receiveShadow = true;
-    scene.add(backWall);
-    resourcesRef.current.geometries.push(wallGeometry);
-    resourcesRef.current.materials.push(wallMaterial);
-    resourcesRef.current.meshes.push(backWall);
-
-    // Side walls
-    const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    leftWall.position.set(-ENVIRONMENT.WALL.WIDTH/2, ENVIRONMENT.WALL.Y_POSITION, 0);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
-    scene.add(leftWall);
-    resourcesRef.current.meshes.push(leftWall);
-
-    const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    rightWall.position.set(ENVIRONMENT.WALL.WIDTH/2, ENVIRONMENT.WALL.Y_POSITION, 0);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
-    scene.add(rightWall);
-    resourcesRef.current.meshes.push(rightWall);
-
-        // Ceiling removed for open-air feel
-
-    // Create stone pillars
-    const pillarGeometry = new THREE.CylinderGeometry(ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.HEIGHT, ENVIRONMENT.PILLAR.SEGMENTS);
-    const pillarMaterial = new THREE.MeshPhongMaterial({ 
-      color: MATERIALS.PILLAR.COLOR,
-      transparent: true,
-      opacity: MATERIALS.PILLAR.OPACITY,
-      shininess: MATERIALS.PILLAR.SHININESS
-    });
-
-    ENVIRONMENT.PILLAR.POSITIONS.forEach(pos => {
-      const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
-      pillar.position.set(...pos);
-      pillar.castShadow = true;
-      pillar.receiveShadow = true;
-      scene.add(pillar);
-      resourcesRef.current.meshes.push(pillar);
+      opacity: 1.0,
+      shininess: 5
     });
     
-    resourcesRef.current.geometries.push(pillarGeometry);
-    resourcesRef.current.materials.push(pillarMaterial);
+    // Add carpet texture
+    const carpetTexture = new THREE.CanvasTexture(createCarpetTexture());
+    carpetMaterial.map = carpetTexture;
+    const carpet = new THREE.Mesh(carpetGeometry, carpetMaterial);
+    carpet.rotation.x = -Math.PI / 2;
+    carpet.position.y = ENVIRONMENT.FLOOR.Y_POSITION + 0.05; // Higher above floor
+    carpet.receiveShadow = true;
+    scene.add(carpet);
+    resourcesRef.current.geometries.push(carpetGeometry);
+    resourcesRef.current.materials.push(carpetMaterial);
+    resourcesRef.current.meshes.push(carpet);
+
+    // Walls and pillars removed for open-air feel
 
     // Create grounded lamps around the room
     const lamps = [];
@@ -612,6 +579,48 @@ const Scrabble3D = () => {
 
     // Store lamps for animation
     sceneRef.current.lamps = lamps;
+  };
+
+  const createCarpetTexture = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    const size = 512;
+    canvas.width = size;
+    canvas.height = size;
+    
+    // Fill with base color
+    ctx.fillStyle = '#8B0000';
+    ctx.fillRect(0, 0, size, size);
+    
+    // Create elegant carpet pattern
+    ctx.strokeStyle = '#660000';
+    ctx.lineWidth = 1;
+    
+    // Create subtle diagonal lines for texture
+    for (let i = -size; i < size * 2; i += 8) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + size, size);
+      ctx.stroke();
+    }
+    
+    // Add some subtle shading
+    ctx.fillStyle = '#660000';
+    ctx.globalAlpha = 0.3;
+    for (let x = 0; x < size; x += 64) {
+      for (let y = 0; y < size; y += 64) {
+        ctx.beginPath();
+        ctx.arc(x + 32, y + 32, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // Reset alpha
+    ctx.globalAlpha = 1.0;
+    
+    return canvas;
   };
 
   const createNameTexture = (playerName, isFlipped = false) => {
