@@ -34,7 +34,7 @@ export default function Home(){
             color: lightMode === 'dark' ? '#fff' : '#000'
           }}
         >
-          Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project. Heavy development in progress! Check{" "}
+          Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check{" "}
           <Link to="/changelog" style={{
             color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
             textDecoration: 'none', 
@@ -43,7 +43,7 @@ export default function Home(){
           {" "}for all the latest updates!
           <br /><br />
           <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
-            Our official release will be after 2025 Nationals, but more beta features are being added to homepage! Try our new 3D Viewer!
+            Our official release will be after 2025 Nationals, but more beta features are being added to homepage!
           </span>
           <Rocket 
             style={{ 
