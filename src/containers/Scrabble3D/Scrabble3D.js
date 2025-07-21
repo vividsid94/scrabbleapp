@@ -506,21 +506,7 @@ const Scrabble3D = () => {
     scene.add(rightWall);
     resourcesRef.current.meshes.push(rightWall);
 
-    // Create ceiling
-    const ceilingGeometry = new THREE.BoxGeometry(ENVIRONMENT.CEILING.WIDTH, ENVIRONMENT.CEILING.HEIGHT, ENVIRONMENT.CEILING.DEPTH);
-    const ceilingMaterial = new THREE.MeshPhongMaterial({ 
-      color: MATERIALS.CEILING.COLOR,
-      transparent: true,
-      opacity: MATERIALS.CEILING.OPACITY,
-      shininess: MATERIALS.CEILING.SHININESS
-    });
-    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.position.y = ENVIRONMENT.CEILING.Y_POSITION;
-    ceiling.receiveShadow = true;
-    scene.add(ceiling);
-    resourcesRef.current.geometries.push(ceilingGeometry);
-    resourcesRef.current.materials.push(ceilingMaterial);
-    resourcesRef.current.meshes.push(ceiling);
+        // Ceiling removed for open-air feel
 
     // Create stone pillars
     const pillarGeometry = new THREE.CylinderGeometry(ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.HEIGHT, ENVIRONMENT.PILLAR.SEGMENTS);
