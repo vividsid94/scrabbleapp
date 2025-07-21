@@ -43,7 +43,7 @@ export default function Home(){
           {" "}for all the latest updates!
           <br /><br />
           <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
-            Our official release will be after 2025 Nationals, but more beta features are being added to homepage!
+            Our official release will be after 2025 Nationals, but more beta features are being added to the homepage!
           </span>
           <Rocket 
             style={{ 
