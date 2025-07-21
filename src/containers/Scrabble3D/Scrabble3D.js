@@ -818,6 +818,48 @@ const Scrabble3D = () => {
         resourcesRef.current.meshes.push(square);
       }
     }
+
+    // Create grid lines between squares
+    const gridLineMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x8B4513, // Dark brown wood color
+      transparent: true,
+      opacity: 0.8,
+      shininess: 30
+    });
+
+    // Vertical grid lines
+    for (let col = 0; col <= gridSize; col++) {
+      const gridLineGeometry = new THREE.BoxGeometry(0.05, 0.15, gridSize * squareSize);
+      const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
+      gridLine.position.set(
+        startX + col * squareSize - squareSize / 2,
+        0.075, // Slightly above board squares
+        0
+      );
+      gridLine.castShadow = true;
+      gridLine.receiveShadow = true;
+      scene.add(gridLine);
+      resourcesRef.current.geometries.push(gridLineGeometry);
+      resourcesRef.current.materials.push(gridLineMaterial);
+      resourcesRef.current.meshes.push(gridLine);
+    }
+
+    // Horizontal grid lines
+    for (let row = 0; row <= gridSize; row++) {
+      const gridLineGeometry = new THREE.BoxGeometry(gridSize * squareSize, 0.15, 0.05);
+      const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
+      gridLine.position.set(
+        0,
+        0.075, // Slightly above board squares
+        startZ + row * squareSize - squareSize / 2
+      );
+      gridLine.castShadow = true;
+      gridLine.receiveShadow = true;
+      scene.add(gridLine);
+      resourcesRef.current.geometries.push(gridLineGeometry);
+      resourcesRef.current.materials.push(gridLineMaterial);
+      resourcesRef.current.meshes.push(gridLine);
+    }
   };
 
   const updateBoardToMove = (moveIndex) => {
