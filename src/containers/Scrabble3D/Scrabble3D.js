@@ -185,6 +185,13 @@ const Scrabble3D = () => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = CONTROLS.DAMPING_FACTOR;
+    
+    // Add constraints to prevent extreme angles that cause distortion
+    controls.minDistance = 10; // Don't get too close
+    controls.maxDistance = 50; // Don't get too far
+    controls.minPolarAngle = Math.PI / 6; // 30 degrees - don't go too horizontal
+    controls.maxPolarAngle = Math.PI / 2.5; // About 72 degrees - don't go too vertical
+    
     controlsRef.current = controls;
     resourcesRef.current.controls = controls;
     
@@ -1725,6 +1732,17 @@ const Scrabble3D = () => {
     setIsPlaying(false);
   };
 
+  const resetCamera = () => {
+    if (controlsRef.current) {
+      // Reset to a better position for viewing the scoresheet
+      const camera = controlsRef.current.object;
+      camera.position.set(0, 30, 12); // Higher and more centered
+      camera.lookAt(0, 0, 0);
+      controlsRef.current.update();
+      setNeedsRender(true);
+    }
+  };
+
   const handleSpeedChange = (speed) => {
     setPlaybackSpeed(speed);
   };
@@ -1825,7 +1843,7 @@ const Scrabble3D = () => {
                 <button onClick={() => handleSpeedChange(GAME.PLAYBACK_SPEEDS.SLOW)} className={styles.speedBtn}>Slow</button>
               </div>
               <div className={styles.controlGroup}>
-                <button onClick={() => controlsRef.current?.reset()} className={styles.controlBtn}>
+                <button onClick={resetCamera} className={styles.controlBtn}>
                   <ArrowClockwise size={16} />
                 </button>
               </div>

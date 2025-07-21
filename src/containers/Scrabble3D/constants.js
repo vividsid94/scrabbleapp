@@ -3,10 +3,10 @@
 
 // Camera and Rendering
 export const CAMERA = {
-  FOV: 75,
+  FOV: 60, // Reduced FOV for less distortion
   NEAR: 0.1,
   FAR: 1000,
-  INITIAL_POSITION: { x: 0, y: 18, z: 20 },
+  INITIAL_POSITION: { x: 0, y: 25, z: 15 }, // Higher and closer for more direct view
   TARGET: { x: 0, y: 0, z: 0 }
 };
 
