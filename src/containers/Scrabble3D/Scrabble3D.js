@@ -1017,7 +1017,7 @@ const Scrabble3D = () => {
     // Base of the rack (slanted)
     const rack1BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
     const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
-    rack1Base.position.set(0, 0.05, -12);
+    rack1Base.position.set(0, -0.2, -12);
     rack1Base.rotation.x = Math.PI / 12; // 15 degree slant
     rack1Base.castShadow = true;
     rack1Base.receiveShadow = true;
@@ -1029,7 +1029,7 @@ const Scrabble3D = () => {
     // Back support of the rack (slanted)
     const rack1BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
     const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
-    rack1Back.position.set(0, 0.35, -11.65);
+    rack1Back.position.set(0, 0.07, -11.65);
     rack1Back.rotation.x = Math.PI / 12; // 15 degree slant
     rack1Back.castShadow = true;
     rack1Back.receiveShadow = true;
@@ -1041,7 +1041,7 @@ const Scrabble3D = () => {
     // Base of the rack (slanted)
     const rack2BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
     const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
-    rack2Base.position.set(0, 0.05, 12);
+    rack2Base.position.set(0, -0.2, 12);
     rack2Base.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
     rack2Base.castShadow = true;
     rack2Base.receiveShadow = true;
@@ -1052,7 +1052,7 @@ const Scrabble3D = () => {
     // Back support of the rack (slanted)
     const rack2BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
     const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
-    rack2Back.position.set(0, 0.35, 11.65);
+    rack2Back.position.set(0, 0.07, 11.65);
     rack2Back.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
     rack2Back.castShadow = true;
     rack2Back.receiveShadow = true;
@@ -1078,7 +1078,7 @@ const Scrabble3D = () => {
     
     // Position tile on rack
     const rackZ = player === 1 ? -12 : 12;
-    const rackY = 0.45; // Slightly above rack surface
+    const rackY = 0.2; // Slightly above rack surface
     tile.position.set(position * 0.8 - 2.8, rackY, rackZ);
     const slant = Math.PI / 12; // 15 degrees
     tile.rotation.x = player === 1
