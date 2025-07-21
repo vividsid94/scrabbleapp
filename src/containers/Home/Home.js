@@ -8,7 +8,7 @@ import { ThemeContext } from '../../App';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
-  const devMessage = "Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!\n\nOur official release will be after 2025 Nationals, but more buttons are being added to homepage!";
+  const devMessage = "Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!\n\nOur official release will be after 2025 Nationals, but more buttons are being added to homepage!";
 
   return (
     <Box sx={{ display: 'flex'}}>
@@ -20,8 +20,8 @@ export default function Home(){
         >
           <Box className={styles.titleContainer}>
             <img 
-              src="/images/t2fox.png" 
-              alt="Tile Turnover Fox Stencil" 
+              src="/images/theomascot.png" 
+              alt="Tile Turnover Mascot" 
               className={styles.stencilBackground}
             />
           </Box>
@@ -34,7 +34,7 @@ export default function Home(){
             color: lightMode === 'dark' ? '#fff' : '#000'
           }}
         >
-          Welcome to Tile Turnover™! Meet Tango, your word game fox! We're a front-end focused project. Heavy development in progress! Check{" "}
+          Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project. Heavy development in progress! Check{" "}
           <Link to="/changelog" style={{
             color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
             textDecoration: 'none', 

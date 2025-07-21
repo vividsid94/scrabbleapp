@@ -30,7 +30,7 @@
 .stencilBackground {
   position: fixed;
   z-index: 0;
-  opacity: 0.04;
+  opacity: 0.10;
   filter: grayscale(1) contrast(200%) brightness(0.5);
   pointer-events: auto;
   top: 50%;
@@ -49,8 +49,8 @@
 }
 
 @keyframes stencilPulse {
-  0%, 100% { opacity: 0; filter: grayscale(1) contrast(200%) brightness(0.5); }
-  50% { opacity: 0.08; filter: grayscale(1) contrast(250%) brightness(0.6); }
+  0%, 100% { opacity: 0.10; filter: grayscale(1) contrast(200%) brightness(0.5); }
+  50% { opacity: 0.20; filter: grayscale(1) contrast(250%) brightness(0.6); }
 }
 
 @keyframes hoverPulse {

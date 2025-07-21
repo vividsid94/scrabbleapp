@@ -361,7 +361,7 @@ const TopMoves = ({
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <img 
               src="/images/t2fox.png" 
-              alt="Tango Fox" 
+              alt="Theo Fox" 
               style={{ 
                 width: '24px', 
                 height: '24px', 
@@ -369,7 +369,7 @@ const TopMoves = ({
                 opacity: 0.6
               }} 
             />
-            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Theo</Box>
             <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
           <Box className={styles.loadingText}>
@@ -393,7 +393,7 @@ const TopMoves = ({
           <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
             <img 
               src="/images/t2fox.png" 
-              alt="Tango Fox" 
+              alt="Theo Fox" 
               style={{ 
                 width: '24px', 
                 height: '24px', 
@@ -401,7 +401,7 @@ const TopMoves = ({
                 opacity: 0.6
               }} 
             />
-            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Theo</Box>
             <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
           </Box>
         </Box>
@@ -415,7 +415,7 @@ const TopMoves = ({
         <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
           <img 
             src="/images/t2fox.png" 
-            alt="Tango Fox" 
+            alt="Theo Fox" 
             style={{ 
               width: '24px', 
               height: '24px', 
@@ -423,7 +423,7 @@ const TopMoves = ({
               opacity: 0.6
             }} 
                       />
-            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Tango</Box>
+            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: '#fff' }}>Ask Theo</Box>
             <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
         </Box>
         {topMoves.length > 0 && (
