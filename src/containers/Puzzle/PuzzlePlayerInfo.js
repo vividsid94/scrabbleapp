@@ -144,7 +144,7 @@ const PuzzlePlayerInfo = React.memo(() => {
         }}>
           {null} {/* No time icon in puzzle mode */}
         </Box>
-        <Tooltip title={gameStarted ? "Start New T² vs T² Game" : "Start T² vs T² Game"}>
+        <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
           <Box
             onClick={() => handleBotModeToggle()}
             sx={{
@@ -322,7 +322,7 @@ const PuzzlePlayerInfo = React.memo(() => {
         justifyContent: 'center'
       }}>
         {gameStarted && !isPausedForBingo && !gameEnded ? (
-          <><strong>Solve puzzles as T² plays itself</strong>
+          <><strong>Solve puzzles as Theo plays itself</strong>
             <Box className={styles.thinkingDots}>
               <div></div>
               <div></div>
@@ -330,7 +330,7 @@ const PuzzlePlayerInfo = React.memo(() => {
             </Box>
           </>
         ) : (
-          <><strong>Solve puzzles as T² plays itself</strong></>
+          <><strong>Solve puzzles as Theo plays itself</strong></>
         )}
       </Box>
 

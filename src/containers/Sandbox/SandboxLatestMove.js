@@ -37,7 +37,7 @@ const SandboxLatestMove = ({ latestMove, player1Name, player2Name, onMoveHistory
 
   // Helper function to get player icon
   const getPlayerIcon = (playerName) => {
-    if (playerName === 'T²' || playerName === 'Bot') {
+    if (playerName === 'Theo' || playerName === 'Bot') {
       return <SmartToyIcon style={{ fontSize: 16 }} />;
     } else {
       return <PersonIcon style={{ fontSize: 16 }} />;

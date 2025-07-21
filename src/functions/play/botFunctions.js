@@ -766,7 +766,7 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   // Set bot mode and names
   setIsBotMode(true);
   setPlayer1Name('You');
-        setPlayer2Name('T²');
+        setPlayer2Name('Theo');
   
   // Clear all temporary states
   setSimulatingMove(null);

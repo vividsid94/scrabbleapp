@@ -33,7 +33,7 @@ const LatestMove = ({
   const getPlayerIcon = (playerName) => {
     if (!playerName) return <PersonIcon style={{ fontSize: 16 }} />;
     
-    if (playerName === 'T²' || playerName === 'Bot' || playerName.includes('Bot')) {
+    if (playerName === 'Theo' || playerName === 'Bot' || playerName.includes('Bot')) {
       return <SmartToyIcon style={{ fontSize: 16 }} />;
     } else {
       return <PersonIcon style={{ fontSize: 16 }} />;

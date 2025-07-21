@@ -97,7 +97,7 @@ const SandboxPlayerInfo = React.memo(() => {
         }}>
           {null} {/* No time icon in puzzle mode */}
         </Box>
-        <Tooltip title={gameStarted ? "Start New T² vs T² Game" : "Start T² vs T² Game"}>
+        <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
           <Box
             onClick={() => handleBotModeToggle()}
             sx={{
@@ -230,7 +230,7 @@ const SandboxPlayerInfo = React.memo(() => {
         justifyContent: 'center'
       }}>
         {gameStarted && !gameEnded ? (
-          <><strong>Watch T² play itself</strong>
+          <><strong>Watch Theo play itself</strong>
             <Box className={styles.thinkingDots}>
               <div></div>
               <div></div>
@@ -238,7 +238,7 @@ const SandboxPlayerInfo = React.memo(() => {
             </Box>
           </>
         ) : (
-          <><strong>Watch T² play itself</strong></>
+          <><strong>Watch Theo play itself</strong></>
         )}
       </Box>
 
