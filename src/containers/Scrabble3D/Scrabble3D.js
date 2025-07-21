@@ -880,28 +880,7 @@ const Scrabble3D = () => {
       shininess: BOARD.GRID.GRID_LINE.MATERIAL.SHININESS
     });
 
-    // Vertical grid lines
-    for (let col = 0; col <= BOARD.GRID.SIZE; col++) {
-      const gridLineGeometry = new THREE.BoxGeometry(
-        BOARD.GRID.GRID_LINE.WIDTH, 
-        BOARD.GRID.GRID_LINE.HEIGHT, 
-        BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE
-      );
-      const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
-      gridLine.position.set(
-        startX + col * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2,
-        BOARD.GRID.GRID_LINE.Y_POSITION,
-        0
-      );
-      gridLine.castShadow = true;
-      gridLine.receiveShadow = true;
-      scene.add(gridLine);
-      resourcesRef.current.geometries.push(gridLineGeometry);
-      resourcesRef.current.materials.push(gridLineMaterial);
-      resourcesRef.current.meshes.push(gridLine);
-    }
-
-    // Horizontal grid lines
+    // Horizontal grid lines (full width)
     for (let row = 0; row <= BOARD.GRID.SIZE; row++) {
       const gridLineGeometry = new THREE.BoxGeometry(
         BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE, 
@@ -920,6 +899,30 @@ const Scrabble3D = () => {
       resourcesRef.current.geometries.push(gridLineGeometry);
       resourcesRef.current.materials.push(gridLineMaterial);
       resourcesRef.current.meshes.push(gridLine);
+    }
+
+    // Vertical grid lines (broken into segments to avoid corner intersections)
+    for (let col = 0; col <= BOARD.GRID.SIZE; col++) {
+      // Create 15 segments for each vertical line (one for each row gap)
+      for (let row = 0; row < BOARD.GRID.SIZE; row++) {
+        const gridLineGeometry = new THREE.BoxGeometry(
+          BOARD.GRID.GRID_LINE.WIDTH, 
+          BOARD.GRID.GRID_LINE.HEIGHT, 
+          BOARD.GRID.SQUARE_SIZE - BOARD.GRID.GRID_LINE.WIDTH // Slightly shorter than square to create gaps
+        );
+        const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
+        gridLine.position.set(
+          startX + col * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2,
+          BOARD.GRID.GRID_LINE.Y_POSITION,
+          startZ + row * BOARD.GRID.SQUARE_SIZE
+        );
+        gridLine.castShadow = true;
+        gridLine.receiveShadow = true;
+        scene.add(gridLine);
+        resourcesRef.current.geometries.push(gridLineGeometry);
+        resourcesRef.current.materials.push(gridLineMaterial);
+        resourcesRef.current.meshes.push(gridLine);
+      }
     }
   };
 
