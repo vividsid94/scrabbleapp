@@ -116,6 +116,7 @@ const Scrabble3D = () => {
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const controlsRef = useRef(null);
+  const cameraRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Game state
@@ -129,6 +130,17 @@ const Scrabble3D = () => {
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
+  
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedTile, setDraggedTile] = useState(null);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0, z: 0 });
+  const [hoveredSquare, setHoveredSquare] = useState(null);
+  const [isPlayMode, setIsPlayMode] = useState(false);
+  
+  // Use refs to avoid closure issues
+  const isDraggingRef = useRef(false);
+  const draggedTileRef = useRef(null);
 
   // Store references to all created resources for cleanup
   const resourcesRef = useRef({
@@ -167,6 +179,7 @@ const Scrabble3D = () => {
     );
     camera.position.set(CAMERA.INITIAL_POSITION.x, CAMERA.INITIAL_POSITION.y, CAMERA.INITIAL_POSITION.z);
     camera.lookAt(CAMERA.TARGET.x, CAMERA.TARGET.y, CAMERA.TARGET.z);
+    cameraRef.current = camera;
 
     // Renderer setup with optimized settings
     const renderer = new THREE.WebGLRenderer({
@@ -185,13 +198,177 @@ const Scrabble3D = () => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = CONTROLS.DAMPING_FACTOR;
+    controls.enablePan = true;
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN
+    };
     controlsRef.current = controls;
     resourcesRef.current.controls = controls;
+    
+    // Don't disable controls initially - we'll handle this in useEffect
     
     // Trigger render on camera movement
     controls.addEventListener('change', () => {
       setNeedsRender(true);
     });
+
+    // Mouse event handlers for drag and drop
+    const handleMouseDown = (event) => {
+      console.log('Mouse down, isPlayMode:', isPlayMode, 'isDragging:', isDraggingRef.current);
+      
+      if (isDraggingRef.current) return;
+      
+      // Only allow dragging in play mode
+      if (!isPlayMode) return;
+      
+      // Prevent OrbitControls from handling this event
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const mouse = new THREE.Vector2();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      
+      // Check for intersection with rack tiles
+      const rackTilesToCheck = [...rackTiles.player1, ...rackTiles.player2];
+      console.log('Rack tiles to check:', rackTilesToCheck.length);
+      const intersects = raycaster.intersectObjects(rackTilesToCheck, true);
+      console.log('Intersects found:', intersects.length);
+      
+      if (intersects.length > 0) {
+        const intersectedTile = intersects[0].object;
+        // Find the parent tile (the actual rack tile)
+        let tile = intersectedTile;
+        while (tile.parent && !tile.userData.isRackTile) {
+          tile = tile.parent;
+        }
+        
+        if (tile.userData.isRackTile) {
+          console.log('Found rack tile:', tile.userData.letter);
+          setIsDragging(true);
+          setDraggedTile(tile);
+          isDraggingRef.current = true;
+          draggedTileRef.current = tile;
+          handleMouseMove(event); // Immediately update drag position to mouse location
+          // Make tile semi-transparent while dragging
+          tile.material.opacity = 0.7;
+          tile.material.transparent = true;
+        }
+      } else {
+        console.log('No rack tiles found, allowing normal camera controls');
+        // If no rack tiles found, allow normal camera controls
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
+      }
+    };
+
+    const handleMouseMove = (event) => {
+      // Use refs for drag state
+      if (!isDraggingRef.current || !draggedTileRef.current) return;
+      
+      // Only prevent default if we're actually dragging
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const mouse = new THREE.Vector2();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      
+      // Create a plane at board height for intersection
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -TILE.BOARD.Y_POSITION);
+      const intersectionPoint = new THREE.Vector3();
+      
+      if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+        setDragPosition(intersectionPoint);
+        
+        // Check if close to a board square
+        const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        
+        const col = Math.round((intersectionPoint.x - startX) / BOARD.GRID.SQUARE_SIZE);
+        const row = Math.round((intersectionPoint.z - startZ) / BOARD.GRID.SQUARE_SIZE);
+        
+        if (col >= 0 && col < BOARD.GRID.SIZE && row >= 0 && row < BOARD.GRID.SIZE) {
+          const squareX = startX + col * BOARD.GRID.SQUARE_SIZE;
+          const squareZ = startZ + row * BOARD.GRID.SQUARE_SIZE;
+          
+          // Check if close enough to snap
+          const distance = Math.sqrt(
+            Math.pow(intersectionPoint.x - squareX, 2) + 
+            Math.pow(intersectionPoint.z - squareZ, 2)
+          );
+          
+          if (distance < BOARD.GRID.SQUARE_SIZE * 0.3) { // Snap threshold
+            setHoveredSquare({ row, col, x: squareX, z: squareZ });
+            setDragPosition({ x: squareX, y: TILE.BOARD.Y_POSITION + 0.1, z: squareZ });
+          } else {
+            setHoveredSquare(null);
+            setDragPosition(intersectionPoint);
+          }
+        } else {
+          setHoveredSquare(null);
+          setDragPosition(intersectionPoint);
+        }
+      }
+      
+      setNeedsRender(true);
+    };
+
+    const handleMouseUp = (event) => {
+      if (!isDraggingRef.current || !draggedTileRef.current) return;
+      
+      // Prevent OrbitControls from handling this event
+      event.preventDefault();
+      event.stopPropagation();
+      
+      if (hoveredSquare) {
+        // Place tile on board
+        const letter = draggedTileRef.current.userData.letter;
+        const player = draggedTileRef.current.userData.player;
+        
+        // Create new tile on board
+        const newTile = createTile(letter, hoveredSquare.row, hoveredSquare.col, player, 0);
+        sceneRef.current.add(newTile);
+        setTiles(prev => [...prev, newTile]);
+        
+        // Remove from rack
+        const playerKey = player === 1 ? 'player1' : 'player2';
+        setRackTiles(prev => ({
+          ...prev,
+          [playerKey]: prev[playerKey].filter(tile => tile !== draggedTileRef.current)
+        }));
+        
+        // Remove dragged tile from scene
+        sceneRef.current.remove(draggedTileRef.current);
+        
+        // Update board state
+        const newBoard = [...boardState];
+        newBoard[hoveredSquare.row][hoveredSquare.col] = letter;
+        setBoardState(newBoard);
+      }
+      
+      // Reset drag state
+      setIsDragging(false);
+      setDraggedTile(null);
+      isDraggingRef.current = false;
+      draggedTileRef.current = null;
+      setHoveredSquare(null);
+      setDragPosition({ x: 0, y: 0, z: 0 });
+      setNeedsRender(true);
+    };
+
+    // Event listeners will be added in a separate useEffect
 
     // Magical lighting setup
     const ambientLight = new THREE.AmbientLight(LIGHTS.AMBIENT.COLOR, LIGHTS.AMBIENT.INTENSITY);
@@ -255,6 +432,11 @@ const Scrabble3D = () => {
         });
       }
       
+      // Update dragged tile position
+      if (isDraggingRef.current && draggedTileRef.current) {
+        draggedTileRef.current.position.copy(dragPosition);
+      }
+      
       // Only render when needed
       if (needsRender) {
         renderer.render(scene, camera);
@@ -282,6 +464,13 @@ const Scrabble3D = () => {
 
       // Remove event listeners
       window.removeEventListener('resize', handleResize);
+      
+      // Remove mouse event listeners
+      if (renderer.domElement) {
+        renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+        renderer.domElement.removeEventListener('mousemove', handleMouseMove);
+        renderer.domElement.removeEventListener('mouseup', handleMouseUp);
+      }
       
       // Dispose controls
       if (resourcesRef.current.controls) {
@@ -430,6 +619,190 @@ const Scrabble3D = () => {
       setIsPlaying(false);
     }
   }, [isPlaying, currentMoveIndex, gameData, playbackSpeed]);
+
+  // Update controls when play mode changes
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !isPlayMode;
+    }
+  }, [isPlayMode]);
+
+  // Handle event listeners for drag and drop
+  useEffect(() => {
+    if (!rendererRef.current) return;
+
+    const renderer = rendererRef.current;
+    
+    // Create event handlers that capture current state
+    const handleMouseDown = (event) => {
+      console.log('Mouse down, isPlayMode:', isPlayMode, 'isDragging:', isDraggingRef.current);
+      
+      if (isDraggingRef.current) return;
+      
+      // Only allow dragging in play mode
+      if (!isPlayMode) return;
+      
+      // Prevent OrbitControls from handling this event
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const mouse = new THREE.Vector2();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      
+      // Check for intersection with rack tiles
+      const rackTilesToCheck = [...rackTiles.player1, ...rackTiles.player2];
+      console.log('Rack tiles to check:', rackTilesToCheck.length);
+      const intersects = raycaster.intersectObjects(rackTilesToCheck, true);
+      console.log('Intersects found:', intersects.length);
+      
+      if (intersects.length > 0) {
+        const intersectedTile = intersects[0].object;
+        // Find the parent tile (the actual rack tile)
+        let tile = intersectedTile;
+        while (tile.parent && !tile.userData.isRackTile) {
+          tile = tile.parent;
+        }
+        
+        if (tile.userData.isRackTile) {
+          console.log('Found rack tile:', tile.userData.letter);
+          setIsDragging(true);
+          setDraggedTile(tile);
+          isDraggingRef.current = true;
+          draggedTileRef.current = tile;
+          handleMouseMove(event); // Immediately update drag position to mouse location
+          // Make tile semi-transparent while dragging
+          tile.material.opacity = 0.7;
+          tile.material.transparent = true;
+        }
+      } else {
+        console.log('No rack tiles found, allowing normal camera controls');
+        // If no rack tiles found, allow normal camera controls
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
+      }
+    };
+
+    const handleMouseMove = (event) => {
+      // Use refs for drag state
+      if (!isDraggingRef.current || !draggedTileRef.current) return;
+      
+      // Only prevent default if we're actually dragging
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const mouse = new THREE.Vector2();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      
+      // Create a plane at board height for intersection
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -TILE.BOARD.Y_POSITION);
+      const intersectionPoint = new THREE.Vector3();
+      
+      if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
+        setDragPosition(intersectionPoint);
+        
+        // Check if close to a board square
+        const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        
+        const col = Math.round((intersectionPoint.x - startX) / BOARD.GRID.SQUARE_SIZE);
+        const row = Math.round((intersectionPoint.z - startZ) / BOARD.GRID.SQUARE_SIZE);
+        
+        if (col >= 0 && col < BOARD.GRID.SIZE && row >= 0 && row < BOARD.GRID.SIZE) {
+          const squareX = startX + col * BOARD.GRID.SQUARE_SIZE;
+          const squareZ = startZ + row * BOARD.GRID.SQUARE_SIZE;
+          
+          // Check if close enough to snap
+          const distance = Math.sqrt(
+            Math.pow(intersectionPoint.x - squareX, 2) + 
+            Math.pow(intersectionPoint.z - squareZ, 2)
+          );
+          
+          if (distance < BOARD.GRID.SQUARE_SIZE * 0.3) { // Snap threshold
+            setHoveredSquare({ row, col, x: squareX, z: squareZ });
+            setDragPosition({ x: squareX, y: TILE.BOARD.Y_POSITION + 0.1, z: squareZ });
+          } else {
+            setHoveredSquare(null);
+            setDragPosition(intersectionPoint);
+          }
+        } else {
+          setHoveredSquare(null);
+          setDragPosition(intersectionPoint);
+        }
+      }
+      
+      setNeedsRender(true);
+    };
+
+    const handleMouseUp = (event) => {
+      if (!isDraggingRef.current || !draggedTileRef.current) return;
+      
+      // Prevent OrbitControls from handling this event
+      event.preventDefault();
+      event.stopPropagation();
+      
+      if (hoveredSquare) {
+        // Place tile on board
+        const letter = draggedTileRef.current.userData.letter;
+        const player = draggedTileRef.current.userData.player;
+        
+        // Create new tile on board
+        const newTile = createTile(letter, hoveredSquare.row, hoveredSquare.col, player, 0);
+        sceneRef.current.add(newTile);
+        setTiles(prev => [...prev, newTile]);
+        
+        // Remove from rack
+        const playerKey = player === 1 ? 'player1' : 'player2';
+        setRackTiles(prev => ({
+          ...prev,
+          [playerKey]: prev[playerKey].filter(tile => tile !== draggedTileRef.current)
+        }));
+        
+        // Remove dragged tile from scene
+        sceneRef.current.remove(draggedTileRef.current);
+        
+        // Update board state
+        const newBoard = [...boardState];
+        newBoard[hoveredSquare.row][hoveredSquare.col] = letter;
+        setBoardState(newBoard);
+      }
+      
+      // Reset drag state
+      setIsDragging(false);
+      setDraggedTile(null);
+      isDraggingRef.current = false;
+      draggedTileRef.current = null;
+      setHoveredSquare(null);
+      setDragPosition({ x: 0, y: 0, z: 0 });
+      setNeedsRender(true);
+    };
+    
+    // Add event listeners
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    // Test click detection
+    const testClick = (event) => {
+      console.log('Canvas clicked, isPlayMode:', isPlayMode);
+    };
+    renderer.domElement.addEventListener('click', testClick);
+    
+    return () => {
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      renderer.domElement.removeEventListener('click', testClick);
+    };
+  }, [isPlayMode, isDragging, rackTiles, boardState]); // Re-create listeners when these change
 
   // Cleanup effect for component unmount
   useEffect(() => {
@@ -1532,6 +1905,12 @@ const Scrabble3D = () => {
       shininess: TILE.RACK.MATERIAL.SHININESS
     });
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+    tile.userData = { 
+      isRackTile: true, 
+      letter: letter, 
+      player: player,
+      position: position
+    };
     resourcesRef.current.geometries.push(tileGeometry);
     resourcesRef.current.materials.push(tileMaterial);
     resourcesRef.current.meshes.push(tile);
@@ -1742,6 +2121,43 @@ const Scrabble3D = () => {
       {/* Latest Move Component with Controls */}
       {gameData && gameData.length > 0 && (
         <div className={styles.moveInfoOverlay}>
+          {/* Mode Toggle Button */}
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 1000
+          }}>
+            <button
+              onClick={() => setIsPlayMode(!isPlayMode)}
+              style={{
+                backgroundColor: isPlayMode ? '#10B981' : '#6B7280',
+                color: '#fff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              {isPlayMode ? '🎮 Play Mode' : '👁️ View Mode'}
+            </button>
+            {isPlayMode && (
+              <div style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                marginTop: '4px',
+                textAlign: 'center'
+              }}>
+                Click tiles to drag
+              </div>
+            )}
+          </div>
           {/* Header with Title and Dictionary Info */}
           <div className={styles.panelHeader}>
             <div className={styles.panelTitle}>
