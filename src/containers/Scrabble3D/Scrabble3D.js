@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import styles from './Scrabble3D.module.css';
 import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
+import { createRack } from '../../functions/rackFunctions';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { useSearchParams } from 'react-router-dom';
 import { 
@@ -106,6 +107,7 @@ const Scrabble3D = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState(1000); // ms per move
   const [boardState, setBoardState] = useState([]);
   const [tiles, setTiles] = useState([]);
+  const [rackTiles, setRackTiles] = useState({ player1: [], player2: [] });
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
@@ -908,6 +910,28 @@ const Scrabble3D = () => {
 
     setBoardState(newBoard);
     setTiles(newTiles);
+
+    // Update rack tiles for both players
+    if (moveIndex < gameData.length) {
+      const currentMove = gameData[moveIndex];
+      if (currentMove && currentMove.player) {
+        // Get actual rack from parsed moves (after the move was made)
+        const actualRack = createRack(moveIndex + 1, gameData);
+        
+        if (actualRack && actualRack.length > 0) {
+          // Determine which player is currently active (next to play)
+          // Josh = player 1 (bottom), Noah = player 2 (top)
+          const nextPlayer = currentMove.player === 'Josh' ? 2 : 1;
+          
+          // Clear both racks first
+          updateRackTiles(1, []);
+          updateRackTiles(2, []);
+          
+          // Show rack for the player whose turn it is
+          updateRackTiles(nextPlayer, actualRack);
+        }
+      }
+    }
   };
 
   const applyMoveToBoard = (board, move, moveIndex) => {
@@ -954,8 +978,6 @@ const Scrabble3D = () => {
         tileRow = row + i;
         tileCol = col;
       }
-
-      console.log(`Placing letter "${letter}" at (${tileRow}, ${tileCol}), current board value: ${board[tileRow][tileCol]}`);
 
       // Only place tile if position is empty (0) or has a multiplier (1-4)
       // Board values: 0=empty, 1=double letter, 2=triple letter, 3=double word, 4=triple word
@@ -1033,6 +1055,114 @@ const Scrabble3D = () => {
     scene.add(rack2Back);
     resourcesRef.current.geometries.push(rack2BackGeometry);
     resourcesRef.current.meshes.push(rack2Back);
+  };
+
+  const createRackTile = (letter, position, player) => {
+    // Create a smaller tile for the rack
+    const tileGeometry = new THREE.BoxGeometry(0.7, 0.12, 0.7);
+    const tileColor = 0xE8D5B5; // Same beige color as board tiles
+    const tileMaterial = new THREE.MeshPhongMaterial({ 
+      color: tileColor,
+      transparent: true,
+      opacity: 0.95,
+      shininess: 50
+    });
+    const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+    resourcesRef.current.geometries.push(tileGeometry);
+    resourcesRef.current.materials.push(tileMaterial);
+    resourcesRef.current.meshes.push(tile);
+    
+    // Position tile on rack
+    const rackZ = player === 1 ? -12 : 12;
+    const rackY = 0.15; // Slightly above rack surface
+    tile.position.set(position * 0.8 - 2.8, rackY, rackZ);
+    tile.castShadow = true;
+    tile.receiveShadow = true;
+
+    // Create letter texture
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 128;
+    canvas.height = 128;
+    
+    context.clearRect(0, 0, 128, 128);
+    
+    // Add white letter
+    context.fillStyle = '#FFFFFF';
+    context.font = 'bold 80px Arial'; // Smaller font for rack tiles
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(letter, 64, 64);
+    
+    // Add point value
+    const pointValues = {
+      'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3,
+      'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '_': 0
+    };
+    
+    const pointValue = pointValues[letter] || 0;
+    if (pointValue > 0) {
+      context.fillStyle = '#FFFFFF';
+      context.font = 'bold 35px Arial';
+      context.textAlign = 'right';
+      context.textBaseline = 'bottom';
+      context.fillText(pointValue.toString(), 128, 128);
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const letterGeometry = new THREE.PlaneGeometry(0.6, 0.6);
+    const letterMaterial = new THREE.MeshBasicMaterial({ 
+      map: texture,
+      transparent: true,
+      alphaTest: 0.01
+    });
+    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
+    letterMesh.position.y = 0.11;
+    letterMesh.rotation.x = -Math.PI / 2;
+    tile.add(letterMesh);
+    resourcesRef.current.geometries.push(letterGeometry);
+    resourcesRef.current.materials.push(letterMaterial);
+    resourcesRef.current.textures.push(texture);
+    resourcesRef.current.meshes.push(letterMesh);
+    
+    letterMesh.renderOrder = 1;
+    letterMaterial.depthTest = false;
+
+    return tile;
+  };
+
+  const updateRackTiles = (player, rackLetters) => {
+    // Clear existing rack tiles for this player
+    const playerKey = player === 1 ? 'player1' : 'player2';
+    rackTiles[playerKey].forEach(tile => {
+      sceneRef.current.remove(tile);
+      if (tile.geometry) tile.geometry.dispose();
+      if (tile.material) {
+        if (tile.material.map) tile.material.map.dispose();
+        tile.material.dispose();
+      }
+      tile.children.forEach(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (child.material.map) child.material.map.dispose();
+          child.material.dispose();
+        }
+      });
+    });
+
+    // Create new rack tiles
+    const newRackTiles = [];
+    rackLetters.forEach((letter, index) => {
+      const rackTile = createRackTile(letter, index, player);
+      sceneRef.current.add(rackTile);
+      newRackTiles.push(rackTile);
+    });
+
+    // Update state
+    setRackTiles(prev => ({
+      ...prev,
+      [playerKey]: newRackTiles
+    }));
   };
 
   const createTile = (letter, row, col, player, moveIndex) => {
