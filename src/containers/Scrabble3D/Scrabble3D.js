@@ -1013,11 +1013,12 @@ const Scrabble3D = () => {
       shininess: 15
     });
 
-    // Create L-shaped rack for Player 1 (bottom of board)
-    // Base of the L
+    // Create slanted rack for Player 1 (bottom of board)
+    // Base of the rack (slanted)
     const rack1BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
     const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
     rack1Base.position.set(0, 0.05, -12);
+    rack1Base.rotation.x = Math.PI / 12; // 15 degree slant
     rack1Base.castShadow = true;
     rack1Base.receiveShadow = true;
     scene.add(rack1Base);
@@ -1025,31 +1026,34 @@ const Scrabble3D = () => {
     resourcesRef.current.materials.push(rackMaterial);
     resourcesRef.current.meshes.push(rack1Base);
 
-    // Back of the L
+    // Back support of the rack (slanted)
     const rack1BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
     const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
     rack1Back.position.set(0, 0.35, -11.65);
+    rack1Back.rotation.x = Math.PI / 12; // 15 degree slant
     rack1Back.castShadow = true;
     rack1Back.receiveShadow = true;
     scene.add(rack1Back);
     resourcesRef.current.geometries.push(rack1BackGeometry);
     resourcesRef.current.meshes.push(rack1Back);
 
-    // Create L-shaped rack for Player 2 (top of board)
-    // Base of the L
+    // Create slanted rack for Player 2 (top of board)
+    // Base of the rack (slanted)
     const rack2BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
     const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
     rack2Base.position.set(0, 0.05, 12);
+    rack2Base.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
     rack2Base.castShadow = true;
     rack2Base.receiveShadow = true;
     scene.add(rack2Base);
     resourcesRef.current.geometries.push(rack2BaseGeometry);
     resourcesRef.current.meshes.push(rack2Base);
 
-    // Back of the L
+    // Back support of the rack (slanted)
     const rack2BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
     const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
     rack2Back.position.set(0, 0.35, 11.65);
+    rack2Back.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
     rack2Back.castShadow = true;
     rack2Back.receiveShadow = true;
     scene.add(rack2Back);
