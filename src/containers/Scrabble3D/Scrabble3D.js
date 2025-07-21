@@ -21,9 +21,27 @@ import {
   Binoculars
 } from '@phosphor-icons/react';
 import LatestMove from './components/LatestMove';
+import {
+  CAMERA,
+  RENDERER,
+  SCENE,
+  LIGHTS,
+  MATERIALS,
+  ENVIRONMENT,
+  TABLE,
+  FUTON,
+  BOARD,
+  RACK,
+  TILE,
+  POINT_VALUES,
+  GAME,
+  CONTROLS,
+  ANIMATION,
+  PRELOAD
+} from './constants';
 
 // Preload all protile images like the Cell component does
-let allLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'];
+let allLetters = PRELOAD.LETTERS;
 let preloadedImages = {};
 let preloadedTextures = {};
 
@@ -104,7 +122,7 @@ const Scrabble3D = () => {
   const [gameData, setGameData] = useState(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1000); // ms per move
+  const [playbackSpeed, setPlaybackSpeed] = useState(GAME.PLAYBACK_SPEEDS.NORMAL); // ms per move
   const [boardState, setBoardState] = useState([]);
   const [tiles, setTiles] = useState([]);
   const [rackTiles, setRackTiles] = useState({ player1: [], player2: [] });
@@ -136,19 +154,19 @@ const Scrabble3D = () => {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000033); // Deep blue background
-    scene.fog = new THREE.Fog(0x000033, 20, 100); // Magical fog
+    scene.background = new THREE.Color(SCENE.BACKGROUND_COLOR);
+    scene.fog = new THREE.Fog(SCENE.FOG_COLOR, SCENE.FOG_NEAR, SCENE.FOG_FAR);
     sceneRef.current = scene;
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
-      75,
+      CAMERA.FOV,
       window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+      CAMERA.NEAR,
+      CAMERA.FAR
     );
-    camera.position.set(0, 25, 0); // Bird's eye view - directly above
-    camera.lookAt(0, 0, 0);
+    camera.position.set(CAMERA.INITIAL_POSITION.x, CAMERA.INITIAL_POSITION.y, CAMERA.INITIAL_POSITION.z);
+    camera.lookAt(CAMERA.TARGET.x, CAMERA.TARGET.y, CAMERA.TARGET.z);
 
     // Renderer setup with optimized settings
     const renderer = new THREE.WebGLRenderer({
@@ -156,7 +174,7 @@ const Scrabble3D = () => {
       powerPreference: "high-performance"
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0)); // Balanced quality vs performance
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDERER.PIXEL_RATIO_MAX));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.shadowMap.autoUpdate = false; // Only update shadows when needed
@@ -166,7 +184,7 @@ const Scrabble3D = () => {
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = CONTROLS.DAMPING_FACTOR;
     controlsRef.current = controls;
     resourcesRef.current.controls = controls;
     
@@ -176,34 +194,31 @@ const Scrabble3D = () => {
     });
 
     // Magical lighting setup
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Soft white ambient light
+    const ambientLight = new THREE.AmbientLight(LIGHTS.AMBIENT.COLOR, LIGHTS.AMBIENT.INTENSITY);
     scene.add(ambientLight);
     resourcesRef.current.lights.push(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // Clean white directional light
-    directionalLight.position.set(15, 15, 10);
+    const directionalLight = new THREE.DirectionalLight(LIGHTS.DIRECTIONAL.COLOR, LIGHTS.DIRECTIONAL.INTENSITY);
+    directionalLight.position.set(LIGHTS.DIRECTIONAL.POSITION.x, LIGHTS.DIRECTIONAL.POSITION.y, LIGHTS.DIRECTIONAL.POSITION.z);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048; // Reduced shadow map size for better performance
-    directionalLight.shadow.mapSize.height = 2048;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.camera.left = -20;
-    directionalLight.shadow.camera.right = 20;
-    directionalLight.shadow.camera.top = 20;
-    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.mapSize.width = RENDERER.SHADOW_MAP_SIZE;
+    directionalLight.shadow.mapSize.height = RENDERER.SHADOW_MAP_SIZE;
+    directionalLight.shadow.camera.near = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.NEAR;
+    directionalLight.shadow.camera.far = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.FAR;
+    directionalLight.shadow.camera.left = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.LEFT;
+    directionalLight.shadow.camera.right = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.RIGHT;
+    directionalLight.shadow.camera.top = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.TOP;
+    directionalLight.shadow.camera.bottom = LIGHTS.DIRECTIONAL.SHADOW_CAMERA.BOTTOM;
     scene.add(directionalLight);
     resourcesRef.current.lights.push(directionalLight);
 
-    // Reduced number of point lights for better performance
-    const whiteLight1 = new THREE.PointLight(0xffffff, 0.8, 50);
-    whiteLight1.position.set(-20, 15, -20);
-    scene.add(whiteLight1);
-    resourcesRef.current.lights.push(whiteLight1);
-
-    const whiteLight2 = new THREE.PointLight(0xffffff, 0.8, 50);
-    whiteLight2.position.set(20, 15, 20);
-    scene.add(whiteLight2);
-    resourcesRef.current.lights.push(whiteLight2);
+    // Point lights
+    LIGHTS.POINT_LIGHTS.forEach(lightConfig => {
+      const pointLight = new THREE.PointLight(lightConfig.COLOR, lightConfig.INTENSITY, lightConfig.DISTANCE);
+      pointLight.position.set(lightConfig.POSITION.x, lightConfig.POSITION.y, lightConfig.POSITION.z);
+      scene.add(pointLight);
+      resourcesRef.current.lights.push(pointLight);
+    });
 
     // Create magical environment
     createMagicalEnvironment(scene);
@@ -216,8 +231,8 @@ const Scrabble3D = () => {
 
     // Animation loop with frame rate limiting
     let lastTime = 0;
-    const targetFPS = 60;
-    const frameInterval = 1000 / targetFPS;
+    const targetFPS = RENDERER.TARGET_FPS;
+    const frameInterval = ANIMATION.FRAME_INTERVAL;
     
     const animate = (currentTime) => {
       resourcesRef.current.animationId = requestAnimationFrame(animate);
@@ -235,7 +250,8 @@ const Scrabble3D = () => {
         const time = currentTime * 0.001;
         sceneRef.current.lamps.forEach((lamp, index) => {
           // Gentle flickering
-          lamp.material.emissiveIntensity = 0.4 + Math.sin(time * 2 + index) * 0.05;
+          lamp.material.emissiveIntensity = LIGHTS.LAMP.ANIMATION.BASE_INTENSITY + 
+            Math.sin(time * LIGHTS.LAMP.ANIMATION.FLICKER_SPEED + index) * LIGHTS.LAMP.ANIMATION.FLICKER_AMPLITUDE;
         });
       }
       
@@ -349,7 +365,7 @@ const Scrabble3D = () => {
         console.log('All protile textures preloaded!');
       } else {
         // Check again in 100ms
-        setTimeout(checkAndPreloadTextures, 100);
+        setTimeout(checkAndPreloadTextures, PRELOAD.CHECK_INTERVAL);
       }
     };
     
@@ -363,7 +379,7 @@ const Scrabble3D = () => {
         setLoading(true);
         
         // Use gameId from URL if provided, otherwise use default
-        const gameNum = gameId ? parseInt(gameId) : 37033;
+        const gameNum = gameId ? parseInt(gameId) : GAME.DEFAULT_GAME_ID;
         console.log('Loading game:', gameNum);
         
         const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
@@ -439,16 +455,16 @@ const Scrabble3D = () => {
 
   const createMagicalEnvironment = (scene) => {
     // Create stone floor
-    const floorGeometry = new THREE.PlaneGeometry(80, 80);
+    const floorGeometry = new THREE.PlaneGeometry(ENVIRONMENT.FLOOR.WIDTH, ENVIRONMENT.FLOOR.HEIGHT);
     const floorMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x696969, // Dim gray
+      color: MATERIALS.FLOOR.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 10
+      opacity: MATERIALS.FLOOR.OPACITY,
+      shininess: MATERIALS.FLOOR.SHININESS
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -1.5;
+    floor.position.y = ENVIRONMENT.FLOOR.Y_POSITION;
     floor.receiveShadow = true;
     scene.add(floor);
     resourcesRef.current.geometries.push(floorGeometry);
@@ -456,17 +472,17 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(floor);
 
     // Create stone walls
-    const wallGeometry = new THREE.BoxGeometry(80, 32, 1);
+    const wallGeometry = new THREE.BoxGeometry(ENVIRONMENT.WALL.WIDTH, ENVIRONMENT.WALL.HEIGHT, ENVIRONMENT.WALL.DEPTH);
     const wallMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B7355, // Saddle brown
+      color: MATERIALS.WALL.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 5
+      opacity: MATERIALS.WALL.OPACITY,
+      shininess: MATERIALS.WALL.SHININESS
     });
 
     // Back wall
     const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    backWall.position.set(0, 14, -40);
+    backWall.position.set(0, ENVIRONMENT.WALL.Y_POSITION, ENVIRONMENT.WALL.Z_POSITION);
     backWall.receiveShadow = true;
     scene.add(backWall);
     resourcesRef.current.geometries.push(wallGeometry);
@@ -475,29 +491,29 @@ const Scrabble3D = () => {
 
     // Side walls
     const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    leftWall.position.set(-40, 14, 0);
+    leftWall.position.set(-ENVIRONMENT.WALL.WIDTH/2, ENVIRONMENT.WALL.Y_POSITION, 0);
     leftWall.rotation.y = Math.PI / 2;
     leftWall.receiveShadow = true;
     scene.add(leftWall);
     resourcesRef.current.meshes.push(leftWall);
 
     const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    rightWall.position.set(40, 14, 0);
+    rightWall.position.set(ENVIRONMENT.WALL.WIDTH/2, ENVIRONMENT.WALL.Y_POSITION, 0);
     rightWall.rotation.y = -Math.PI / 2;
     rightWall.receiveShadow = true;
     scene.add(rightWall);
     resourcesRef.current.meshes.push(rightWall);
 
     // Create ceiling
-    const ceilingGeometry = new THREE.BoxGeometry(80, 0.5, 80);
+    const ceilingGeometry = new THREE.BoxGeometry(ENVIRONMENT.CEILING.WIDTH, ENVIRONMENT.CEILING.HEIGHT, ENVIRONMENT.CEILING.DEPTH);
     const ceilingMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xF5DEB3, // Light wheat color
+      color: MATERIALS.CEILING.COLOR,
       transparent: true,
-      opacity: 1.0,
-      shininess: 5
+      opacity: MATERIALS.CEILING.OPACITY,
+      shininess: MATERIALS.CEILING.SHININESS
     });
     const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.position.y = 30;
+    ceiling.position.y = ENVIRONMENT.CEILING.Y_POSITION;
     ceiling.receiveShadow = true;
     scene.add(ceiling);
     resourcesRef.current.geometries.push(ceilingGeometry);
@@ -505,20 +521,15 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(ceiling);
 
     // Create stone pillars
-    const pillarGeometry = new THREE.CylinderGeometry(0.8, 0.8, 8, 8);
+    const pillarGeometry = new THREE.CylinderGeometry(ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.RADIUS, ENVIRONMENT.PILLAR.HEIGHT, ENVIRONMENT.PILLAR.SEGMENTS);
     const pillarMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x696969,
+      color: MATERIALS.PILLAR.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 15
+      opacity: MATERIALS.PILLAR.OPACITY,
+      shininess: MATERIALS.PILLAR.SHININESS
     });
 
-    const pillarPositions = [
-      [-30, 4, -30], [30, 4, -30],
-      [-30, 4, 30], [30, 4, 30]
-    ];
-
-    pillarPositions.forEach(pos => {
+    ENVIRONMENT.PILLAR.POSITIONS.forEach(pos => {
       const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
       pillar.position.set(...pos);
       pillar.castShadow = true;
@@ -532,18 +543,15 @@ const Scrabble3D = () => {
 
     // Create grounded lamps around the room
     const lamps = [];
-    const lampPositions = [
-      [-25, 0, -25], [25, 0, -25], [-25, 0, 25], [25, 0, 25]
-    ];
 
-    lampPositions.forEach(pos => {
+    ENVIRONMENT.LAMP_POSITIONS.forEach(pos => {
       // Lamp base
-      const baseGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.2, 8);
+      const baseGeometry = new THREE.CylinderGeometry(LIGHTS.LAMP.BASE_RADIUS, LIGHTS.LAMP.BASE_RADIUS + 0.1, LIGHTS.LAMP.BASE_HEIGHT, 8);
       const baseMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x654321, // Dark brown
+        color: MATERIALS.LAMP_BASE.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 20
+        opacity: MATERIALS.LAMP_BASE.OPACITY,
+        shininess: MATERIALS.LAMP_BASE.SHININESS
       });
       const base = new THREE.Mesh(baseGeometry, baseMaterial);
       base.position.set(pos[0], -1.4, pos[2]);
@@ -555,12 +563,12 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(base);
 
       // Lamp pole
-      const poleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8);
+      const poleGeometry = new THREE.CylinderGeometry(LIGHTS.LAMP.POLE_RADIUS, LIGHTS.LAMP.POLE_RADIUS, LIGHTS.LAMP.POLE_HEIGHT, 8);
       const poleMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x8B4513, // Saddle brown
+        color: MATERIALS.LAMP_POLE.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 30
+        opacity: MATERIALS.LAMP_POLE.OPACITY,
+        shininess: MATERIALS.LAMP_POLE.SHININESS
       });
       const pole = new THREE.Mesh(poleGeometry, poleMaterial);
       pole.position.set(pos[0], -0.15, pos[2]);
@@ -572,12 +580,12 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(pole);
 
       // Lamp shade
-      const shadeGeometry = new THREE.CylinderGeometry(0.8, 0.6, 0.4, 8);
+      const shadeGeometry = new THREE.CylinderGeometry(LIGHTS.LAMP.SHADE_RADIUS_TOP, LIGHTS.LAMP.SHADE_RADIUS_BOTTOM, LIGHTS.LAMP.SHADE_HEIGHT, 8);
       const shadeMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xF5DEB3, // Wheat
+        color: MATERIALS.LAMP_SHADE.COLOR,
         transparent: true,
-        opacity: 0.7,
-        shininess: 10
+        opacity: MATERIALS.LAMP_SHADE.OPACITY,
+        shininess: MATERIALS.LAMP_SHADE.SHININESS
       });
       const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
       shade.position.set(pos[0], 1.1, pos[2]);
@@ -589,13 +597,13 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(shade);
 
       // Lamp light bulb
-      const bulbGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+      const bulbGeometry = new THREE.SphereGeometry(LIGHTS.LAMP.BULB_RADIUS, 8, 6);
       const bulbMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xFFFFE0,
-        emissive: 0xFFFFE0,
-        emissiveIntensity: 0.4,
+        color: MATERIALS.LAMP_BULB.COLOR,
+        emissive: MATERIALS.LAMP_BULB.EMISSIVE,
+        emissiveIntensity: MATERIALS.LAMP_BULB.EMISSIVE_INTENSITY,
         transparent: true,
-        opacity: 0.9
+        opacity: MATERIALS.LAMP_BULB.OPACITY
       });
       const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
       bulb.position.set(pos[0], 1.1, pos[2]);
@@ -606,7 +614,7 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(bulb);
 
       // Add lamp light
-      const lampLight = new THREE.PointLight(0xFFFFE0, 3.0, 40);
+      const lampLight = new THREE.PointLight(LIGHTS.LAMP.COLOR, LIGHTS.LAMP.INTENSITY, LIGHTS.LAMP.DISTANCE);
       lampLight.position.set(pos[0], 1.1, pos[2]);
       scene.add(lampLight);
       resourcesRef.current.lights.push(lampLight);
@@ -620,15 +628,15 @@ const Scrabble3D = () => {
 
   const createTableAndChairs = (scene) => {
     // Create magical white table
-    const tableGeometry = new THREE.BoxGeometry(50, 0.3, 25);
+    const tableGeometry = new THREE.BoxGeometry(TABLE.WIDTH, TABLE.HEIGHT, TABLE.DEPTH);
     const tableMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xFFFFFF, // Pure white
+      color: TABLE.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 20
+      opacity: TABLE.MATERIAL.OPACITY,
+      shininess: TABLE.MATERIAL.SHININESS
     });
     const table = new THREE.Mesh(tableGeometry, tableMaterial);
-    table.position.y = -0.5;
+    table.position.y = TABLE.Y_POSITION;
     table.castShadow = true;
     table.receiveShadow = true;
     scene.add(table);
@@ -640,21 +648,16 @@ const Scrabble3D = () => {
     createPlayerRacks(scene);
 
     // Create table legs
-    const legGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+    const legGeometry = new THREE.BoxGeometry(TABLE.LEG.WIDTH, TABLE.LEG.HEIGHT, TABLE.LEG.DEPTH);
     const legMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x654321, // Dark brown
+      color: TABLE.LEG.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 15
+      opacity: TABLE.LEG.MATERIAL.OPACITY,
+      shininess: TABLE.LEG.MATERIAL.SHININESS
     });
 
     // Position legs at corners
-    const legPositions = [
-      [-9.5, -1.1, -9.5], [9.5, -1.1, -9.5],
-      [-9.5, -1.1, 9.5], [9.5, -1.1, 9.5]
-    ];
-
-    legPositions.forEach(pos => {
+    TABLE.LEG.POSITIONS.forEach(pos => {
       const leg = new THREE.Mesh(legGeometry, legMaterial);
       leg.position.set(...pos);
       leg.castShadow = true;
@@ -667,22 +670,17 @@ const Scrabble3D = () => {
     resourcesRef.current.materials.push(legMaterial);
 
     // Create two cozy futons
-    const futonPositions = [
-      { x: 0, z: -16, rotation: 0 },    // Futon facing the board
-      { x: 0, z: 16, rotation: Math.PI } // Futon behind the board
-    ];
-
-    futonPositions.forEach((pos, index) => {
+    FUTON.POSITIONS.forEach((pos, index) => {
       // Futon base/cushion
-      const cushionGeometry = new THREE.BoxGeometry(5.0, 1.0, 5.0);
+      const cushionGeometry = new THREE.BoxGeometry(FUTON.CUSHION.WIDTH, FUTON.CUSHION.HEIGHT, FUTON.CUSHION.DEPTH);
       const cushionMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x4682B4, // Steel blue
+        color: FUTON.CUSHION.MATERIAL.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 10
+        opacity: FUTON.CUSHION.MATERIAL.OPACITY,
+        shininess: FUTON.CUSHION.MATERIAL.SHININESS
       });
       const cushion = new THREE.Mesh(cushionGeometry, cushionMaterial);
-      cushion.position.set(pos.x, -0.6, pos.z);
+      cushion.position.set(pos.x, FUTON.CUSHION.Y_POSITION, pos.z);
       cushion.castShadow = true;
       cushion.receiveShadow = true;
       scene.add(cushion);
@@ -691,15 +689,15 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(cushion);
 
       // Futon back cushion (folded up)
-      const backCushionGeometry = new THREE.BoxGeometry(5.0, 4.5, 1.0); // Increased height to extend down to base
+      const backCushionGeometry = new THREE.BoxGeometry(FUTON.BACK_CUSHION.WIDTH, FUTON.BACK_CUSHION.HEIGHT, FUTON.BACK_CUSHION.DEPTH);
       const backCushionMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x4682B4,
+        color: FUTON.BACK_CUSHION.MATERIAL.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 10
+        opacity: FUTON.BACK_CUSHION.MATERIAL.OPACITY,
+        shininess: FUTON.BACK_CUSHION.MATERIAL.SHININESS
       });
       const backCushion = new THREE.Mesh(backCushionGeometry, backCushionMaterial);
-      backCushion.position.set(pos.x, 0.65, pos.z + (pos.rotation === 0 ? -3.0 : 3.0)); // Lowered position so it connects to base
+      backCushion.position.set(pos.x, FUTON.BACK_CUSHION.Y_POSITION, pos.z + (pos.rotation === 0 ? -FUTON.BACK_CUSHION.Z_OFFSET : FUTON.BACK_CUSHION.Z_OFFSET));
       backCushion.castShadow = true;
       backCushion.receiveShadow = true;
       scene.add(backCushion);
@@ -708,15 +706,15 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(backCushion);
 
       // Futon frame/legs (low profile)
-      const frameGeometry = new THREE.BoxGeometry(5.3, 0.4, 5.3);
+      const frameGeometry = new THREE.BoxGeometry(FUTON.FRAME.WIDTH, FUTON.FRAME.HEIGHT, FUTON.FRAME.DEPTH);
       const frameMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x191970, // Midnight blue
+        color: FUTON.FRAME.MATERIAL.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 20
+        opacity: FUTON.FRAME.MATERIAL.OPACITY,
+        shininess: FUTON.FRAME.MATERIAL.SHININESS
       });
       const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-      frame.position.set(pos.x, -1.2, pos.z); // Moved down to avoid collision with cushion
+      frame.position.set(pos.x, FUTON.FRAME.Y_POSITION, pos.z);
       frame.castShadow = true;
       frame.receiveShadow = true;
       scene.add(frame);
@@ -725,22 +723,18 @@ const Scrabble3D = () => {
       resourcesRef.current.meshes.push(frame);
 
       // Add some decorative pillows
-      const pillowGeometry = new THREE.BoxGeometry(1.2, 0.4, 1.2);
+      const pillowGeometry = new THREE.BoxGeometry(FUTON.PILLOW.WIDTH, FUTON.PILLOW.HEIGHT, FUTON.PILLOW.DEPTH);
       const pillowMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xFF69B4, // Hot pink
+        color: FUTON.PILLOW.MATERIAL.COLOR,
         transparent: true,
-        opacity: 0.9,
-        shininess: 5
+        opacity: FUTON.PILLOW.MATERIAL.OPACITY,
+        shininess: FUTON.PILLOW.MATERIAL.SHININESS
       });
 
       // Two pillows on each futon
-      const pillowPositions = [
-        { x: -1.5, z: 0.8 }, { x: 1.5, z: 0.8 }
-      ];
-
-      pillowPositions.forEach(pillowPos => {
+      FUTON.PILLOW.POSITIONS.forEach(pillowPos => {
         const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
-        pillow.position.set(pos.x + pillowPos.x, 0.1, pos.z + pillowPos.z); // Raised to sit on top of base cushion
+        pillow.position.set(pos.x + pillowPos.x, FUTON.PILLOW.Y_POSITION, pos.z + pillowPos.z);
         pillow.castShadow = true;
         pillow.receiveShadow = true;
         scene.add(pillow);
@@ -754,50 +748,49 @@ const Scrabble3D = () => {
 
   const createBoard = (scene) => {
     // Create circular board base (raised to create groove effect)
-    const boardRadius = 10.8;
-    const boardGeometry = new THREE.CylinderGeometry(boardRadius, boardRadius, 0.3, 64);
+    const boardGeometry = new THREE.CylinderGeometry(BOARD.RADIUS, BOARD.RADIUS, BOARD.HEIGHT, BOARD.SEGMENTS);
     const boardMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xC0C0C0, // Slightly lighter gray
+      color: BOARD.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.8, // Much more transparent for acrylic look
-      shininess: 100, // High shininess for glossy acrylic
-      reflectivity: 0.8 // High reflectivity for acrylic
+      opacity: BOARD.MATERIAL.OPACITY,
+      shininess: BOARD.MATERIAL.SHININESS,
+      reflectivity: BOARD.MATERIAL.REFLECTIVITY
     });
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
-    board.position.y = -0.1; // Raised higher to create groove effect
+    board.position.y = BOARD.Y_POSITION;
     scene.add(board);
     resourcesRef.current.geometries.push(boardGeometry);
     resourcesRef.current.materials.push(boardMaterial);
     resourcesRef.current.meshes.push(board);
 
-    // Create colored squares on the board surface (simple boxes to avoid rendering issues)
-    const squareSize = 1;
-    const gridSize = 15;
-    const startX = -(gridSize * squareSize) / 2 + squareSize / 2;
-    const startZ = -(gridSize * squareSize) / 2 + squareSize / 2;
+    // Create colored squares on the board surface
+    const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+    const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
 
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
+    for (let row = 0; row < BOARD.GRID.SIZE; row++) {
+      for (let col = 0; col < BOARD.GRID.SIZE; col++) {
         // Create colored square boxes on the board surface
-        const squareGeometry = new THREE.BoxGeometry(squareSize * 0.9, 0.1, squareSize * 0.9);
+        const squareGeometry = new THREE.BoxGeometry(
+          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE, 
+          BOARD.GRID.SQUARE_HEIGHT, 
+          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE
+        );
         
         // Get the actual board value from origBoard
         const boardValue = JSON.parse(origBoard)[row][col];
         
-        // Different colors for different square types - using Viewer defaults
-        let squareColor = 0xFFFFFF; // Default white
+        // Different colors for different square types
+        let squareColor = BOARD.SQUARE_COLORS.EMPTY; // Default white
         
-        if (boardValue === 4) {
-          squareColor = 0xCE2222; // Triple word - red (from cellColors)
-        } else if (boardValue === 3) {
-          squareColor = 0xF49FD4; // Double word - pink (from cellColors)
-        } else if (boardValue === 2) {
-          squareColor = 0x7269D6; // Triple letter - purple (from cellColors)
-        } else if (boardValue === 1) {
-          squareColor = 0x7ED6DD; // Double letter - cyan (from cellColors)
-        } else if (boardValue === 0) {
-          squareColor = 0xFFFFFF; // Empty squares - bright white
+        if (boardValue === GAME.BOARD_VALUES.TRIPLE_WORD) {
+          squareColor = BOARD.SQUARE_COLORS.TRIPLE_WORD;
+        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_WORD) {
+          squareColor = BOARD.SQUARE_COLORS.DOUBLE_WORD;
+        } else if (boardValue === GAME.BOARD_VALUES.TRIPLE_LETTER) {
+          squareColor = BOARD.SQUARE_COLORS.TRIPLE_LETTER;
+        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_LETTER) {
+          squareColor = BOARD.SQUARE_COLORS.DOUBLE_LETTER;
         }
         
         const squareMaterial = new THREE.MeshPhongMaterial({ 
@@ -808,9 +801,9 @@ const Scrabble3D = () => {
         });
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
         square.position.set(
-          startX + col * squareSize,
-          0.025, // Slightly above the board surface
-          startZ + row * squareSize
+          startX + col * BOARD.GRID.SQUARE_SIZE,
+          BOARD.GRID.Y_POSITION,
+          startZ + row * BOARD.GRID.SQUARE_SIZE
         );
         square.castShadow = true;
         square.receiveShadow = true;
@@ -823,19 +816,23 @@ const Scrabble3D = () => {
 
     // Create grid lines between squares
     const gridLineMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B4513, // Dark brown wood color
+      color: BOARD.GRID.GRID_LINE.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.8,
-      shininess: 30
+      opacity: BOARD.GRID.GRID_LINE.MATERIAL.OPACITY,
+      shininess: BOARD.GRID.GRID_LINE.MATERIAL.SHININESS
     });
 
     // Vertical grid lines
-    for (let col = 0; col <= gridSize; col++) {
-      const gridLineGeometry = new THREE.BoxGeometry(0.05, 0.15, gridSize * squareSize);
+    for (let col = 0; col <= BOARD.GRID.SIZE; col++) {
+      const gridLineGeometry = new THREE.BoxGeometry(
+        BOARD.GRID.GRID_LINE.WIDTH, 
+        BOARD.GRID.GRID_LINE.HEIGHT, 
+        BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE
+      );
       const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
       gridLine.position.set(
-        startX + col * squareSize - squareSize / 2,
-        0.075, // Slightly above board squares
+        startX + col * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2,
+        BOARD.GRID.GRID_LINE.Y_POSITION,
         0
       );
       gridLine.castShadow = true;
@@ -847,13 +844,17 @@ const Scrabble3D = () => {
     }
 
     // Horizontal grid lines
-    for (let row = 0; row <= gridSize; row++) {
-      const gridLineGeometry = new THREE.BoxGeometry(gridSize * squareSize, 0.15, 0.05);
+    for (let row = 0; row <= BOARD.GRID.SIZE; row++) {
+      const gridLineGeometry = new THREE.BoxGeometry(
+        BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE, 
+        BOARD.GRID.GRID_LINE.HEIGHT, 
+        BOARD.GRID.GRID_LINE.WIDTH
+      );
       const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
       gridLine.position.set(
         0,
-        0.075, // Slightly above board squares
-        startZ + row * squareSize - squareSize / 2
+        BOARD.GRID.GRID_LINE.Y_POSITION,
+        startZ + row * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2
       );
       gridLine.castShadow = true;
       gridLine.receiveShadow = true;
@@ -1007,18 +1008,18 @@ const Scrabble3D = () => {
 
   const createPlayerRacks = (scene) => {
     const rackMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B4513, // Dark brown wood
+      color: RACK.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.9,
-      shininess: 15
+      opacity: RACK.MATERIAL.OPACITY,
+      shininess: RACK.MATERIAL.SHININESS
     });
 
     // Create slanted rack for Player 1 (bottom of board)
     // Base of the rack (slanted)
-    const rack1BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
+    const rack1BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
     const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
-    rack1Base.position.set(0, -0.2, -12);
-    rack1Base.rotation.x = Math.PI / 12; // 15 degree slant
+    rack1Base.position.set(RACK.POSITIONS.PLAYER1.x, RACK.POSITIONS.PLAYER1.y, RACK.POSITIONS.PLAYER1.z);
+    rack1Base.rotation.x = RACK.SLANT_ANGLE;
     rack1Base.castShadow = true;
     rack1Base.receiveShadow = true;
     scene.add(rack1Base);
@@ -1027,10 +1028,10 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(rack1Base);
 
     // Back support of the rack (slanted)
-    const rack1BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
+    const rack1BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
     const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
-    rack1Back.position.set(0, 0.07, -11.65);
-    rack1Back.rotation.x = Math.PI / 12; // 15 degree slant
+    rack1Back.position.set(RACK.POSITIONS.PLAYER1.x, RACK.POSITIONS.PLAYER1.backY, RACK.POSITIONS.PLAYER1.backZ);
+    rack1Back.rotation.x = RACK.SLANT_ANGLE;
     rack1Back.castShadow = true;
     rack1Back.receiveShadow = true;
     scene.add(rack1Back);
@@ -1039,10 +1040,10 @@ const Scrabble3D = () => {
 
     // Create slanted rack for Player 2 (top of board)
     // Base of the rack (slanted)
-    const rack2BaseGeometry = new THREE.BoxGeometry(8, 0.1, 0.8);
+    const rack2BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
     const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
-    rack2Base.position.set(0, -0.2, 12);
-    rack2Base.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
+    rack2Base.position.set(RACK.POSITIONS.PLAYER2.x, RACK.POSITIONS.PLAYER2.y, RACK.POSITIONS.PLAYER2.z);
+    rack2Base.rotation.x = -RACK.SLANT_ANGLE; // -15 degree slant (opposite direction)
     rack2Base.castShadow = true;
     rack2Base.receiveShadow = true;
     scene.add(rack2Base);
@@ -1050,10 +1051,10 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(rack2Base);
 
     // Back support of the rack (slanted)
-    const rack2BackGeometry = new THREE.BoxGeometry(8, 0.6, 0.1);
+    const rack2BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
     const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
-    rack2Back.position.set(0, 0.07, 11.65);
-    rack2Back.rotation.x = -Math.PI / 12; // -15 degree slant (opposite direction)
+    rack2Back.position.set(RACK.POSITIONS.PLAYER2.x, RACK.POSITIONS.PLAYER2.backY, RACK.POSITIONS.PLAYER2.backZ);
+    rack2Back.rotation.x = -RACK.SLANT_ANGLE; // -15 degree slant (opposite direction)
     rack2Back.castShadow = true;
     rack2Back.receiveShadow = true;
     scene.add(rack2Back);
@@ -1063,13 +1064,12 @@ const Scrabble3D = () => {
 
   const createRackTile = (letter, position, player) => {
     // Create a smaller tile for the rack
-    const tileGeometry = new THREE.BoxGeometry(0.7, 0.12, 0.7);
-    const tileColor = 0xE8D5B5; // Same beige color as board tiles
+    const tileGeometry = new THREE.BoxGeometry(TILE.RACK.WIDTH, TILE.RACK.HEIGHT, TILE.RACK.DEPTH);
     const tileMaterial = new THREE.MeshPhongMaterial({ 
-      color: tileColor,
+      color: TILE.RACK.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.95,
-      shininess: 50
+      opacity: TILE.RACK.MATERIAL.OPACITY,
+      shininess: TILE.RACK.MATERIAL.SHININESS
     });
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
     resourcesRef.current.geometries.push(tileGeometry);
@@ -1077,13 +1077,11 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(tile);
     
     // Position tile on rack
-    const rackZ = player === 1 ? -12 : 12;
-    const rackY = 0.2; // Slightly above rack surface
-    tile.position.set(position * 0.8 - 2.8, rackY, rackZ);
-    const slant = Math.PI / 12; // 15 degrees
+    const rackZ = player === 1 ? RACK.POSITIONS.PLAYER1.z : RACK.POSITIONS.PLAYER2.z;
+    tile.position.set(position * TILE.RACK.SPACING - TILE.RACK.OFFSET, TILE.RACK.Y_POSITION, rackZ);
     tile.rotation.x = player === 1
-      ? (3 * Math.PI) / 2 + slant
-      : Math.PI / 2 - slant;
+      ? (3 * Math.PI) / 2 + RACK.SLANT_ANGLE
+      : Math.PI / 2 - RACK.SLANT_ANGLE;
     tile.rotation.y = player === 1 ? Math.PI : 0; // Flip letters right-side up
     tile.castShadow = true;
     tile.receiveShadow = true;
@@ -1091,43 +1089,38 @@ const Scrabble3D = () => {
     // Create letter texture
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = 128;
-    canvas.height = 128;
+    canvas.width = TILE.LETTER.CANVAS_SIZE;
+    canvas.height = TILE.LETTER.CANVAS_SIZE;
     
-    context.clearRect(0, 0, 128, 128);
+    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
     
     // Add white letter
-    context.fillStyle = '#FFFFFF';
-    context.font = 'bold 80px Arial'; // Smaller font for rack tiles
+    context.fillStyle = TILE.LETTER.COLORS.LETTER;
+    context.font = TILE.LETTER.FONT.RACK;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter, 64, 64);
+    context.fillText(letter, TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
     
     // Add point value
-    const pointValues = {
-      'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3,
-      'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '_': 0
-    };
-    
-    const pointValue = pointValues[letter] || 0;
+    const pointValue = POINT_VALUES[letter] || 0;
     if (pointValue > 0) {
-      context.fillStyle = '#FFFFFF';
-      context.font = 'bold 35px Arial';
+      context.fillStyle = TILE.LETTER.COLORS.POINTS;
+      context.font = TILE.LETTER.FONT.RACK_POINTS;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), 128, 128);
+      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
     }
     
     const texture = new THREE.CanvasTexture(canvas);
-    const letterGeometry = new THREE.PlaneGeometry(0.6, 0.6);
+    const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.RACK_SIZE, TILE.LETTER.RACK_SIZE);
     const letterMaterial = new THREE.MeshBasicMaterial({ 
       map: texture,
       transparent: true,
       alphaTest: 0.01
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = 0.11;
-    letterMesh.rotation.x = -Math.PI / 2;
+    letterMesh.position.y = TILE.LETTER.Y_OFFSET;
+    letterMesh.rotation.x = TILE.LETTER.ROTATION;
     tile.add(letterMesh);
     resourcesRef.current.geometries.push(letterGeometry);
     resourcesRef.current.materials.push(letterMaterial);
@@ -1176,13 +1169,12 @@ const Scrabble3D = () => {
 
   const createTile = (letter, row, col, player, moveIndex) => {
     // Enhanced tile geometry
-    const tileGeometry = new THREE.BoxGeometry(0.9, 0.15, 0.9);
-    const tileColor = 0xE8D5B5; // More beige tile color
+    const tileGeometry = new THREE.BoxGeometry(TILE.BOARD.WIDTH, TILE.BOARD.HEIGHT, TILE.BOARD.DEPTH);
     const tileMaterial = new THREE.MeshPhongMaterial({ 
-      color: tileColor,
+      color: TILE.BOARD.MATERIAL.COLOR,
       transparent: true,
-      opacity: 0.95,
-      shininess: 50
+      opacity: TILE.BOARD.MATERIAL.OPACITY,
+      shininess: TILE.BOARD.MATERIAL.SHININESS
     });
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
     resourcesRef.current.geometries.push(tileGeometry);
@@ -1190,12 +1182,12 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(tile);
     
     // Position tile on board
-    const startX = -(15 * 1) / 2 + 1 / 2;
-    const startZ = -(15 * 1) / 2 + 1 / 2;
+    const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+    const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
     tile.position.set(
-      startX + col * 1,
-      0.15, // Medium position - above board squares but not floating
-      startZ + row * 1
+      startX + col * BOARD.GRID.SQUARE_SIZE,
+      TILE.BOARD.Y_POSITION,
+      startZ + row * BOARD.GRID.SQUARE_SIZE
     );
     tile.castShadow = true;
     tile.receiveShadow = true;
@@ -1203,43 +1195,38 @@ const Scrabble3D = () => {
     // Create clean white lettering
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = 128;
-    canvas.height = 128;
+    canvas.width = TILE.LETTER.CANVAS_SIZE;
+    canvas.height = TILE.LETTER.CANVAS_SIZE;
     
-    context.clearRect(0, 0, 128, 128);
+    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
     
     // Add white fill for main letter
-    context.fillStyle = '#FFFFFF';
-    context.font = 'bold 100px Arial';
+    context.fillStyle = TILE.LETTER.COLORS.LETTER;
+    context.font = TILE.LETTER.FONT.BOARD;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter, 64, 64);
+    context.fillText(letter, TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
     
     // Add point value in bottom right
-    const pointValues = {
-      'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3,
-      'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '_': 0
-    };
-    
-    const pointValue = pointValues[letter] || 0;
+    const pointValue = POINT_VALUES[letter] || 0;
     if (pointValue > 0) {
-      context.fillStyle = '#FFFFFF';
-      context.font = 'bold 45px Arial';
+      context.fillStyle = TILE.LETTER.COLORS.POINTS;
+      context.font = TILE.LETTER.FONT.POINTS;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), 128, 128);
+      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
     }
     
     const texture = new THREE.CanvasTexture(canvas);
-    const letterGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+    const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
     const letterMaterial = new THREE.MeshBasicMaterial({ 
       map: texture,
       transparent: true,
       alphaTest: 0.01
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = 0.11;
-    letterMesh.rotation.x = -Math.PI / 2;
+    letterMesh.position.y = TILE.LETTER.Y_OFFSET;
+    letterMesh.rotation.x = TILE.LETTER.ROTATION;
     tile.add(letterMesh);
     resourcesRef.current.geometries.push(letterGeometry);
     resourcesRef.current.materials.push(letterMaterial);
@@ -1373,9 +1360,9 @@ const Scrabble3D = () => {
           {isExpanded && (
             <div className={styles.expandableContent}>
               <div className={styles.controlGroup}>
-                <button onClick={() => handleSpeedChange(500)} className={styles.speedBtn}>Fast</button>
-                <button onClick={() => handleSpeedChange(1000)} className={styles.speedBtn}>Normal</button>
-                <button onClick={() => handleSpeedChange(2000)} className={styles.speedBtn}>Slow</button>
+                <button onClick={() => handleSpeedChange(GAME.PLAYBACK_SPEEDS.FAST)} className={styles.speedBtn}>Fast</button>
+                <button onClick={() => handleSpeedChange(GAME.PLAYBACK_SPEEDS.NORMAL)} className={styles.speedBtn}>Normal</button>
+                <button onClick={() => handleSpeedChange(GAME.PLAYBACK_SPEEDS.SLOW)} className={styles.speedBtn}>Slow</button>
               </div>
               <div className={styles.controlGroup}>
                 <button onClick={() => controlsRef.current?.reset()} className={styles.controlBtn}>
