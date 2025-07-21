@@ -1078,8 +1078,13 @@ const Scrabble3D = () => {
     
     // Position tile on rack
     const rackZ = player === 1 ? -12 : 12;
-    const rackY = 0.15; // Slightly above rack surface
+    const rackY = 0.45; // Slightly above rack surface
     tile.position.set(position * 0.8 - 2.8, rackY, rackZ);
+    const slant = Math.PI / 12; // 15 degrees
+    tile.rotation.x = player === 1
+      ? (3 * Math.PI) / 2 + slant
+      : Math.PI / 2 - slant;
+    tile.rotation.y = player === 1 ? Math.PI : 0; // Flip letters right-side up
     tile.castShadow = true;
     tile.receiveShadow = true;
 
