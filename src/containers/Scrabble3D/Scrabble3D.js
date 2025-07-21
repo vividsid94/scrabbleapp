@@ -409,6 +409,7 @@ const Scrabble3D = () => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
       updateBoardToMove(currentMoveIndex);
       updateScoresheet(); // Update scoresheet with current game state
+      createPlayerNames(); // Create player names with current game data
       setNeedsRender(true); // Trigger render after board update
       
       // Update shadows when board changes significantly
@@ -627,6 +628,53 @@ const Scrabble3D = () => {
     sceneRef.current.lamps = lamps;
   };
 
+  const createNameTexture = (playerName, isFlipped = false) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size with high DPI for crisp text
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 512 * dpr;
+    canvas.height = 128 * dpr;
+    canvas.style.width = '512px';
+    canvas.style.height = '128px';
+    
+    ctx.scale(dpr, dpr);
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, 512, 128);
+    
+    // Create engraved effect - white text
+    ctx.fillStyle = '#FFFFFF'; // White text
+    ctx.font = 'bold 64px Arial'; // Larger font for visibility
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Add shadow for depth
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    
+    // Draw the main text
+    ctx.fillText(playerName, 256, 64);
+    
+    // Add highlight for 3D effect
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = '#F0F0F0'; // Slightly off-white for highlight
+    ctx.fillText(playerName, 253, 61);
+    
+    // Create texture
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    return texture;
+  };
+
   const createTableAndChairs = (scene) => {
     // Create magical white table
     const tableGeometry = new THREE.BoxGeometry(TABLE.WIDTH, TABLE.HEIGHT, TABLE.DEPTH);
@@ -708,6 +756,17 @@ const Scrabble3D = () => {
       resourcesRef.current.geometries.push(backCushionGeometry);
       resourcesRef.current.materials.push(backCushionMaterial);
       resourcesRef.current.meshes.push(backCushion);
+
+      // Store futon position for later name creation
+      if (!sceneRef.current.futonPositions) {
+        sceneRef.current.futonPositions = [];
+      }
+      sceneRef.current.futonPositions.push({
+        x: pos.x,
+        z: pos.z,
+        rotation: pos.rotation,
+        index: index
+      });
 
       // Futon frame/legs (low profile)
       const frameGeometry = new THREE.BoxGeometry(FUTON.FRAME.WIDTH, FUTON.FRAME.HEIGHT, FUTON.FRAME.DEPTH);
@@ -1244,6 +1303,99 @@ const Scrabble3D = () => {
   };
 
   // Function to update scoresheet with current game data
+  const createPlayerNames = () => {
+    if (!sceneRef.current || !sceneRef.current.futonPositions || !gameData) return;
+    
+    console.log('Creating player names, cleaning up old ones...'); // Debug log
+    
+    // Remove existing name planes - improved cleanup
+    const childrenToRemove = [];
+    sceneRef.current.children.forEach(child => {
+      if (child.userData && child.userData.isNamePlane) {
+        childrenToRemove.push(child);
+      }
+    });
+    
+    // Remove and dispose of old name planes
+    childrenToRemove.forEach(child => {
+      sceneRef.current.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (Array.isArray(child.material)) {
+        // Handle materials array
+        child.material.forEach(mat => {
+          if (mat.map) mat.map.dispose();
+          mat.dispose();
+        });
+      } else if (child.material) {
+        if (child.material.map) child.material.map.dispose();
+        child.material.dispose();
+      }
+    });
+    
+    console.log(`Removed ${childrenToRemove.length} old name planes`); // Debug log
+    
+    // Extract player names from game data
+    const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+    const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+    
+    console.log(`Creating player names: ${player1Name} and ${player2Name}`); // Debug log
+    
+    // Create name planes for each futon - same logic for both
+    sceneRef.current.futonPositions.forEach(futon => {
+      const playerName = futon.index === 0 ? player1Name : player2Name;
+      const nameTexture = createNameTexture(playerName, false); // Always use same rotation
+      const nameGeometry = new THREE.BoxGeometry(3.5, 0.8, 0.3); // Much thicker box
+      
+      // Create a material with the texture only on the front face
+      const materials = [
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Right face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Left face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Top face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Bottom face - solid color
+        new THREE.MeshBasicMaterial({ map: nameTexture, transparent: true, alphaTest: 0.1 }), // Front face - with text
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b })  // Back face - solid color
+      ];
+      const namePlane = new THREE.Mesh(nameGeometry, materials);
+      
+      // Position the name on the chair base
+      const nameY = FUTON.FRAME.Y_POSITION + 1.2; // Even higher above the frame
+      const nameZ = futon.z + (futon.rotation === 0 ? -FUTON.FRAME.DEPTH/2 + 4.5 : FUTON.FRAME.DEPTH/2 - 4.5); // Front of chair
+      namePlane.position.set(futon.x, nameY, nameZ);
+      
+      // Rotate the name to lay flat on the chair base - same for both
+      namePlane.rotation.x = -Math.PI / 2; // Lay flat (rotate 90 degrees)
+      namePlane.rotation.y = 0; // Always face the same direction
+      
+      // Add metadata for identification
+      namePlane.userData = {
+        isNamePlane: true,
+        playerName: playerName,
+        isFlipped: false, // Always false
+        playerIndex: futon.index
+      };
+      
+      sceneRef.current.add(namePlane);
+      resourcesRef.current.geometries.push(nameGeometry);
+      resourcesRef.current.materials.push(...materials); // Spread the materials array
+      resourcesRef.current.meshes.push(namePlane);
+    });
+  };
+
+  const updateNameTextures = () => {
+    // Find and update name textures if they exist
+    if (sceneRef.current && sceneRef.current.children) {
+      sceneRef.current.children.forEach(child => {
+        if (child.userData && child.userData.isNamePlane) {
+          const playerName = child.userData.playerName;
+          const isFlipped = child.userData.isFlipped;
+          const newTexture = createNameTexture(playerName, isFlipped);
+          child.material.map = newTexture;
+          child.material.needsUpdate = true;
+        }
+      });
+    }
+  };
+
   const updateScoresheet = () => {
     if (sceneRef.current.scoresheet && sceneRef.current.scoresheet.scores) {
       // Recreate the texture with updated data
