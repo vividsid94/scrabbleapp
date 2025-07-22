@@ -22,7 +22,6 @@ import {
   House,
   Binoculars
 } from '@phosphor-icons/react';
-import LatestMove from './components/LatestMove';
 import {
   CAMERA,
   RENDERER,
@@ -566,7 +565,7 @@ const Scrabble3D = () => {
   useEffect(() => {
     if (isPlaying && gameData && currentMoveIndex < gameData.length - 1) {
       const timer = setTimeout(() => {
-        setCurrentMoveIndex(prev => prev + 1);
+        handleNextMove(); // Use the same logic as manual forward
       }, playbackSpeed);
       return () => clearTimeout(timer);
     } else if (isPlaying && currentMoveIndex >= gameData?.length - 1) {
@@ -2117,17 +2116,6 @@ const Scrabble3D = () => {
               <span>Sample game loaded. Pick a game from the Viewer!</span>
             </div>
           )}
-          
-          <LatestMove 
-            latestMove={currentMove}
-            player1Name="Player 1"
-            player2Name="Player 2"
-            allMoves={gameData.slice(0, currentMoveIndex + 1)} // Only show moves up to current view
-            boardCoords={[]}
-            player1Rack={[]}
-            player2Rack={[]}
-            pool={[]}
-          />
           
           {/* Control Icons */}
           <div className={styles.controlIcons}>
