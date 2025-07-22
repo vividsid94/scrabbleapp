@@ -256,12 +256,12 @@ export default function MiniDrawer() {
               Color Scheme
             </MenuItem>
           </Menu>
-          <img src={'/images/theomascot.png'} className={styles.cfLogo} id="logo" width="58" height="58"/>
+          <img src={'/images/theomascot.png'} className={styles.sidenavFoxStencil} id="logo" width="58" height="58"/>
         </MyToolbar>
       </MyAppBar>
       <Drawer className={styles.myDrawer} variant="permanent">
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img src={'/images/theomascot.png'} className={styles.cfLogo} id="logo" width="48" height="48"/>
+          <img src={'/images/theomascot.png'} className={styles.sidenavFoxStencil} id="logo" width="48" height="48"/>
         </DrawerHeader>
         
         <List className={styles.btnContainer}>
