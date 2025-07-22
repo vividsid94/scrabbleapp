@@ -294,7 +294,22 @@ export const makeBotMove = async (botMoveSound) => {
 
     // Sort moves by totalValue (points + leave) from the backend
     const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
-    const bestMove = sortedMoves[0];
+    let botToUse = useGameStore.getState().selectedBot;
+    let botMove;
+    if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {
+      botMove = sortedMoves[botToUse.customRank - 1]; // Custom rank (1-based)
+    } else if (botToUse && botToUse.name === 'Tess' && sortedMoves.length >= 2) {
+      botMove = sortedMoves[1]; // 2nd best move
+    } else if (botToUse && botToUse.name === 'Novice' && sortedMoves.length >= 30) {
+      botMove = sortedMoves[29]; // 30th best move
+    } else if (botToUse && botToUse.name === 'Beginner' && sortedMoves.length >= 15) {
+      botMove = sortedMoves[14]; // 15th best move
+    } else if (botToUse && botToUse.name === 'Intermediate' && sortedMoves.length >= 5) {
+      botMove = sortedMoves[4]; // 5th best move
+    } else {
+      botMove = sortedMoves[0]; // Best move
+    }
+    const bestMove = botMove;
 
     // Play bot move sound after the delay
     if (botMoveSound && botMoveSound.play) {
@@ -465,7 +480,22 @@ export const makeBotMove = async (botMoveSound) => {
         
         // Sort moves by totalValue (points + leave) from the backend
         const sortedMoves = retryData.moves.sort((a, b) => b.totalValue - a.totalValue);
-        const bestMove = sortedMoves[0];
+        let botToUse = useGameStore.getState().selectedBot;
+        let botMove;
+        if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {
+          botMove = sortedMoves[botToUse.customRank - 1]; // Custom rank (1-based)
+        } else if (botToUse && botToUse.name === 'Tess' && sortedMoves.length >= 2) {
+          botMove = sortedMoves[1]; // 2nd best move
+        } else if (botToUse && botToUse.name === 'Novice' && sortedMoves.length >= 30) {
+          botMove = sortedMoves[29]; // 30th best move
+        } else if (botToUse && botToUse.name === 'Beginner' && sortedMoves.length >= 15) {
+          botMove = sortedMoves[14]; // 15th best move
+        } else if (botToUse && botToUse.name === 'Intermediate' && sortedMoves.length >= 5) {
+          botMove = sortedMoves[4]; // 5th best move
+        } else {
+          botMove = sortedMoves[0]; // Best move
+        }
+        const bestMove = botMove;
         
         // Play bot move sound
         if (botMoveSound && botMoveSound.play) {

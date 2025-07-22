@@ -23,6 +23,22 @@ import { useGameStore } from '../../stores/gameStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
+import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
+import Modal from '@mui/material/Modal';
+import { CaretDown, CaretUp, Smiley, Robot, UserCircle } from '@phosphor-icons/react';
+
+const bots = [
+  {
+    name: 'Theo',
+    img: '/images/theomascot.png',
+    desc: 'Clever and quick, always ready for a challenge. Prefers bold, aggressive moves.'
+  },
+  {
+    name: 'Tess',
+    img: '/images/tessmascot.png',
+    desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!'
+  }
+];
 
 export default function Play() {
   // Use Zustand Game Store
@@ -179,6 +195,8 @@ export default function Play() {
     
     // Bot move handler
     makeBotMove,
+    selectedBot,
+    setSelectedBot,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
@@ -189,6 +207,16 @@ export default function Play() {
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
+  const mascotRef = useRef();
+  const [botSelectOpen, setBotSelectOpen] = useState(false);
+  const [showSkillBots, setShowSkillBots] = useState(false);
+  const skillBots = [
+    { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={32} color="#60A5FA" /> },
+    { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={32} color="#8B7355" /> },
+    { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={32} color="#3D5A80" /> },
+  ];
+  const [customRank, setCustomRank] = useState('');
+  const [customBotSelected, setCustomBotSelected] = useState(false);
 
   // Initialize sounds (simplified) - only once
   const [sounds, setSounds] = useState(null);
@@ -280,8 +308,20 @@ export default function Play() {
     }
   }, [isBotMode]);
 
-  // Wrapper function to pass sound objects to handleBotModeToggle
+  // Show modal when toggling bot mode on
   const handleBotModeToggleWithSounds = () => {
+    if (!isBotMode) {
+      setBotSelectOpen(true);
+    } else {
+      handleBotModeToggle(gameStartSound, botMoveSound);
+    }
+  };
+
+  // When a bot is selected, set the bot and start bot mode
+  const handleBotSelect = (bot) => {
+    setSelectedBot(bot);
+    setPlayer2Name(bot.name);
+    setBotSelectOpen(false);
     handleBotModeToggle(gameStartSound, botMoveSound);
   };
 
@@ -419,6 +459,16 @@ export default function Play() {
     updatePreviewScore();
   }, [selectedTilesArray, tempBoardCoords]);
 
+  useEffect(() => {
+    if (
+      snackbarSeverity === 'error' &&
+      snackbarMessage &&
+      (snackbarMessage.toLowerCase().includes('not valid') || snackbarMessage.toLowerCase().includes('invalid word'))
+    ) {
+      mascotRef.current?.shake();
+    }
+  }, [snackbarMessage, snackbarSeverity]);
+
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -485,7 +535,7 @@ export default function Play() {
         <Box className={styles.rightPanel}>
           <PlayerInfo
             player1Name={player1Name}
-            player2Name={player2Name}
+            player2Name={isBotMode ? selectedBot.name : player2Name}
             player1Points={player1points}
             player2Points={player2points}
               player1Time={formatTime(player1Time || 0)}
@@ -547,6 +597,8 @@ export default function Play() {
               />,
               topMoves: <LightbulbIcon className={styles.keyBtn} />,
             }}
+            mascotRef={mascotRef}
+            botImage={isBotMode ? selectedBot.img : undefined}
           />
 
           {showTimeSlider && !gameStarted && (
@@ -677,6 +729,188 @@ export default function Play() {
         </Box>
       )}
       </Box>
+
+      <Modal
+        open={botSelectOpen}
+        onClose={() => setBotSelectOpen(false)}
+        aria-labelledby="bot-select-modal-title"
+        aria-describedby="bot-select-modal-description"
+      >
+        <Box className={styles.modalContainer} style={{ minWidth: 340, maxWidth: 480, alignItems: 'center', animation: 'none', border: 'none', boxShadow: 'none' }}>
+          <div className={styles.modalTitle} id="bot-select-modal-title" style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, textAlign: 'center', letterSpacing: '0.04em' }}>
+            Who will you play against today?
+          </div>
+          <div style={{ fontSize: 15, color: '#374151', marginBottom: 24, textAlign: 'center', fontWeight: 500, opacity: 0.85 }}>
+            Each fox has a unique style. Pick your challenger!
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 24, justifyContent: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+            {bots.map(bot => (
+              <div
+                key={bot.name}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  border: selectedBot.name === bot.name ? '3px solid #3D5A80' : '2px solid #e5e7eb',
+                  borderRadius: 16,
+                  padding: '18px 18px 12px 18px',
+                  background: selectedBot.name === bot.name ? 'rgba(96,165,250,0.08)' : '#fff',
+                  boxShadow: selectedBot.name === bot.name ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
+                  cursor: 'pointer',
+                  minWidth: 120,
+                  maxWidth: 160,
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  position: 'relative',
+                }}
+                onClick={() => handleBotSelect(bot)}
+              >
+                <img src={bot.img} alt={bot.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#eee', marginBottom: 4, boxShadow: selectedBot.name === bot.name ? '0 0 0 3px #60A5FA' : 'none', transition: 'box-shadow 0.2s' }} />
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
+                <div style={{ fontSize: 13, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 32 }}>{bot.desc}</div>
+                <button
+                  style={{
+                    marginTop: 10,
+                    background: selectedBot.name === bot.name ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '7px 20px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 15,
+                    boxShadow: selectedBot.name === bot.name ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: selectedBot.name === bot.name ? 1 : 0.85
+                  }}
+                  onClick={e => { e.stopPropagation(); handleBotSelect(bot); }}
+                >
+                  {selectedBot.name === bot.name ? 'Selected' : 'Choose'}
+                </button>
+              </div>
+            ))}
+          </div>
+          <div style={{ width: '100%', marginBottom: 8 }}>
+            <div className={styles.moveHistoryList} style={{ marginTop: 8, width: '100%', maxHeight: 220, overflowY: 'auto' }}>
+              {skillBots.map(bot => (
+                <div
+                  key={bot.name}
+                  className={styles.moveHistoryItem}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    background: selectedBot.name === bot.name && !customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
+                    border: selectedBot.name === bot.name && !customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
+                    borderRadius: 12,
+                    boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
+                    cursor: 'pointer',
+                    padding: '12px 16px',
+                    marginBottom: 8,
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    position: 'relative',
+                  }}
+                  onClick={() => { setCustomBotSelected(false); handleBotSelect(bot); }}
+                >
+                  <div style={{ marginRight: 8 }}>{bot.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
+                    <div style={{ fontSize: 12, color: '#374151', opacity: 0.8 }}>{bot.desc}</div>
+                  </div>
+                  <button
+                    style={{
+                      background: selectedBot.name === bot.name && !customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                      color: '#fff',
+                      border: 0,
+                      borderRadius: 8,
+                      padding: '6px 16px',
+                      fontWeight: 'bold',
+                      letterSpacing: 1,
+                      fontSize: 13,
+                      boxShadow: selectedBot.name === bot.name && !customBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                      outline: 'transparent',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      opacity: selectedBot.name === bot.name && !customBotSelected ? 1 : 0.85
+                    }}
+                    onClick={e => { e.stopPropagation(); setCustomBotSelected(false); handleBotSelect(bot); }}
+                  >
+                    {selectedBot.name === bot.name && !customBotSelected ? 'Selected' : 'Choose'}
+                  </button>
+                </div>
+              ))}
+              {/* Custom bot item */}
+              <div
+                className={styles.moveHistoryItem}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  background: customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
+                  border: customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
+                  borderRadius: 12,
+                  boxShadow: customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
+                  cursor: 'pointer',
+                  padding: '12px 16px',
+                  marginBottom: 8,
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  position: 'relative',
+                }}
+                onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+              >
+                <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom</div>
+                  <div style={{ fontSize: 12, color: '#374151', opacity: 0.8 }}>Play <input type="text" value={customRank} onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }} placeholder="X" style={{ width: 32, fontSize: 12, textAlign: 'center', border: '1px solid #e5e7eb', borderRadius: 4, margin: '0 4px' }} />th by points + leave</div>
+                </div>
+                <button
+                  style={{
+                    background: customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '6px 16px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 13,
+                    boxShadow: customBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    outline: 'transparent',
+                    cursor: /^\d+$/.test(customRank) && parseInt(customRank) > 0 ? 'pointer' : 'not-allowed',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: customBotSelected ? 1 : 0.85
+                  }}
+                  disabled={!/^\d+$/.test(customRank) || parseInt(customRank) <= 0}
+                  onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+                >
+                  {customBotSelected ? 'Selected' : 'Choose'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <button
+            style={{
+              marginTop: 8,
+              background: '#f0f0f0',
+              color: '#1F2937',
+              border: 'none',
+              borderRadius: 8,
+              padding: '6px 16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              alignSelf: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            onClick={() => setBotSelectOpen(false)}
+          >
+            Cancel
+          </button>
+        </Box>
+      </Modal>
     </Box>
   );
 } 

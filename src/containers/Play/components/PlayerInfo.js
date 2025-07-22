@@ -14,6 +14,8 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
+import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
+import { UserCircle } from '@phosphor-icons/react';
 
 const actionButtonStyle = {
   width: '24px',
@@ -23,10 +25,18 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx }) => (
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx, mascotRef, botImage }) => (
   <Box className={styles.playerPanel} sx={sx}>
     <Box className={styles.playerInfo}>
-      <Box className={styles.playerName}>{name}</Box>
+      <Box className={styles.playerName} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {name}
+        {isBot && mascotRef && (
+          <ShakeableMascot ref={mascotRef} src={botImage || "/images/theomascot.png"} width={56} alt="Bot mascot" />
+        )}
+        {!isBot && (
+          <img src="/images/player.png" alt="Player avatar" width={56} height={56} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+        )}
+      </Box>
       <Box 
         className={styles.timer}
         sx={{
@@ -112,7 +122,9 @@ export default function PlayerInfo({
   simulatingMove,
   boardCoords,
   pool,
-  icons
+  icons,
+  mascotRef,
+  botImage
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -371,7 +383,8 @@ export default function PlayerInfo({
           points: player2Points,
           rack: isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack,
           isBot: isBotMode,
-          isThinking: isBotMode && isBotThinking
+          isThinking: isBotMode && isBotThinking,
+          botImage: botImage // Pass botImage to PlayerInfoSection
         }
       ].sort((a, b) => {
         // If currentPlayer is 2, bot should be first
@@ -446,6 +459,8 @@ export default function PlayerInfo({
               }
             }
           } : undefined}
+          mascotRef={player.isBot ? mascotRef : undefined}
+          botImage={player.botImage}
         />
       ))}
 

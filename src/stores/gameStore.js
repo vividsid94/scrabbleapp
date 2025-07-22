@@ -96,6 +96,8 @@ export const useGameStore = create((set, get) => {
     // Settings state
     playerMoveSoundType: 'puzzle',
     botMoveSoundType: 'puzzle',
+    // Bot selection
+    selectedBot: { name: 'Theo', img: '/images/theomascot.png' },
   };
 
   return {
@@ -197,6 +199,7 @@ export const useGameStore = create((set, get) => {
     // Actions - Settings
     setPlayerMoveSoundType: (type) => set({ playerMoveSoundType: type }),
     setBotMoveSoundType: (type) => set({ botMoveSoundType: type }),
+    setSelectedBot: (bot) => set({ selectedBot: bot }),
     
     // Complex actions
     resetGame: () => set({
