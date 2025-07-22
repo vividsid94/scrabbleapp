@@ -272,6 +272,12 @@ const Scrabble3D = () => {
         });
       }
       
+      // Animate scoreboard pulse light
+      if (sceneRef.current.pulseLight) {
+        const time = currentTime * 0.001;
+        sceneRef.current.pulseLight.intensity = 0.3 + Math.sin(time * 2) * 0.2;
+      }
+      
       // Only render when needed
       if (needsRender) {
         renderer.render(scene, camera);
@@ -446,6 +452,7 @@ const Scrabble3D = () => {
   // Update board when move changes - exactly like viewer
   useEffect(() => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
+      updateScoreboard(); // Update amazing scoreboard with current game state
       updateScoresheet(); // Update scoresheet with current game state
       createPlayerNames(); // Create player names with current game data
       setNeedsRender(true); // Trigger render after board update
@@ -736,6 +743,9 @@ const Scrabble3D = () => {
     // Create 3D racks for both players
     createPlayerRacks(scene);
 
+    // Create amazing scoreboard on the table
+    createAmazingScoreboard(scene);
+    
     // Create scoresheet on the table
     createScoresheet(scene);
 
@@ -1021,21 +1031,21 @@ const Scrabble3D = () => {
   const updateRackTilesForMove = (moveIndex) => {
     if (!gameData || moveIndex < 0) return;
 
-    // Get actual rack from parsed moves (after the move was made)
-    const actualRack = createRack(moveIndex + 1, gameData);
-    
-    if (actualRack && actualRack.length > 0) {
-      // Determine which player is currently active (next to play)
-      // Josh = player 1 (bottom), Noah = player 2 (top)
+        // Get actual rack from parsed moves (after the move was made)
+        const actualRack = createRack(moveIndex + 1, gameData);
+        
+        if (actualRack && actualRack.length > 0) {
+          // Determine which player is currently active (next to play)
+          // Josh = player 1 (bottom), Noah = player 2 (top)
       const currentMove = gameData[moveIndex];
       const nextPlayer = currentMove && currentMove.player === 'Josh' ? 2 : 1;
-      
-      // Clear both racks first
-      updateRackTiles(1, []);
-      updateRackTiles(2, []);
-      
-      // Show rack for the player whose turn it is
-      updateRackTiles(nextPlayer, actualRack);
+          
+          // Clear both racks first
+          updateRackTiles(1, []);
+          updateRackTiles(2, []);
+          
+          // Show rack for the player whose turn it is
+          updateRackTiles(nextPlayer, actualRack);
     } else {
       // Clear both racks if no rack available
       updateRackTiles(1, []);
@@ -1045,7 +1055,7 @@ const Scrabble3D = () => {
 
   const updateBoardToMove = (moveIndex) => {
     if (!gameData) return;
-
+    
     console.log(`Updating to move ${moveIndex}, previous was ${previousMoveIndex}, total moves: ${gameData.length}`);
 
     // Determine if we're going forward or backward
@@ -1055,7 +1065,7 @@ const Scrabble3D = () => {
     if (isGoingBackward) {
       // Going backward - we need to handle removal properly
       console.log('Going backward - handling removal');
-      
+
       // Reset board to initial state
       setBoardCoords(JSON.parse(origBoard));
       setPlayer1points(0);
@@ -1066,7 +1076,7 @@ const Scrabble3D = () => {
       for (let i = 0; i <= moveIndex; i++) {
         handleMoveWrapper(i - 2, i - 1, i, i + 1, "next");
       }
-    } else {
+      } else {
       // Going forward - apply moves from current position to target
       console.log('Going forward - applying moves');
       
@@ -1149,7 +1159,324 @@ const Scrabble3D = () => {
     resourcesRef.current.meshes.push(rack2Back);
   };
 
-  const createScoresheet = (scene) => {
+  const createAmazingScoreboard = (scene) => {
+    // Create the main scoreboard base (raised platform)
+    const baseGeometry = new THREE.BoxGeometry(8, 0.3, 6);
+    const baseMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x1a1a2e, // Dark blue base
+      transparent: true,
+      opacity: 0.9,
+      shininess: 100
+    });
+    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+    base.position.set(18, 1.8, 0); // Moved further to the right side
+    base.castShadow = true;
+    base.receiveShadow = true;
+    scene.add(base);
+    resourcesRef.current.geometries.push(baseGeometry);
+    resourcesRef.current.materials.push(baseMaterial);
+    resourcesRef.current.meshes.push(base);
+
+    // Create glowing border around the base
+    const borderGeometry = new THREE.BoxGeometry(8.2, 0.1, 6.2);
+    const borderMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x00ffff, // Cyan glow
+      emissive: 0x00ffff,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.8
+    });
+    const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    border.position.set(18, 1.95, 0);
+    scene.add(border);
+    resourcesRef.current.geometries.push(borderGeometry);
+    resourcesRef.current.materials.push(borderMaterial);
+    resourcesRef.current.meshes.push(border);
+
+    // Create the main scoreboard display
+    const displayGeometry = new THREE.BoxGeometry(7.5, 2, 5.5);
+    const displayMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x0f0f23, // Very dark blue
+      transparent: true,
+      opacity: 0.95,
+      shininess: 200
+    });
+    const display = new THREE.Mesh(displayGeometry, displayMaterial);
+    display.position.set(18, 2.8, 0);
+    display.castShadow = true;
+    display.receiveShadow = true;
+    scene.add(display);
+    resourcesRef.current.geometries.push(displayGeometry);
+    resourcesRef.current.materials.push(displayMaterial);
+    resourcesRef.current.meshes.push(display);
+
+    // Create glowing accent lines
+    const accentGeometry = new THREE.BoxGeometry(7.6, 0.05, 5.6);
+    const accentMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xff6b6b, // Coral accent
+      emissive: 0xff6b6b,
+      emissiveIntensity: 0.4,
+      transparent: true,
+      opacity: 0.9
+    });
+    const accent = new THREE.Mesh(accentGeometry, accentMaterial);
+    accent.position.set(18, 3.85, 0);
+    scene.add(accent);
+    resourcesRef.current.geometries.push(accentGeometry);
+    resourcesRef.current.materials.push(accentMaterial);
+    resourcesRef.current.meshes.push(accent);
+
+    // Create the digital display screen
+    const screenGeometry = new THREE.PlaneGeometry(7, 1.8);
+    const screenMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.9
+    });
+    const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+    screen.position.set(18, 2.8, 2.76); // Front face of display
+    scene.add(screen);
+    resourcesRef.current.geometries.push(screenGeometry);
+    resourcesRef.current.materials.push(screenMaterial);
+    resourcesRef.current.meshes.push(screen);
+
+    // Create the scoreboard texture with amazing design
+    const createScoreboardTexture = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+    
+    // High-DPI scaling for crisp text
+    const scale = window.devicePixelRatio || 1;
+      canvas.width = 700 * scale;
+      canvas.height = 180 * scale;
+      canvas.style.width = '700px';
+      canvas.style.height = '180px';
+      
+      ctx.scale(scale, scale);
+      
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+      gradient.addColorStop(0, '#0a0a1a');
+      gradient.addColorStop(0.5, '#1a1a3a');
+      gradient.addColorStop(1, '#0a0a1a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 700, 180);
+    
+      // Add subtle grid pattern
+      ctx.strokeStyle = '#2a2a4a';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 700; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 180);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 180; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(700, i);
+        ctx.stroke();
+      }
+      
+      // Add glowing border effect
+      ctx.strokeStyle = '#00ffff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 696, 176);
+      
+      // Add inner border
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(6, 6, 688, 168);
+    
+      // Get player names and scores
+      const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+      const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+      
+      // Calculate current scores
+      let player1Score = 0;
+      let player2Score = 0;
+      
+      if (gameData && gameData.length > 0) {
+        gameData.slice(0, currentMoveIndex + 1).forEach(move => {
+          const score = move.score || 0;
+          if (move.player === player1Name) {
+            player1Score += score;
+          } else {
+            player2Score += score;
+          }
+        });
+      }
+      
+      // Draw player 1 section (left side)
+      ctx.fillStyle = '#4ecdc4';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(player1Name, 175, 40);
+      
+      // Player 1 score with glow effect
+      ctx.shadowColor = '#4ecdc4';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText(player1Score.toString(), 175, 100);
+      
+      // Draw player 2 section (right side)
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ff6b6b';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText(player2Name, 525, 40);
+      
+      // Player 2 score with glow effect
+      ctx.shadowColor = '#ff6b6b';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText(player2Score.toString(), 525, 100);
+      
+      // Draw center divider
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(350, 20);
+      ctx.lineTo(350, 160);
+      ctx.stroke();
+      
+      return canvas;
+    };
+    
+    // Create and apply the texture
+    const scoreboardCanvas = createScoreboardTexture();
+    const scoreboardTexture = new THREE.CanvasTexture(scoreboardCanvas);
+    const scoreboardDisplayGeometry = new THREE.PlaneGeometry(6.8, 1.6);
+    const scoreboardDisplayMaterial = new THREE.MeshBasicMaterial({ 
+      map: scoreboardTexture,
+      transparent: true,
+      alphaTest: 0.01
+    });
+    const scoreboardDisplay = new THREE.Mesh(scoreboardDisplayGeometry, scoreboardDisplayMaterial);
+    scoreboardDisplay.position.set(18, 2.8, 2.78); // Slightly in front of screen
+    scene.add(scoreboardDisplay);
+    resourcesRef.current.geometries.push(scoreboardDisplayGeometry);
+    resourcesRef.current.materials.push(scoreboardDisplayMaterial);
+    resourcesRef.current.textures.push(scoreboardTexture);
+    resourcesRef.current.meshes.push(scoreboardDisplay);
+
+    // Store reference to scoreboard for updates
+    sceneRef.current.scoreboard = {
+      base: base,
+      display: display,
+      screen: screen,
+      scoreboardDisplay: scoreboardDisplay,
+      texture: scoreboardTexture
+    };
+        
+    // Add pulsing light effect
+    const pulseLight = new THREE.PointLight(0x00ffff, 0.5, 10);
+    pulseLight.position.set(18, 3, 0);
+    scene.add(pulseLight);
+    resourcesRef.current.lights.push(pulseLight);
+
+    // Store pulse light for animation
+    sceneRef.current.pulseLight = pulseLight;
+  };
+
+  // Function to update scoresheet with current game data
+  const createPlayerNames = () => {
+    if (!sceneRef.current || !sceneRef.current.futonPositions || !gameData) return;
+    
+    console.log('Creating player names, cleaning up old ones...'); // Debug log
+    
+    // Remove existing name planes - improved cleanup
+    const childrenToRemove = [];
+    sceneRef.current.children.forEach(child => {
+      if (child.userData && child.userData.isNamePlane) {
+        childrenToRemove.push(child);
+      }
+    });
+    
+    // Remove and dispose of old name planes
+    childrenToRemove.forEach(child => {
+      sceneRef.current.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (Array.isArray(child.material)) {
+        // Handle materials array
+        child.material.forEach(mat => {
+          if (mat.map) mat.map.dispose();
+          mat.dispose();
+        });
+      } else if (child.material) {
+        if (child.material.map) child.material.map.dispose();
+        child.material.dispose();
+      }
+    });
+    
+    console.log(`Removed ${childrenToRemove.length} old name planes`); // Debug log
+    
+    // Extract player names from game data
+    const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+    const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+    
+    console.log(`Creating player names: ${player1Name} and ${player2Name}`); // Debug log
+    
+    // Create name planes for each futon - same logic for both
+    sceneRef.current.futonPositions.forEach(futon => {
+      const playerName = futon.index === 0 ? player1Name : player2Name;
+      const nameTexture = createNameTexture(playerName, false); // Always use same rotation
+      const nameGeometry = new THREE.BoxGeometry(3.5, 0.8, 0.3); // Much thicker box
+      
+      // Create a material with the texture only on the front face
+      const materials = [
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Right face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Left face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Top face - solid color
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Bottom face - solid color
+        new THREE.MeshBasicMaterial({ map: nameTexture, transparent: true, alphaTest: 0.1 }), // Front face - with text
+        new THREE.MeshBasicMaterial({ color: 0x2a4a6b })  // Back face - solid color
+      ];
+      const namePlane = new THREE.Mesh(nameGeometry, materials);
+      
+      // Position the name on the chair base
+      const nameY = FUTON.FRAME.Y_POSITION + 1.2; // Even higher above the frame
+      const nameZ = futon.z + (futon.rotation === 0 ? -FUTON.FRAME.DEPTH/2 + 4.5 : FUTON.FRAME.DEPTH/2 - 4.5); // Front of chair
+      namePlane.position.set(futon.x, nameY, nameZ);
+      
+      // Rotate the name to lay flat on the chair base - same for both
+      namePlane.rotation.x = -Math.PI / 2; // Lay flat (rotate 90 degrees)
+      namePlane.rotation.y = 0; // Always face the same direction
+      
+      // Add metadata for identification
+      namePlane.userData = {
+        isNamePlane: true,
+        playerName: playerName,
+        isFlipped: false, // Always false
+        playerIndex: futon.index
+      };
+      
+      sceneRef.current.add(namePlane);
+      resourcesRef.current.geometries.push(nameGeometry);
+      resourcesRef.current.materials.push(...materials); // Spread the materials array
+      resourcesRef.current.meshes.push(namePlane);
+    });
+  };
+
+  const updateNameTextures = () => {
+    // Find and update name textures if they exist
+    if (sceneRef.current && sceneRef.current.children) {
+      sceneRef.current.children.forEach(child => {
+        if (child.userData && child.userData.isNamePlane) {
+          const playerName = child.userData.playerName;
+          const isFlipped = child.userData.isFlipped;
+          const newTexture = createNameTexture(playerName, isFlipped);
+          child.material.map = newTexture;
+          child.material.needsUpdate = true;
+        }
+      });
+    }
+  };
+
+    const createScoresheet = (scene) => {
     // Create simple paper scoresheet
     const scoresheetGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH, TABLE.SCORESHEET.HEIGHT);
     const scoresheetMaterial = new THREE.MeshPhongMaterial({ 
@@ -1221,8 +1548,6 @@ const Scrabble3D = () => {
       scoresContext.lineTo(360, 20 + i * 18);
     }
     scoresContext.stroke();
-    
-    // Draw all text after font loads (see loadModernFont function below)
     
     // Function to create and apply texture
     const createTexture = () => {
@@ -1324,100 +1649,6 @@ const Scrabble3D = () => {
     
     // Draw immediately with system fonts
     drawText();
-  };
-
-  // Function to update scoresheet with current game data
-  const createPlayerNames = () => {
-    if (!sceneRef.current || !sceneRef.current.futonPositions || !gameData) return;
-    
-    console.log('Creating player names, cleaning up old ones...'); // Debug log
-    
-    // Remove existing name planes - improved cleanup
-    const childrenToRemove = [];
-    sceneRef.current.children.forEach(child => {
-      if (child.userData && child.userData.isNamePlane) {
-        childrenToRemove.push(child);
-      }
-    });
-    
-    // Remove and dispose of old name planes
-    childrenToRemove.forEach(child => {
-      sceneRef.current.remove(child);
-      if (child.geometry) child.geometry.dispose();
-      if (Array.isArray(child.material)) {
-        // Handle materials array
-        child.material.forEach(mat => {
-          if (mat.map) mat.map.dispose();
-          mat.dispose();
-        });
-      } else if (child.material) {
-        if (child.material.map) child.material.map.dispose();
-        child.material.dispose();
-      }
-    });
-    
-    console.log(`Removed ${childrenToRemove.length} old name planes`); // Debug log
-    
-    // Extract player names from game data
-    const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
-    const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
-    
-    console.log(`Creating player names: ${player1Name} and ${player2Name}`); // Debug log
-    
-    // Create name planes for each futon - same logic for both
-    sceneRef.current.futonPositions.forEach(futon => {
-      const playerName = futon.index === 0 ? player1Name : player2Name;
-      const nameTexture = createNameTexture(playerName, false); // Always use same rotation
-      const nameGeometry = new THREE.BoxGeometry(3.5, 0.8, 0.3); // Much thicker box
-      
-      // Create a material with the texture only on the front face
-      const materials = [
-        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Right face - solid color
-        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Left face - solid color
-        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Top face - solid color
-        new THREE.MeshBasicMaterial({ color: 0x2a4a6b }), // Bottom face - solid color
-        new THREE.MeshBasicMaterial({ map: nameTexture, transparent: true, alphaTest: 0.1 }), // Front face - with text
-        new THREE.MeshBasicMaterial({ color: 0x2a4a6b })  // Back face - solid color
-      ];
-      const namePlane = new THREE.Mesh(nameGeometry, materials);
-      
-      // Position the name on the chair base
-      const nameY = FUTON.FRAME.Y_POSITION + 1.2; // Even higher above the frame
-      const nameZ = futon.z + (futon.rotation === 0 ? -FUTON.FRAME.DEPTH/2 + 4.5 : FUTON.FRAME.DEPTH/2 - 4.5); // Front of chair
-      namePlane.position.set(futon.x, nameY, nameZ);
-      
-      // Rotate the name to lay flat on the chair base - same for both
-      namePlane.rotation.x = -Math.PI / 2; // Lay flat (rotate 90 degrees)
-      namePlane.rotation.y = 0; // Always face the same direction
-      
-      // Add metadata for identification
-      namePlane.userData = {
-        isNamePlane: true,
-        playerName: playerName,
-        isFlipped: false, // Always false
-        playerIndex: futon.index
-      };
-      
-      sceneRef.current.add(namePlane);
-      resourcesRef.current.geometries.push(nameGeometry);
-      resourcesRef.current.materials.push(...materials); // Spread the materials array
-      resourcesRef.current.meshes.push(namePlane);
-    });
-  };
-
-  const updateNameTextures = () => {
-    // Find and update name textures if they exist
-    if (sceneRef.current && sceneRef.current.children) {
-      sceneRef.current.children.forEach(child => {
-        if (child.userData && child.userData.isNamePlane) {
-          const playerName = child.userData.playerName;
-          const isFlipped = child.userData.isFlipped;
-          const newTexture = createNameTexture(playerName, isFlipped);
-          child.material.map = newTexture;
-          child.material.needsUpdate = true;
-        }
-      });
-    }
   };
 
   const updateScoresheet = () => {
@@ -1545,6 +1776,130 @@ const Scrabble3D = () => {
         sceneRef.current.scoresheet.scores.material.map.dispose();
       }
       sceneRef.current.scoresheet.scores.material.map = newTexture;
+    }
+  };
+
+  const updateScoreboard = () => {
+    if (sceneRef.current.scoreboard && sceneRef.current.scoreboard.scoreboardDisplay) {
+      // Recreate the scoreboard texture with updated data
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // High-DPI scaling for crisp text
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = 700 * scale;
+      canvas.height = 180 * scale;
+      canvas.style.width = '700px';
+      canvas.style.height = '180px';
+      
+      ctx.scale(scale, scale);
+      
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+      gradient.addColorStop(0, '#0a0a1a');
+      gradient.addColorStop(0.5, '#1a1a3a');
+      gradient.addColorStop(1, '#0a0a1a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 700, 180);
+      
+      // Add subtle grid pattern
+      ctx.strokeStyle = '#2a2a4a';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 700; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 180);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 180; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(700, i);
+        ctx.stroke();
+      }
+      
+      // Add glowing border effect
+      ctx.strokeStyle = '#00ffff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 696, 176);
+      
+      // Add inner border
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(6, 6, 688, 168);
+      
+      // Get player names and scores
+      const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+      const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+      
+      // Calculate current scores
+      let player1Score = 0;
+      let player2Score = 0;
+      
+      if (gameData && gameData.length > 0) {
+        gameData.slice(0, currentMoveIndex + 1).forEach(move => {
+          const score = move.score || 0;
+          if (move.player === player1Name) {
+            player1Score += score;
+          } else {
+            player2Score += score;
+          }
+        });
+      }
+      
+      // Draw player 1 section (left side)
+      ctx.fillStyle = '#4ecdc4';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(player1Name, 175, 40);
+      
+      // Player 1 score with glow effect
+      ctx.shadowColor = '#4ecdc4';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText(player1Score.toString(), 175, 100);
+      
+      // Draw player 2 section (right side)
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ff6b6b';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText(player2Name, 525, 40);
+      
+      // Player 2 score with glow effect
+      ctx.shadowColor = '#ff6b6b';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText(player2Score.toString(), 525, 100);
+      
+      // Draw center divider
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(350, 20);
+      ctx.lineTo(350, 160);
+      ctx.stroke();
+      
+      // Remove VS, TURN, and Move __ labels
+      // (No ctx.fillText for those)
+      
+      // Add decorative elements
+      ctx.fillStyle = '#ffd93d';
+      ctx.font = '12px Arial';
+      
+      // Update the texture
+      const newTexture = new THREE.CanvasTexture(canvas);
+      sceneRef.current.scoreboard.scoreboardDisplay.material.map = newTexture;
+      sceneRef.current.scoreboard.scoreboardDisplay.material.needsUpdate = true;
+      
+      // Clean up old texture
+      if (sceneRef.current.scoreboard.texture) {
+        sceneRef.current.scoreboard.texture.dispose();
+      }
+      sceneRef.current.scoreboard.texture = newTexture;
     }
   };
 
