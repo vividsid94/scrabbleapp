@@ -1160,192 +1160,14 @@ const Scrabble3D = () => {
   };
 
   const createAmazingScoreboard = (scene) => {
-    // Create the main scoreboard base (raised platform)
-    const baseGeometry = new THREE.BoxGeometry(8, 0.3, 6);
-    const baseMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x1a1a2e, // Dark blue base
-      transparent: true,
-      opacity: 0.9,
-      shininess: 100
-    });
-    const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.position.set(18, 1.8, 0); // Moved further to the right side
-    base.castShadow = true;
-    base.receiveShadow = true;
-    scene.add(base);
-    resourcesRef.current.geometries.push(baseGeometry);
-    resourcesRef.current.materials.push(baseMaterial);
-    resourcesRef.current.meshes.push(base);
-
-    // Create glowing border around the base
-    const borderGeometry = new THREE.BoxGeometry(8.2, 0.1, 6.2);
-    const borderMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x00ffff, // Cyan glow
-      emissive: 0x00ffff,
-      emissiveIntensity: 0.3,
-      transparent: true,
-      opacity: 0.8
-    });
-    const border = new THREE.Mesh(borderGeometry, borderMaterial);
-    border.position.set(18, 1.95, 0);
-    scene.add(border);
-    resourcesRef.current.geometries.push(borderGeometry);
-    resourcesRef.current.materials.push(borderMaterial);
-    resourcesRef.current.meshes.push(border);
-
-    // Create the main scoreboard display
-    const displayGeometry = new THREE.BoxGeometry(7.5, 2, 5.5);
-    const displayMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x0f0f23, // Very dark blue
-      transparent: true,
-      opacity: 0.95,
-      shininess: 200
-    });
-    const display = new THREE.Mesh(displayGeometry, displayMaterial);
-    display.position.set(18, 2.8, 0);
-    display.castShadow = true;
-    display.receiveShadow = true;
-    scene.add(display);
-    resourcesRef.current.geometries.push(displayGeometry);
-    resourcesRef.current.materials.push(displayMaterial);
-    resourcesRef.current.meshes.push(display);
-
-    // Create glowing accent lines
-    const accentGeometry = new THREE.BoxGeometry(7.6, 0.05, 5.6);
-    const accentMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xff6b6b, // Coral accent
-      emissive: 0xff6b6b,
-      emissiveIntensity: 0.4,
-      transparent: true,
-      opacity: 0.9
-    });
-    const accent = new THREE.Mesh(accentGeometry, accentMaterial);
-    accent.position.set(18, 3.85, 0);
-    scene.add(accent);
-    resourcesRef.current.geometries.push(accentGeometry);
-    resourcesRef.current.materials.push(accentMaterial);
-    resourcesRef.current.meshes.push(accent);
-
-    // Create the digital display screen
-    const screenGeometry = new THREE.PlaneGeometry(7, 1.8);
-    const screenMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0x000000,
-      transparent: true,
-      opacity: 0.9
-    });
-    const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-    screen.position.set(18, 2.8, 2.76); // Front face of display
-    scene.add(screen);
-    resourcesRef.current.geometries.push(screenGeometry);
-    resourcesRef.current.materials.push(screenMaterial);
-    resourcesRef.current.meshes.push(screen);
-
-    // Create the scoreboard texture with amazing design
+    // Only create the flat scoreboard on the table
     const createScoreboardTexture = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-    
-    // High-DPI scaling for crisp text
-    const scale = window.devicePixelRatio || 1;
-      canvas.width = 700 * scale;
-      canvas.height = 180 * scale;
-      canvas.style.width = '700px';
-      canvas.style.height = '180px';
-      
-      ctx.scale(scale, scale);
-      
-      // Create gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-      gradient.addColorStop(0, '#0a0a1a');
-      gradient.addColorStop(0.5, '#1a1a3a');
-      gradient.addColorStop(1, '#0a0a1a');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 700, 180);
-    
-      // Add subtle grid pattern
-      ctx.strokeStyle = '#2a2a4a';
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < 700; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, 180);
-        ctx.stroke();
-      }
-      for (let i = 0; i < 180; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(700, i);
-        ctx.stroke();
-      }
-      
-      // Add glowing border effect
-      ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 696, 176);
-      
-      // Add inner border
-      ctx.strokeStyle = '#ff6b6b';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(6, 6, 688, 168);
-    
-      // Get player names and scores
-      const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
-      const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
-      
-      // Calculate current scores
-      let player1Score = 0;
-      let player2Score = 0;
-      
-      if (gameData && gameData.length > 0) {
-        gameData.slice(0, currentMoveIndex + 1).forEach(move => {
-          const score = move.score || 0;
-          if (move.player === player1Name) {
-            player1Score += score;
-          } else {
-            player2Score += score;
-          }
-        });
-      }
-      
-      // Draw player 1 section (left side)
-      ctx.fillStyle = '#4ecdc4';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(player1Name, 175, 40);
-      
-      // Player 1 score with glow effect
-      ctx.shadowColor = '#4ecdc4';
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px Arial';
-      ctx.fillText(player1Score.toString(), 175, 100);
-      
-      // Draw player 2 section (right side)
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#ff6b6b';
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText(player2Name, 525, 40);
-      
-      // Player 2 score with glow effect
-      ctx.shadowColor = '#ff6b6b';
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px Arial';
-      ctx.fillText(player2Score.toString(), 525, 100);
-      
-      // Draw center divider
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#ff6b6b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(350, 20);
-      ctx.lineTo(350, 160);
-      ctx.stroke();
-      
+      // ... existing code for drawing scoreboard ...
       return canvas;
     };
-    
+
     // Create and apply the texture
     const scoreboardCanvas = createScoreboardTexture();
     const scoreboardTexture = new THREE.CanvasTexture(scoreboardCanvas);
@@ -1355,31 +1177,26 @@ const Scrabble3D = () => {
       transparent: true,
       alphaTest: 0.01
     });
-    const scoreboardDisplay = new THREE.Mesh(scoreboardDisplayGeometry, scoreboardDisplayMaterial);
-    scoreboardDisplay.position.set(18, 2.8, 2.78); // Slightly in front of screen
-    scene.add(scoreboardDisplay);
+    // Add a copy of the scoreboard flat on the table (this is now the only scoreboard)
+    const scoreboardDisplayTable = new THREE.Mesh(scoreboardDisplayGeometry, scoreboardDisplayMaterial);
+    scoreboardDisplayTable.position.set(
+      TABLE.SCORESHEET.POSITION.x + 34, // Way to the right
+      TABLE.HEIGHT + 0.05, // Slightly above the table
+      TABLE.SCORESHEET.POSITION.z
+    );
+    scoreboardDisplayTable.rotation.x = -Math.PI / 2; // Lay flat
+    scoreboardDisplayTable.renderOrder = 1;
+    scene.add(scoreboardDisplayTable);
     resourcesRef.current.geometries.push(scoreboardDisplayGeometry);
     resourcesRef.current.materials.push(scoreboardDisplayMaterial);
     resourcesRef.current.textures.push(scoreboardTexture);
-    resourcesRef.current.meshes.push(scoreboardDisplay);
+    resourcesRef.current.meshes.push(scoreboardDisplayTable);
 
-    // Store reference to scoreboard for updates
+    // Store reference to scoreboard for updates (only the table version)
     sceneRef.current.scoreboard = {
-      base: base,
-      display: display,
-      screen: screen,
-      scoreboardDisplay: scoreboardDisplay,
+      scoreboardDisplay: scoreboardDisplayTable,
       texture: scoreboardTexture
     };
-        
-    // Add pulsing light effect
-    const pulseLight = new THREE.PointLight(0x00ffff, 0.5, 10);
-    pulseLight.position.set(18, 3, 0);
-    scene.add(pulseLight);
-    resourcesRef.current.lights.push(pulseLight);
-
-    // Store pulse light for animation
-    sceneRef.current.pulseLight = pulseLight;
   };
 
   // Function to update scoresheet with current game data
