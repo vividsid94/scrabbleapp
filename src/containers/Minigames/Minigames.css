@@ -108,4 +108,122 @@
 
 .bookCard::after {
   display: none;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .minigames-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 8px;
+  }
+
+  .minigames-tab {
+    font-size: 14px;
+    padding: 6px 12px;
+    margin: 0 2px;
+    min-width: 60px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bookCard {
+    width: 100%;
+    max-width: 100%;
+    margin: 5px 8px 0 8px;
+    padding: 20px 16px 20px 32px;
+    min-height: 300px;
+    border-radius: 0 12px 12px 0;
+  }
+
+  .bookCard::before {
+    left: -20px;
+    width: 32px;
+    background:
+      /* spiral rings - smaller for mobile */
+      repeating-linear-gradient(
+        #f7f7f7 0px,
+        #d9d9d9 1px,
+        #616161 4px,
+        transparent 4px,
+        transparent 8px,
+        #f7f7f7 8px,
+        #d9d9d9 9px,
+        #616161 12px,
+        transparent 12px,
+        transparent 24px
+      ) 0px 8px / 32px 100% no-repeat;
+    border-radius: 12px 0 0 12px;
+  }
+
+  /* Adjust holes for mobile */
+  .bookCard {
+    background:
+      /* holes - smaller for mobile */
+      repeating-linear-gradient(
+        to bottom,
+        #333 0px,
+        #333 12px,
+        transparent 12px,
+        transparent 28px
+      ) 6px 8px / 12px 28px repeat-y,
+      /* base color */
+      #f7f7f7;
+  }
+}
+
+@media (max-width: 480px) {
+  .minigames-tabs {
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 12px;
+  }
+
+  .minigames-tab {
+    font-size: 16px;
+    padding: 8px 16px;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .bookCard {
+    margin: 5px 12px 0 12px;
+    padding: 16px 12px 16px 24px;
+    min-height: 250px;
+  }
+
+  .bookCard::before {
+    left: -16px;
+    width: 24px;
+    background:
+      /* spiral rings - even smaller for very small screens */
+      repeating-linear-gradient(
+        #f7f7f7 0px,
+        #d9d9d9 1px,
+        #616161 3px,
+        transparent 3px,
+        transparent 6px,
+        #f7f7f7 6px,
+        #d9d9d9 7px,
+        #616161 10px,
+        transparent 10px,
+        transparent 20px
+      ) 0px 6px / 24px 100% no-repeat;
+  }
+
+  /* Adjust holes for very small screens */
+  .bookCard {
+    background:
+      /* holes - smaller for very small screens */
+      repeating-linear-gradient(
+        to bottom,
+        #333 0px,
+        #333 8px,
+        transparent 8px,
+        transparent 24px
+      ) 4px 6px / 8px 24px repeat-y,
+      /* base color */
+      #f7f7f7;
+  }
 } 

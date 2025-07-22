@@ -31,12 +31,36 @@ const Minigames = () => {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidenav />
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-        <Box sx={{ width: '100%', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+      <Box sx={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: { xs: '100%', sm: 800, md: 900 }, 
+          margin: '0 auto', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          gap: 0 
+        }}>
           <div
             className="minigames-tabs"
             ref={tabBarRef}
-            style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 0 }}
+            style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: { xs: 4, sm: 6, md: 8 }, 
+              marginBottom: 0,
+              width: '100%',
+              flexWrap: { xs: 'wrap', sm: 'nowrap' },
+              padding: { xs: '0 8px', sm: 0 }
+            }}
           >
             {MINIGAMES.map(game => (
               <button
@@ -44,10 +68,10 @@ const Minigames = () => {
                 className={`minigames-tab${selected === game.key ? ' selected' : ''}`}
                 onClick={() => setSelected(game.key)}
                 style={{
-                  height: 50,
-                  fontSize: 18,
+                  height: { xs: 40, sm: 45, md: 50 },
+                  fontSize: { xs: 14, sm: 16, md: 18 },
                   fontWeight: 700,
-                  letterSpacing: 2,
+                  letterSpacing: { xs: 1, sm: 1.5, md: 2 },
                   border: 'none',
                   borderRadius: 8,
                   color: '#fff',
@@ -60,13 +84,15 @@ const Minigames = () => {
                   outline: 'transparent',
                   position: 'relative',
                   userSelect: 'none',
-                  marginLeft: 8,
-                  marginRight: 8,
+                  marginLeft: { xs: 4, sm: 6, md: 8 },
+                  marginRight: { xs: 4, sm: 6, md: 8 },
                   marginBottom: 0,
                   cursor: 'pointer',
                   transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
                   transform: selected === game.key ? 'scale(1.04)' : 'scale(1)',
                   zIndex: selected === game.key ? 2 : 1,
+                  flex: { xs: '1 1 calc(50% - 8px)', sm: 'none' },
+                  minWidth: { xs: 'auto', sm: 'auto' }
                 }}
               >
                 {game.label}
@@ -89,7 +115,7 @@ const Minigames = () => {
           <Box
             className="bookCard"
             sx={{
-              width: tabBarWidth ? `${tabBarWidth}px` : 'auto',
+              width: { xs: '100%', sm: tabBarWidth ? `${tabBarWidth}px` : 'auto' },
               minWidth: 0,
             }}
           >

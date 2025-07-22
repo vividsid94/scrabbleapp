@@ -322,39 +322,87 @@ const JigsawPuzzle = () => {
   }, [dragged]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", minHeight: "80vh", background: "linear-gradient(135deg, #f8fafc 60%, #e0e7ef 100%)", padding: 32 }}>
+    <div style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      minHeight: "80vh", 
+      padding: 16,
+      width: '100%'
+    }}>
       {/* Control Box / Tray */}
-      <div style={{ width: pieceSize * 3 + 32, marginRight: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div>
-            <label style={{ fontWeight: 600, marginRight: 12 }}>Grid Size:</label>
-            {[3, 4, 5, 7].map(size => (
-              <button
-                key={size}
-                onClick={() => { setRows(size); setCols(size); }}
-                style={{
-                  marginRight: 8,
-                  padding: '8px 18px',
-                  fontSize: 16,
-                  borderRadius: 6,
-                  background: rows === size ? '#4ECDC4' : '#eee',
-                  color: rows === size ? '#fff' : '#333',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  boxShadow: '0 1px 4px #0001',
-                }}
-              >
-                {size} x {size}
-              </button>
-            ))}
+      <div style={{ 
+        width: '100%',
+        maxWidth: 400,
+        marginBottom: 20,
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center'
+      }}>
+        <div style={{ 
+          marginBottom: 20, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 10,
+          width: '100%'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 8,
+            alignItems: 'center'
+          }}>
+            <label style={{ 
+              fontWeight: 600, 
+              marginBottom: 4,
+              textAlign: 'center',
+              fontSize: 16
+            }}>Grid Size:</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+              {[3, 4, 5, 7].map(size => (
+                <button
+                  key={size}
+                  onClick={() => { setRows(size); setCols(size); }}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 14,
+                    borderRadius: 6,
+                    background: rows === size ? '#4ECDC4' : '#eee',
+                    color: rows === size ? '#fff' : '#333',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    boxShadow: '0 1px 4px #0001',
+                    flex: '1 1 calc(50% - 2px)'
+                  }}
+                >
+                  {size} x {size}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <label style={{ fontWeight: 600, marginRight: 12 }}>Image:</label>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 8,
+            alignItems: 'center'
+          }}>
+            <label style={{ 
+              fontWeight: 600, 
+              marginBottom: 4,
+              textAlign: 'center',
+              fontSize: 16
+            }}>Image:</label>
             <select
               value={image}
               onChange={e => setImage(e.target.value)}
-              style={{ fontSize: 16, padding: '6px 12px', borderRadius: 6 }}
+              style={{ 
+                fontSize: 14, 
+                padding: '6px 12px', 
+                borderRadius: 6,
+                width: '100%',
+                maxWidth: 200
+              }}
             >
               {images.map(img => (
                 <option key={img} value={img}>
@@ -364,7 +412,20 @@ const JigsawPuzzle = () => {
             </select>
           </div>
         </div>
-        <div ref={trayRef} style={{ minHeight: pieceSize + 20, minWidth: pieceSize * 3, background: '#f0f4f8', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24, position: 'relative' }}>
+        <div ref={trayRef} style={{ 
+          minHeight: pieceSize + 16, 
+          width: '100%',
+          maxWidth: 350,
+          background: '#f0f4f8', 
+          borderRadius: 12, 
+          boxShadow: '0 2px 8px #0001', 
+          padding: 8, 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 6, 
+          marginBottom: 20, 
+          position: 'relative' 
+        }}>
           {pieces.map((_, pieceIdx) => pieceIdx).filter(pieceIdx => !board.includes(pieceIdx)).map((pieceIdx, i) => {
             const piece = pieces[pieceIdx];
             if (!piece) return null;
@@ -373,7 +434,13 @@ const JigsawPuzzle = () => {
             return (
               <div
                 key={`tray-${piece.id}`}
-                style={{ width: pieceSize, height: pieceSize, cursor: isComplete ? 'default' : 'grab', position: 'relative' }}
+                style={{ 
+                  width: pieceSize, 
+                  height: pieceSize, 
+                  cursor: isComplete ? 'default' : 'grab', 
+                  position: 'relative',
+                  flexShrink: 0
+                }}
                 onMouseDown={e => handleTrayMouseDown(pieceIdx, e)}
               >
                 <svg
@@ -449,17 +516,63 @@ const JigsawPuzzle = () => {
             </div>
           )}
         </div>
-        <button onClick={shuffleTray} style={{ marginBottom: 12, padding: '10px 24px', fontSize: 16, borderRadius: 8, background: '#4ECDC4', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 8px #0002' }}>
-          Shuffle
-        </button>
-        <button onClick={resetPuzzle} style={{ marginBottom: 12, padding: '10px 24px', fontSize: 16, borderRadius: 8, background: '#3D5A80', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 8px #0002' }}>
-          Reset
-        </button>
-        <button onClick={() => setShowPreview(p => !p)} style={{ marginBottom: 12, padding: '10px 24px', fontSize: 16, borderRadius: 8, background: '#ffe066', color: '#333', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 8px #0002' }}>
-          {showPreview ? 'Hide' : 'Show'} Preview
-        </button>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'row', 
+          gap: 8,
+          width: '100%'
+        }}>
+          <button onClick={shuffleTray} style={{ 
+            flex: '1',
+            padding: '8px 16px', 
+            fontSize: 14, 
+            borderRadius: 8, 
+            background: '#4ECDC4', 
+            color: '#fff', 
+            border: 'none', 
+            cursor: 'pointer', 
+            fontWeight: 'bold', 
+            boxShadow: '0 2px 8px #0002' 
+          }}>
+            Shuffle
+          </button>
+          <button onClick={resetPuzzle} style={{ 
+            flex: '1',
+            padding: '8px 16px', 
+            fontSize: 14, 
+            borderRadius: 8, 
+            background: '#3D5A80', 
+            color: '#fff', 
+            border: 'none', 
+            cursor: 'pointer', 
+            fontWeight: 'bold', 
+            boxShadow: '0 2px 8px #0002' 
+          }}>
+            Reset
+          </button>
+          <button onClick={() => setShowPreview(p => !p)} style={{ 
+            flex: '1',
+            padding: '8px 16px', 
+            fontSize: 14, 
+            borderRadius: 8, 
+            background: '#ffe066', 
+            color: '#333', 
+            border: 'none', 
+            cursor: 'pointer', 
+            fontWeight: 'bold', 
+            boxShadow: '0 2px 8px #0002' 
+          }}>
+            {showPreview ? 'Hide' : 'Show'} Preview
+          </button>
+        </div>
         {isComplete && (
-          <div style={{ marginTop: 24, fontSize: 20, fontWeight: 700, color: '#4ECDC4' }}>
+          <div style={{ 
+            marginTop: 20, 
+            fontSize: 18, 
+            fontWeight: 700, 
+            color: '#4ECDC4',
+            textAlign: 'center'
+          }}>
             🎉 Puzzle Complete!
           </div>
         )}
@@ -469,13 +582,14 @@ const JigsawPuzzle = () => {
         ref={boardRef}
         style={{
           position: "relative",
-          width: cols * pieceSize,
+          width: '100%',
+          maxWidth: cols * pieceSize,
           height: rows * pieceSize,
           background: "#eee",
           borderRadius: 16,
           boxShadow: '0 2px 12px #0001',
           border: '2px solid #e0e7ef',
-          userSelect: 'none',
+          userSelect: 'none'
         }}
       >
         {/* Preview overlay */}

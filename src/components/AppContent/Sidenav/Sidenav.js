@@ -28,10 +28,12 @@ import {
   Star,
   Sun,
   Moon,
-  Cube
+  Cube,
+  PuzzlePiece
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import styles from './Sidenav.module.css';
 
@@ -232,6 +234,18 @@ export default function MiniDrawer() {
             }}>
               3D Viewer (Beta) {isCurrentPage('/3dviewer') && '✓'}
             </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/play" sx={{ 
+              backgroundColor: isCurrentPage('/play') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/play') ? '600' : '400'
+            }}>
+              Play (Beta) {isCurrentPage('/play') && '✓'}
+            </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/puzzle" sx={{ 
+              backgroundColor: isCurrentPage('/puzzle') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/puzzle') ? '600' : '400'
+            }}>
+              Puzzle (Beta) {isCurrentPage('/puzzle') && '✓'}
+            </MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
               backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
               fontWeight: isCurrentPage('/changelog') ? '600' : '400'
@@ -317,6 +331,45 @@ export default function MiniDrawer() {
                     }} 
                     weight={isCurrentPage('/3dviewer') ? "fill" : (hoveredIcon === '3d-viewer' ? "fill" : "regular")}
                     onMouseEnter={() => setHoveredIcon('3d-viewer')}
+                    onMouseLeave={() => setHoveredIcon(null)}
+                  />
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <a id="playBtn" className={styles.link} href="/play">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/play') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Play (Beta)" placement="right">
+                  <SmartToyIcon 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/play') ? '#EF4444' : (hoveredIcon === 'play' ? '#EF4444' : getTextColor()),
+                      fontSize: isCurrentPage('/play') ? '24px' : '20px'
+                    }} 
+                    onMouseEnter={() => setHoveredIcon('play')}
+                    onMouseLeave={() => setHoveredIcon(null)}
+                  />
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
+        <List className={styles.btnContainer}>
+          <a id="puzzleBtn" className={styles.link} href="/puzzle">
+            <ListItem className={`${styles.listItem} ${isCurrentPage('/puzzle') ? styles.activePage : ''}`} sx={listItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Puzzle (Beta)" placement="right">
+                  <PuzzlePiece 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: isCurrentPage('/puzzle') ? '#10B981' : getTextColor(),
+                      fontSize: isCurrentPage('/puzzle') ? '24px' : '20px'
+                    }} 
+                    weight={isCurrentPage('/puzzle') ? "fill" : (hoveredIcon === 'puzzle' ? "fill" : "regular")}
+                    onMouseEnter={() => setHoveredIcon('puzzle')}
                     onMouseLeave={() => setHoveredIcon(null)}
                   />
                 </Tooltip>
