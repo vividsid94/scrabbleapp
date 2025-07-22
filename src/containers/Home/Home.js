@@ -31,7 +31,7 @@ export default function Home(){
             color: lightMode === 'dark' ? '#fff' : '#000'
           }}
         >
-          Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check{" "}
+          Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check the{" "}
           <Link to="/changelog" style={{
             color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
             textDecoration: 'none', 
