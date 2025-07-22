@@ -22,142 +22,186 @@ const WORDS = [
   { word: 'HELP', clue: 'Assistance.' },
   { word: 'PLAY', clue: 'To engage in a game.' },
   { word: 'RULE', clue: 'A principle governing conduct.' },
-  { word: 'TESS', clue: 'Your friendly fox mascot.' },
-  { word: 'SID', clue: 'The creator of this site.' },
-  { word: 'THEO', clue: 'Another mascot fox.' },
-  { word: 'ICON', clue: 'A small graphic symbol.' },
-  { word: 'IMAGE', clue: 'A visual representation.' },
-  { word: 'CARD', clue: 'A piece used in memory games.' },
-  { word: 'PAIR', clue: 'Two of a kind.' },
-  { word: 'HOME', clue: 'Where you live.' },
-  { word: 'ABOUT', clue: 'Information section.' },
-  { word: 'MENU', clue: 'A list of options.' },
+  { word: 'CAT', clue: 'Feline pet.' },
+  { word: 'DOG', clue: 'Canine companion.' },
+  { word: 'SUN', clue: 'Star in our solar system.' },
+  { word: 'MOON', clue: 'Earth\'s natural satellite.' },
+  { word: 'TREE', clue: 'Woody plant.' },
+  { word: 'BOOK', clue: 'Collection of pages.' },
+  { word: 'FIRE', clue: 'Hot flames.' },
+  { word: 'WATER', clue: 'Clear liquid.' },
+  { word: 'HOUSE', clue: 'Place to live.' },
+  { word: 'PHONE', clue: 'Communication device.' },
 ];
 
 const GRID_SIZE = 13;
-
-// Directions
 const ACROSS = 0;
 const DOWN = 1;
 
 function getRandomWords(n) {
-  const shuffled = WORDS.sort(() => 0.5 - Math.random());
+  const shuffled = [...WORDS].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, n);
 }
 
-// Backtracking crossword generator with localGrid to avoid shadowing state
 function generateCrossword(words) {
+  // Initialize empty grid
+  let grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
+  let placed = [];
+  let wordNumber = 1;
+
+  // Sort words by length for better placement
   const sortedWords = [...words].sort((a, b) => b.word.length - a.word.length);
-  let bestPlaced = [];
-  let bestGrid = [];
+  
+  console.log('Starting crossword generation with words:', sortedWords.map(w => w.word));
 
-  function cloneGrid(localGrid) {
-    return localGrid.map(row => row.map(cell => (cell ? { ...cell } : null)));
+  // Place first word horizontally in center
+  const firstWord = sortedWords[0];
+  const startRow = Math.floor(GRID_SIZE / 2);
+  const startCol = Math.floor((GRID_SIZE - firstWord.word.length) / 2);
+  
+  // Place first word
+  for (let i = 0; i < firstWord.word.length; i++) {
+    grid[startRow][startCol + i] = {
+      letter: firstWord.word[i],
+      userLetter: '',
+      number: i === 0 ? wordNumber : undefined
+    };
   }
+  
+  placed.push({
+    word: firstWord.word,
+    clue: firstWord.clue,
+    row: startRow,
+    col: startCol,
+    dir: ACROSS,
+    num: wordNumber++
+  });
 
-  function canPlace(localGrid, word, row, col, dir) {
-    if (dir === ACROSS && col + word.length > GRID_SIZE) return false;
-    if (dir === DOWN && row + word.length > GRID_SIZE) return false;
-    for (let k = 0; k < word.length; k++) {
-      const r = dir === ACROSS ? row : row + k;
-      const c = dir === ACROSS ? col + k : col;
-      const cell = localGrid[r][c];
-      if (cell && cell.letter !== word[k]) return false;
-      // Don't allow adjacent words (classic rule)
-      if (dir === ACROSS) {
-        if (r > 0 && localGrid[r - 1][c]) return false;
-        if (r < GRID_SIZE - 1 && localGrid[r + 1][c]) return false;
-      } else {
-        if (c > 0 && localGrid[r][c - 1]) return false;
-        if (c < GRID_SIZE - 1 && localGrid[r][c + 1]) return false;
-      }
-    }
-    return true;
-  }
+  console.log('Placed first word:', firstWord.word);
 
-  function placeWord(localGrid, word, row, col, dir, wordNum) {
-    for (let k = 0; k < word.length; k++) {
-      const r = dir === ACROSS ? row : row + k;
-      const c = dir === ACROSS ? col + k : col;
-      if (!localGrid[r][c]) localGrid[r][c] = { letter: word[k], userLetter: '' };
-      if (k === 0) localGrid[r][c].number = wordNum;
-    }
-  }
+  // Try to place remaining words
+  for (let wordIdx = 1; wordIdx < sortedWords.length && wordIdx < 8; wordIdx++) {
+    const currentWord = sortedWords[wordIdx];
+    let bestPlacement = null;
+    let maxIntersections = 0;
 
-  function removeWord(localGrid, word, row, col, dir) {
-    for (let k = 0; k < word.length; k++) {
-      const r = dir === ACROSS ? row : row + k;
-      const c = dir === ACROSS ? col + k : col;
-      // Only remove if this cell is not shared with another word
-      let shared = false;
-      for (let d = 0; d < word.length; d++) {
-        if (d === k) continue;
-        const rr = dir === ACROSS ? row : row + d;
-        const cc = dir === ACROSS ? col + d : col;
-        if (rr === r && cc === c) shared = true;
-      }
-      if (!shared) localGrid[r][c] = null;
-    }
-  }
+    console.log('Trying to place word:', currentWord.word);
 
-  function search(localGrid, placed, used, wordNum) {
-    if (placed.length > bestPlaced.length) {
-      bestPlaced = placed.map(w => ({ ...w }));
-      bestGrid = cloneGrid(localGrid);
-    }
-    if (used.length === sortedWords.length) return;
-    for (let w = 0; w < sortedWords.length; w++) {
-      if (used.includes(w)) continue;
-      const word = sortedWords[w].word;
-      let placedWord = false;
-      // Try all possible positions and directions
-      for (let dir of [ACROSS, DOWN]) {
-        for (let row = 0; row < GRID_SIZE; row++) {
-          for (let col = 0; col < GRID_SIZE; col++) {
-            // If not first word, must cross an existing letter
-            if (placed.length > 0) {
-              let crosses = false;
-              for (let k = 0; k < word.length; k++) {
-                const r = dir === ACROSS ? row : row + k;
-                const c = dir === ACROSS ? col + k : col;
-                if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) continue;
-                if (localGrid[r][c] && localGrid[r][c].letter === word[k]) crosses = true;
+    // Try both directions
+    for (let direction of [ACROSS, DOWN]) {
+      // Try every position on the grid
+      for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+          
+          // Check if word fits in bounds
+          if (direction === ACROSS && col + currentWord.word.length > GRID_SIZE) continue;
+          if (direction === DOWN && row + currentWord.word.length > GRID_SIZE) continue;
+
+          // Check if this placement is valid
+          let intersections = 0;
+          let canPlace = true;
+          let hasIntersection = false;
+
+          for (let i = 0; i < currentWord.word.length; i++) {
+            const r = direction === ACROSS ? row : row + i;
+            const c = direction === ACROSS ? col + i : col;
+            
+            const cell = grid[r][c];
+            
+            if (cell !== null) {
+              // Cell is occupied
+              if (cell.letter === currentWord.word[i]) {
+                // Valid intersection
+                intersections++;
+                hasIntersection = true;
+              } else {
+                // Invalid intersection
+                canPlace = false;
+                break;
               }
-              if (!crosses) continue;
+            } else {
+              // Cell is empty - check surroundings to avoid creating invalid words
+              const adjacentCells = [];
+              
+              if (direction === ACROSS) {
+                // Check above and below for vertical words
+                if (r > 0) adjacentCells.push(grid[r - 1][c]);
+                if (r < GRID_SIZE - 1) adjacentCells.push(grid[r + 1][c]);
+              } else {
+                // Check left and right for horizontal words
+                if (c > 0) adjacentCells.push(grid[r][c - 1]);
+                if (c < GRID_SIZE - 1) adjacentCells.push(grid[r][c + 1]);
+              }
+              
+              // Only allow adjacent letters at intersection points
+              for (let adj of adjacentCells) {
+                if (adj !== null) {
+                  canPlace = false;
+                  break;
+                }
+              }
+              
+              if (!canPlace) break;
             }
-            if (canPlace(localGrid, word, row, col, dir)) {
-              placeWord(localGrid, word, row, col, dir, wordNum);
-              placed.push({ ...sortedWords[w], row, col, dir, num: wordNum });
-              search(localGrid, placed, [...used, w], wordNum + 1);
-              placed.pop();
-              removeWord(localGrid, word, row, col, dir);
-              placedWord = true;
+          }
+
+          // Check that we don't extend existing words
+          if (canPlace) {
+            if (direction === ACROSS) {
+              if (col > 0 && grid[row][col - 1] !== null) canPlace = false;
+              if (col + currentWord.word.length < GRID_SIZE && grid[row][col + currentWord.word.length] !== null) canPlace = false;
+            } else {
+              if (row > 0 && grid[row - 1][col] !== null) canPlace = false;
+              if (row + currentWord.word.length < GRID_SIZE && grid[row + currentWord.word.length][col] !== null) canPlace = false;
             }
+          }
+
+          // Must have at least one intersection (except first word)
+          if (canPlace && hasIntersection && intersections > maxIntersections) {
+            maxIntersections = intersections;
+            bestPlacement = { row, col, direction, intersections };
           }
         }
       }
-      if (!placedWord && placed.length === 0) return; // If first word can't be placed, stop
     }
-  }
 
-  // Start with empty grid and no placed words
-  for (let dir of [ACROSS, DOWN]) {
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        const localGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
-        if (canPlace(localGrid, sortedWords[0].word, row, col, dir)) {
-          placeWord(localGrid, sortedWords[0].word, row, col, dir, 1);
-          search(localGrid, [{ ...sortedWords[0], row, col, dir, num: 1 }], [0], 2);
-          // No need to removeWord here since localGrid is recreated each time
+    // Place the word if we found a good spot
+    if (bestPlacement) {
+      console.log(`Placing word ${currentWord.word} at row ${bestPlacement.row}, col ${bestPlacement.col}, direction ${bestPlacement.direction}, intersections: ${bestPlacement.intersections}`);
+      
+      for (let i = 0; i < currentWord.word.length; i++) {
+        const r = bestPlacement.direction === ACROSS ? bestPlacement.row : bestPlacement.row + i;
+        const c = bestPlacement.direction === ACROSS ? bestPlacement.col + i : bestPlacement.col;
+        
+        if (grid[r][c] === null) {
+          grid[r][c] = {
+            letter: currentWord.word[i],
+            userLetter: '',
+            number: i === 0 ? wordNumber : undefined
+          };
+        } else {
+          // This is an intersection - add number if it's the start of the word
+          if (i === 0) {
+            grid[r][c].number = wordNumber;
+          }
         }
       }
+      
+      placed.push({
+        word: currentWord.word,
+        clue: currentWord.clue,
+        row: bestPlacement.row,
+        col: bestPlacement.col,
+        dir: bestPlacement.direction,
+        num: wordNumber++
+      });
+    } else {
+      console.log(`Could not place word: ${currentWord.word}`);
     }
   }
-  return { grid: bestGrid, placed: bestPlaced };
-}
 
-function getCellNumber(grid, row, col) {
-  return grid[row][col] && grid[row][col].number ? grid[row][col].number : undefined;
+  console.log('Final placed words:', placed.length);
+  return { grid, placed };
 }
 
 export default function Crossword() {
@@ -168,69 +212,140 @@ export default function Crossword() {
   const [win, setWin] = useState(false);
 
   const newPuzzle = () => {
-    const words = getRandomWords(20);
+    const words = getRandomWords(12);
     const { grid, placed } = generateCrossword(words);
     setGrid(grid);
     setPlaced(placed);
     setUserGrid(grid.map(row => row.map(cell => cell ? { ...cell, userLetter: '' } : null)));
     setSelectedCell(null);
     setWin(false);
+    console.log(`Generated puzzle with ${placed.length} words`);
   };
 
   useEffect(() => {
     newPuzzle();
-    // eslint-disable-next-line
   }, []);
 
   // Check for win
   useEffect(() => {
     if (!userGrid.length || !grid.length) return;
+    
+    let allFilled = true;
     for (let r = 0; r < GRID_SIZE; r++) {
       for (let c = 0; c < GRID_SIZE; c++) {
-        if (grid[r] && grid[r][c] && grid[r][c].letter !== userGrid[r][c].userLetter.toUpperCase()) return;
+        if (grid[r] && grid[r][c]) {
+          if (grid[r][c].letter !== userGrid[r][c].userLetter.toUpperCase()) {
+            allFilled = false;
+            break;
+          }
+        }
       }
+      if (!allFilled) break;
     }
-    setWin(true);
+    
+    setWin(allFilled);
   }, [userGrid, grid]);
 
   const handleCellClick = (row, col) => {
-    if (!grid[row][col]) return;
+    if (!grid[row] || !grid[row][col]) return;
     setSelectedCell({ row, col });
   };
 
   const handleInput = (e) => {
     if (!selectedCell) return;
     const { row, col } = selectedCell;
+    
+    if (e.key === 'Backspace') {
+      setUserGrid(prev => {
+        const newGrid = prev.map(rowArr => rowArr.map(cell => cell ? { ...cell } : null));
+        if (newGrid[row] && newGrid[row][col]) {
+          newGrid[row][col].userLetter = '';
+        }
+        return newGrid;
+      });
+      return;
+    }
+    
     const val = e.key.length === 1 ? e.key.toUpperCase() : '';
     if (!/^[A-Z]$/.test(val)) return;
+    
     setUserGrid(prev => {
       const newGrid = prev.map(rowArr => rowArr.map(cell => cell ? { ...cell } : null));
-      newGrid[row][col].userLetter = val;
+      if (newGrid[row] && newGrid[row][col]) {
+        newGrid[row][col].userLetter = val;
+      }
       return newGrid;
     });
+    
     // Move to next cell in the same word if possible
-    const word = placed.find(w => w.row === row && w.col === col && grid[row][col].number === w.num);
-    if (word) {
+    const currentWord = placed.find(w => {
+      const inRange = w.dir === ACROSS 
+        ? (row === w.row && col >= w.col && col < w.col + w.word.length)
+        : (col === w.col && row >= w.row && row < w.row + w.word.length);
+      return inRange;
+    });
+    
+    if (currentWord) {
       let nextRow = row, nextCol = col;
-      if (word.dir === ACROSS) nextCol++;
-      else nextRow++;
-      if (nextRow < GRID_SIZE && nextCol < GRID_SIZE && grid[nextRow][nextCol]) {
+      if (currentWord.dir === ACROSS) {
+        nextCol++;
+      } else {
+        nextRow++;
+      }
+      
+      if (nextRow < GRID_SIZE && nextCol < GRID_SIZE && 
+          grid[nextRow] && grid[nextRow][nextCol]) {
         setSelectedCell({ row: nextRow, col: nextCol });
       }
     }
   };
 
-  // Clues
-  const acrossClues = placed.filter(w => w.dir === ACROSS).map(w => ({ num: w.num, clue: w.clue }));
-  const downClues = placed.filter(w => w.dir === DOWN).map(w => ({ num: w.num, clue: w.clue }));
+  // Generate clues
+  const acrossClues = placed
+    .filter(w => w.dir === ACROSS)
+    .sort((a, b) => a.num - b.num)
+    .map(w => ({ num: w.num, clue: w.clue }));
+    
+  const downClues = placed
+    .filter(w => w.dir === DOWN)
+    .sort((a, b) => a.num - b.num)
+    .map(w => ({ num: w.num, clue: w.clue }));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', padding: '20px' }}>
       <h2 style={{ fontWeight: 800, fontSize: 32, margin: '0 0 18px 0', letterSpacing: 1 }}>Mini Crossword</h2>
-      <button onClick={newPuzzle} style={{ marginBottom: 18, padding: '10px 28px', fontSize: 18, borderRadius: 8, background: '#4ECDC4', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 8px #0002' }}>New Puzzle</button>
-      <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', width: '100%', justifyContent: 'center' }}>
+      <button 
+        onClick={newPuzzle} 
+        style={{ 
+          marginBottom: 18, 
+          padding: '10px 28px', 
+          fontSize: 18, 
+          borderRadius: 8, 
+          background: '#4ECDC4', 
+          color: '#fff', 
+          border: 'none', 
+          cursor: 'pointer', 
+          fontWeight: 'bold', 
+          boxShadow: '0 2px 8px #0002' 
+        }}
+      >
+        New Puzzle ({placed.length} words)
+      </button>
+      
+      <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
         {/* Grid */}
-        <table style={{ borderCollapse: 'collapse', background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #0001', border: '2px solid #e0e7ef', fontSize: 22, fontWeight: 700, letterSpacing: 2, userSelect: 'none' }}
+        <table 
+          style={{ 
+            borderCollapse: 'collapse', 
+            background: '#fff', 
+            borderRadius: 16, 
+            boxShadow: '0 2px 12px #0001', 
+            border: '2px solid #e0e7ef', 
+            fontSize: 22, 
+            fontWeight: 700, 
+            letterSpacing: 2, 
+            userSelect: 'none' 
+          }}
           tabIndex={0}
           onKeyDown={handleInput}
         >
@@ -242,8 +357,14 @@ export default function Crossword() {
                     key={c}
                     onClick={() => handleCellClick(r, c)}
                     style={{
-                      width: 36, height: 36, textAlign: 'center', border: '1px solid #e0e7ef', borderRadius: 6,
-                      background: cell ? (selectedCell && selectedCell.row === r && selectedCell.col === c ? '#ffe066' : '#f8fafc') : '#bbb',
+                      width: 36, 
+                      height: 36, 
+                      textAlign: 'center', 
+                      border: '1px solid #e0e7ef', 
+                      borderRadius: 6,
+                      background: cell 
+                        ? (selectedCell && selectedCell.row === r && selectedCell.col === c ? '#ffe066' : '#f8fafc') 
+                        : '#bbb',
                       color: cell ? '#222' : '#888',
                       cursor: cell ? 'pointer' : 'default',
                       position: 'relative',
@@ -254,7 +375,16 @@ export default function Crossword() {
                     }}
                   >
                     {cell && cell.number && (
-                      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 10, color: '#3D5A80', fontWeight: 800 }}>{cell.number}</span>
+                      <span style={{ 
+                        position: 'absolute', 
+                        top: 2, 
+                        left: 4, 
+                        fontSize: 10, 
+                        color: '#3D5A80', 
+                        fontWeight: 800 
+                      }}>
+                        {cell.number}
+                      </span>
                     )}
                     {cell && cell.userLetter}
                   </td>
@@ -263,27 +393,55 @@ export default function Crossword() {
             ))}
           </tbody>
         </table>
+        
         {/* Clues */}
-        <div style={{ minWidth: 260, background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #0001', border: '2px solid #e0e7ef', padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: '#3D5A80' }}>Across</div>
-          {acrossClues.map(({ num, clue }) => (
-            <div key={num} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-              <span style={{ color: '#4ECDC4', fontWeight: 800 }}>{num}.</span> {clue}
-            </div>
-          ))}
-          <div style={{ fontWeight: 700, fontSize: 18, margin: '16px 0 8px 0', color: '#3D5A80' }}>Down</div>
-          {downClues.map(({ num, clue }) => (
-            <div key={num} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-              <span style={{ color: '#3D5A80', fontWeight: 800 }}>{num}.</span> {clue}
-            </div>
-          ))}
+        <div style={{ 
+          minWidth: 260, 
+          background: '#fff', 
+          borderRadius: 16, 
+          boxShadow: '0 2px 12px #0001', 
+          border: '2px solid #e0e7ef', 
+          padding: 24, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 18,
+          maxHeight: '500px',
+          overflowY: 'auto'
+        }}>
+          {acrossClues.length > 0 && (
+            <>
+              <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: '#3D5A80' }}>Across</div>
+              {acrossClues.map(({ num, clue }) => (
+                <div key={`across-${num}`} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
+                  <span style={{ color: '#4ECDC4', fontWeight: 800 }}>{num}.</span> {clue}
+                </div>
+              ))}
+            </>
+          )}
+          
+          {downClues.length > 0 && (
+            <>
+              <div style={{ fontWeight: 700, fontSize: 18, margin: '16px 0 8px 0', color: '#3D5A80' }}>Down</div>
+              {downClues.map(({ num, clue }) => (
+                <div key={`down-${num}`} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
+                  <span style={{ color: '#3D5A80', fontWeight: 800 }}>{num}.</span> {clue}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
+      
       {win && (
         <div style={{ marginTop: 32, fontSize: 28, fontWeight: 700, color: '#4ECDC4' }}>
           🎉 You solved the crossword!
         </div>
-      )}
+        )}
+      
+      {/* Debug info */}
+      <div style={{ marginTop: 20, fontSize: 12, color: '#666' }}>
+        Debug: Check browser console for placement details
+      </div>
     </div>
   );
-} 
+}
