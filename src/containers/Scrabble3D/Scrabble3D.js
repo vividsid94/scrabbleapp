@@ -5,7 +5,9 @@ import styles from './Scrabble3D.module.css';
 import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
 import { createRack } from '../../functions/rackFunctions';
-import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
+import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
+import { extractLocation } from '../../functions/boardFunctions';
+import { handleMove } from '../../functions/moveHandlers';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Play,
@@ -118,9 +120,10 @@ const Scrabble3D = () => {
   const controlsRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Game state
+  // Game state - exactly like viewer
   const [gameData, setGameData] = useState(null);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // Start at -1 like viewer (empty board)
+  const [previousMoveIndex, setPreviousMoveIndex] = useState(-1); // Track previous move for direction
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(GAME.PLAYBACK_SPEEDS.NORMAL); // ms per move
   const [boardState, setBoardState] = useState([]);
@@ -129,6 +132,13 @@ const Scrabble3D = () => {
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
+  
+  // Additional state needed for moveHandlers (like viewer)
+  const [boardCoords, setBoardCoords] = useState([]);
+  const [currentMoveCoords, setCurrentMoveCoords] = useState([]);
+  const [player1points, setPlayer1points] = useState(0);
+  const [player2points, setPlayer2points] = useState(0);
+  const [pointsScored, setPointsScored] = useState(0);
 
   // Store references to all created resources for cleanup
   const resourcesRef = useRef({
@@ -379,6 +389,27 @@ const Scrabble3D = () => {
     checkAndPreloadTextures();
   }, []);
 
+  // handleMoveWrapper - exactly like viewer
+  const handleMoveWrapper = (superLastMove, lastMove, thisMove, nextMove, type) => {
+    const state = {
+      setBoardCoords,
+      setCurrentMoveCoords,
+      setPlayer1points,
+      setPlayer2points,
+      setPointsScored,
+      boardCoords,
+      origBoard
+    };
+    
+    // Calculate move indices - these are now just the move indices directly
+    const superLastMoveIndex = superLastMove !== null && superLastMove !== undefined ? superLastMove : -1;
+    const lastMoveIndex = lastMove !== null && lastMove !== undefined ? lastMove : -1;
+    const thisMoveIndex = thisMove !== null && thisMove !== undefined ? thisMove : -1;
+    const nextMoveIndex = nextMove !== null && nextMove !== undefined ? nextMove : -1;
+    
+    handleMove(superLastMoveIndex, lastMoveIndex, thisMoveIndex, nextMoveIndex, type, state, gameData);
+  };
+
   // Load game data
   useEffect(() => {
     const loadGame = async () => {
@@ -397,9 +428,10 @@ const Scrabble3D = () => {
           console.log('Parsed moves:', parsedMoves); // Debug parsed moves
           setGameData(parsedMoves);
           
-          // Initialize board state
-          const initialBoard = JSON.parse(origBoard).map(row => row.map(Number));
-          setBoardState(initialBoard);
+          // Initialize board state exactly like viewer
+          const initialBoard = JSON.parse(origBoard);
+          setBoardCoords(initialBoard);
+          setBoardState(initialBoard.map(row => row.map(Number)));
         }
       } catch (error) {
         console.error('Failed to load game:', error);
@@ -411,10 +443,9 @@ const Scrabble3D = () => {
     loadGame();
   }, [gameId]); // Add gameId as dependency
 
-  // Update board when move changes
+  // Update board when move changes - exactly like viewer
   useEffect(() => {
     if (gameData && gameData.length > 0 && sceneRef.current) {
-      updateBoardToMove(currentMoveIndex);
       updateScoresheet(); // Update scoresheet with current game state
       createPlayerNames(); // Create player names with current game data
       setNeedsRender(true); // Trigger render after board update
@@ -424,7 +455,14 @@ const Scrabble3D = () => {
         rendererRef.current.shadowMap.needsUpdate = true;
       }
     }
-  }, [currentMoveIndex, gameData]);
+  }, [currentMoveIndex, gameData]); // Remove boardCoords dependency
+
+  // Watch for boardCoords changes and update 3D tiles
+  useEffect(() => {
+    if (boardCoords.length > 0 && sceneRef.current) {
+      update3DTilesFromBoardCoords();
+    }
+  }, [boardCoords]);
 
   // Auto-play functionality
   useEffect(() => {
@@ -933,10 +971,10 @@ const Scrabble3D = () => {
     }
   };
 
-  const updateBoardToMove = (moveIndex) => {
-    if (!gameData || !sceneRef.current) return;
+  const update3DTilesFromBoardCoords = () => {
+    if (!sceneRef.current) return;
 
-    console.log(`Updating to move ${moveIndex}, total moves: ${gameData.length}`);
+    console.log('Updating 3D tiles from boardCoords:', boardCoords);
 
     // Clear existing tiles and dispose their resources
     tiles.forEach(tile => {
@@ -963,107 +1001,88 @@ const Scrabble3D = () => {
     });
     setTiles([]);
 
-    // Start with a fresh board
-    const newBoard = JSON.parse(origBoard).map(row => row.map(Number));
+    // Create new 3D tiles from the updated boardCoords
     const newTiles = [];
-
-    // Apply moves one by one, building up the board state
-    for (let i = 0; i <= moveIndex && i < gameData.length; i++) {
-      const move = gameData[i];
-      console.log(`Processing move ${i}:`, move);
-      if (move && move.word && move.word !== "--" && move.location) {
-        const moveTiles = applyMoveToBoard(newBoard, move, i);
-        newTiles.push(...moveTiles);
-      }
-    }
-
-    setBoardState(newBoard);
-    setTiles(newTiles);
-
-    // Update rack tiles for both players
-    if (moveIndex < gameData.length) {
-      const currentMove = gameData[moveIndex];
-      if (currentMove && currentMove.player) {
-        // Get actual rack from parsed moves (after the move was made)
-        const actualRack = createRack(moveIndex + 1, gameData);
-        
-        if (actualRack && actualRack.length > 0) {
-          // Determine which player is currently active (next to play)
-          // Josh = player 1 (bottom), Noah = player 2 (top)
-          const nextPlayer = currentMove.player === 'Josh' ? 2 : 1;
-          
-          // Clear both racks first
-          updateRackTiles(1, []);
-          updateRackTiles(2, []);
-          
-          // Show rack for the player whose turn it is
-          updateRackTiles(nextPlayer, actualRack);
+    for (let row = 0; row < 15; row++) {
+      for (let col = 0; col < 15; col++) {
+        const cellValue = boardCoords[row][col];
+        if (typeof cellValue === 'string' && cellValue.length === 1) {
+          // This is a letter tile
+          const tile = createTile(cellValue, row, col, 'Unknown', 0);
+          newTiles.push(tile);
+          sceneRef.current.add(tile);
+          resourcesRef.current.meshes.push(tile);
         }
       }
     }
+    setTiles(newTiles);
   };
 
-  const applyMoveToBoard = (board, move, moveIndex) => {
-    const tiles = [];
-    const { location, word, player } = move;
+  const updateRackTilesForMove = (moveIndex) => {
+    if (!gameData || moveIndex < 0) return;
+
+    // Get actual rack from parsed moves (after the move was made)
+    const actualRack = createRack(moveIndex + 1, gameData);
     
-    console.log(`Applying move: word="${word}", location="${location}", player=${player}`);
-    
-    // Parse location - handle both "H7" and "7H" formats
-    let locationParts = location.match(/([A-O])(\d+)/); // Letter first: "H7"
-    let col, row, direction;
-    
-    if (locationParts) {
-      // Format: "H7" (letter first, then number) = VERTICAL play
-      col = locationParts[1].charCodeAt(0) - 65; // A=0, B=1, etc.
-      row = parseInt(locationParts[2]) - 1;
-      direction = 'vertical';
+    if (actualRack && actualRack.length > 0) {
+      // Determine which player is currently active (next to play)
+      // Josh = player 1 (bottom), Noah = player 2 (top)
+      const currentMove = gameData[moveIndex];
+      const nextPlayer = currentMove && currentMove.player === 'Josh' ? 2 : 1;
+      
+      // Clear both racks first
+      updateRackTiles(1, []);
+      updateRackTiles(2, []);
+      
+      // Show rack for the player whose turn it is
+      updateRackTiles(nextPlayer, actualRack);
     } else {
-      // Try format: "7H" (number first, then letter) = HORIZONTAL play
-      locationParts = location.match(/(\d+)([A-O])/);
-      if (locationParts) {
-        row = parseInt(locationParts[1]) - 1;
-        col = locationParts[2].charCodeAt(0) - 65; // A=0, B=1, etc.
-        direction = 'horizontal';
-      } else {
-        console.log('Failed to parse location:', location);
-        return tiles;
-      }
+      // Clear both racks if no rack available
+      updateRackTiles(1, []);
+      updateRackTiles(2, []);
     }
-    
-    console.log(`Parsed location: row=${row}, col=${col}, direction=${direction}`);
-    
-    console.log(`Direction: ${direction}, word length: ${word.length}`);
-
-    // Place each letter
-    for (let i = 0; i < word.length; i++) {
-      const letter = word[i];
-      let tileRow, tileCol;
-
-      if (direction === 'horizontal') {
-        tileRow = row;
-        tileCol = col + i;
-      } else {
-        tileRow = row + i;
-        tileCol = col;
-      }
-
-      // Only place tile if position is empty (0) or has a multiplier (1-4)
-      // Board values: 0=empty, 1=double letter, 2=triple letter, 3=double word, 4=triple word
-      if (board[tileRow][tileCol] <= 4) {
-        board[tileRow][tileCol] = letter;
-        
-        const tile = createTile(letter, tileRow, tileCol, player, moveIndex);
-        tiles.push(tile);
-        sceneRef.current.add(tile);
-        resourcesRef.current.meshes.push(tile);
-      } else {
-        console.log(`Position (${tileRow}, ${tileCol}) already occupied with letter: ${board[tileRow][tileCol]}`);
-      }
-    }
-
-    return tiles;
   };
+
+  const updateBoardToMove = (moveIndex) => {
+    if (!gameData) return;
+
+    console.log(`Updating to move ${moveIndex}, previous was ${previousMoveIndex}, total moves: ${gameData.length}`);
+
+    // Determine if we're going forward or backward
+    const isGoingForward = moveIndex > previousMoveIndex;
+    const isGoingBackward = moveIndex < previousMoveIndex;
+    
+    if (isGoingBackward) {
+      // Going backward - we need to handle removal properly
+      console.log('Going backward - handling removal');
+      
+      // Reset board to initial state
+      setBoardCoords(JSON.parse(origBoard));
+      setPlayer1points(0);
+      setPlayer2points(0);
+      setPointsScored(0);
+      
+      // Apply moves up to the target move index
+      for (let i = 0; i <= moveIndex; i++) {
+        handleMoveWrapper(i - 2, i - 1, i, i + 1, "next");
+      }
+    } else {
+      // Going forward - apply moves from current position to target
+      console.log('Going forward - applying moves');
+      
+      for (let i = previousMoveIndex + 1; i <= moveIndex; i++) {
+        handleMoveWrapper(i - 2, i - 1, i, i + 1, "next");
+      }
+    }
+
+    // Update previous move index
+    setPreviousMoveIndex(moveIndex);
+
+    // Update rack tiles for both players
+    updateRackTilesForMove(moveIndex);
+  };
+
+
 
   const canPlaceWordHorizontally = (board, row, col, word) => {
     // Check if word can fit horizontally
@@ -1717,19 +1736,56 @@ const Scrabble3D = () => {
 
   const handleNextMove = () => {
     if (gameData && currentMoveIndex < gameData.length - 1) {
-      setCurrentMoveIndex(currentMoveIndex + 1);
+      const newIndex = currentMoveIndex + 1;
+      setCurrentMoveIndex(newIndex);
+      
+      // Use "next" type like viewer
+      handleMoveWrapper(
+        newIndex - 2,
+        newIndex - 1,
+        newIndex,
+        newIndex + 1,
+        "next"
+      );
+      
+      // Update rack tiles
+      updateRackTilesForMove(newIndex);
     }
   };
 
   const handlePrevMove = () => {
     if (currentMoveIndex > 0) {
-      setCurrentMoveIndex(currentMoveIndex - 1);
+      const newIndex = currentMoveIndex - 1;
+      setCurrentMoveIndex(newIndex);
+      
+      // Use "previous" type like viewer
+      handleMoveWrapper(
+        newIndex - 2,
+        newIndex - 1,
+        newIndex,
+        newIndex + 1,
+        "previous"
+      );
+      
+      // Update rack tiles
+      updateRackTilesForMove(newIndex);
     }
   };
 
   const handleReset = () => {
-    setCurrentMoveIndex(0);
+    setCurrentMoveIndex(-1); // Reset to -1 like viewer (empty board)
+    setPreviousMoveIndex(-1);
     setIsPlaying(false);
+    
+    // Reset board to initial state
+    setBoardCoords(JSON.parse(origBoard));
+    setPlayer1points(0);
+    setPlayer2points(0);
+    setPointsScored(0);
+    
+    // Clear rack tiles
+    updateRackTiles(1, []);
+    updateRackTiles(2, []);
   };
 
   const resetCamera = () => {
