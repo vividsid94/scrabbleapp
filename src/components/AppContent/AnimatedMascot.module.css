@@ -1,0 +1,45 @@
+.mascot {
+  width: 220px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  will-change: opacity, transform;
+}
+.fadeIn {
+  opacity: 1;
+  transform: scale(1.08) rotate(-2deg);
+}
+.fadeOut {
+  opacity: 0;
+  transform: scale(0.92) rotate(2deg);
+}
+
+.stencilBackground {
+  width: 220px;
+  height: auto;
+  opacity: 0.10;
+  filter: grayscale(1) contrast(200%) brightness(0.5);
+  pointer-events: none;
+  animation: stencilPulse 4s ease-in-out infinite;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 0 auto;
+}
+
+.stencilEffect {
+  opacity: 0.10;
+  filter: grayscale(1) contrast(200%) brightness(0.5);
+  animation: stencilPulse 4s ease-in-out infinite;
+  transition: opacity 0.3s, filter 0.3s;
+}
+
+@keyframes stencilFloat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1.1) translateX(0px); }
+  50% { transform: translate(-50%, -50%) scale(1.1) translateX(15px); }
+}
+
+@keyframes stencilPulse {
+  0%, 100% { opacity: 0.10; filter: grayscale(1) contrast(200%) brightness(0.5); }
+  50% { opacity: 0.20; filter: grayscale(1) contrast(250%) brightness(0.6); }
+} 

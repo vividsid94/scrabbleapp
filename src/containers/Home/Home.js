@@ -5,6 +5,7 @@ import styles from './Home.module.css';
 import { Rocket } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { ThemeContext } from '../../App';
+import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
@@ -14,18 +15,15 @@ export default function Home(){
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
       <Box className={styles.page}>
-        <Box 
-          className={styles.title}
-          style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
-        >
-          <Box className={styles.titleContainer}>
-            <img 
-              src="/images/theomascot.png" 
-              alt="Tile Turnover Mascot" 
-              className={styles.stencilBackground}
-            />
+        <Box className={styles.heroContainer}>
+          <Box className={styles.mascotWrapper}>
+            <AnimatedMascot />
           </Box>
-          Tile Turnover™
+          <Box className={styles.title}
+            style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
+          >
+            Tile Turnover™
+          </Box>
         </Box>
         <Box 
           className={styles.developmentMessage}
