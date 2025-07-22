@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./AnimatedMascot.module.css";
 
-const mascotImages = [
+const theoImages = [
   "/images/theomascot.png",
   "/images/theomascot2.png",
   "/images/theomascot3.png",
   "/images/theomascot4.png"
 ];
+const tessImages = [
+  "/images/tessmascot.png",
+  "/images/tessmascot2.png",
+  "/images/tessmascot3.png"
+];
 
-export default function AnimatedMascot() {
+export default function AnimatedMascot({ about = 'theo' }) {
+  const mascotImages = about === 'tess' ? tessImages : theoImages;
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState(0);
   const [crossfade, setCrossfade] = useState(false);

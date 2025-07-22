@@ -88,6 +88,30 @@ export default function About() {
               <div style={{ fontSize: 13, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 44, maxHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 12 }}>
                 Calm, clever, and encouraging, I love strategy and help others discover the joy of smart play. I’m your friendly fox for thoughtful games and positive vibes!
               </div>
+              <button
+                style={{
+                  marginTop: 10,
+                  background: 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)',
+                  color: '#fff',
+                  border: 0,
+                  borderRadius: 8,
+                  padding: '7px 20px',
+                  fontWeight: 'bold',
+                  letterSpacing: 1,
+                  fontSize: 15,
+                  boxShadow: '6px 0px 0px #60A5FA',
+                  outline: 'transparent',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  opacity: 0.95
+                }}
+                onClick={() => setShowPhotoshoot('tess')}
+              >
+                Photoshoot
+              </button>
             </Box>
           </Box>
           {/* Theo Profile */}
@@ -140,17 +164,17 @@ export default function About() {
               Photoshoot
             </button>
           </Box>
-          {/* Photoshoot Modal */}
+          {/* Photoshoot Modal (Theo or Tess) */}
           <Modal
-            open={showPhotoshoot}
+            open={!!showPhotoshoot}
             onClose={() => setShowPhotoshoot(false)}
-            aria-labelledby="theo-photoshoot-modal-title"
-            aria-describedby="theo-photoshoot-modal-description"
+            aria-labelledby="photoshoot-modal-title"
+            aria-describedby="photoshoot-modal-description"
           >
             <Box style={{
               minWidth: 320,
               maxWidth: 600,
-              background: 'linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,1))',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85))',
               border: 'none',
               borderRadius: 16,
               boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,255,255,0.10) inset',
@@ -165,9 +189,10 @@ export default function About() {
               left: '50%',
               transform: 'translate(-50%, -50%)',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 512, height: 512, overflow: 'hidden' }}>
+              <div style={{ marginBottom: 24, fontWeight: 700, fontSize: 22, color: '#1F2937', textAlign: 'center' }}>{showPhotoshoot === 'tess' ? "Tess's Photoshoot" : "Theo's Photoshoot"}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 512, height: 512, overflow: 'hidden' }}>
                 <div style={{ transform: 'scale(2)', transformOrigin: 'center' }}>
-                  <AnimatedMascot />
+                  <AnimatedMascot about={showPhotoshoot === 'tess' ? 'tess' : 'theo'} />
                 </div>
               </div>
               <button
