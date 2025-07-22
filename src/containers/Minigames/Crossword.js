@@ -34,7 +34,7 @@ const WORDS = [
   { word: 'PHONE', clue: 'Communication device.' },
 ];
 
-const GRID_SIZE = 13;
+const GRID_SIZE = 15;
 const ACROSS = 0;
 const DOWN = 1;
 
@@ -313,7 +313,6 @@ export default function Crossword() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', padding: '20px' }}>
-      <h2 style={{ fontWeight: 800, fontSize: 32, margin: '0 0 18px 0', letterSpacing: 1 }}>Mini Crossword</h2>
       <button 
         onClick={newPuzzle} 
         style={{ 

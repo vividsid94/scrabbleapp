@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import JigsawPuzzle from '../Home/Jigsaw';
 import MemoryGame from '../Memory/Memory';
 import WordSearch from './WordSearch';
@@ -19,68 +19,80 @@ const MINIGAMES = [
 
 const Minigames = () => {
   const [selected, setSelected] = useState('jigsaw');
+  const tabBarRef = useRef(null);
+  const [tabBarWidth, setTabBarWidth] = useState(null);
+
+  useLayoutEffect(() => {
+    if (tabBarRef.current) {
+      setTabBarWidth(tabBarRef.current.offsetWidth);
+    }
+  }, [selected]);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidenav />
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-        <Box sx={{ width: '100%', maxWidth: 1200, margin: '40px auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h1 style={{ textAlign: 'center', fontSize: 40, fontWeight: 900, margin: '0 0 24px 0', letterSpacing: 1 }}>🎮 Minigames</h1>
-          <div className="minigames-tabs" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, gap: 16 }}>
+        <Box sx={{ width: '100%', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          <div
+            className="minigames-tabs"
+            ref={tabBarRef}
+            style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 0 }}
+          >
             {MINIGAMES.map(game => (
               <button
                 key={game.key}
                 className={`minigames-tab${selected === game.key ? ' selected' : ''}`}
                 onClick={() => setSelected(game.key)}
                 style={{
-                  fontSize: 22,
+                  height: 50,
+                  fontSize: 18,
                   fontWeight: 700,
-                  padding: '14px 38px',
-                  borderRadius: 12,
+                  letterSpacing: 2,
                   border: 'none',
-                  background: selected === game.key ? '#4ECDC4' : 'rgba(255,255,255,0.85)',
-                  color: selected === game.key ? '#fff' : '#333',
-                  boxShadow: selected === game.key ? '0 4px 24px #4ECDC455' : '0 2px 8px #0001',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s cubic-bezier(.4,2,.6,1)',
-                  transform: selected === game.key ? 'scale(1.08)' : 'scale(1)',
-                  outline: selected === game.key ? '3px solid #4ECDC4' : 'none',
+                  borderRadius: 8,
+                  color: '#fff',
+                  background: selected === game.key
+                    ? 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)'
+                    : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                  boxShadow: selected === game.key
+                    ? '6px 0px 0px #3D5A80'
+                    : '6px 0px 0px #374151',
+                  outline: 'transparent',
                   position: 'relative',
-                  zIndex: selected === game.key ? 2 : 1,
+                  userSelect: 'none',
+                  marginLeft: 8,
+                  marginRight: 8,
                   marginBottom: 0,
-                  minWidth: 120,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                  transform: selected === game.key ? 'scale(1.04)' : 'scale(1)',
+                  zIndex: selected === game.key ? 2 : 1,
                 }}
               >
                 {game.label}
                 {selected === game.key && (
-                  <span className="minigames-tab-underline" style={{
-                    display: 'block',
-                    height: 6,
+                  <span style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: -6,
+                    height: 5,
+                    background: '#4ECDC4',
                     borderRadius: 3,
-                    background: 'linear-gradient(90deg, #4ECDC4 60%, #3D5A80 100%)',
-                    marginTop: 8,
-                    width: '80%',
-                    marginLeft: '10%',
-                    transition: 'width 0.2s',
+                    width: '100%',
+                    display: 'block',
                   }} />
                 )}
               </button>
             ))}
           </div>
-          <Box sx={{
-            width: '100%',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85))',
-            border: 'none',
-            borderRadius: 16,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,255,255,0.10) inset',
-            padding: '32px 24px',
-            minHeight: 600,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            marginBottom: 24,
-            animation: 'none',
-          }}>
+          <Box
+            className="bookCard"
+            sx={{
+              width: tabBarWidth ? `${tabBarWidth}px` : 'auto',
+              minWidth: 0,
+            }}
+          >
             {MINIGAMES.find(game => game.key === selected)?.component}
           </Box>
         </Box>

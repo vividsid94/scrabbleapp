@@ -1,54 +1,111 @@
 .minigames-root {
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  /* font-family removed for consistency */
 }
 
 .minigames-tabs {
-  margin-bottom: 32px;
+  margin-bottom: 18px;
+  gap: 8px;
 }
 
 .minigames-tab {
   background: #fff;
   color: #333;
   border: none;
-  border-radius: 16px;
-  font-size: 22px;
-  font-weight: 700;
-  padding: 14px 38px;
-  margin: 0 8px;
-  box-shadow: 0 2px 8px #0001;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 7px 20px;
+  margin: 0 4px;
+  box-shadow: 0 1px 4px #0001;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(.4,2,.6,1);
+  transition: all 0.18s cubic-bezier(.4,2,.6,1);
   position: relative;
   outline: none;
   z-index: 1;
+  min-width: 80px;
+  letter-spacing: 0.2px;
 }
 
 .minigames-tab.selected {
   background: #4ECDC4;
   color: #fff;
-  box-shadow: 0 4px 24px #4ECDC455;
-  transform: scale(1.08);
-  outline: 3px solid #4ECDC4;
+  box-shadow: 0 2px 12px #4ECDC433;
+  transform: scale(1.04);
+  outline: 2px solid #4ECDC4;
   z-index: 2;
 }
 
 .minigames-tab-underline {
   display: block;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: linear-gradient(90deg, #4ECDC4 60%, #3D5A80 100%);
-  margin-top: 8px;
-  width: 80%;
-  margin-left: 10%;
-  transition: width 0.2s;
+  margin-top: 6px;
+  width: 70%;
+  margin-left: 15%;
+  transition: width 0.18s;
 }
 
 .minigames-content {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
-  background: rgba(255,255,255,0.7);
-  border-radius: 24px;
-  box-shadow: 0 2px 24px #0001;
-  padding: 32px;
-  min-height: 600px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(255,255,255,0.90));
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  padding: 24px 12px;
+  min-height: 420px;
+}
+
+.bookCard {
+  position: relative;
+  width: 700px;
+  min-height: 420px;
+  margin-top: 5px;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 0 8px 32px -8px rgba(60,60,100,0.10), 8px 0 24px -12px rgba(60,60,100,0.06);
+  border: none;
+  border-right: 2px solid #222;
+  padding: 32px 24px 32px 48px;
+  background:
+    /* holes */
+    repeating-linear-gradient(
+      to bottom,
+      #333 0px,
+      #333 16px,
+      transparent 16px,
+      transparent 40px
+    ) 8px 10px / 16px 32px repeat-y,
+    /* base color */
+    #f7f7f7;
+  overflow: visible;
+}
+
+.bookCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -28px;
+  width: 44px;
+  height: 100%;
+  background:
+    /* spiral rings */
+    repeating-linear-gradient(
+      #f7f7f7 0px,
+      #d9d9d9 2px,
+      #616161 6px,
+      transparent 6px,
+      transparent 10px,
+      #f7f7f7 10px,
+      #d9d9d9 12px,
+      #616161 16px,
+      transparent 16px,
+      transparent 32px
+    ) 0px 10px / 44px 100% no-repeat;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 16px 0 0 16px;
+}
+
+.bookCard::after {
+  display: none;
 } 

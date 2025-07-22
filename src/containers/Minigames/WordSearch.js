@@ -220,7 +220,6 @@ export default function WordSearch() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      <h2 style={{ fontWeight: 800, fontSize: 32, margin: '0 0 18px 0', letterSpacing: 1 }}>Word Search</h2>
       <button onClick={newPuzzle} style={{ marginBottom: 18, padding: '10px 28px', fontSize: 18, borderRadius: 8, background: '#4ECDC4', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 8px #0002' }}>New Puzzle</button>
       <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', width: '100%', justifyContent: 'center' }}>
         {/* Grid */}
