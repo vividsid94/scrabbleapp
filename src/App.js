@@ -22,6 +22,9 @@ import SubmitGame from "./containers/SubmitGame/SubmitGame";
 import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
 import About from "./containers/About/About";
 import TestTheoShake from "./containers/Home/TestTheoShake";
+import TestMindBlow from "./containers/Home/TestMindBlow";
+import Jigsaw from "./containers/Home/Jigsaw";
+import Minigames from "./containers/Minigames/Minigames";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
@@ -42,6 +45,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
         color: lightMode === 'dark' ? '#fff' : '#000'
       }}>
         <Routes>
+          <Route path="/minigames" element={<Minigames/>} />
           <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
           <Route path="/" element={<Home/>} />
           <Route path="/memory" element={<Memory/>} />
@@ -61,6 +65,9 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
           <Route path="/about" element={<About/>} />
           <Route path="/test-theo-shake" element={<TestTheoShake/>} />
+          <Route path="/test-mind-blow" element={<TestMindBlow />} />
+          <Route path="/jigsaw" element={<Jigsaw />} />
+          <Route path="/test-jigsaw" element={<Jigsaw />} />
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}

@@ -12,7 +12,7 @@ const Card = ({ className, onClick, imgSource, imgDesc }) => {
       <Box className={styles.cardInner}>
         <Box className={styles.cardFront}>
           <Box className={styles.cardContent}>
-            <Typography variant="h6">?</Typography>
+            {/* No text or '?' on the front */}
           </Box>
         </Box>
         <Box className={styles.cardBack}>

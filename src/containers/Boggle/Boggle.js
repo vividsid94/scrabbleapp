@@ -34,6 +34,10 @@ const Boggle = () => {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(true);
   const [tileColor, setTileColor] = useState('#6D84A2');
   const [highlightedTile, setHighlightedTile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const [dragCurrent, setDragCurrent] = useState(null);
+  const touchCellRef = React.useRef();
 
   // Load dictionary
   useEffect(() => {
@@ -100,24 +104,66 @@ const Boggle = () => {
     setIsPlaying(true);
   };
 
-  // Handle letter selection
-  const handleLetterClick = (row, col) => {
+  // Drag/Touch selection logic
+  const handleTileMouseDown = (row, col) => {
     if (!isPlaying) return;
-
-    const letter = board[row][col];
-    const lastSelected = selectedLetters[selectedLetters.length - 1];
-    
-    // Check if the letter is adjacent to the last selected letter
-    if (lastSelected) {
-      const [lastRow, lastCol] = lastSelected;
-      const isAdjacent = Math.abs(row - lastRow) <= 1 && Math.abs(col - lastCol) <= 1;
-      if (!isAdjacent) return;
+    setIsDragging(true);
+    setDragStart([row, col]);
+    setDragCurrent([row, col]);
+    setSelectedLetters([[row, col]]);
+  };
+  const handleTileMouseEnter = (row, col) => {
+    if (!isPlaying || !isDragging || !dragStart) return;
+    const last = selectedLetters[selectedLetters.length - 1];
+    // Only add if adjacent and not already selected
+    const isAdjacent = last && Math.abs(row - last[0]) <= 1 && Math.abs(col - last[1]) <= 1;
+    const alreadySelected = selectedLetters.some(([r, c]) => r === row && c === col);
+    if (isAdjacent && !alreadySelected) {
+      setSelectedLetters([...selectedLetters, [row, col]]);
+      setDragCurrent([row, col]);
     }
-
-    // Check if the letter is already selected
-    if (selectedLetters.some(([r, c]) => r === row && c === col)) return;
-
-    setSelectedLetters([...selectedLetters, [row, col]]);
+  };
+  const handleTileMouseUp = () => {
+    setIsDragging(false);
+    setDragStart(null);
+    setDragCurrent(null);
+  };
+  // Touch support
+  const handleTileTouchStart = (row, col, e) => {
+    if (!isPlaying) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart([row, col]);
+    setDragCurrent([row, col]);
+    setSelectedLetters([[row, col]]);
+    touchCellRef.current = [row, col];
+  };
+  const handleTileTouchMove = (e) => {
+    if (!isPlaying || !isDragging || !dragStart) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!elem) return;
+    const r = elem.getAttribute('data-row');
+    const c = elem.getAttribute('data-col');
+    if (r !== null && c !== null) {
+      const row = parseInt(r, 10);
+      const col = parseInt(c, 10);
+      const last = selectedLetters[selectedLetters.length - 1];
+      const isAdjacent = last && Math.abs(row - last[0]) <= 1 && Math.abs(col - last[1]) <= 1;
+      const alreadySelected = selectedLetters.some(([r2, c2]) => r2 === row && c2 === col);
+      if (isAdjacent && !alreadySelected) {
+        setSelectedLetters([...selectedLetters, [row, col]]);
+        setDragCurrent([row, col]);
+        touchCellRef.current = [row, col];
+      }
+    }
+  };
+  const handleTileTouchEnd = () => {
+    setIsDragging(false);
+    setDragStart(null);
+    setDragCurrent(null);
+    touchCellRef.current = null;
   };
 
   // Submit word
@@ -217,16 +263,25 @@ const Boggle = () => {
 
     if (cachedImage) {
       const modifiedImageUrl = modifyImageColor(cachedImage, tileColor);
-      
       return (
         <Box
           key={`${row}-${col}`}
           className={`${styles.letter} ${isSelected ? styles.selected : ''} ${isHighlighted ? styles.highlighted : ''}`}
-          onClick={() => handleLetterClick(row, col)}
+          data-row={row}
+          data-col={col}
+          onMouseDown={() => handleTileMouseDown(row, col)}
+          onMouseEnter={() => handleTileMouseEnter(row, col)}
+          onMouseUp={handleTileMouseUp}
+          onTouchStart={e => handleTileTouchStart(row, col, e)}
+          onTouchMove={handleTileTouchMove}
+          onTouchEnd={handleTileTouchEnd}
           style={{
             backgroundImage: `url(${modifiedImageUrl})`,
             backgroundSize: '100%',
             backgroundColor: isSelected ? '#4CAF50' : tileColor,
+            touchAction: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
           }}
         />
       );
@@ -234,8 +289,28 @@ const Boggle = () => {
     return null;
   };
 
+  // Board/tile sizing for SVG overlay
+  const TILE_SIZE = 80;
+  const TILE_GAP = 16; // 1rem gap
+  const BOARD_SIZE = 4;
+  const SVG_SIZE = TILE_SIZE * BOARD_SIZE + TILE_GAP * (BOARD_SIZE - 1);
+
+  // Calculate the center of a tile in px
+  function getTileCenter(row, col) {
+    return {
+      x: col * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2,
+      y: row * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2,
+    };
+  }
+
+  // Polyline points for selected path
+  const linePoints = selectedLetters.map(([row, col]) => {
+    const { x, y } = getTileCenter(row, col);
+    return `${x},${y}`;
+  }).join(' ');
+
   return (
-    <Box className={styles.container}>
+    <Box className={styles.container} onMouseLeave={handleTileMouseUp}>
       <Box className={styles.gameInfo}>
         <Typography variant="h4">Score: {score}</Typography>
         <Typography variant="h5">Time: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</Typography>
@@ -261,7 +336,27 @@ const Boggle = () => {
         </Box>
       ) : (
         <>
-          <Box className={styles.board}>
+          <Box className={styles.board} style={{ position: 'relative', width: SVG_SIZE, height: SVG_SIZE }}>
+            {/* SVG overlay for lines */}
+            <svg
+              width={SVG_SIZE}
+              height={SVG_SIZE}
+              style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 2 }}
+            >
+              {selectedLetters.length > 1 && (
+                <polyline
+                  points={linePoints}
+                  fill="none"
+                  stroke="#4ECDC4"
+                  strokeWidth={8}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  opacity={0.85}
+                  style={{ filter: 'drop-shadow(0 2px 8px #4ECDC455)' }}
+                />
+              )}
+            </svg>
+            {/* Tiles */}
             {board.map((row, rowIndex) => (
               row.map((letter, colIndex) => renderTile(letter, rowIndex, colIndex))
             ))}

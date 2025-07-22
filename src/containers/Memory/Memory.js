@@ -7,6 +7,8 @@ import styles from './Memory.module.css';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { ThemeContext } from '../../App';
 import Card from './Card';
+import Confetti from '../../components/Confetti/Confetti';
+import { Gear, GridFour, ImageSquare } from '@phosphor-icons/react';
 
 const useInterval = (callback, delay, duration) => {
   const durationRef = useRef(duration);
@@ -42,21 +44,44 @@ export default function Memory() {
   const [finishedItems, setFinishedItems] = useState([]);
   const [winner, setWinner] = useState(false);
   const matches = useMediaQuery('(min-width:600px)');
+  const [theme, setTheme] = useState('mixed');
+  const [numPairs, setNumPairs] = useState(8); // Default grid size (8 pairs = 16 cards)
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  const localImages = [
-    {id: "1", url: "./images/bathroom.jpg", description: "Image 1"},
-    {id: "2", url: "./images/image2.jpg", description: "Image 2"},
-    {id: "3", url: "./images/image3.jpg", description: "Image 3"},
-    {id: "4", url: "./images/image4.jpg", description: "Image 4"},
-    {id: "5", url: "./images/image5.jpg", description: "Image 5"},
-    {id: "6", url: "./images/image6.jpg", description: "Image 6"},
-    {id: "7", url: "./images/bathroom.jpg", description: "Image 7"},
-    {id: "8", url: "./images/image8.jpg", description: "Image 8"},
-    {id: "9", url: "./images/image9.jpg", description: "Image 9"},
-    {id: "10", url: "./images/image10.jpg", description: "Image 10"},
-    {id: "11", url: "./images/image11.jpg", description: "Image 11"},
-    {id: "12", url: "./images/image12.jpg", description: "Image 12"}
+  // Build a dynamic image pool from available assets
+  const mascotAndIconImages = [
+    { url: '/images/theomascot.png', description: 'Theo Mascot' },
+    { url: '/images/theomascot2.png', description: 'Theo Mascot 2' },
+    { url: '/images/theomascot3.png', description: 'Theo Mascot 3' },
+    { url: '/images/theomascot4.png', description: 'Theo Mascot 4' },
+    { url: '/images/tessmascot.png', description: 'Tess Mascot' },
+    { url: '/images/tessmascot2.png', description: 'Tess Mascot 2' },
+    { url: '/images/tessmascot3.png', description: 'Tess Mascot 3' },
+    { url: '/images/player.png', description: 'Player Icon' },
+    { url: '/images/t2icon.png', description: 'T2 Icon' },
+    { url: '/images/t2icon2.png', description: 'T2 Icon 2' },
+    { url: '/images/woogles-icon.png', description: 'Woogles Icon' },
+    { url: '/images/cross-tables-icon.png', description: 'Cross-Tables Icon' },
+    { url: '/images/me.jpg', description: 'Me' }
   ];
+  const protiles = [
+    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','_'
+  ].map(letter => ({
+    url: `/images/compressed-clean-protiles/${letter}.png`,
+    description: `Protile ${letter}`
+  }));
+
+  // Theme options
+  const themeOptions = {
+    mascots: mascotAndIconImages,
+    protiles: protiles,
+    mixed: [...mascotAndIconImages, ...protiles]
+  };
+
+  const getRandomImages = (pool, n) => {
+    const shuffled = pool.slice().sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, n);
+  };
 
   const startNewGame = () => {
     setGameState({
@@ -69,10 +94,11 @@ export default function Memory() {
     setVisibleItems([]);
     setFinishedItems([]);
     setWinner(false);
-    // Shuffle and set new list
-    const shuffledList = localImages
-      .concat(localImages.map(item => ({...item, id: item.id + "1"})))
-      .sort(() => 0.5 - Math.random());
+    // Pick N images from the selected theme pool
+    const pool = themeOptions[theme];
+    const chosen = getRandomImages(pool, numPairs);
+    // Duplicate and shuffle for pairs
+    const shuffledList = [...chosen, ...chosen].map((item, idx) => ({ ...item, id: idx + '-' + item.url })).sort(() => 0.5 - Math.random());
     setList(shuffledList);
   };
 
@@ -109,6 +135,7 @@ export default function Memory() {
       setWinner(true);
       setGameState(prev => ({...prev, isPlaying: false}));
       clearInterval(durationIntervalRef.current);
+      setShowConfetti(true);
     }
   }, [finishedItems]);
 
@@ -123,22 +150,59 @@ export default function Memory() {
 
   return (
     <Box sx={{ display: 'flex'}}>
-      <Sidenav/>
       <Box className={styles.gameContainer} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
         <Box className={styles.gameHeader}>
-          <Typography variant="h4" className={styles.title}>Memory Game</Typography>
-          <Box className={styles.stats}>
-            <Typography>Time: {gameState.timer}s</Typography>
-            <Typography>Moves: {gameState.moves}</Typography>
-            <Typography>Score: {gameState.score}</Typography>
+          <Box className={styles.settingsPanel}>
+            <Box style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Gear size={28} weight="duotone" style={{ color: '#4ECDC4' }} />
+              <span style={{ fontWeight: 600, fontSize: 18, letterSpacing: 1 }}>Settings</span>
+            </Box>
+            <Box style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', fontWeight: 500, gap: 6 }}>
+                <ImageSquare size={22} weight="duotone" style={{ color: '#7C3AED' }} />
+                Theme:
+                <select
+                  value={theme}
+                  onChange={e => {
+                    setTheme(e.target.value);
+                    if (gameState.isPlaying) startNewGame();
+                  }}
+                  style={{ marginLeft: 6, padding: 4, fontSize: 16, borderRadius: 6 }}
+                >
+                  <option value="mixed">Mixed</option>
+                  <option value="mascots">Mascots & Icons</option>
+                  <option value="protiles">Protiles Only</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', fontWeight: 500, gap: 6 }}>
+                <GridFour size={22} weight="duotone" style={{ color: '#F59E0B' }} />
+                Difficulty:
+                <select
+                  value={numPairs}
+                  onChange={e => {
+                    setNumPairs(Number(e.target.value));
+                    if (gameState.isPlaying) startNewGame();
+                  }}
+                  style={{ marginLeft: 6, padding: 4, fontSize: 16, borderRadius: 6 }}
+                >
+                  <option value={6}>Easy (6 pairs)</option>
+                  <option value={8}>Medium (8 pairs)</option>
+                  <option value={12}>Hard (12 pairs)</option>
+                </select>
+              </label>
+            </Box>
+            <Box style={{ display: 'flex', gap: 24, alignItems: 'center', margin: '18px 0 0 0', width: '100%' }}>
+              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Time: {gameState.timer}s</span>
+              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Moves: {gameState.moves}</span>
+              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Score: {gameState.score}</span>
+              <button
+                className={styles.newGameModernButton}
+                onClick={startNewGame}
+              >
+                New Game
+              </button>
+            </Box>
           </Box>
-          <Button 
-            variant="contained" 
-            onClick={startNewGame}
-            className={styles.newGameButton}
-          >
-            New Game
-          </Button>
         </Box>
 
         <table className={styles.gameBoard}>
@@ -191,12 +255,15 @@ export default function Memory() {
         </table>
 
         {winner && (
-          <Box className={styles.winnerMessage}>
-            <Typography variant="h4">Congratulations! You Win!</Typography>
-            <Typography>Time: {gameState.timer} seconds</Typography>
-            <Typography>Moves: {gameState.moves}</Typography>
-            <Typography>Score: {gameState.score}</Typography>
-          </Box>
+          <>
+            <Confetti winner="player" isVisible={showConfetti} onComplete={() => setShowConfetti(false)} />
+            <Box className={styles.winnerMessage}>
+              <Typography variant="h4">Congratulations! You Win!</Typography>
+              <Typography>Time: {gameState.timer} seconds</Typography>
+              <Typography>Moves: {gameState.moves}</Typography>
+              <Typography>Score: {gameState.score}</Typography>
+            </Box>
+          </>
         )}
       </Box>
     </Box>

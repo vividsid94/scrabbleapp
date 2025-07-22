@@ -1,0 +1,54 @@
+.minigames-root {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.minigames-tabs {
+  margin-bottom: 32px;
+}
+
+.minigames-tab {
+  background: #fff;
+  color: #333;
+  border: none;
+  border-radius: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 14px 38px;
+  margin: 0 8px;
+  box-shadow: 0 2px 8px #0001;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(.4,2,.6,1);
+  position: relative;
+  outline: none;
+  z-index: 1;
+}
+
+.minigames-tab.selected {
+  background: #4ECDC4;
+  color: #fff;
+  box-shadow: 0 4px 24px #4ECDC455;
+  transform: scale(1.08);
+  outline: 3px solid #4ECDC4;
+  z-index: 2;
+}
+
+.minigames-tab-underline {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4ECDC4 60%, #3D5A80 100%);
+  margin-top: 8px;
+  width: 80%;
+  margin-left: 10%;
+  transition: width 0.2s;
+}
+
+.minigames-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.7);
+  border-radius: 24px;
+  box-shadow: 0 2px 24px #0001;
+  padding: 32px;
+  min-height: 600px;
+} 
