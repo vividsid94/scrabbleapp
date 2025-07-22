@@ -9,8 +9,7 @@ import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
-  const devMessage = "Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project. Heavy development in progress! Check changelog for all the latest updates!\n\nOur official release will be after 2025 Nationals, but more buttons are being added to homepage!";
-
+ 
   return (
     <Box sx={{ display: 'flex'}}>
       <Sidenav/>
@@ -32,7 +31,7 @@ export default function Home(){
             color: lightMode === 'dark' ? '#fff' : '#000'
           }}
         >
-          Welcome to Tile Turnover™! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check{" "}
+          Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check{" "}
           <Link to="/changelog" style={{
             color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
             textDecoration: 'none', 
