@@ -165,8 +165,7 @@ export default function About() {
               left: '50%',
               transform: 'translate(-50%, -50%)',
             }}>
-              <div style={{ marginBottom: 24, fontWeight: 700, fontSize: 22, color: '#1F2937', textAlign: 'center' }}>Theo's Photoshoot</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 512, height: 512, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 512, height: 512, overflow: 'hidden' }}>
                 <div style={{ transform: 'scale(2)', transformOrigin: 'center' }}>
                   <AnimatedMascot />
                 </div>
