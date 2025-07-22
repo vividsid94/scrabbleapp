@@ -12,7 +12,7 @@ export default function AnimatedMascot() {
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState(0);
   const [crossfade, setCrossfade] = useState(false);
-  const [stencilMode, setStencilMode] = useState(true);
+  const [stencilMode, setStencilMode] = useState(false);
   const poseTimeoutRef = useRef();
   const modeTimeoutRef = useRef();
 

@@ -28,10 +28,8 @@
 }
 
 .stencilEffect {
-  opacity: 0.10;
-  filter: grayscale(1) contrast(200%) brightness(0.5);
-  animation: stencilPulse 4s ease-in-out infinite;
-  transition: opacity 0.3s, filter 0.3s;
+  filter: grayscale(1) contrast(120%) brightness(1.2);
+  /* No opacity or animation override, just the filter */
 }
 
 @keyframes stencilFloat {

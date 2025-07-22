@@ -31,7 +31,7 @@ const bots = [
   {
     name: 'Theo',
     img: '/images/theomascot.png',
-    desc: 'Clever and quick, always ready for a challenge. Prefers bold, aggressive moves.'
+    desc: 'Clever and quick, Theo prefers bold, aggressive moves.'
   },
   {
     name: 'Tess',
@@ -767,7 +767,7 @@ export default function Play() {
               >
                 <img src={bot.img} alt={bot.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#eee', marginBottom: 4, boxShadow: selectedBot.name === bot.name ? '0 0 0 3px #60A5FA' : 'none', transition: 'box-shadow 0.2s' }} />
                 <div style={{ fontWeight: 700, fontSize: 18, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
-                <div style={{ fontSize: 13, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 32 }}>{bot.desc}</div>
+                <div style={{ fontSize: 13, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 44, maxHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{bot.desc}</div>
                 <button
                   style={{
                     marginTop: 10,
