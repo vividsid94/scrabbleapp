@@ -16,7 +16,8 @@ import {
   Plus,
   ArrowsLeftRight,
   CaretDown,
-  CaretUp
+  CaretUp,
+  Cube
 } from '@phosphor-icons/react';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
@@ -339,16 +340,21 @@ export default function Viewer({ onChange }){
     justifyContent: 'center'
   };
 
+  // State for Cube icon hover
+  const [is3DHovered, setIs3DHovered] = useState(false);
+
   return (
-    <Box sx={{ display: 'flex'}}>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Sidenav/>
+      {/* No header panel, move 3D link to player panel below */}
+      {/* Modal and main content */}
       <Modal
         open={open}
         onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-                  <Box className={styles.modalContainer}>
+        <Box className={styles.modalContainer}>
           {modalContent === "dictionaryTiles" && (
             <SettingsModal
               dictionary={dictionary}
@@ -364,7 +370,6 @@ export default function Viewer({ onChange }){
               handleBoardModeChange={(e) => setBoardMode(e.target.value)}
             />
           )}
-
           {modalContent === "recentGames" && (
             <RecentGamesList
               recentNames={recentNames}
@@ -393,25 +398,23 @@ export default function Viewer({ onChange }){
             <div>{loadingMsg}</div>
           )}
         </Box>
-      </Modal>  
+      </Modal>
       <Box className={styles.page}>
         <Box className={styles.mainPanel}>
-          
           <Box className={styles.leftContainer}>
             <Box className={styles.mainBox}>
-            <Board 
-              board={board} 
-              points={pointsScored} 
-              boardMode={boardMode}
-              rack={createRack(currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
-              move={currentMoveRef.current >= 0 ? getMove(parsedMoves[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
-              moveDirection={moveDirection} 
-              dictionary={gameDictionary} 
-              onBoardChildClick={() => {}}
-              showDictionary={false}
-              commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
-            />
-   
+              <Board 
+                board={board} 
+                points={pointsScored} 
+                boardMode={boardMode}
+                rack={createRack(currentMoveRef.current - 1, parsedMoves).map(char => char === ' ' ? '?' : char).join('')} 
+                move={currentMoveRef.current >= 0 ? getMove(parsedMoves[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
+                moveDirection={moveDirection} 
+                dictionary={gameDictionary} 
+                onBoardChildClick={() => {}}
+                showDictionary={false}
+                commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
+              />
             </Box>
           </Box>
           <Box className={styles.rightPanel}>
@@ -437,27 +440,48 @@ export default function Viewer({ onChange }){
                   <span>{gameDictionary}</span>
                 </Box>
                 <span style={{opacity: 0.4}}>•</span>
-                <span>{wooglesMode ? 'Woogles' : 'Cross-Tables'}</span>
+                <span>
+                  {wooglesMode ? 'Woogles' : 'Cross-Tables'}
+                </span>
               </Box>
               
               <Box className={styles.playerToggle}>
                 {/* Main navigation icons - Row 1 */}
-                {iconList.map((icon, index) => (
-                  <Tooltip key={`icon-${index}`} title={icon.toolTip}>
-                    <Box
-                      className={styles.Arrows} 
-                      onClick={icon.onClick}
-                      onMouseEnter={() => setHoveredIcon(`nav-${index}`)}
-                      onMouseLeave={() => setHoveredIcon(null)}
-                    >
-                      <icon.icon 
-                        size={icon.size} 
-                        color={icon.color}
-                        weight={hoveredIcon === `nav-${index}` ? 'fill' : 'regular'}
-                      />
-                    </Box>
-                  </Tooltip>
-                ))}
+                {iconList.map((icon, index) => {
+                  // Insert Cube icon after the forward icon (CaretRight, index 2)
+                  const isAfterForward = index === 2;
+                  return (
+                    <React.Fragment key={`icon-${index}`}>
+                      <Tooltip title={icon.toolTip}>
+                        <Box
+                          className={styles.Arrows}
+                          onClick={icon.onClick}
+                          onMouseEnter={() => setHoveredIcon(`nav-${index}`)}
+                          onMouseLeave={() => setHoveredIcon(null)}
+                        >
+                          <icon.icon
+                            size={icon.size}
+                            color={icon.color}
+                            weight={hoveredIcon === `nav-${index}` ? 'fill' : 'regular'}
+                          />
+                        </Box>
+                      </Tooltip>
+                      {isAfterForward && gameNum && (
+                        <Tooltip title="View in 3D">
+                          <Box
+                            className={styles.Arrows}
+                            onClick={() => window.open(`/3dviewer?gameId=${gameNum}`, '_blank')}
+                            onMouseEnter={() => setIs3DHovered(true)}
+                            onMouseLeave={() => setIs3DHovered(false)}
+                            style={{ marginLeft: 2, marginRight: 2 }}
+                          >
+                            <Cube size={20} color="#60A5FA" weight={is3DHovered ? 'fill' : 'regular'} />
+                          </Box>
+                        </Tooltip>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
                 
                 {/* Collapsible options button */}
                 <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>

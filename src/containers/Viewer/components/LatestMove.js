@@ -139,6 +139,7 @@ const LatestMove = ({
 
   return (
     <Box className={styles.latestMovePanel}>
+      {/* Remove Cube icon from here, just keep the rest of the content */}
       <Box className={`${styles.latestMoveContent} ${animationClass}`}>
         <Box 
           className={styles.moveHistoryTurnNumber}
@@ -157,18 +158,6 @@ const LatestMove = ({
           {parsedMoves.length > 1 && (
             <Box className={styles.expandIcon} onClick={handleExpandClick}>
               {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
-            </Box>
-          )}
-          {gameNum && (
-            <Box 
-              className={styles.expandIcon} 
-              onClick={() => window.open(`/3d?gameId=${gameNum}`, '_blank')}
-              onMouseEnter={() => setIs3DHovered(true)}
-              onMouseLeave={() => setIs3DHovered(false)}
-              style={{ cursor: 'pointer', marginLeft: '8px' }}
-              title="View in 3D"
-            >
-              <Cube size={16} weight={is3DHovered ? "fill" : "regular"} />
             </Box>
           )}
         </Box>

@@ -159,6 +159,10 @@ const Scrabble3D = () => {
     sphereGeometry: new THREE.SphereGeometry(1, 8, 6)
   });
 
+  // Add state for full player names
+  const [player1Name, setPlayer1Name] = useState('Player 1');
+  const [player2Name, setPlayer2Name] = useState('Player 2');
+
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -422,25 +426,112 @@ const Scrabble3D = () => {
       try {
         setLoading(true);
         
-        // Use gameId from URL if provided, otherwise use default
-        const gameNum = gameId ? parseInt(gameId) : GAME.DEFAULT_GAME_ID;
-        console.log('Loading game:', gameNum);
-        
+        if (!gameId) {
+          // Use default game if no gameId
+          const gameNum = GAME.DEFAULT_GAME_ID;
+          const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
+          let extractedPlayer1 = null;
+          let extractedPlayer2 = null;
+          if (rawGCG) {
+            const lines = rawGCG.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].startsWith('#player1')) {
+                extractedPlayer1 = lines[i].split(' ').slice(2).join(' ').trim();
+              }
+              if (lines[i].startsWith('#player2')) {
+                extractedPlayer2 = lines[i].split(' ').slice(2).join(' ').trim();
+              }
+            }
+            const parsedMoves = parseGCG(rawGCG);
+            setGameData(parsedMoves);
+            const initialBoard = JSON.parse(origBoard);
+            setBoardCoords(initialBoard);
+            setBoardState(initialBoard.map(row => row.map(Number)));
+            if (extractedPlayer1 && extractedPlayer2) {
+              setPlayer1Name(extractedPlayer1);
+              setPlayer2Name(extractedPlayer2);
+            } else {
+              setPlayer1Name(parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : 'Player 1');
+              setPlayer2Name(parsedMoves && parsedMoves.length > 1 ? parsedMoves[1].player : 'Player 2');
+            }
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Detect Woogles game
+        if (typeof gameId === 'string' && gameId.startsWith('woogles-')) {
+          const wooglesId = gameId.replace('woogles-', '');
+          try {
+            const { getWooglesGameGCG } = await import('../../axios/api');
+            const rawGCG = await getWooglesGameGCG(wooglesId);
+            if (!rawGCG) throw new Error('Failed to load Woogles GCG');
+            // Parse player names from headers
+            let extractedPlayer1 = null;
+            let extractedPlayer2 = null;
+            const lines = rawGCG.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].startsWith('#player1')) {
+                extractedPlayer1 = lines[i].split(' ').slice(2).join(' ').trim();
+              }
+              if (lines[i].startsWith('#player2')) {
+                extractedPlayer2 = lines[i].split(' ').slice(2).join(' ').trim();
+              }
+            }
+            const parsedMoves = parseGCG(rawGCG);
+            setGameData(parsedMoves);
+            const initialBoard = JSON.parse(origBoard);
+            setBoardCoords(initialBoard);
+            setBoardState(initialBoard.map(row => row.map(Number)));
+            setPlayer1Name(extractedPlayer1 || (parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : 'Player 1'));
+            setPlayer2Name(extractedPlayer2 || (parsedMoves && parsedMoves.length > 1 ? parsedMoves[1].player : 'Player 2'));
+          } catch (err) {
+            setGameData([]);
+            setPlayer1Name('Player 1');
+            setPlayer2Name('Player 2');
+            setBoardCoords(JSON.parse(origBoard));
+            setBoardState(JSON.parse(origBoard).map(row => row.map(Number)));
+            console.error('Failed to load Woogles game:', err);
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, treat as Cross-Tables game
+        const gameNum = parseInt(gameId);
         const rawGCG = await getMoveSet('https://www.cross-tables.com/annotated/selfgcg/', gameNum);
-        
+        let extractedPlayer1 = null;
+        let extractedPlayer2 = null;
         if (rawGCG) {
+          const lines = rawGCG.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith('#player1')) {
+              extractedPlayer1 = lines[i].split(' ').slice(2).join(' ').trim();
+            }
+            if (lines[i].startsWith('#player2')) {
+              extractedPlayer2 = lines[i].split(' ').slice(2).join(' ').trim();
+            }
+          }
           const parsedMoves = parseGCG(rawGCG);
-          console.log('Raw GCG:', rawGCG.substring(0, 500)); // Debug first 500 chars
-          console.log('Parsed moves:', parsedMoves); // Debug parsed moves
           setGameData(parsedMoves);
-          
-          // Initialize board state exactly like viewer
           const initialBoard = JSON.parse(origBoard);
           setBoardCoords(initialBoard);
           setBoardState(initialBoard.map(row => row.map(Number)));
+          if (extractedPlayer1 && extractedPlayer2) {
+            setPlayer1Name(extractedPlayer1);
+            setPlayer2Name(extractedPlayer2);
+          } else {
+            setPlayer1Name(parsedMoves && parsedMoves.length > 0 ? parsedMoves[0].player : 'Player 1');
+            setPlayer2Name(parsedMoves && parsedMoves.length > 1 ? parsedMoves[1].player : 'Player 2');
+          }
         }
       } catch (error) {
         console.error('Failed to load game:', error);
+        setGameData([]);
+        setPlayer1Name('Player 1');
+        setPlayer2Name('Player 2');
+        setBoardCoords(JSON.parse(origBoard));
+        setBoardState(JSON.parse(origBoard).map(row => row.map(Number)));
       } finally {
         setLoading(false);
       }
