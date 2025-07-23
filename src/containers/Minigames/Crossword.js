@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import Box from '@mui/material/Box';
 
 // Pool of 20+ words and definitions
 const WORDS = [
@@ -34,7 +36,7 @@ const WORDS = [
   { word: 'PHONE', clue: 'Communication device.' },
 ];
 
-const GRID_SIZE = 15;
+const GRID_SIZE = 12;
 const ACROSS = 0;
 const DOWN = 1;
 
@@ -98,10 +100,10 @@ function generateCrossword(words) {
           if (direction === DOWN && row + currentWord.word.length > GRID_SIZE) continue;
 
           // Check if this placement is valid
-          let intersections = 0;
           let canPlace = true;
+          let intersections = 0;
           let hasIntersection = false;
-
+          
           for (let i = 0; i < currentWord.word.length; i++) {
             const r = direction === ACROSS ? row : row + i;
             const c = direction === ACROSS ? col + i : col;
@@ -144,7 +146,7 @@ function generateCrossword(words) {
               if (!canPlace) break;
             }
           }
-
+          
           // Check that we don't extend existing words
           if (canPlace) {
             if (direction === ACROSS) {
@@ -164,7 +166,7 @@ function generateCrossword(words) {
         }
       }
     }
-
+    
     // Place the word if we found a good spot
     if (bestPlacement) {
       console.log(`Placing word ${currentWord.word} at row ${bestPlacement.row}, col ${bestPlacement.col}, direction ${bestPlacement.direction}, intersections: ${bestPlacement.intersections}`);
@@ -210,6 +212,26 @@ export default function Crossword() {
   const [userGrid, setUserGrid] = useState([]);
   const [selectedCell, setSelectedCell] = useState(null);
   const [win, setWin] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(0);
+
+  // Mobile responsiveness
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive sizing
+  const cellSize = isMobile ? 24 : 36;
+  const fontSize = isMobile ? 12 : 20;
 
   const newPuzzle = () => {
     const words = getRandomWords(12);
@@ -219,6 +241,8 @@ export default function Crossword() {
     setUserGrid(grid.map(row => row.map(cell => cell ? { ...cell, userLetter: '' } : null)));
     setSelectedCell(null);
     setWin(false);
+    setScore(0);
+    setTimer(0);
     console.log(`Generated puzzle with ${placed.length} words`);
   };
 
@@ -226,23 +250,38 @@ export default function Crossword() {
     newPuzzle();
   }, []);
 
+  // Timer effect
+  useEffect(() => {
+    if (!win && placed.length > 0) {
+      const interval = setInterval(() => {
+        setTimer(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [win, placed.length]);
+
   // Check for win
   useEffect(() => {
     if (!userGrid.length || !grid.length) return;
     
     let allFilled = true;
-    for (let r = 0; r < GRID_SIZE; r++) {
-      for (let c = 0; c < GRID_SIZE; c++) {
+    let correctCells = 0;
+    let totalCells = 0;
+    
+    for (let r = 0; r < grid.length; r++) {
+      for (let c = 0; c < grid[r].length; c++) {
         if (grid[r] && grid[r][c]) {
-          if (grid[r][c].letter !== userGrid[r][c].userLetter.toUpperCase()) {
+          totalCells++;
+          if (grid[r][c].letter === userGrid[r][c].userLetter.toUpperCase()) {
+            correctCells++;
+          } else {
             allFilled = false;
-            break;
           }
         }
       }
-      if (!allFilled) break;
     }
     
+    setScore(Math.floor((correctCells / totalCells) * 100));
     setWin(allFilled);
   }, [userGrid, grid]);
 
@@ -293,7 +332,7 @@ export default function Crossword() {
         nextRow++;
       }
       
-      if (nextRow < GRID_SIZE && nextCol < GRID_SIZE && 
+      if (nextRow < grid.length && nextCol < grid[0].length && 
           grid[nextRow] && grid[nextRow][nextCol]) {
         setSelectedCell({ row: nextRow, col: nextCol });
       }
@@ -312,135 +351,249 @@ export default function Crossword() {
     .map(w => ({ num: w.num, clue: w.clue }));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', padding: '20px' }}>
-      <button 
-        onClick={newPuzzle} 
-        style={{ 
-          marginBottom: 18, 
-          padding: '10px 28px', 
-          fontSize: 18, 
-          borderRadius: 8, 
-          background: '#4ECDC4', 
-          color: '#fff', 
-          border: 'none', 
-          cursor: 'pointer', 
-          fontWeight: 'bold', 
-          boxShadow: '0 2px 8px #0002' 
-        }}
-      >
-        New Puzzle ({placed.length} words)
-      </button>
-      
-      <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-        {/* Grid */}
-        <table 
-          style={{ 
-            borderCollapse: 'collapse', 
-            background: '#fff', 
-            borderRadius: 16, 
-            boxShadow: '0 2px 12px #0001', 
-            border: '2px solid #e0e7ef', 
-            fontSize: 22, 
-            fontWeight: 700, 
-            letterSpacing: 2, 
-            userSelect: 'none' 
-          }}
-          tabIndex={0}
-          onKeyDown={handleInput}
-        >
-          <tbody>
-            {userGrid.map((rowArr, r) => (
-              <tr key={r}>
-                {rowArr.map((cell, c) => (
-                  <td
-                    key={c}
-                    onClick={() => handleCellClick(r, c)}
-                    style={{
-                      width: 36, 
-                      height: 36, 
-                      textAlign: 'center', 
-                      border: '1px solid #e0e7ef', 
-                      borderRadius: 6,
-                      background: cell 
-                        ? (selectedCell && selectedCell.row === r && selectedCell.col === c ? '#ffe066' : '#f8fafc') 
-                        : '#bbb',
-                      color: cell ? '#222' : '#888',
-                      cursor: cell ? 'pointer' : 'default',
-                      position: 'relative',
-                      fontWeight: 700,
-                      fontSize: 20,
-                      outline: 'none',
-                      transition: 'background 0.2s',
-                    }}
-                  >
-                    {cell && cell.number && (
-                      <span style={{ 
-                        position: 'absolute', 
-                        top: 2, 
-                        left: 4, 
-                        fontSize: 10, 
-                        color: '#3D5A80', 
-                        fontWeight: 800 
-                      }}>
-                        {cell.number}
-                      </span>
-                    )}
-                    {cell && cell.userLetter}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {/* Clues */}
-        <div style={{ 
-          minWidth: 260, 
-          background: '#fff', 
-          borderRadius: 16, 
-          boxShadow: '0 2px 12px #0001', 
-          border: '2px solid #e0e7ef', 
-          padding: 24, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 18,
-          maxHeight: '500px',
-          overflowY: 'auto'
+    <Box sx={{ display: 'flex'}}>
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
+        <Box sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 1200, md: 1400 },
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0
         }}>
-          {acrossClues.length > 0 && (
-            <>
-              <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: '#3D5A80' }}>Across</div>
-              {acrossClues.map(({ num, clue }) => (
-                <div key={`across-${num}`} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-                  <span style={{ color: '#4ECDC4', fontWeight: 800 }}>{num}.</span> {clue}
+          {/* Controls Section */}
+          <div style={{
+            width: '100%',
+            maxWidth: isMobile ? '100%' : 1200,
+            marginBottom: isMobile ? 16 : 20,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 16 : 20,
+            alignItems: 'flex-start'
+          }}>
+            {/* Left third - Controls */}
+            <div style={{
+              width: isMobile ? '100%' : '33%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isMobile ? 8 : 10
+            }}>
+              {/* Action Buttons */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 8 : 8,
+                width: '100%'
+              }}>
+                <button onClick={newPuzzle} style={{ 
+                  flex: '1',
+                  padding: isMobile ? '3px 8px' : '2px 6px', 
+                  fontSize: isMobile ? 10 : 9, 
+                  borderRadius: 4, 
+                  background: 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)',
+                  color: '#fff', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold',
+                  letterSpacing: 0.3,
+                  boxShadow: '3px 0px 0px #3D5A80',
+                  outline: 'transparent',
+                  position: 'relative',
+                  userSelect: 'none',
+                  transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                  height: isMobile ? '24px' : '20px'
+                }}>
+                  New Puzzle ({placed.length} words)
+                </button>
+              </div>
+
+              {/* Game Stats */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 4 : 6,
+                alignItems: 'center',
+                marginTop: isMobile ? 8 : 12
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row', 
+                  gap: isMobile ? 4 : 12,
+                  alignItems: 'center',
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: 500,
+                  color: '#374151'
+                }}>
+                  <span>Time: {timer}s</span>
+                  <span>Score: {score}%</span>
                 </div>
-              ))}
-            </>
+              </div>
+
+              {/* Clues */}
+              <div style={{ 
+                background: '#fff', 
+                borderRadius: 16, 
+                boxShadow: '0 2px 12px #0001', 
+                border: '2px solid #e0e7ef', 
+                padding: isMobile ? 8 : 12, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: isMobile ? 6 : 8,
+                marginTop: isMobile ? 12 : 16,
+                maxHeight: isMobile ? 300 : 400,
+                overflowY: 'auto',
+                alignItems: 'flex-start'
+              }}>
+                {acrossClues.length > 0 && (
+                  <>
+                    <div style={{ 
+                      fontWeight: 700, 
+                      fontSize: isMobile ? 12 : 14, 
+                      marginBottom: isMobile ? 2 : 4, 
+                      color: '#3D5A80',
+                      textAlign: 'left',
+                      width: '100%'
+                    }}>
+                      Across
+                    </div>
+                    {acrossClues.map(({ num, clue }) => (
+                      <div key={`across-${num}`} style={{ 
+                        fontWeight: 600, 
+                        fontSize: isMobile ? 10 : 12, 
+                        marginBottom: isMobile ? 1 : 2,
+                        textAlign: 'left',
+                        width: '100%'
+                      }}>
+                        <span style={{ color: '#4ECDC4', fontWeight: 800 }}>{num}.</span> {clue}
+                      </div>
+                    ))}
+                  </>
+                )}
+                
+                {downClues.length > 0 && (
+                  <>
+                    <div style={{ 
+                      fontWeight: 700, 
+                      fontSize: isMobile ? 12 : 14, 
+                      margin: isMobile ? '8px 0 2px 0' : '12px 0 4px 0', 
+                      color: '#3D5A80',
+                      textAlign: 'left',
+                      width: '100%'
+                    }}>
+                      Down
+                    </div>
+                    {downClues.map(({ num, clue }) => (
+                      <div key={`down-${num}`} style={{ 
+                        fontWeight: 600, 
+                        fontSize: isMobile ? 10 : 12, 
+                        marginBottom: isMobile ? 1 : 2,
+                        textAlign: 'left',
+                        width: '100%'
+                      }}>
+                        <span style={{ color: '#3D5A80', fontWeight: 800 }}>{num}.</span> {clue}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Right two-thirds - Game Board */}
+            <div style={{
+              width: isMobile ? '100%' : '67%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              overflow: 'hidden'
+            }}>
+              {/* Grid */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <table 
+                  style={{ 
+                    borderCollapse: 'collapse', 
+                    background: '#fff', 
+                    borderRadius: 16, 
+                    boxShadow: '0 2px 12px #0001', 
+                    border: '2px solid #e0e7ef', 
+                    userSelect: 'none' 
+                  }}
+                  tabIndex={0}
+                  onKeyDown={handleInput}
+                >
+                  <tbody>
+                    {userGrid.map((rowArr, r) => (
+                      <tr key={r}>
+                        {rowArr.map((cell, c) => (
+                          <td
+                            key={c}
+                            onClick={() => handleCellClick(r, c)}
+                            style={{
+                              width: cellSize, 
+                              height: cellSize, 
+                              textAlign: 'center', 
+                              border: '1px solid #e0e7ef', 
+                              borderRadius: 6,
+                              background: cell 
+                                ? (selectedCell && selectedCell.row === r && selectedCell.col === c ? '#ffe066' : '#f8fafc') 
+                                : '#bbb',
+                              color: cell ? '#222' : '#888',
+                              cursor: cell ? 'pointer' : 'default',
+                              position: 'relative',
+                              fontWeight: 700,
+                              fontSize: fontSize,
+                              outline: 'none',
+                              transition: 'background 0.2s',
+                            }}
+                          >
+                            {cell && cell.number && (
+                              <span style={{ 
+                                position: 'absolute', 
+                                top: 2, 
+                                left: 4, 
+                                fontSize: Math.max(fontSize * 0.4, 6), 
+                                color: '#3D5A80', 
+                                fontWeight: 800 
+                              }}>
+                                {cell.number}
+                              </span>
+                            )}
+                            {cell && cell.userLetter}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {win && (
+            <div style={{ 
+              marginTop: isMobile ? 16 : 32, 
+              fontSize: isMobile ? 20 : 28, 
+              fontWeight: 700, 
+              color: '#4ECDC4',
+              textAlign: 'center'
+            }}>
+              🎉 You solved the crossword!
+            </div>
           )}
-          
-          {downClues.length > 0 && (
-            <>
-              <div style={{ fontWeight: 700, fontSize: 18, margin: '16px 0 8px 0', color: '#3D5A80' }}>Down</div>
-              {downClues.map(({ num, clue }) => (
-                <div key={`down-${num}`} style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-                  <span style={{ color: '#3D5A80', fontWeight: 800 }}>{num}.</span> {clue}
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </div>
-      
-      {win && (
-        <div style={{ marginTop: 32, fontSize: 28, fontWeight: 700, color: '#4ECDC4' }}>
-          🎉 You solved the crossword!
-        </div>
-        )}
-      
-      {/* Debug info */}
-      <div style={{ marginTop: 20, fontSize: 12, color: '#666' }}>
-        Debug: Check browser console for placement details
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }

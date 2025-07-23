@@ -48,6 +48,24 @@ export default function Memory() {
   const [numPairs, setNumPairs] = useState(8); // Default grid size (8 pairs = 16 cards)
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Mobile responsiveness
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive card sizing
+  const cardSize = isMobile ? 60 : 80;
+  const cardSpacing = isMobile ? 6 : 8;
+
   // Build a dynamic image pool from available assets
   const mascotAndIconImages = [
     { url: '/images/theomascot.png', description: 'Theo Mascot' },
@@ -150,121 +168,293 @@ export default function Memory() {
 
   return (
     <Box sx={{ display: 'flex'}}>
-      <Box className={styles.gameContainer} style={{color: lightMode === 'dark' ? '#fff' : '#000'}}>
-        <Box className={styles.gameHeader}>
-          <Box className={styles.settingsPanel}>
-            <Box style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Gear size={28} weight="duotone" style={{ color: '#4ECDC4' }} />
-              <span style={{ fontWeight: 600, fontSize: 18, letterSpacing: 1 }}>Settings</span>
-            </Box>
-            <Box style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', fontWeight: 500, gap: 6 }}>
-                <ImageSquare size={22} weight="duotone" style={{ color: '#7C3AED' }} />
-                Theme:
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
+        <Box sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 1000, md: 1200 },
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0
+        }}>
+          {/* Controls Section */}
+          <div style={{
+            width: '100%',
+            maxWidth: isMobile ? '100%' : 1200,
+            marginBottom: isMobile ? 16 : 20,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 16 : 20,
+            alignItems: 'flex-start'
+          }}>
+            {/* Left quarter - Controls */}
+            <div style={{
+              width: isMobile ? '100%' : '25%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isMobile ? 8 : 10
+            }}>
+              {/* Theme Selection */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 6 : 8,
+                alignItems: 'center'
+              }}>
+                <label style={{
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  textAlign: 'center',
+                  fontSize: isMobile ? 14 : 16
+                }}>Theme:</label>
                 <select
                   value={theme}
                   onChange={e => {
                     setTheme(e.target.value);
                     if (gameState.isPlaying) startNewGame();
                   }}
-                  style={{ marginLeft: 6, padding: 4, fontSize: 16, borderRadius: 6 }}
+                  style={{
+                    fontSize: isMobile ? 12 : 14,
+                    padding: isMobile ? '4px 8px' : '6px 12px',
+                    borderRadius: 6,
+                    width: '100%',
+                    maxWidth: isMobile ? '100%' : 200
+                  }}
                 >
                   <option value="mixed">Mixed</option>
                   <option value="mascots">Mascots & Icons</option>
                   <option value="protiles">Protiles Only</option>
                 </select>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', fontWeight: 500, gap: 6 }}>
-                <GridFour size={22} weight="duotone" style={{ color: '#F59E0B' }} />
-                Difficulty:
-                <select
-                  value={numPairs}
-                  onChange={e => {
-                    setNumPairs(Number(e.target.value));
-                    if (gameState.isPlaying) startNewGame();
-                  }}
-                  style={{ marginLeft: 6, padding: 4, fontSize: 16, borderRadius: 6 }}
-                >
-                  <option value={6}>Easy (6 pairs)</option>
-                  <option value={8}>Medium (8 pairs)</option>
-                  <option value={12}>Hard (12 pairs)</option>
-                </select>
-              </label>
-            </Box>
-            <Box style={{ display: 'flex', gap: 24, alignItems: 'center', margin: '18px 0 0 0', width: '100%' }}>
-              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Time: {gameState.timer}s</span>
-              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Moves: {gameState.moves}</span>
-              <span style={{ fontWeight: 500, fontSize: 15, color: '#374151' }}>Score: {gameState.score}</span>
-              <button
-                className={styles.newGameModernButton}
-                onClick={startNewGame}
-              >
-                New Game
-              </button>
-            </Box>
-          </Box>
-        </Box>
+              </div>
 
-        <table className={styles.gameBoard}>
-          <tbody>
-            {subLists.map((subList, subListIndex) => (
-              <tr className={styles.row} key={subListIndex}>
-                {subList.map((item, index) => (
-                  <td key={item.id}>
-                    <Card
-                      className={`${
-                        visibleItems.includes(subListIndex * subList.length + index)
-                          ? styles.cardShow
-                          : ''
-                      } ${
-                        finishedItems.includes(subListIndex * subList.length + index)
-                          ? styles.cardFinished
-                          : ''
-                      }`}
+              {/* Difficulty Selection */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 6 : 8,
+                alignItems: 'center'
+              }}>
+                <label style={{
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  textAlign: 'center',
+                  fontSize: isMobile ? 14 : 16
+                }}>Difficulty:</label>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: isMobile ? 1 : 2, 
+                  justifyContent: 'center',
+                  width: '100%'
+                }}>
+                  {[
+                    { value: 6, label: 'Easy (6 pairs)' },
+                    { value: 8, label: 'Medium (8 pairs)' },
+                    { value: 12, label: 'Hard (12 pairs)' }
+                  ].map(option => (
+                    <button
+                      key={option.value}
                       onClick={() => {
-                        if (!gameState.isPlaying) return;
-                        if (!finishedItems.includes(subListIndex * subList.length + index)) {
-                          switch (visibleItems.length) {
-                            case 0:
-                              setVisibleItems([subListIndex * subList.length + index]);
-                              break;
-                            case 1:
-                              if (visibleItems[0] !== subListIndex * subList.length + index) {
-                                setVisibleItems(
-                                  visibleItems.concat(subListIndex * subList.length + index)
-                                );
-                                checkItems(visibleItems[0], subListIndex * subList.length + index);
-                              }
-                              break;
-                            case 2:
-                              setVisibleItems([subListIndex * subList.length + index]);
-                              break;
-                            default:
-                              setVisibleItems([]);
-                          }
-                        }
+                        setNumPairs(option.value);
+                        if (gameState.isPlaying) startNewGame();
                       }}
-                      imgSource={item.url}
-                      imgDesc={item.description}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      style={{
+                        padding: isMobile ? '1px 3px' : '2px 4px',
+                        fontSize: isMobile ? 7 : 9,
+                        borderRadius: 3,
+                        background: numPairs === option.value 
+                          ? 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)'
+                          : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        letterSpacing: 0.2,
+                        boxShadow: numPairs === option.value 
+                          ? '2px 0px 0px #3D5A80'
+                          : '2px 0px 0px #374151',
+                        outline: 'transparent',
+                        position: 'relative',
+                        userSelect: 'none',
+                        marginLeft: 0,
+                        marginRight: 0,
+                        marginBottom: 0,
+                        transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                        transform: numPairs === option.value ? 'scale(1.01)' : 'scale(1)',
+                        zIndex: numPairs === option.value ? 2 : 1,
+                        flex: isMobile ? '1 1 calc(33% - 1px)' : '1 1 calc(33% - 1px)',
+                        minWidth: isMobile ? '20px' : '25px',
+                        height: isMobile ? '20px' : '24px'
+                      }}
+                    >
+                      {option.value}
+                      {numPairs === option.value && (
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          bottom: -2,
+                          height: 1,
+                          background: '#4ECDC4',
+                          borderRadius: 1,
+                          width: '100%',
+                          display: 'block',
+                        }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        {winner && (
-          <>
-            <Confetti winner="player" isVisible={showConfetti} onComplete={() => setShowConfetti(false)} />
-            <Box className={styles.winnerMessage}>
-              <Typography variant="h4">Congratulations! You Win!</Typography>
-              <Typography>Time: {gameState.timer} seconds</Typography>
-              <Typography>Moves: {gameState.moves}</Typography>
-              <Typography>Score: {gameState.score}</Typography>
-            </Box>
-          </>
-        )}
+              {/* Action Buttons */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 8 : 8,
+                width: '100%'
+              }}>
+                <button onClick={startNewGame} style={{ 
+                  flex: '1',
+                  padding: isMobile ? '3px 8px' : '2px 6px', 
+                  fontSize: isMobile ? 10 : 9, 
+                  borderRadius: 4, 
+                  background: 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)',
+                  color: '#fff', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold',
+                  letterSpacing: 0.3,
+                  boxShadow: '3px 0px 0px #3D5A80',
+                  outline: 'transparent',
+                  position: 'relative',
+                  userSelect: 'none',
+                  transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                  height: isMobile ? '24px' : '20px'
+                }}>
+                  New Game
+                </button>
+              </div>
+
+              {/* Game Stats */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 4 : 6,
+                alignItems: 'center',
+                marginTop: isMobile ? 8 : 12
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row', 
+                  gap: isMobile ? 4 : 12,
+                  alignItems: 'center',
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: 500,
+                  color: '#374151'
+                }}>
+                  <span>Time: {gameState.timer}s</span>
+                  <span>Moves: {gameState.moves}</span>
+                  <span>Score: {gameState.score}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right three-quarters - Game Board */}
+            <div style={{
+              width: isMobile ? '100%' : '75%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                maxWidth: '100%',
+                overflow: 'auto'
+              }}>
+                <table style={{
+                  borderSpacing: cardSpacing,
+                  margin: '0 auto'
+                }}>
+                  <tbody>
+                    {subLists.map((subList, subListIndex) => (
+                      <tr key={subListIndex} style={{
+                        display: 'flex',
+                        gap: cardSpacing,
+                        marginBottom: cardSpacing
+                      }}>
+                        {subList.map((item, index) => (
+                          <td key={item.id}>
+                            <Card
+                              className={`${
+                                visibleItems.includes(subListIndex * subList.length + index)
+                                  ? styles.cardShow
+                                  : ''
+                              } ${
+                                finishedItems.includes(subListIndex * subList.length + index)
+                                  ? styles.cardFinished
+                                  : ''
+                              }`}
+                              style={{
+                                width: cardSize,
+                                height: cardSize
+                              }}
+                              onClick={() => {
+                                if (!gameState.isPlaying) return;
+                                if (!finishedItems.includes(subListIndex * subList.length + index)) {
+                                  switch (visibleItems.length) {
+                                    case 0:
+                                      setVisibleItems([subListIndex * subList.length + index]);
+                                      break;
+                                    case 1:
+                                      if (visibleItems[0] !== subListIndex * subList.length + index) {
+                                        setVisibleItems(
+                                          visibleItems.concat(subListIndex * subList.length + index)
+                                        );
+                                        checkItems(visibleItems[0], subListIndex * subList.length + index);
+                                      }
+                                      break;
+                                    case 2:
+                                      setVisibleItems([subListIndex * subList.length + index]);
+                                      break;
+                                    default:
+                                      setVisibleItems([]);
+                                  }
+                                }
+                              }}
+                              imgSource={item.url}
+                              imgDesc={item.description}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {winner && (
+            <>
+              <Confetti winner="player" isVisible={showConfetti} onComplete={() => setShowConfetti(false)} />
+              <Box className={styles.winnerMessage}>
+                <Typography variant="h4">Congratulations! You Win!</Typography>
+                <Typography>Time: {gameState.timer} seconds</Typography>
+                <Typography>Moves: {gameState.moves}</Typography>
+                <Typography>Score: {gameState.score}</Typography>
+              </Box>
+            </>
+          )}
+        </Box>
       </Box>
     </Box>
   );

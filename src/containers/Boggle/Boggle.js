@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
-import styles from './Boggle.module.css';
+import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
+import Box from '@mui/material/Box';
 import { findAllPossibleWords, canFormWord } from '../../functions/boggleFunctions';
 import { modifyImageColor } from '../../functions/tileFunctions';
 
@@ -38,6 +38,25 @@ const Boggle = () => {
   const [dragStart, setDragStart] = useState(null);
   const [dragCurrent, setDragCurrent] = useState(null);
   const touchCellRef = React.useRef();
+
+  // Mobile responsiveness
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive sizing
+  const tileSize = isMobile ? 60 : 80;
+  const tileGap = isMobile ? 8 : 12;
+  const boardSize = 4 * tileSize + 3 * tileGap;
 
   // Load dictionary
   useEffect(() => {
@@ -102,153 +121,147 @@ const Boggle = () => {
     setScore(0);
     setTimeLeft(180);
     setIsPlaying(true);
+    setShowHints(false);
+    setPossibleWords([]);
   };
 
-  // Drag/Touch selection logic
+  // Timer effect
+  useEffect(() => {
+    let interval;
+    if (isPlaying && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setIsPlaying(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, timeLeft]);
+
+  // Update possible words when board changes
+  useEffect(() => {
+    if (board.length > 0 && dictionary.size > 0) {
+      const words = findAllPossibleWords(board, dictionary);
+      setPossibleWords(words);
+    }
+  }, [board, dictionary]);
+
   const handleTileMouseDown = (row, col) => {
     if (!isPlaying) return;
     setIsDragging(true);
-    setDragStart([row, col]);
-    setDragCurrent([row, col]);
+    setDragStart({ row, col });
+    setDragCurrent({ row, col });
     setSelectedLetters([[row, col]]);
   };
+
   const handleTileMouseEnter = (row, col) => {
-    if (!isPlaying || !isDragging || !dragStart) return;
-    const last = selectedLetters[selectedLetters.length - 1];
-    // Only add if adjacent and not already selected
-    const isAdjacent = last && Math.abs(row - last[0]) <= 1 && Math.abs(col - last[1]) <= 1;
-    const alreadySelected = selectedLetters.some(([r, c]) => r === row && c === col);
-    if (isAdjacent && !alreadySelected) {
-      setSelectedLetters([...selectedLetters, [row, col]]);
-      setDragCurrent([row, col]);
+    if (!isDragging || !dragStart || !isPlaying) return;
+    
+    // Check if the tile is adjacent to the last selected tile
+    const lastSelected = selectedLetters[selectedLetters.length - 1];
+    const rowDiff = Math.abs(row - lastSelected[0]);
+    const colDiff = Math.abs(col - lastSelected[1]);
+    
+    if (rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0)) {
+      // Check if this tile is already selected (to prevent loops)
+      const isAlreadySelected = selectedLetters.some(([r, c]) => r === row && c === col);
+      if (!isAlreadySelected) {
+        setSelectedLetters(prev => [...prev, [row, col]]);
+        setDragCurrent({ row, col });
+      }
     }
   };
+
   const handleTileMouseUp = () => {
     setIsDragging(false);
     setDragStart(null);
     setDragCurrent(null);
   };
-  // Touch support
+
   const handleTileTouchStart = (row, col, e) => {
-    if (!isPlaying) return;
     e.preventDefault();
-    setIsDragging(true);
-    setDragStart([row, col]);
-    setDragCurrent([row, col]);
-    setSelectedLetters([[row, col]]);
-    touchCellRef.current = [row, col];
+    handleTileMouseDown(row, col);
+    touchCellRef.current = { row, col };
   };
+
   const handleTileTouchMove = (e) => {
-    if (!isPlaying || !isDragging || !dragStart) return;
+    if (!isDragging || !dragStart || !isPlaying) return;
     const touch = e.touches[0];
     if (!touch) return;
+    
     const elem = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!elem) return;
-    const r = elem.getAttribute('data-row');
-    const c = elem.getAttribute('data-col');
-    if (r !== null && c !== null) {
-      const row = parseInt(r, 10);
-      const col = parseInt(c, 10);
-      const last = selectedLetters[selectedLetters.length - 1];
-      const isAdjacent = last && Math.abs(row - last[0]) <= 1 && Math.abs(col - last[1]) <= 1;
-      const alreadySelected = selectedLetters.some(([r2, c2]) => r2 === row && c2 === col);
-      if (isAdjacent && !alreadySelected) {
-        setSelectedLetters([...selectedLetters, [row, col]]);
-        setDragCurrent([row, col]);
-        touchCellRef.current = [row, col];
-      }
+    
+    const row = elem.getAttribute('data-row');
+    const col = elem.getAttribute('data-col');
+    
+    if (row !== null && col !== null) {
+      const rowNum = parseInt(row, 10);
+      const colNum = parseInt(col, 10);
+      
+      if (touchCellRef.current && touchCellRef.current.row === rowNum && touchCellRef.current.col === colNum) return;
+      touchCellRef.current = { row: rowNum, col: colNum };
+      handleTileMouseEnter(rowNum, colNum);
     }
   };
+
   const handleTileTouchEnd = () => {
-    setIsDragging(false);
-    setDragStart(null);
-    setDragCurrent(null);
+    handleTileMouseUp();
     touchCellRef.current = null;
   };
 
-  // Submit word
   const submitWord = () => {
     if (selectedLetters.length < 3) return;
-
-    const word = selectedLetters.map(([row, col]) => {
-      const letter = board[row][col];
-      return letter === 'Qu' ? 'QU' : letter;
-    }).join('');
     
-    // Check if word is valid and not already found
-    if (dictionary.has(word) && !foundWords.includes(word)) {
+    const word = selectedLetters.map(([row, col]) => board[row][col]).join('');
+    
+    // Check if word is valid
+    if (dictionary.has(word.toLowerCase()) && !foundWords.includes(word)) {
       const wordScore = calculateWordScore(word);
-      setFoundWords([...foundWords, word]);
-      setScore(score + wordScore);
+      setScore(prev => prev + wordScore);
+      setFoundWords(prev => [...prev, word]);
+      
+      // Highlight the word briefly
+      setHighlightedTile(word);
+      setTimeout(() => setHighlightedTile(null), 1000);
     }
-
+    
     setSelectedLetters([]);
   };
 
-  // Calculate word score
   const calculateWordScore = (word) => {
     const length = word.length;
-    if (length <= 3) return 1;
-    if (length === 4) return 2;
-    if (length === 5) return 3;
-    if (length === 6) return 5;
-    if (length === 7) return 7;
+    if (length === 3) return 1;
+    if (length === 4) return 1;
+    if (length === 5) return 2;
+    if (length === 6) return 3;
+    if (length === 7) return 5;
     return 11; // 8+ letters
   };
 
-  // Timer effect
-  useEffect(() => {
-    let timer;
-    if (isPlaying && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsPlaying(false);
-    }
-    return () => clearInterval(timer);
-  }, [isPlaying, timeLeft]);
-
-  // Update possible words when board or dictionary changes
-  useEffect(() => {
-    if (board.length > 0 && dictionary.size > 0 && !isDictionaryLoading) {
-      const words = findAllPossibleWords(board, dictionary);
-      setPossibleWords(words);
-    }
-  }, [board, dictionary, isDictionaryLoading]);
-
-  // Add keyboard event listener
+  // Keyboard support
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (!isPlaying) return;
-      
-      const key = event.key.toUpperCase();
-      if (key === 'Q') {
-        // Special handling for 'Qu'
-        const quTile = findTile('Qu');
-        if (quTile) {
-          setHighlightedTile(quTile);
-          setTimeout(() => setHighlightedTile(null), 500);
-        }
-      } else if (/^[A-Z]$/.test(key)) {
-        const tile = findTile(key);
-        if (tile) {
-          setHighlightedTile(tile);
-          setTimeout(() => setHighlightedTile(null), 500);
-        }
+      if (event.key === 'Enter') {
+        submitWord();
+      } else if (event.key === 'Escape') {
+        setSelectedLetters([]);
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isPlaying, board]);
+  }, [selectedLetters]);
 
-  // Helper function to find tile coordinates
   const findTile = (letter) => {
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
         if (board[row][col] === letter) {
-          return [row, col];
+          return { row, col };
         }
       }
     }
@@ -257,31 +270,41 @@ const Boggle = () => {
 
   const renderTile = (letter, row, col) => {
     const isSelected = selectedLetters.some(([r, c]) => r === row && c === col);
-    const isHighlighted = highlightedTile && highlightedTile[0] === row && highlightedTile[1] === col;
+    const isHighlighted = highlightedTile && highlightedTile.includes(letter);
     const cacheKey = letter === 'Qu' ? 'Q' : letter;
     const cachedImage = preloadedImages[cacheKey];
-
+    
     if (cachedImage) {
       const modifiedImageUrl = modifyImageColor(cachedImage, tileColor);
       return (
-        <Box
+        <div
           key={`${row}-${col}`}
-          className={`${styles.letter} ${isSelected ? styles.selected : ''} ${isHighlighted ? styles.highlighted : ''}`}
           data-row={row}
           data-col={col}
           onMouseDown={() => handleTileMouseDown(row, col)}
           onMouseEnter={() => handleTileMouseEnter(row, col)}
           onMouseUp={handleTileMouseUp}
-          onTouchStart={e => handleTileTouchStart(row, col, e)}
+          onTouchStart={(e) => handleTileTouchStart(row, col, e)}
           onTouchMove={handleTileTouchMove}
           onTouchEnd={handleTileTouchEnd}
           style={{
+            width: tileSize,
+            height: tileSize,
             backgroundImage: `url(${modifiedImageUrl})`,
             backgroundSize: '100%',
-            backgroundColor: isSelected ? '#4CAF50' : tileColor,
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: isSelected ? '#4ECDC4' : isHighlighted ? '#FFD700' : tileColor,
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: isSelected 
+              ? '0 4px 8px rgba(78, 205, 196, 0.4)'
+              : '0 2px 4px rgba(0, 0, 0, 0.2)',
+            transform: isSelected ? 'scale(0.95)' : 'scale(1)',
             touchAction: 'none',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
+            userSelect: 'none'
           }}
         />
       );
@@ -289,17 +312,10 @@ const Boggle = () => {
     return null;
   };
 
-  // Board/tile sizing for SVG overlay
-  const TILE_SIZE = 80;
-  const TILE_GAP = 16; // 1rem gap
-  const BOARD_SIZE = 4;
-  const SVG_SIZE = TILE_SIZE * BOARD_SIZE + TILE_GAP * (BOARD_SIZE - 1);
-
-  // Calculate the center of a tile in px
   function getTileCenter(row, col) {
     return {
-      x: col * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2,
-      y: row * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2,
+      x: col * (tileSize + tileGap) + tileSize / 2,
+      y: row * (tileSize + tileGap) + tileSize / 2,
     };
   }
 
@@ -310,91 +326,341 @@ const Boggle = () => {
   }).join(' ');
 
   return (
-    <Box className={styles.container} onMouseLeave={handleTileMouseUp}>
-      <Box className={styles.gameInfo}>
-        <Typography variant="h4">Score: {score}</Typography>
-        <Typography variant="h5">Time: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</Typography>
-        <Button 
-          variant="contained" 
-          onClick={initializeBoard}
-          disabled={isDictionaryLoading}
-        >
-          {isDictionaryLoading ? 'Loading Dictionary...' : 'New Game'}
-        </Button>
-        <Button 
-          variant="outlined" 
-          onClick={() => setShowHints(!showHints)}
-          disabled={isDictionaryLoading || !isPlaying}
-        >
-          {showHints ? 'Hide Hints' : 'Show Hints'}
-        </Button>
-      </Box>
+    <Box sx={{ display: 'flex'}}>
+      <Sidenav />
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
+        <Box sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 1200, md: 1400 },
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0
+        }}>
+          {/* Controls Section */}
+          <div style={{
+            width: '100%',
+            maxWidth: isMobile ? '100%' : 1200,
+            marginBottom: isMobile ? 16 : 20,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 16 : 20,
+            alignItems: 'flex-start'
+          }}>
+            {/* Left quarter - Controls */}
+            <div style={{
+              width: isMobile ? '100%' : '25%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isMobile ? 8 : 10
+            }}>
+              {/* Game Stats */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 4 : 6,
+                alignItems: 'center',
+                marginBottom: isMobile ? 8 : 12
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row', 
+                  gap: isMobile ? 4 : 12,
+                  alignItems: 'center',
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: 500,
+                  color: '#374151'
+                }}>
+                  <span>Score: {score}</span>
+                  <span>Time: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+                </div>
+              </div>
 
-      {isDictionaryLoading ? (
-        <Box className={styles.loadingMessage}>
-          <Typography variant="h6">Loading Dictionary...</Typography>
-        </Box>
-      ) : (
-        <>
-          <Box className={styles.board} style={{ position: 'relative', width: SVG_SIZE, height: SVG_SIZE }}>
-            {/* SVG overlay for lines */}
-            <svg
-              width={SVG_SIZE}
-              height={SVG_SIZE}
-              style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 2 }}
-            >
-              {selectedLetters.length > 1 && (
-                <polyline
-                  points={linePoints}
-                  fill="none"
-                  stroke="#4ECDC4"
-                  strokeWidth={8}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  opacity={0.85}
-                  style={{ filter: 'drop-shadow(0 2px 8px #4ECDC455)' }}
-                />
+              {/* Action Buttons */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 8 : 8,
+                width: '100%'
+              }}>
+                <button 
+                  onClick={initializeBoard}
+                  disabled={isDictionaryLoading}
+                  style={{ 
+                    flex: '1',
+                    padding: isMobile ? '3px 8px' : '2px 6px', 
+                    fontSize: isMobile ? 10 : 9, 
+                    borderRadius: 4, 
+                    background: 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)',
+                    color: '#fff', 
+                    border: 'none', 
+                    cursor: isDictionaryLoading ? 'not-allowed' : 'pointer', 
+                    fontWeight: 'bold',
+                    letterSpacing: 0.3,
+                    boxShadow: '3px 0px 0px #3D5A80',
+                    outline: 'transparent',
+                    position: 'relative',
+                    userSelect: 'none',
+                    transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                    height: isMobile ? '24px' : '20px',
+                    opacity: isDictionaryLoading ? 0.6 : 1
+                  }}
+                >
+                  {isDictionaryLoading ? 'Loading...' : 'New Game'}
+                </button>
+              </div>
+
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 8 : 8,
+                width: '100%'
+              }}>
+                <button 
+                  onClick={submitWord}
+                  disabled={selectedLetters.length < 3 || !isPlaying}
+                  style={{ 
+                    flex: '1',
+                    padding: isMobile ? '3px 8px' : '2px 6px', 
+                    fontSize: isMobile ? 10 : 9, 
+                    borderRadius: 4, 
+                    background: 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)',
+                    color: '#fff', 
+                    border: 'none', 
+                    cursor: (selectedLetters.length < 3 || !isPlaying) ? 'not-allowed' : 'pointer', 
+                    fontWeight: 'bold',
+                    letterSpacing: 0.3,
+                    boxShadow: '3px 0px 0px #3D5A80',
+                    outline: 'transparent',
+                    position: 'relative',
+                    userSelect: 'none',
+                    transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                    height: isMobile ? '24px' : '20px',
+                    opacity: (selectedLetters.length < 3 || !isPlaying) ? 0.6 : 1
+                  }}
+                >
+                  Submit Word
+                </button>
+              </div>
+
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row', 
+                gap: isMobile ? 8 : 8,
+                width: '100%'
+              }}>
+                <button 
+                  onClick={() => setShowHints(!showHints)}
+                  disabled={isDictionaryLoading || !isPlaying}
+                  style={{ 
+                    flex: '1',
+                    padding: isMobile ? '3px 8px' : '2px 6px', 
+                    fontSize: isMobile ? 10 : 9, 
+                    borderRadius: 4, 
+                    background: showHints 
+                      ? 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)'
+                      : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                    color: '#fff', 
+                    border: 'none', 
+                    cursor: (isDictionaryLoading || !isPlaying) ? 'not-allowed' : 'pointer', 
+                    fontWeight: 'bold',
+                    letterSpacing: 0.3,
+                    boxShadow: showHints 
+                      ? '3px 0px 0px #3D5A80'
+                      : '3px 0px 0px #374151',
+                    outline: 'transparent',
+                    position: 'relative',
+                    userSelect: 'none',
+                    transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                    height: isMobile ? '24px' : '20px',
+                    opacity: (isDictionaryLoading || !isPlaying) ? 0.6 : 1
+                  }}
+                >
+                  {showHints ? 'Hide Hints' : 'Show Hints'}
+                </button>
+              </div>
+
+              {/* Word Lists */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: isMobile ? 8 : 12,
+                marginTop: isMobile ? 12 : 16
+              }}>
+                {/* Found Words */}
+                <div style={{ 
+                  background: '#fff', 
+                  borderRadius: 16, 
+                  boxShadow: '0 2px 12px #0001', 
+                  border: '2px solid #e0e7ef', 
+                  padding: isMobile ? 12 : 16, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: isMobile ? 4 : 6
+                }}>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    fontSize: isMobile ? 12 : 14, 
+                    marginBottom: isMobile ? 4 : 6, 
+                    color: '#3D5A80',
+                    textAlign: 'center'
+                  }}>
+                    Found Words:
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: isMobile ? 2 : 4,
+                    justifyContent: 'center',
+                    maxHeight: isMobile ? 120 : 150,
+                    overflowY: 'auto'
+                  }}>
+                    {foundWords.map((word, index) => (
+                      <div key={index} style={{ 
+                        color: '#4ECDC4', 
+                        fontWeight: 600, 
+                        fontSize: isMobile ? 10 : 12, 
+                        padding: isMobile ? '1px 3px' : '2px 4px',
+                        borderRadius: 3,
+                        background: '#4ECDC422'
+                      }}>
+                        {word} ({calculateWordScore(word)})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Possible Words (Hints) */}
+                {showHints && (
+                  <div style={{ 
+                    background: '#fff', 
+                    borderRadius: 16, 
+                    boxShadow: '0 2px 12px #0001', 
+                    border: '2px solid #e0e7ef', 
+                    padding: isMobile ? 12 : 16, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: isMobile ? 4 : 6
+                  }}>
+                    <div style={{ 
+                      fontWeight: 700, 
+                      fontSize: isMobile ? 12 : 14, 
+                      marginBottom: isMobile ? 4 : 6, 
+                      color: '#3D5A80',
+                      textAlign: 'center'
+                    }}>
+                      Possible Words:
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: isMobile ? 2 : 4,
+                      justifyContent: 'center',
+                      maxHeight: isMobile ? 120 : 150,
+                      overflowY: 'auto'
+                    }}>
+                      {possibleWords.slice(0, isMobile ? 10 : 15).map(({ word, score }, index) => (
+                        <div key={index} style={{ 
+                          color: '#666', 
+                          fontWeight: 500, 
+                          fontSize: isMobile ? 9 : 11, 
+                          padding: isMobile ? '1px 2px' : '1px 3px',
+                          borderRadius: 2,
+                          background: '#f3f4f6'
+                        }}>
+                          {word} ({score})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right three-quarters - Game Board */}
+            <div style={{
+              width: isMobile ? '100%' : '75%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              overflow: 'hidden'
+            }}>
+              {isDictionaryLoading ? (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: 200,
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: 600,
+                  color: '#374151'
+                }}>
+                  Loading Dictionary...
+                </div>
+              ) : (
+                <div style={{ 
+                  position: 'relative', 
+                  width: boardSize, 
+                  height: boardSize,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: tileGap,
+                  padding: isMobile ? 12 : 16,
+                  background: '#fff',
+                  borderRadius: 16,
+                  boxShadow: '0 2px 12px #0001',
+                  border: '2px solid #e0e7ef'
+                }} onMouseLeave={handleTileMouseUp}>
+                  {/* SVG overlay for lines */}
+                  <svg
+                    width={boardSize}
+                    height={boardSize}
+                    style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 2 }}
+                  >
+                    {selectedLetters.length > 1 && (
+                      <polyline
+                        points={linePoints}
+                        fill="none"
+                        stroke="#4ECDC4"
+                        strokeWidth={isMobile ? 6 : 8}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        opacity={0.85}
+                        style={{ filter: 'drop-shadow(0 2px 8px #4ECDC455)' }}
+                      />
+                    )}
+                  </svg>
+                  {/* Tiles */}
+                  {board.map((row, rowIndex) => (
+                    row.map((letter, colIndex) => renderTile(letter, rowIndex, colIndex))
+                  ))}
+                </div>
               )}
-            </svg>
-            {/* Tiles */}
-            {board.map((row, rowIndex) => (
-              row.map((letter, colIndex) => renderTile(letter, rowIndex, colIndex))
-            ))}
-          </Box>
+            </div>
+          </div>
 
-          <Box className={styles.controls}>
-            <Button 
-              variant="contained" 
-              onClick={submitWord}
-              disabled={selectedLetters.length < 3 || !isPlaying}
-            >
-              Submit Word
-            </Button>
-          </Box>
-
-          <Box className={styles.wordLists}>
-            <Box className={styles.foundWords}>
-              <Typography variant="h6">Found Words:</Typography>
-              {foundWords.map((word, index) => (
-                <Typography key={index}>
-                  {word} ({calculateWordScore(word)} points)
-                </Typography>
-              ))}
-            </Box>
-
-            {showHints && (
-              <Box className={styles.possibleWords}>
-                <Typography variant="h6">Possible Words:</Typography>
-                {possibleWords.map(({ word, score }, index) => (
-                  <Typography key={index}>
-                    {word} ({score} points)
-                  </Typography>
-                ))}
-              </Box>
-            )}
-          </Box>
-        </>
-      )}
+          {!isPlaying && timeLeft === 0 && (
+            <div style={{ 
+              marginTop: isMobile ? 16 : 32, 
+              fontSize: isMobile ? 20 : 28, 
+              fontWeight: 700, 
+              color: '#4ECDC4',
+              textAlign: 'center'
+            }}>
+              🎉 Game Over! Final Score: {score}
+            </div>
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 };
