@@ -95,19 +95,17 @@ const JigsawPuzzle = () => {
   const [cols, setCols] = useState(3);
   const pieceSize = 100;
   const tabSize = pieceSize / 3.5;
-  const images = [
-    "/images/theomascot.png",
-    "/images/tessmascot.png",
-    "/images/player.png",
-    "/images/t2icon.png",
-    "/images/woogles-icon.png",
-    "/images/compressed-clean-protiles/A.png",
-    "/images/compressed-clean-protiles/B.png",
-    "/images/compressed-clean-protiles/C.png"
+  const images = [ 
+    '/images/theomascot.png',
+    '/images/tessmascot.png',
+    '/images/theomascot2.png',
+    '/images/theomascot3.png',
+    '/images/theomascot4.png',
+    '/images/tessmascot2.png',
+    '/images/tessmascot3.png'
   ];
   const [image, setImage] = useState(images[0]);
   const [pieces, setPieces] = useState([]); // {row, col, tabs, id}
-  // Tray is now derived: all piece indices not present on the board
   const [board, setBoard] = useState(Array(rows * cols).fill(null)); // board[i] = pieceIdx or null
   const [dragged, setDragged] = useState(null); // {pieceIdx, from: 'tray'|'board', boardIdx?}
   const draggedRef = useRef(null);
@@ -117,29 +115,58 @@ const JigsawPuzzle = () => {
   const [showPreview, setShowPreview] = useState(false);
   const boardRef = useRef();
   const trayRef = useRef();
+  const [trayOrder, setTrayOrder] = useState([]); // Track randomized tray order
+
+  // Mobile responsiveness - adjust piece size based on screen width
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePieceSize, setMobilePieceSize] = useState(80);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      setMobilePieceSize(mobile ? 60 : 80);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const currentPieceSize = isMobile ? mobilePieceSize : pieceSize;
+  const currentTabSize = currentPieceSize / 3.5;
+  
+  // Tray pieces are much smaller for better space efficiency
+  const trayPieceSize = isMobile ? 40 : 60;
+  const trayTabSize = trayPieceSize / 3.5;
 
   // Initialize puzzle
   const initializePuzzle = (newRows, newCols, newImage) => {
+    const totalPieces = newRows * newCols;
     const tabs = generateTabs(newRows, newCols);
+    
     const newPieces = [];
-    for (let row = 0; row < newRows; row++) {
-      for (let col = 0; col < newCols; col++) {
-        newPieces.push({
-          row,
-          col,
-          tabs: tabs[row][col],
-          id: row * newCols + col,
-          imgRow: row,
-          imgCol: col,
-        });
-      }
+    for (let i = 0; i < totalPieces; i++) {
+      const row = Math.floor(i / newCols);
+      const col = i % newCols;
+      newPieces.push({
+        id: i,
+        row,
+        col,
+        tabs: tabs[row][col],
+        imgRow: row,
+        imgCol: col
+      });
     }
+    
     setPieces(newPieces);
-    setBoard(Array(newRows * newCols).fill(null));
+    setBoard(Array(totalPieces).fill(null));
     setIsComplete(false);
-    setDragged(null);
-    setShowPreview(false);
-    if (newImage) setImage(newImage);
+    
+    // Randomize tray order
+    const trayIndices = Array.from({ length: totalPieces }, (_, i) => i);
+    const shuffledTray = shuffleArray([...trayIndices]);
+    setTrayOrder(shuffledTray);
   };
 
   useEffect(() => {
@@ -200,8 +227,8 @@ const JigsawPuzzle = () => {
       ) {
         const relX = clientX - boardRect.left;
         const relY = clientY - boardRect.top;
-        let snapRow = Math.floor(relY / pieceSize);
-        let snapCol = Math.floor(relX / pieceSize);
+        let snapRow = Math.floor(relY / currentPieceSize);
+        let snapCol = Math.floor(relX / currentPieceSize);
         if (
           snapRow >= 0 && snapRow < rows &&
           snapCol >= 0 && snapCol < cols
@@ -261,7 +288,7 @@ const JigsawPuzzle = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragged, pieceSize, rows, cols, board, mousePos]);
+  }, [dragged, currentPieceSize, rows, cols, board, mousePos]);
 
   const handleTrayMouseDown = (pieceIdx, e) => {
     if (isComplete) return;
@@ -292,21 +319,11 @@ const JigsawPuzzle = () => {
   };
 
   const shuffleTray = () => {
-    // Shuffle unplaced pieces
-    const trayPieces = pieces.map((_, idx) => idx).filter(idx => !board.includes(idx));
-    const shuffled = shuffleArray(trayPieces);
-    // Place shuffled tray pieces at the end of the board (if any nulls)
-    setBoard(prev => {
-      const newBoard = prev.slice();
-      let trayIdx = 0;
-      for (let i = 0; i < newBoard.length; i++) {
-        if (newBoard[i] === null && trayIdx < shuffled.length) {
-          newBoard[i] = null; // keep as null
-          trayIdx++;
-        }
-      }
-      return newBoard;
-    });
+    // Re-randomize the tray order
+    const totalPieces = rows * cols;
+    const trayIndices = Array.from({ length: totalPieces }, (_, i) => i);
+    const shuffledTray = shuffleArray([...trayIndices]);
+    setTrayOrder(shuffledTray);
   };
 
   const resetPuzzle = () => {
@@ -322,86 +339,121 @@ const JigsawPuzzle = () => {
   }, [dragged]);
 
   return (
-    <div style={{ 
-      display: "flex", 
-      flexDirection: "column", 
-      alignItems: "center", 
-      minHeight: "80vh", 
-      padding: 16,
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      minHeight: "80vh",
+      padding: isMobile ? 12 : 16,
       width: '100%'
     }}>
       {/* Control Box / Tray */}
-      <div style={{ 
+      <div style={{
         width: '100%',
-        maxWidth: 400,
-        marginBottom: 20,
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center'
+        maxWidth: isMobile ? '100%' : 800,
+        marginBottom: isMobile ? 16 : 20,
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 16 : 20,
+        alignItems: 'flex-start'
       }}>
-        <div style={{ 
-          marginBottom: 20, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 10,
-          width: '100%'
+        {/* Left half - Controls */}
+        <div style={{
+          width: isMobile ? '100%' : '50%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isMobile ? 8 : 10
         }}>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 8,
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: isMobile ? 6 : 8,
             alignItems: 'center'
           }}>
-            <label style={{ 
-              fontWeight: 600, 
+            <label style={{
+              fontWeight: 600,
               marginBottom: 4,
               textAlign: 'center',
-              fontSize: 16
+              fontSize: isMobile ? 14 : 16
             }}>Grid Size:</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: isMobile ? 2 : 3, 
+              justifyContent: 'center',
+              width: '100%'
+            }}>
               {[3, 4, 5, 7].map(size => (
                 <button
                   key={size}
                   onClick={() => { setRows(size); setCols(size); }}
                   style={{
-                    padding: '6px 12px',
-                    fontSize: 14,
+                    padding: isMobile ? '3px 6px' : '4px 8px',
+                    fontSize: isMobile ? 10 : 12,
                     borderRadius: 6,
-                    background: rows === size ? '#4ECDC4' : '#eee',
-                    color: rows === size ? '#fff' : '#333',
+                    background: rows === size 
+                      ? 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)'
+                      : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                    color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
                     fontWeight: 'bold',
-                    boxShadow: '0 1px 4px #0001',
-                    flex: '1 1 calc(50% - 2px)'
+                    letterSpacing: 0.5,
+                    boxShadow: rows === size 
+                      ? '4px 0px 0px #3D5A80'
+                      : '4px 0px 0px #374151',
+                    outline: 'transparent',
+                    position: 'relative',
+                    userSelect: 'none',
+                    marginLeft: isMobile ? 1 : 2,
+                    marginRight: isMobile ? 1 : 2,
+                    marginBottom: 0,
+                    transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+                    transform: rows === size ? 'scale(1.02)' : 'scale(1)',
+                    zIndex: rows === size ? 2 : 1,
+                    flex: isMobile ? '1 1 calc(50% - 2px)' : '1 1 calc(50% - 3px)',
+                    minWidth: isMobile ? '40px' : '50px'
                   }}
                 >
                   {size} x {size}
+                  {rows === size && (
+                    <span style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      bottom: -4,
+                      height: 3,
+                      background: '#4ECDC4',
+                      borderRadius: 2,
+                      width: '100%',
+                      display: 'block',
+                    }} />
+                  )}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 8,
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: isMobile ? 6 : 8,
             alignItems: 'center'
           }}>
-            <label style={{ 
-              fontWeight: 600, 
+            <label style={{
+              fontWeight: 600,
               marginBottom: 4,
               textAlign: 'center',
-              fontSize: 16
+              fontSize: isMobile ? 14 : 16
             }}>Image:</label>
             <select
               value={image}
               onChange={e => setImage(e.target.value)}
-              style={{ 
-                fontSize: 14, 
-                padding: '6px 12px', 
+              style={{
+                fontSize: isMobile ? 12 : 14,
+                padding: isMobile ? '4px 8px' : '6px 12px',
                 borderRadius: 6,
                 width: '100%',
-                maxWidth: 200
+                maxWidth: isMobile ? '100%' : 200
               }}
             >
               {images.map(img => (
@@ -411,22 +463,91 @@ const JigsawPuzzle = () => {
               ))}
             </select>
           </div>
+          
+          {/* Action Buttons */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row', 
+            gap: isMobile ? 8 : 8,
+            width: '100%'
+          }}>
+            <button onClick={shuffleTray} style={{ 
+              flex: '1',
+              padding: isMobile ? '10px 16px' : '8px 16px', 
+              fontSize: isMobile ? 16 : 14, 
+              borderRadius: 8, 
+              background: 'linear-gradient(45deg, transparent 5%, #4ECDC4 5%)',
+              color: '#fff', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              boxShadow: '6px 0px 0px #3D5A80',
+              outline: 'transparent',
+              position: 'relative',
+              userSelect: 'none',
+              transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+              minHeight: isMobile ? '44px' : 'auto'
+            }}>
+              Shuffle
+            </button>
+            <button onClick={resetPuzzle} style={{ 
+              flex: '1',
+              padding: isMobile ? '10px 16px' : '8px 16px', 
+              fontSize: isMobile ? 16 : 14, 
+              borderRadius: 8, 
+              background: 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+              color: '#fff', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              boxShadow: '6px 0px 0px #374151',
+              outline: 'transparent',
+              position: 'relative',
+              userSelect: 'none',
+              transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+              minHeight: isMobile ? '44px' : 'auto'
+            }}>
+              Reset
+            </button>
+            <button onClick={() => setShowPreview(p => !p)} style={{ 
+              flex: '1',
+              padding: isMobile ? '10px 16px' : '8px 16px', 
+              fontSize: isMobile ? 16 : 14, 
+              borderRadius: 8, 
+              background: 'linear-gradient(45deg, transparent 5%, #F59E0B 5%)',
+              color: '#fff', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              boxShadow: '6px 0px 0px #D97706',
+              outline: 'transparent',
+              position: 'relative',
+              userSelect: 'none',
+              transition: 'all 0.18s cubic-bezier(.4,2,.6,1)',
+              minHeight: isMobile ? '44px' : 'auto'
+            }}>
+              {showPreview ? 'Hide' : 'Show'} Preview
+            </button>
+          </div>
         </div>
+        
+        {/* Right half - Tray */}
         <div ref={trayRef} style={{ 
-          minHeight: pieceSize + 16, 
-          width: '100%',
-          maxWidth: 350,
+          minHeight: trayPieceSize + (isMobile ? 12 : 16), 
+          width: isMobile ? '100%' : '50%',
           background: '#f0f4f8', 
-          borderRadius: 12, 
+          borderRadius: isMobile ? 8 : 12, 
           boxShadow: '0 2px 8px #0001', 
-          padding: 8, 
+          padding: isMobile ? 6 : 8, 
           display: 'flex', 
           flexWrap: 'wrap', 
-          gap: 6, 
-          marginBottom: 20, 
+          gap: isMobile ? 4 : 6, 
           position: 'relative' 
         }}>
-          {pieces.map((_, pieceIdx) => pieceIdx).filter(pieceIdx => !board.includes(pieceIdx)).map((pieceIdx, i) => {
+          {trayOrder.filter(pieceIdx => !board.includes(pieceIdx)).map((pieceIdx, i) => {
             const piece = pieces[pieceIdx];
             if (!piece) return null;
             // If dragging this piece from tray, render as floating
@@ -435,8 +556,8 @@ const JigsawPuzzle = () => {
               <div
                 key={`tray-${piece.id}`}
                 style={{ 
-                  width: pieceSize, 
-                  height: pieceSize, 
+                  width: trayPieceSize, 
+                  height: trayPieceSize, 
                   cursor: isComplete ? 'default' : 'grab', 
                   position: 'relative',
                   flexShrink: 0
@@ -444,27 +565,27 @@ const JigsawPuzzle = () => {
                 onMouseDown={e => handleTrayMouseDown(pieceIdx, e)}
               >
                 <svg
-                  width={pieceSize + 2 * tabSize}
-                  height={pieceSize + 2 * tabSize}
-                  viewBox={`0 0 ${pieceSize + 2 * tabSize} ${pieceSize + 2 * tabSize}`}
-                  style={{ display: 'block', position: 'absolute', left: -tabSize, top: -tabSize }}
+                  width={trayPieceSize + 2 * trayTabSize}
+                  height={trayPieceSize + 2 * trayTabSize}
+                  viewBox={`0 0 ${trayPieceSize + 2 * trayTabSize} ${trayPieceSize + 2 * trayTabSize}`}
+                  style={{ display: 'block', position: 'absolute', left: -trayTabSize, top: -trayTabSize }}
                 >
                   <defs>
                     <clipPath id={`clip_tray_${piece.id}`}>
-                      <path d={getPiecePath(tabSize, tabSize, pieceSize, piece.tabs)} />
+                      <path d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, piece.tabs)} />
                     </clipPath>
                   </defs>
                   <image
                     href={image}
-                    x={tabSize - piece.imgCol * pieceSize}
-                    y={tabSize - piece.imgRow * pieceSize}
-                    width={cols * pieceSize}
-                    height={rows * pieceSize}
+                    x={trayTabSize - piece.imgCol * trayPieceSize}
+                    y={trayTabSize - piece.imgRow * trayPieceSize}
+                    width={cols * trayPieceSize}
+                    height={rows * trayPieceSize}
                     clipPath={`url(#clip_tray_${piece.id})`}
                     style={{ pointerEvents: 'none' }}
                   />
                   <path
-                    d={getPiecePath(tabSize, tabSize, pieceSize, piece.tabs)}
+                    d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, piece.tabs)}
                     fill="none"
                     stroke="#333"
                     strokeWidth={2}
@@ -478,36 +599,36 @@ const JigsawPuzzle = () => {
             <div
               style={{
                 position: 'fixed',
-                left: mousePos.x - dragOffset.x - tabSize,
-                top: mousePos.y - dragOffset.y - tabSize,
-                width: pieceSize + 2 * tabSize,
-                height: pieceSize + 2 * tabSize,
+                left: mousePos.x - dragOffset.x - trayTabSize,
+                top: mousePos.y - dragOffset.y - trayTabSize,
+                width: trayPieceSize + 2 * trayTabSize,
+                height: trayPieceSize + 2 * trayTabSize,
                 pointerEvents: 'none',
                 zIndex: 1000,
               }}
             >
               <svg
-                width={pieceSize + 2 * tabSize}
-                height={pieceSize + 2 * tabSize}
-                viewBox={`0 0 ${pieceSize + 2 * tabSize} ${pieceSize + 2 * tabSize}`}
+                width={trayPieceSize + 2 * trayTabSize}
+                height={trayPieceSize + 2 * trayTabSize}
+                viewBox={`0 0 ${trayPieceSize + 2 * trayTabSize} ${trayPieceSize + 2 * trayTabSize}`}
                 style={{ display: 'block' }}
               >
                 <defs>
                   <clipPath id={`clip_tray_drag_${dragged.pieceIdx}`}>
-                    <path d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)} />
+                    <path d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, pieces[dragged.pieceIdx].tabs)} />
                   </clipPath>
                 </defs>
                 <image
                   href={image}
-                  x={tabSize - pieces[dragged.pieceIdx].imgCol * pieceSize}
-                  y={tabSize - pieces[dragged.pieceIdx].imgRow * pieceSize}
-                  width={cols * pieceSize}
-                  height={rows * pieceSize}
+                  x={trayTabSize - pieces[dragged.pieceIdx].imgCol * trayPieceSize}
+                  y={trayTabSize - pieces[dragged.pieceIdx].imgRow * trayPieceSize}
+                  width={cols * trayPieceSize}
+                  height={rows * trayPieceSize}
                   clipPath={`url(#clip_tray_drag_${dragged.pieceIdx})`}
                   style={{ pointerEvents: 'none' }}
                 />
                 <path
-                  d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)}
+                  d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, pieces[dragged.pieceIdx].tabs)}
                   fill="none"
                   stroke="#333"
                   strokeWidth={2}
@@ -516,59 +637,10 @@ const JigsawPuzzle = () => {
             </div>
           )}
         </div>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'row', 
-          gap: 8,
-          width: '100%'
-        }}>
-          <button onClick={shuffleTray} style={{ 
-            flex: '1',
-            padding: '8px 16px', 
-            fontSize: 14, 
-            borderRadius: 8, 
-            background: '#4ECDC4', 
-            color: '#fff', 
-            border: 'none', 
-            cursor: 'pointer', 
-            fontWeight: 'bold', 
-            boxShadow: '0 2px 8px #0002' 
-          }}>
-            Shuffle
-          </button>
-          <button onClick={resetPuzzle} style={{ 
-            flex: '1',
-            padding: '8px 16px', 
-            fontSize: 14, 
-            borderRadius: 8, 
-            background: '#3D5A80', 
-            color: '#fff', 
-            border: 'none', 
-            cursor: 'pointer', 
-            fontWeight: 'bold', 
-            boxShadow: '0 2px 8px #0002' 
-          }}>
-            Reset
-          </button>
-          <button onClick={() => setShowPreview(p => !p)} style={{ 
-            flex: '1',
-            padding: '8px 16px', 
-            fontSize: 14, 
-            borderRadius: 8, 
-            background: '#ffe066', 
-            color: '#333', 
-            border: 'none', 
-            cursor: 'pointer', 
-            fontWeight: 'bold', 
-            boxShadow: '0 2px 8px #0002' 
-          }}>
-            {showPreview ? 'Hide' : 'Show'} Preview
-          </button>
-        </div>
         {isComplete && (
           <div style={{ 
-            marginTop: 20, 
-            fontSize: 18, 
+            marginTop: isMobile ? 16 : 20, 
+            fontSize: isMobile ? 16 : 18, 
             fontWeight: 700, 
             color: '#4ECDC4',
             textAlign: 'center'
@@ -583,13 +655,15 @@ const JigsawPuzzle = () => {
         style={{
           position: "relative",
           width: '100%',
-          maxWidth: cols * pieceSize,
-          height: rows * pieceSize,
+          maxWidth: cols * currentPieceSize,
+          height: rows * currentPieceSize,
           background: "#eee",
-          borderRadius: 16,
+          borderRadius: isMobile ? 12 : 16,
           boxShadow: '0 2px 12px #0001',
           border: '2px solid #e0e7ef',
-          userSelect: 'none'
+          userSelect: 'none',
+          marginTop: isMobile ? 12 : 16,
+          touchAction: 'none' // Prevent scrolling when dragging pieces
         }}
       >
         {/* Preview overlay */}
@@ -601,8 +675,8 @@ const JigsawPuzzle = () => {
               position: 'absolute',
               left: 0,
               top: 0,
-              width: cols * pieceSize,
-              height: rows * pieceSize,
+              width: cols * currentPieceSize,
+              height: rows * currentPieceSize,
               opacity: 0.5,
               zIndex: 1,
               pointerEvents: 'none',
@@ -614,18 +688,18 @@ const JigsawPuzzle = () => {
         {board.map((pieceIdx, i) => {
           const gridRow = Math.floor(i / cols);
           const gridCol = i % cols;
-          const left = gridCol * pieceSize - tabSize;
-          const top = gridRow * pieceSize - tabSize;
+          const left = gridCol * currentPieceSize - currentTabSize;
+          const top = gridRow * currentPieceSize - currentTabSize;
           if (pieceIdx === null) {
             return (
               <div
                 key={`board-empty-${i}`}
                 style={{
                   position: 'absolute',
-                  left: gridCol * pieceSize,
-                  top: gridRow * pieceSize,
-                  width: pieceSize,
-                  height: pieceSize,
+                  left: gridCol * currentPieceSize,
+                  top: gridRow * currentPieceSize,
+                  width: currentPieceSize,
+                  height: currentPieceSize,
                   background: '#f0f4f8',
                   borderRadius: 8,
                   border: '1px dashed #bbb',
@@ -644,35 +718,35 @@ const JigsawPuzzle = () => {
                 position: 'absolute',
                 left,
                 top,
-                width: pieceSize + 2 * tabSize,
-                height: pieceSize + 2 * tabSize,
+                width: currentPieceSize + 2 * currentTabSize,
+                height: currentPieceSize + 2 * currentTabSize,
                 zIndex: 2,
                 cursor: isComplete ? 'default' : 'grab',
               }}
               onMouseDown={e => handleBoardMouseDown(i, pieceIdx, e)}
             >
               <svg
-                width={pieceSize + 2 * tabSize}
-                height={pieceSize + 2 * tabSize}
-                viewBox={`0 0 ${pieceSize + 2 * tabSize} ${pieceSize + 2 * tabSize}`}
+                width={currentPieceSize + 2 * currentTabSize}
+                height={currentPieceSize + 2 * currentTabSize}
+                viewBox={`0 0 ${currentPieceSize + 2 * currentTabSize} ${currentPieceSize + 2 * currentTabSize}`}
                 style={{ display: 'block' }}
               >
                 <defs>
                   <clipPath id={`clip_board_${piece.id}`}>
-                    <path d={getPiecePath(tabSize, tabSize, pieceSize, piece.tabs)} />
+                    <path d={getPiecePath(currentTabSize, currentTabSize, currentPieceSize, piece.tabs)} />
                   </clipPath>
                 </defs>
                 <image
                   href={image}
-                  x={tabSize - piece.imgCol * pieceSize}
-                  y={tabSize - piece.imgRow * pieceSize}
-                  width={cols * pieceSize}
-                  height={rows * pieceSize}
+                  x={currentTabSize - piece.imgCol * currentPieceSize}
+                  y={currentTabSize - piece.imgRow * currentPieceSize}
+                  width={cols * currentPieceSize}
+                  height={rows * currentPieceSize}
                   clipPath={`url(#clip_board_${piece.id})`}
                   style={{ pointerEvents: 'none' }}
                 />
                 <path
-                  d={getPiecePath(tabSize, tabSize, pieceSize, piece.tabs)}
+                  d={getPiecePath(currentTabSize, currentTabSize, currentPieceSize, piece.tabs)}
                   fill="none"
                   stroke="#333"
                   strokeWidth={2}
@@ -686,36 +760,36 @@ const JigsawPuzzle = () => {
           <div
             style={{
               position: 'fixed',
-              left: mousePos.x - dragOffset.x - tabSize,
-              top: mousePos.y - dragOffset.y - tabSize,
-              width: pieceSize + 2 * tabSize,
-              height: pieceSize + 2 * tabSize,
+              left: mousePos.x - dragOffset.x - currentTabSize,
+              top: mousePos.y - dragOffset.y - currentTabSize,
+              width: currentPieceSize + 2 * currentTabSize,
+              height: currentPieceSize + 2 * currentTabSize,
               pointerEvents: 'none',
               zIndex: 1000,
             }}
           >
             <svg
-              width={pieceSize + 2 * tabSize}
-              height={pieceSize + 2 * tabSize}
-              viewBox={`0 0 ${pieceSize + 2 * tabSize} ${pieceSize + 2 * tabSize}`}
+              width={currentPieceSize + 2 * currentTabSize}
+              height={currentPieceSize + 2 * currentTabSize}
+              viewBox={`0 0 ${currentPieceSize + 2 * currentTabSize} ${currentPieceSize + 2 * currentTabSize}`}
               style={{ display: 'block' }}
             >
               <defs>
                 <clipPath id={`clip_board_drag_${dragged.pieceIdx}`}>
-                  <path d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)} />
+                  <path d={getPiecePath(currentTabSize, currentTabSize, currentPieceSize, pieces[dragged.pieceIdx].tabs)} />
                 </clipPath>
               </defs>
               <image
                 href={image}
-                x={tabSize - pieces[dragged.pieceIdx].imgCol * pieceSize}
-                y={tabSize - pieces[dragged.pieceIdx].imgRow * pieceSize}
-                width={cols * pieceSize}
-                height={rows * pieceSize}
+                x={currentTabSize - pieces[dragged.pieceIdx].imgCol * currentPieceSize}
+                y={currentTabSize - pieces[dragged.pieceIdx].imgRow * currentPieceSize}
+                width={cols * currentPieceSize}
+                height={rows * currentPieceSize}
                 clipPath={`url(#clip_board_drag_${dragged.pieceIdx})`}
                 style={{ pointerEvents: 'none' }}
               />
               <path
-                d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)}
+                d={getPiecePath(currentTabSize, currentTabSize, currentPieceSize, pieces[dragged.pieceIdx].tabs)}
                 fill="none"
                 stroke="#333"
                 strokeWidth={2}
@@ -728,36 +802,36 @@ const JigsawPuzzle = () => {
           <div
             style={{
               position: 'fixed',
-              left: mousePos.x - dragOffset.x - tabSize,
-              top: mousePos.y - dragOffset.y - tabSize,
-              width: pieceSize + 2 * tabSize,
-              height: pieceSize + 2 * tabSize,
+              left: mousePos.x - dragOffset.x - trayTabSize,
+              top: mousePos.y - dragOffset.y - trayTabSize,
+              width: trayPieceSize + 2 * trayTabSize,
+              height: trayPieceSize + 2 * trayTabSize,
               pointerEvents: 'none',
               zIndex: 1000,
             }}
           >
             <svg
-              width={pieceSize + 2 * tabSize}
-              height={pieceSize + 2 * tabSize}
-              viewBox={`0 0 ${pieceSize + 2 * tabSize} ${pieceSize + 2 * tabSize}`}
+              width={trayPieceSize + 2 * trayTabSize}
+              height={trayPieceSize + 2 * trayTabSize}
+              viewBox={`0 0 ${trayPieceSize + 2 * trayTabSize} ${trayPieceSize + 2 * trayTabSize}`}
               style={{ display: 'block' }}
             >
               <defs>
                 <clipPath id={`clip_tray_drag_${dragged.pieceIdx}`}>
-                  <path d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)} />
+                  <path d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, pieces[dragged.pieceIdx].tabs)} />
                 </clipPath>
               </defs>
               <image
                 href={image}
-                x={tabSize - pieces[dragged.pieceIdx].imgCol * pieceSize}
-                y={tabSize - pieces[dragged.pieceIdx].imgRow * pieceSize}
-                width={cols * pieceSize}
-                height={rows * pieceSize}
+                x={trayTabSize - pieces[dragged.pieceIdx].imgCol * trayPieceSize}
+                y={trayTabSize - pieces[dragged.pieceIdx].imgRow * trayPieceSize}
+                width={cols * trayPieceSize}
+                height={rows * trayPieceSize}
                 clipPath={`url(#clip_tray_drag_${dragged.pieceIdx})`}
                 style={{ pointerEvents: 'none' }}
               />
               <path
-                d={getPiecePath(tabSize, tabSize, pieceSize, pieces[dragged.pieceIdx].tabs)}
+                d={getPiecePath(trayTabSize, trayTabSize, trayPieceSize, pieces[dragged.pieceIdx].tabs)}
                 fill="none"
                 stroke="#333"
                 strokeWidth={2}
