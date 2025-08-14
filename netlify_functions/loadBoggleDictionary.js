@@ -14,8 +14,8 @@ async function loadBoggleDictionary() {
   const startTime = Date.now();
 
   try {
-    // Load from the same dictionary.json file
-    const dictionaryPath = path.join(__dirname, 'dictionary.json');
+    // Load from the same twl-wordlist.json file
+    const dictionaryPath = path.join(__dirname, 'twl-wordlist.json');
     console.log('Loading dictionary from:', dictionaryPath);
     
     const fileStartTime = Date.now();

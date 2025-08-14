@@ -4,13 +4,15 @@
     publish = "build"
     include = [
         "netlify_functions/dictionary.gaddag.json",
-        "netlify_functions/leaves.json"
+        "netlify_functions/leaves.json",
+        "netlify_functions/twl-wordlist.json"
     ]
 
 [functions]
     included_files = [
         "netlify_functions/leaves.json",
-        "netlify_functions/dictionary.gaddag.json"
+        "netlify_functions/dictionary.gaddag.json",
+        "netlify_functions/twl-wordlist.json"
     ]
     node_bundler = "esbuild"
     external_node_modules = ["aws-sdk"]

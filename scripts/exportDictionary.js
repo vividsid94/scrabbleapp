@@ -38,8 +38,8 @@ async function exportDictionary() {
 
     console.log(`Found total of ${allWords.length} words`);
 
-    // Save to dictionary.json
-    const outputPath = path.join(__dirname, '../netlify_functions/dictionary.json');
+    // Save to twl-wordlist.json
+const outputPath = path.join(__dirname, '../netlify_functions/twl-wordlist.json');
     fs.writeFileSync(outputPath, JSON.stringify(allWords, null, 2));
     console.log(`Saved ${allWords.length} words to ${outputPath}`);
 

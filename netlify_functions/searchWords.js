@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
     // Load the full word list for searching
     const fs = require('fs');
     const path = require('path');
-    const dictionaryPath = path.join(__dirname, 'dictionary.json');
+    const dictionaryPath = path.join(__dirname, 'twl-wordlist.json');
     const dictionaryData = fs.readFileSync(dictionaryPath, 'utf8');
     const allWords = JSON.parse(dictionaryData);
 
