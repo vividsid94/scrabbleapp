@@ -17,7 +17,7 @@ const Widget = () => {
   const [validationWord, setValidationWord] = useState('');
   const [validationResult, setValidationResult] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [activeTab, setActiveTab] = useState('validation'); // 'validation' or 'anagram'
+  const [activeTab, setActiveTab] = useState('validation'); // 'validation', 'anagram', or 'subanagram'
 
   useEffect(() => {
     // Check if running in Electron
@@ -35,14 +35,18 @@ const Widget = () => {
   useEffect(() => {
     const searchTimeout = setTimeout(() => {
       if (searchTerm.length > 0) {
-        performSearch(searchTerm);
+        if (activeTab === 'anagram') {
+          performSearch(searchTerm);
+        } else if (activeTab === 'subanagram') {
+          performSubanagramSearch(searchTerm);
+        }
       } else {
         setSearchResults([]);
       }
     }, 300); // Wait 300ms after user stops typing
 
     return () => clearTimeout(searchTimeout);
-  }, [searchTerm]);
+  }, [searchTerm, activeTab]);
 
   const performSearch = async (term) => {
     if (term.length < 1) {
@@ -53,7 +57,7 @@ const Widget = () => {
     setIsSearching(true);
     try {
       // Call the Go service for anagram search
-      const response = await fetch(`${GO_SERVICE_URL}/anagram-search`, {
+      const response = await fetch(`${GO_SERVICE_URL}/find-anagrams`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,25 +66,76 @@ const Widget = () => {
       });
       
       if (!response.ok) {
-        if (response.status === 404) {
-          // Anagram search endpoint not implemented yet
-          setSearchResults(['Anagram search coming soon!']);
-        } else {
-          console.error('Search error:', response.status, response.statusText);
-          setSearchResults([]);
-        }
+        console.error('Search error:', response.status, response.statusText);
+        setSearchResults([]);
         return;
       }
       
       const data = await response.json();
+      console.log('Anagram search response:', data); // Debug log
       
+      // Check for different possible response formats
       if (data.words) {
         setSearchResults(data.words);
+      } else if (data.anagrams) {
+        setSearchResults(data.anagrams);
+      } else if (data.results) {
+        setSearchResults(data.results);
+      } else if (Array.isArray(data)) {
+        setSearchResults(data);
       } else {
+        console.log('No words found in response, data:', data);
         setSearchResults([]);
       }
     } catch (error) {
       console.error('Search error:', error);
+      setSearchResults(['Service temporarily unavailable']);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const performSubanagramSearch = async (term) => {
+    if (term.length < 1) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Call the Go service for subanagram search
+      const response = await fetch(`${GO_SERVICE_URL}/find-subanagrams`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ letters: term })
+      });
+      
+      if (!response.ok) {
+        console.error('Subanagram search error:', response.status, response.statusText);
+        setSearchResults([]);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Subanagram search response:', data); // Debug log
+      
+      // Check for different possible response formats
+      if (data.words) {
+        setSearchResults(data.words);
+      } else if (data.subanagrams) {
+        setSearchResults(data.subanagrams);
+      } else if (data.results) {
+        setSearchResults(data.results);
+      } else if (Array.isArray(data)) {
+        setSearchResults(data);
+      } else {
+        console.log('No subanagrams found in response, data:', data);
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Subanagram search error:', error);
       setSearchResults(['Service temporarily unavailable']);
     } finally {
       setIsSearching(false);
@@ -325,7 +380,7 @@ const Widget = () => {
                 color: activeTab === 'validation' ? 'white' : '#4F46E5',
                 fontWeight: activeTab === 'validation' ? 'bold' : '500',
                 transition: 'all 0.2s ease',
-                fontSize: '0.8rem',
+                fontSize: '0.7rem',
                 '&:hover': {
                   background: activeTab === 'validation' 
                     ? 'linear-gradient(135deg, #4338CA, #5855EB)' 
@@ -351,7 +406,7 @@ const Widget = () => {
                 color: activeTab === 'anagram' ? 'white' : '#059669',
                 fontWeight: activeTab === 'anagram' ? 'bold' : '500',
                 transition: 'all 0.2s ease',
-                fontSize: '0.8rem',
+                fontSize: '0.7rem',
                 '&:hover': {
                   background: activeTab === 'anagram' 
                     ? 'linear-gradient(135deg, #047857, #059669)' 
@@ -364,9 +419,180 @@ const Widget = () => {
                 Anagram Search
               </Box>
             </Box>
+            <Box
+              onClick={() => setActiveTab('subanagram')}
+              sx={{
+                flex: 1,
+                p: 1.5,
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: activeTab === 'subanagram' 
+                  ? 'linear-gradient(135deg, #F59E0B, #F97316)' 
+                  : 'transparent',
+                color: activeTab === 'subanagram' ? 'white' : '#F59E0B',
+                fontWeight: activeTab === 'subanagram' ? 'bold' : '500',
+                transition: 'all 0.2s ease',
+                fontSize: '0.7rem',
+                '&:hover': {
+                  background: activeTab === 'subanagram' 
+                    ? 'linear-gradient(135deg, #D97706, #F59E0B)' 
+                    : 'rgba(245, 158, 11, 0.1)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <MagnifyingGlass size={14} weight="fill" />
+                Subanagrams
+              </Box>
+            </Box>
           </Box>
 
           {/* Tab Content */}
+          {activeTab === 'subanagram' && (
+            /* Subanagram Search Tab */
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 1,
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(249, 115, 22, 0.05))',
+              borderRadius: '0px',
+              p: 1.5,
+              border: '1px solid rgba(245, 158, 11, 0.15)',
+              height: '200px'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                <MagnifyingGlass size={16} weight="fill" color="#F59E0B" />
+                <Typography variant="body2" sx={{ 
+                  color: '#F59E0B', 
+                  fontWeight: 'bold',
+                  fontFamily: 'Preahvihear, sans-serif',
+                  textAlign: 'center',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  fontSize: '0.85rem'
+                }}>
+                  Subanagram Search
+                </Typography>
+              </Box>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  size="small"
+                  placeholder="Enter letters to find subanagrams..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  autoComplete="off"
+                  InputProps={{
+                    startAdornment: <Search sx={{ mr: 1.5, color: '#F59E0B', fontSize: '1.2rem' }} />,
+                    endAdornment: isSearching ? (
+                      <CircularProgress size={20} sx={{ color: '#F59E0B' }} />
+                    ) : null
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      borderRadius: '0px',
+                      '& fieldset': {
+                        borderColor: 'rgba(245, 158, 11, 0.3)',
+                        borderWidth: '2px',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(245, 158, 11, 0.5)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#F59E0B',
+                        borderWidth: '2px',
+                      },
+                    },
+                  }}
+                />
+              </Box>
+              
+              {/* Search Results - Fixed height, no scrollbar */}
+              {searchResults.length > 0 && (
+                <Box sx={{ 
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '0px',
+                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                  flex: 1,
+                  p: 0,
+                  overflow: 'hidden'
+                }}>
+                  <List sx={{ 
+                    height: '100%',
+                    p: 0,
+                    overflow: 'hidden'
+                  }}>
+                    {searchResults.map((word, index) => {
+                      // Check if this is a special message (not a real word)
+                      const isSpecialMessage = word === 'Service temporarily unavailable';
+                      
+                      return (
+                        <ListItem 
+                          key={index} 
+                          sx={{ 
+                            py: 1, 
+                            px: 2,
+                            borderBottom: index < searchResults.length - 1 ? '1px solid rgba(245, 158, 11, 0.1)' : 'none',
+                            '&:hover': { 
+                              background: isSpecialMessage ? 'rgba(255, 193, 7, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                              transform: isSpecialMessage ? 'none' : 'translateX(4px)'
+                            },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <ListItemText 
+                            primary={word} 
+                            primaryTypographyProps={{ 
+                              fontSize: '0.8rem',
+                              color: isSpecialMessage ? '#F59E0B' : '#F59E0B',
+                              fontWeight: '600',
+                              fontFamily: 'Preahvihear, sans-serif',
+                              fontStyle: isSpecialMessage ? 'italic' : 'normal'
+                            }}
+                          />
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Box>
+              )}
+              
+              {/* No results message */}
+              {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+                <Box sx={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  borderRadius: '0px',
+                  p: 1.5,
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  textAlign: 'center',
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography variant="body2" sx={{ 
+                    color: '#DC2626',
+                    fontWeight: '500',
+                    fontSize: '0.75rem'
+                  }}>
+                    No subanagrams found
+                  </Typography>
+                </Box>
+              )}
+              
+              {/* Help text */}
+              <Typography variant="body2" sx={{ 
+                color: '#F59E0B', 
+                textAlign: 'center', 
+                py: 0.5,
+                fontStyle: 'italic',
+                opacity: 0.8,
+                fontSize: '0.75rem'
+              }}>
+                Type letters to find all possible shorter words
+              </Typography>
+            </Box>
+          )}
+
           {activeTab === 'validation' && (
             /* Word Validation Tab */
             <Box sx={{ 
@@ -652,7 +878,7 @@ const Widget = () => {
                     opacity: 0.8,
                     fontSize: '0.75rem'
                   }}>
-                    Anagram search coming soon! For now, use word validation above
+                    Type letters to find all possible Scrabble words
                   </Typography>
                 </Box>
               )}

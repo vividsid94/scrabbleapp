@@ -1,14 +1,18 @@
 /**
- * Load Dictionary - Now calls deployed Railway service
+ * Load Dictionary - Railway Service Interface
  * 
- * This function provides a simple interface to validate words and search anagrams
- * by calling the deployed Go service instead of parsing KWG files locally.
+ * This function provides a unified interface to the deployed Railway service
+ * for word validation, anagram search, and subanagram search.
+ * 
+ * Used by: gameLogic.js, botLogic.js, getBoardControl.js, getTopMoves.js, 
+ * generateMoves.js, studyLogic.js, Boggle.js
  */
 
 const RAILWAY_BASE_URL = 'https://scrabble-move-generator-production.up.railway.app';
 
 /**
- * Simple dictionary interface that calls the Railway service
+ * Railway Dictionary Interface
+ * Provides compatibility with existing code that expects a dictionary object
  */
 class RailwayDictionary {
   constructor() {
@@ -47,7 +51,7 @@ class RailwayDictionary {
    */
   async search(letters) {
     try {
-      const response = await fetch(`${this.baseUrl}/anagram-search`, {
+      const response = await fetch(`${this.baseUrl}/find-anagrams`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +65,47 @@ class RailwayDictionary {
       }
 
       const data = await response.json();
-      return data.words || [];
+      
+      // Handle different response formats
+      if (data.words) return data.words;
+      if (data.anagrams) return data.anagrams;
+      if (data.results) return data.results;
+      if (Array.isArray(data)) return data;
+      
+      return [];
+    } catch (error) {
+      console.error('Error calling Railway service:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search for subanagrams (shorter words)
+   */
+  async searchSubanagrams(letters) {
+    try {
+      const response = await fetch(`${this.baseUrl}/find-subanagrams`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ letters: letters })
+      });
+
+      if (!response.ok) {
+        console.error('Railway service error:', response.status, response.statusText);
+        return [];
+      }
+
+      const data = await response.json();
+      
+      // Handle different response formats
+      if (data.words) return data.words;
+      if (data.subanagrams) return data.subanagrams;
+      if (data.results) return data.results;
+      if (Array.isArray(data)) return data;
+      
+      return [];
     } catch (error) {
       console.error('Error calling Railway service:', error);
       return [];
@@ -84,10 +128,14 @@ class RailwayDictionary {
   hasGaddag() { return false; }
   getPrimaryFormat() { return this.format; }
   getWordCount() { return 'Unknown (Railway Service)'; }
+  
+  // Legacy methods that might be expected
+  getAllWords() { return []; } // Not supported via Railway
+  getDefinition(word) { return null; } // Not supported via Railway
 }
 
 /**
- * Load the dictionary - now returns Railway service interface
+ * Load the dictionary - returns Railway service interface
  */
 function loadDictionary() {
   return new RailwayDictionary();
