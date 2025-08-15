@@ -1,6 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Preahvihear');
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 .widget-container {
-  -webkit-app-region: drag;
-  user-select: none;
+  animation: gradientShift 8s ease infinite;
+}
+
+.widget-header::after {
+  animation: gradientShift 3s ease infinite;
 }
 
 .widget-header {

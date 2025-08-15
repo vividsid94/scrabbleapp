@@ -1,89 +1,96 @@
-const fs = require('fs');
-const path = require('path');
+/**
+ * Load Dictionary - Now calls deployed Railway service
+ * 
+ * This function provides a simple interface to validate words and search anagrams
+ * by calling the deployed Go service instead of parsing KWG files locally.
+ */
 
-// Simple GADDAG implementation
-class GADDAG {
+const RAILWAY_BASE_URL = 'https://scrabble-move-generator-production.up.railway.app';
+
+/**
+ * Simple dictionary interface that calls the Railway service
+ */
+class RailwayDictionary {
   constructor() {
-    this.root = {};
+    this.baseUrl = RAILWAY_BASE_URL;
+    this.format = 'Railway Service';
   }
 
-  static fromJSON(json) {
-    const gaddag = new GADDAG();
-    gaddag.root = json;
-    return gaddag;
+  /**
+   * Check if a word exists in the dictionary
+   */
+  async contains(word) {
+    try {
+      const response = await fetch(`${this.baseUrl}/validate-word`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ word: word })
+      });
+
+      if (!response.ok) {
+        console.error('Railway service error:', response.status, response.statusText);
+        return false;
+      }
+
+      const data = await response.json();
+      return data.isValid || false;
+    } catch (error) {
+      console.error('Error calling Railway service:', error);
+      return false;
+    }
   }
 
-  contains(word) {
-    word = word.toUpperCase();
-    // Try all GADDAG traversals for the word
-    for (let i = 1; i < word.length; i++) {
-      const prefix = word.substring(0, i).split('').reverse().join('');
-      const suffix = word.substring(i);
-      const gaddagPath = prefix + '^' + suffix;
-      let node = this.root;
-      let found = true;
-      for (const letter of gaddagPath) {
-        if (!node[letter]) {
-          found = false;
-          break;
-        }
-        node = node[letter];
+  /**
+   * Search for anagrams of given letters
+   */
+  async search(letters) {
+    try {
+      const response = await fetch(`${this.baseUrl}/anagram-search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ letters: letters })
+      });
+
+      if (!response.ok) {
+        console.error('Railway service error:', response.status, response.statusText);
+        return [];
       }
-      if (found && node['$'] === true) {
-        return true;
-      }
+
+      const data = await response.json();
+      return data.words || [];
+    } catch (error) {
+      console.error('Error calling Railway service:', error);
+      return [];
     }
-    // Also check the full reversed word with no suffix
-    const rev = word.split('').reverse().join('') + '^';
-    let node = this.root;
-    let found = true;
-    for (const letter of rev) {
-      if (!node[letter]) {
-        found = false;
-        break;
-      }
-      node = node[letter];
-    }
-    if (found && node['$'] === true) {
-      return true;
-    }
-    return false;
   }
+
+  /**
+   * Get information about the dictionary
+   */
+  getInfo() {
+    return {
+      format: this.format,
+      source: 'Railway Service',
+      url: this.baseUrl
+    };
+  }
+
+  // Compatibility methods for existing code
+  hasKWG() { return false; }
+  hasGaddag() { return false; }
+  getPrimaryFormat() { return this.format; }
+  getWordCount() { return 'Unknown (Railway Service)'; }
 }
 
-// Cache the loaded GADDAG
-let cachedGaddag = null;
-
+/**
+ * Load the dictionary - now returns Railway service interface
+ */
 function loadDictionary() {
-  try {
-    if (cachedGaddag) {
-      console.log('Using cached GADDAG');
-      return cachedGaddag;
-    }
-
-    // Load the pre-built GADDAG using fs.readFileSync
-    const gaddagPath = path.join(__dirname, 'dictionary.gaddag.json');
-    console.log('Loading GADDAG from:', gaddagPath);
-    const jsonData = fs.readFileSync(gaddagPath, 'utf8');
-    console.log('GADDAG JSON file size:', jsonData.length);
-    const gaddagJson = JSON.parse(jsonData);
-    console.log('GADDAG JSON parsed successfully');
-    
-    cachedGaddag = GADDAG.fromJSON(gaddagJson);
-    
-    // Test a few common words to verify the GADDAG is working
-    const testWords = ['HELLO', 'WORLD', 'SCRABBLE'];
-    console.log('Testing GADDAG with sample words:');
-    for (const word of testWords) {
-      console.log(`${word}: ${cachedGaddag.contains(word)}`);
-    }
-
-    return cachedGaddag;
-  } catch (error) {
-    console.error('Error loading GADDAG:', error);
-    throw new Error('Failed to load GADDAG dictionary');
-  }
+  return new RailwayDictionary();
 }
 
 module.exports = loadDictionary;
-module.exports.GADDAG = GADDAG;
