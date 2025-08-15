@@ -17,6 +17,7 @@ const Widget = () => {
   const [validationWord, setValidationWord] = useState('');
   const [validationResult, setValidationResult] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [activeTab, setActiveTab] = useState('validation'); // 'validation' or 'anagram'
 
   useEffect(() => {
     // Check if running in Electron
@@ -60,6 +61,17 @@ const Widget = () => {
         body: JSON.stringify({ letters: term })
       });
       
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Anagram search endpoint not implemented yet
+          setSearchResults(['Anagram search coming soon!']);
+        } else {
+          console.error('Search error:', response.status, response.statusText);
+          setSearchResults([]);
+        }
+        return;
+      }
+      
       const data = await response.json();
       
       if (data.words) {
@@ -69,7 +81,7 @@ const Widget = () => {
       }
     } catch (error) {
       console.error('Search error:', error);
-      setSearchResults([]);
+      setSearchResults(['Service temporarily unavailable']);
     } finally {
       setIsSearching(false);
     }
@@ -120,7 +132,7 @@ const Widget = () => {
       setValidationResult({
         word: data.word,
         isValid: data.isValid,
-        dictionary: data.dictionary || 'Unknown'
+        dictionary: data.lexicon || data.dictionary || 'NWL23'
       });
     } catch (error) {
       console.error('Validation error:', error);
@@ -257,12 +269,11 @@ const Widget = () => {
       {/* Widget Content - Hidden when minimized */}
       {!isMinimized && (
         <Box sx={{ 
-          p: 2, 
+          p: 1.5, 
           flex: 1, 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: 2, 
-          overflow: 'auto',
+          gap: 1.5, 
           background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.6))'
         }}>
           {/* Time Display */}
@@ -270,320 +281,385 @@ const Widget = () => {
             textAlign: 'center',
             background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1))',
             borderRadius: '0px',
-            p: 1.5,
+            p: 1,
             border: '1px solid rgba(59, 130, 246, 0.2)'
           }}>
-            <Typography variant="h5" sx={{ 
+            <Typography variant="body1" sx={{ 
               fontWeight: 'bold', 
               color: '#1E40AF',
               fontFamily: 'Preahvihear, sans-serif',
               textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-              mb: 0.5
+              mb: 0.25,
+              fontSize: '0.9rem'
             }}>
               {currentTime.toLocaleTimeString()}
             </Typography>
             <Typography variant="body2" sx={{ 
               color: '#3B82F6',
               fontWeight: '500',
-              letterSpacing: '0.05em'
+              letterSpacing: '0.05em',
+              fontSize: '0.7rem'
             }}>
               {currentTime.toLocaleDateString()}
             </Typography>
           </Box>
 
-          {/* Anagram Search */}
+          {/* Tab Navigation */}
           <Box sx={{ 
             display: 'flex', 
-            flexDirection: 'column', 
-            gap: 1.5,
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(16, 185, 129, 0.05))',
+            background: 'rgba(255, 255, 255, 0.8)',
             borderRadius: '0px',
-            p: 2,
-            border: '1px solid rgba(34, 197, 94, 0.15)'
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden'
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-              <MagnifyingGlass size={20} weight="fill" color="#059669" />
-              <Typography variant="h6" sx={{ 
-                color: '#059669', 
-                fontWeight: 'bold',
-                fontFamily: 'Preahvihear, sans-serif',
-                textAlign: 'center',
-                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-              }}>
-                Anagram Search
-              </Typography>
-            </Box>
-            <Box sx={{ position: 'relative' }}>
-              <TextField
-                size="medium"
-                placeholder="Enter letters to find anagrams..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                autoComplete="off"
-                InputProps={{
-                  startAdornment: <Search sx={{ mr: 1.5, color: '#059669', fontSize: '1.2rem' }} />,
-                  endAdornment: isSearching ? (
-                    <CircularProgress size={20} sx={{ color: '#059669' }} />
-                  ) : null
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '0px',
-                    '& fieldset': {
-                      borderColor: 'rgba(34, 197, 94, 0.3)',
-                      borderWidth: '2px',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(34, 197, 94, 0.5)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#059669',
-                      borderWidth: '2px',
-                    },
-                  },
-                }}
-              />
-            </Box>
-            
-            {/* Search Results */}
-            {searchResults.length > 0 && (
-              <Box sx={{ 
-                background: 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '0px',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <List sx={{ 
-                  maxHeight: 100, 
-                  overflow: 'auto', 
-                  p: 0
-                }}>
-                  {searchResults.map((word, index) => (
-                    <ListItem 
-                      key={index} 
-                      sx={{ 
-                        py: 1, 
-                        px: 2,
-                        borderBottom: index < searchResults.length - 1 ? '1px solid rgba(34, 197, 94, 0.1)' : 'none',
-                        '&:hover': { 
-                          background: 'rgba(34, 197, 94, 0.08)',
-                          transform: 'translateX(4px)'
-                        },
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <ListItemText 
-                        primary={word} 
-                        primaryTypographyProps={{ 
-                          fontSize: '1rem',
-                          color: '#059669',
-                          fontWeight: '600',
-                          fontFamily: 'Preahvihear, sans-serif'
-                        }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            )}
-            
-            {/* No results message */}
-            {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
-              <Box sx={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                borderRadius: '0px',
+            <Box
+              onClick={() => setActiveTab('validation')}
+              sx={{
+                flex: 1,
                 p: 1.5,
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                textAlign: 'center'
-              }}>
-                <Typography variant="body2" sx={{ 
-                  color: '#DC2626',
-                  fontWeight: '500'
-                }}>
-                  No anagrams found
-                </Typography>
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: activeTab === 'validation' 
+                  ? 'linear-gradient(135deg, #4F46E5, #6366F1)' 
+                  : 'transparent',
+                color: activeTab === 'validation' ? 'white' : '#4F46E5',
+                fontWeight: activeTab === 'validation' ? 'bold' : '500',
+                transition: 'all 0.2s ease',
+                fontSize: '0.8rem',
+                '&:hover': {
+                  background: activeTab === 'validation' 
+                    ? 'linear-gradient(135deg, #4338CA, #5855EB)' 
+                    : 'rgba(79, 70, 229, 0.1)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <CheckCircle size={14} weight="fill" />
+                Word Validation
               </Box>
-            )}
-            
-            {/* Help text */}
-            <Typography variant="body2" sx={{ 
-              color: '#059669', 
-              textAlign: 'center', 
-              py: 1,
-              fontStyle: 'italic',
-              opacity: 0.8
-            }}>
-              Type letters to find all possible Scrabble words
-            </Typography>
+            </Box>
+            <Box
+              onClick={() => setActiveTab('anagram')}
+              sx={{
+                flex: 1,
+                p: 1.5,
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: activeTab === 'anagram' 
+                  ? 'linear-gradient(135deg, #059669, #10B981)' 
+                  : 'transparent',
+                color: activeTab === 'anagram' ? 'white' : '#059669',
+                fontWeight: activeTab === 'anagram' ? 'bold' : '500',
+                transition: 'all 0.2s ease',
+                fontSize: '0.8rem',
+                '&:hover': {
+                  background: activeTab === 'anagram' 
+                    ? 'linear-gradient(135deg, #047857, #059669)' 
+                    : 'rgba(34, 197, 94, 0.1)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <MagnifyingGlass size={14} weight="fill" />
+                Anagram Search
+              </Box>
+            </Box>
           </Box>
 
-          {/* Word Validation */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 1.5,
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05))',
-            borderRadius: '0px',
-            p: 2,
-            border: '1px solid rgba(99, 102, 241, 0.15)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-              <CheckCircle size={20} weight="fill" color="#4F46E5" />
-              <Typography variant="h6" sx={{ 
-                color: '#4F46E5', 
-                fontWeight: 'bold',
-                fontFamily: 'Preahvihear, sans-serif',
-                textAlign: 'center',
-                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-              }}>
-                Word Validation
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
-              <TextField
-                size="medium"
-                placeholder="Enter word to validate..."
-                value={validationWord}
-                onChange={(e) => setValidationWord(e.target.value)}
-                autoComplete="off"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    validateWord(validationWord);
-                  }
-                }}
-                sx={{
-                  flex: 1,
-                  '& .MuiOutlinedInput-root': {
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '0px',
-                    '& fieldset': {
-                      borderColor: 'rgba(99, 102, 241, 0.3)',
-                      borderWidth: '2px',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(99, 102, 241, 0.5)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#4F46E5',
-                      borderWidth: '2px',
-                    },
-                  },
-                }}
-              />
-              <IconButton
-                size="large"
-                onClick={() => validateWord(validationWord)}
-                disabled={!validationWord.trim() || isValidating}
-                sx={{
-                  color: 'white',
-                  background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
-                  borderRadius: '0px',
-                  width: '44px',
-                  height: '44px',
-                  '&:hover': { 
-                    background: 'linear-gradient(135deg, #4338CA, #5855EB)',
-                    transform: 'scale(1.05)'
-                  },
-                  '&:disabled': { 
-                    background: 'linear-gradient(135deg, #9CA3AF, #D1D5DB)',
-                    transform: 'none'
-                  },
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
-                }}
-              >
-                {isValidating ? (
-                  <CircularProgress size={20} sx={{ color: 'white' }} />
-                ) : (
-                  <Search fontSize="medium" />
-                )}
-              </IconButton>
-            </Box>
-            
-            {/* Validation Result */}
-            {validationResult && (
-              <Box sx={{ 
-                p: 2, 
-                borderRadius: '0px', 
-                background: validationResult.isValid 
-                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1))' 
-                  : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1))',
-                border: `2px solid ${validationResult.isValid ? '#10B981' : '#EF4444'}`,
-                boxShadow: `0 4px 16px ${validationResult.isValid ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                {/* Success/Error Icon */}
-                <Box sx={{
-                  position: 'absolute',
-                  top: '6px',
-                  right: '6px',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '0px',
-                  background: validationResult.isValid ? '#10B981' : '#EF4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '10px',
-                  fontWeight: 'bold'
+          {/* Tab Content */}
+          {activeTab === 'validation' && (
+            /* Word Validation Tab */
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 1,
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05))',
+              borderRadius: '0px',
+              p: 1.5,
+              border: '1px solid rgba(99, 102, 241, 0.15)',
+              height: '200px'
+            }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                <CheckCircle size={16} weight="fill" color="#4F46E5" />
+                <Typography variant="body2" sx={{ 
+                  color: '#4F46E5', 
+                  fontWeight: 'bold',
+                  fontFamily: 'Preahvihear, sans-serif',
+                  textAlign: 'center',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  fontSize: '0.85rem'
                 }}>
-                  {validationResult.isValid ? <CheckCircle size={12} weight="fill" /> : <XCircle size={12} weight="fill" />}
-                </Box>
-                
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 'bold',
-                    color: validationResult.isValid ? '#059669' : '#DC2626',
-                    fontFamily: 'Preahvihear, sans-serif',
-                    textAlign: 'center',
-                    mb: 1,
-                    textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {validationResult.word}: {validationResult.isValid ? 'VALID' : 'INVALID'}
+                  Word Validation
                 </Typography>
-                
-                {validationResult.dictionary && !validationResult.error && (
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.6)',
-                    borderRadius: '0px',
-                    p: 1.5,
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="body2" sx={{ 
-                      color: validationResult.isValid ? '#059669' : '#DC2626',
-                      fontWeight: '500',
-                      fontFamily: 'Preahvihear, sans-serif'
-                    }}>
-                      Dictionary: {validationResult.dictionary.format || validationResult.dictionary}
-                    </Typography>
-                  </Box>
-                )}
-                
-                {validationResult.error && (
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.6)',
-                    borderRadius: '0px',
-                    p: 1.5,
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="body2" sx={{ 
-                      color: '#DC2626',
-                      fontWeight: '500',
-                      fontFamily: 'Preahvihear, sans-serif'
-                    }}>
-                      {validationResult.error}
-                    </Typography>
-                  </Box>
-                )}
               </Box>
-            )}
-          </Box>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <TextField
+                              size="small"
+                              placeholder="Enter word to validate..."
+                              value={validationWord}
+                              onChange={(e) => setValidationWord(e.target.value)}
+                              autoComplete="off"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  validateWord(validationWord);
+                                }
+                              }}
+                              sx={{
+                                flex: 1,
+                                '& .MuiOutlinedInput-root': {
+                                  background: 'rgba(255, 255, 255, 0.8)',
+                                  borderRadius: '0px',
+                                  '& fieldset': {
+                                    borderColor: 'rgba(99, 102, 241, 0.3)',
+                                    borderWidth: '2px',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#4F46E5',
+                                    borderWidth: '2px',
+                                  },
+                                },
+                              }}
+                            />
+                    <IconButton
+                      size="large"
+                      onClick={() => validateWord(validationWord)}
+                      disabled={!validationWord.trim() || isValidating}
+                      sx={{
+                        color: 'white',
+                        background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
+                        borderRadius: '0px',
+                        width: '44px',
+                        height: '44px',
+                        '&:hover': { 
+                          background: 'linear-gradient(135deg, #4338CA, #5855EB)',
+                          transform: 'scale(1.05)'
+                        },
+                        '&:disabled': { 
+                          background: 'linear-gradient(135deg, #9CA3AF, #D1D5DB)',
+                          transform: 'none'
+                        },
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+                      }}
+                    >
+                                                  {isValidating ? (
+                              <CircularProgress size={20} sx={{ color: 'white' }} />
+                            ) : (
+                              <CheckCircle fontSize="medium" />
+                            )}
+                    </IconButton>
+                  </Box>
+                  
+                  {/* Validation Result */}
+                  {validationResult && (
+                    <Box sx={{
+                      background: validationResult.isValid 
+                        ? 'rgba(34, 197, 94, 0.1)' 
+                        : 'rgba(239, 68, 68, 0.1)',
+                      borderRadius: '0px',
+                      p: 1,
+                      border: `1px solid ${validationResult.isValid 
+                        ? 'rgba(34, 197, 94, 0.2)' 
+                        : 'rgba(239, 68, 68, 0.2)'}`,
+                      textAlign: 'center',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                      {validationResult.isValid ? (
+                        <CheckCircle size={16} weight="fill" color="#059669" />
+                      ) : (
+                        <XCircle size={16} weight="fill" color="#DC2626" />
+                      )}
+                      <Typography variant="body2" sx={{ 
+                        color: validationResult.isValid ? '#059669' : '#DC2626',
+                        fontWeight: '600',
+                        fontFamily: 'Preahvihear, sans-serif',
+                        fontSize: '0.8rem'
+                      }}>
+                        {validationResult.word} is {validationResult.isValid ? 'VALID' : 'INVALID'}
+                      </Typography>
+                    </Box>
+                      {validationResult.dictionary && (
+                        <Typography variant="body2" sx={{ 
+                          color: validationResult.isValid ? '#059669' : '#DC2626',
+                          fontWeight: '500',
+                          mt: 0.25,
+                          opacity: 0.8,
+                          fontSize: '0.75rem'
+                        }}>
+                          Dictionary: {validationResult.dictionary}
+                        </Typography>
+                      )}
+                      {validationResult.error && (
+                        <Typography variant="body2" sx={{ 
+                          color: '#DC2626',
+                          fontWeight: '500',
+                          mt: 0.25,
+                          opacity: 0.8,
+                          fontSize: '0.75rem'
+                        }}>
+                          {validationResult.error}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {activeTab === 'anagram' && (
+                /* Anagram Search Tab */
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 1,
+                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(16, 185, 129, 0.05))',
+                  borderRadius: '0px',
+                  p: 1.5,
+                  border: '1px solid rgba(34, 197, 94, 0.15)',
+                  height: '200px'
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                    <MagnifyingGlass size={16} weight="fill" color="#059669" />
+                    <Typography variant="body2" sx={{ 
+                      color: '#059669', 
+                      fontWeight: 'bold',
+                      fontFamily: 'Preahvihear, sans-serif',
+                      textAlign: 'center',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      fontSize: '0.85rem'
+                    }}>
+                      Anagram Search
+                    </Typography>
+                  </Box>
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField
+                      size="small"
+                      placeholder="Enter letters to find anagrams..."
+                      value={searchTerm}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      autoComplete="off"
+                      InputProps={{
+                        startAdornment: <Search sx={{ mr: 1.5, color: '#059669', fontSize: '1.2rem' }} />,
+                        endAdornment: isSearching ? (
+                          <CircularProgress size={20} sx={{ color: '#059669' }} />
+                        ) : null
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          background: 'rgba(255, 255, 255, 0.8)',
+                          borderRadius: '0px',
+                          '& fieldset': {
+                            borderColor: 'rgba(34, 197, 94, 0.3)',
+                            borderWidth: '2px',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(34, 197, 94, 0.5)',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#059669',
+                            borderWidth: '2px',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                  
+                  {/* Search Results - Fixed height, no scrollbar */}
+                  {searchResults.length > 0 && (
+                    <Box sx={{ 
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '0px',
+                      border: '1px solid rgba(34, 197, 94, 0.2)',
+                      flex: 1,
+                      p: 0,
+                      overflow: 'hidden'
+                    }}>
+                      <List sx={{ 
+                        height: '100%',
+                        p: 0,
+                        overflow: 'hidden'
+                      }}>
+                        {searchResults.map((word, index) => {
+                          // Check if this is a special message (not a real word)
+                          const isSpecialMessage = word === 'Anagram search coming soon!' || word === 'Service temporarily unavailable';
+                          
+                          return (
+                            <ListItem 
+                              key={index} 
+                              sx={{ 
+                                py: 1, 
+                                px: 2,
+                                borderBottom: index < searchResults.length - 1 ? '1px solid rgba(34, 197, 94, 0.1)' : 'none',
+                                '&:hover': { 
+                                  background: isSpecialMessage ? 'rgba(255, 193, 7, 0.08)' : 'rgba(34, 197, 94, 0.08)',
+                                  transform: isSpecialMessage ? 'none' : 'translateX(4px)'
+                                },
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <ListItemText 
+                                primary={word} 
+                                                          primaryTypographyProps={{ 
+                            fontSize: '0.8rem',
+                            color: isSpecialMessage ? '#F59E0B' : '#059669',
+                            fontWeight: '600',
+                            fontFamily: 'Preahvihear, sans-serif',
+                            fontStyle: isSpecialMessage ? 'italic' : 'normal'
+                          }}
+                              />
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </Box>
+                  )}
+                  
+                  {/* No results message */}
+                  {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+                    <Box sx={{
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      borderRadius: '0px',
+                      p: 1.5,
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      textAlign: 'center',
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Typography variant="body2" sx={{ 
+                        color: '#DC2626',
+                        fontWeight: '500',
+                        fontSize: '0.75rem'
+                      }}>
+                        No anagrams found
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {/* Help text */}
+                  <Typography variant="body2" sx={{ 
+                    color: '#059669', 
+                    textAlign: 'center', 
+                    py: 0.5,
+                    fontStyle: 'italic',
+                    opacity: 0.8,
+                    fontSize: '0.75rem'
+                  }}>
+                    Anagram search coming soon! For now, use word validation above
+                  </Typography>
+                </Box>
+              )}
+
+
+
+
         </Box>
       )}
     </Box>
