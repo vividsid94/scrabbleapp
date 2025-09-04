@@ -8,6 +8,7 @@
  * generateMoves.js, studyLogic.js, Boggle.js
  */
 
+const axios = require('axios');
 const RAILWAY_BASE_URL = 'https://scrabble-move-generator-production.up.railway.app';
 
 /**
@@ -25,21 +26,16 @@ class RailwayDictionary {
    */
   async contains(word) {
     try {
-      const response = await fetch(`${this.baseUrl}/validate-word`, {
-        method: 'POST',
+      const response = await axios.post(`${this.baseUrl}/validate-word`, {
+        word: word
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ word: word })
+        timeout: 10000 // 10 second timeout
       });
 
-      if (!response.ok) {
-        console.error('Railway service error:', response.status, response.statusText);
-        return false;
-      }
-
-      const data = await response.json();
-      return data.isValid || false;
+      return response.data.isValid || false;
     } catch (error) {
       console.error('Error calling Railway service:', error);
       return false;
@@ -51,20 +47,16 @@ class RailwayDictionary {
    */
   async search(letters) {
     try {
-      const response = await fetch(`${this.baseUrl}/find-anagrams`, {
-        method: 'POST',
+      const response = await axios.post(`${this.baseUrl}/find-anagrams`, {
+        letters: letters
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ letters: letters })
+        timeout: 10000 // 10 second timeout
       });
 
-      if (!response.ok) {
-        console.error('Railway service error:', response.status, response.statusText);
-        return [];
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       // Handle different response formats
       if (data.words) return data.words;
@@ -84,20 +76,16 @@ class RailwayDictionary {
    */
   async searchSubanagrams(letters) {
     try {
-      const response = await fetch(`${this.baseUrl}/find-subanagrams`, {
-        method: 'POST',
+      const response = await axios.post(`${this.baseUrl}/find-subanagrams`, {
+        letters: letters
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ letters: letters })
+        timeout: 10000 // 10 second timeout
       });
 
-      if (!response.ok) {
-        console.error('Railway service error:', response.status, response.statusText);
-        return [];
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       // Handle different response formats
       if (data.words) return data.words;

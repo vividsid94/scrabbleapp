@@ -89,8 +89,6 @@ export const handleWordSubmit = async (playerMoveSound) => {
   });
 
   const validationResult = await response.json();
-  console.log('🔍 Validation result received:', validationResult);
-  
   if (!validationResult.isValid) {
     console.log('Invalid word submission:', {
       reason: validationResult.reason || 'Word not found in dictionary',
@@ -121,8 +119,6 @@ export const handleWordSubmit = async (playerMoveSound) => {
     setSelectedBoardPosition(null);
     return;
   }
-
-  console.log('✅ Word validation passed:', validationResult);
 
   // Calculate score
   const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
