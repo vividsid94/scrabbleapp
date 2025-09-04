@@ -15,7 +15,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
-import { UserCircle } from '@phosphor-icons/react';
+import { UserCircle, DotsThree } from '@phosphor-icons/react';
 
 const actionButtonStyle = {
   width: '24px',
@@ -30,12 +30,6 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
     <Box className={styles.playerInfo}>
       <Box className={styles.playerName} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {name}
-        {isBot && mascotRef && (
-          <ShakeableMascot ref={mascotRef} src={botImage || "/images/theomascot.png"} width={56} alt="Bot mascot" />
-        )}
-        {!isBot && (
-          <img src="/images/player.png" alt="Player avatar" width={56} height={56} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-        )}
       </Box>
       <Box 
         className={styles.timer}
@@ -188,20 +182,29 @@ export default function PlayerInfo({
         </Tooltip>
         <Tooltip title={showBestMove ? "Hide Options" : "Show Options"}>
           <Box
-            className={styles.keyBtn}
             onClick={() => setShowBestMove(!showBestMove)}
             sx={{ 
-              ...actionButtonStyle,
               opacity: !gameStarted ? 0.3 : 1,
               cursor: !gameStarted ? 'not-allowed' : 'pointer',
               pointerEvents: !gameStarted ? 'none' : 'auto',
               transform: showBestMove ? 'rotate(90deg)' : 'none',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <MoreHorizIcon sx={{ fontSize: 20 }} />
+            <DotsThree size={20} color="white" />
           </Box>
         </Tooltip>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginLeft: '30px'
+        }}>
+          {icons.vs}
+        </Box>
       </Box>
 
       <Collapse in={showBestMove}>

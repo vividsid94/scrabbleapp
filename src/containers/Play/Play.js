@@ -27,7 +27,7 @@ import { initializeSounds, updateSoundType } from '../../functions/play/soundFun
 import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
 import Modal from '@mui/material/Modal';
-import { CaretDown, CaretUp, Smiley, Robot, UserCircle } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, ArrowsHorizontal, Gear, Clock, Lightbulb, DotsThree } from '@phosphor-icons/react';
 
 const bots = [
   {
@@ -596,19 +596,28 @@ export default function Play() {
             boardCoords={boardCoords}
             pool={pool}
             icons={{
-              settings: <TuneIcon className={styles.keyBtn} />,
+              settings: <Gear size={20} color="white" />,
               time: (
                 <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                  <TimerIcon 
-                      className={`${styles.keyBtn} ${styles.timerIcon} ${showTimeSlider ? styles.active : ''} ${gameStarted ? styles.disabled : ''}`}
+                  <Clock 
+                    size={20} 
+                    color={showTimeSlider ? "#1976d2" : "white"}
                     onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
+                    style={{ cursor: gameStarted ? 'not-allowed' : 'pointer' }}
                   />
                 </Tooltip>
               ),
               botMode: <SmartToyIcon 
-                  className={`${styles.keyBtn} ${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+                  className={`${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
               />,
-              topMoves: <LightbulbIcon className={styles.keyBtn} />,
+              topMoves: <Lightbulb size={20} color="white" />,
+              vs: gameStarted ? (
+                <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={20} color="white" />
+                  <ArrowsHorizontal size={20} color="white" />
+                  <img src={isBotMode ? selectedBot.img : "/images/player.png"} alt="Opponent" width={20} height={20} />
+                </Box>
+              ) : null,
             }}
             mascotRef={mascotRef}
             botImage={isBotMode ? selectedBot.img : undefined}
