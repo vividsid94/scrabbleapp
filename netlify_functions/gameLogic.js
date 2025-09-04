@@ -27,7 +27,9 @@ const gaddag = loadDictionary();
  */
 async function isValidWord(word) {
     try {
-        return await gaddag.contains(word.toUpperCase());
+        const result = await gaddag.contains(word.toUpperCase());
+        console.log(`🔍 Word validation: "${word}" -> ${result}`);
+        return result;
     } catch (error) {
         console.error('❌ Dictionary error:', error);
         return false;
@@ -224,11 +226,15 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
 
     // Check if all words are valid
     for (const word of newWords) {
-        if (!(await isValidWord(word))) {
+        const isValid = await isValidWord(word);
+        console.log(`🔍 Validating word "${word}": ${isValid}`);
+        if (!isValid) {
+            console.log(`❌ Invalid word found: "${word}"`);
             return { isValid: false, reason: `Invalid word: ${word}`, words: newWords };
         }
     }
 
+    console.log(`✅ All words valid: ${newWords.join(', ')}`);
     return { isValid: true, words: newWords };
 }
 
