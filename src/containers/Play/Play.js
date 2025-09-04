@@ -231,6 +231,28 @@ export default function Play() {
     { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={32} color="#8B7355" /> },
     { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={32} color="#3D5A80" /> },
   ];
+
+  // Bot icon mapping for the top panel
+  const getBotIcon = (botName) => {
+    switch (botName) {
+      case 'Theo':
+        return <img src="/images/theomascot.png" alt="Theo" width={20} height={20} />;
+      case 'Tess':
+        return <img src="/images/tessmascot.png" alt="Tess" width={20} height={20} />;
+      case 'Novice':
+        return <Smiley size={20} color="#60A5FA" />;
+      case 'Beginner':
+        return <UserCircle size={20} color="#8B7355" />;
+      case 'Intermediate':
+        return <Robot size={20} color="#3D5A80" />;
+      case 'Custom':
+        return <Robot size={20} color="#9CA3AF" />;
+      case 'Defense Bot':
+        return <Robot size={20} color="#3D5A80" />;
+      default:
+        return <Robot size={20} color="#9CA3AF" />;
+    }
+  };
   const [customRank, setCustomRank] = useState('');
   const [customBotSelected, setCustomBotSelected] = useState(false);
   const [customDefenseBotSelected, setCustomDefenseBotSelected] = useState(false);
@@ -606,12 +628,12 @@ export default function Play() {
                 <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <User size={20} color="white" />
                   <ArrowsHorizontal size={20} color="white" />
-                  <img src={isBotMode ? selectedBot.img : "/images/player.png"} alt="Opponent" width={20} height={20} />
+                  {isBotMode ? getBotIcon(selectedBot.name) : <img src="/images/player.png" alt="Opponent" width={20} height={20} />}
                 </Box>
               ) : null,
             }}
             mascotRef={mascotRef}
-            botImage={isBotMode ? selectedBot.img : undefined}
+            botImage={isBotMode ? getBotIcon(selectedBot.name) : undefined}
           />
 
           {showTimeSlider && !gameStarted && (
@@ -960,7 +982,7 @@ export default function Play() {
                     onChange={(e, value) => setDefenseWeight(value)}
                     onClick={(e) => e.stopPropagation()}
                     min={0.0}
-                    max={10.0}
+                    max={5.0}
                     step={0.1}
                     size="small"
                     sx={{
