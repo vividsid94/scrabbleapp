@@ -306,15 +306,20 @@ export const makeBotMove = async (botMoveSound) => {
       console.log('🤖 Tess - Running opponent simulations...');
       setTessOpponentSims({}); // Clear old results
       
-      // Wait for simulations to complete
-      await runTessOpponentSims(sortedMoves, boardCoords, pool);
+      // Wait for simulations to complete and get results
+      const simulationResults = await runTessOpponentSims(sortedMoves, boardCoords, pool);
+      console.log('🤖 Tess - Simulation results received:', simulationResults);
       
-      // Now use the simulation results to select the best move
-      const evaluatedMoves = sortedMoves.map(move => {
-        const simResult = tessOpponentSims[move.word];
+      // Only evaluate moves that were actually analyzed (top 15)
+      const movesToEvaluate = sortedMoves.slice(0, 15);
+      const evaluatedMoves = movesToEvaluate.map(move => {
+        const simResult = simulationResults[move.word];
+        console.log(`🤖 Tess - Checking move ${move.word}:`, simResult);
+        
         if (simResult && simResult.data && !simResult.error) {
           // Calculate: points + leave - opponent average score
           const opponentAvgScore = simResult.data.averageScore || 0;
+          console.log(`🤖 Tess - Move ${move.word} opponentAvgScore:`, opponentAvgScore);
           const adjustedValue = move.totalValue - opponentAvgScore;
           
           console.log(`🤖 Tess - Move ${move.word}: ${move.totalValue} - ${opponentAvgScore} = ${adjustedValue}`);
@@ -326,6 +331,7 @@ export const makeBotMove = async (botMoveSound) => {
           };
         } else {
           // Fallback to original value if no simulation data
+          console.log(`🤖 Tess - No simulation data for ${move.word}, using original value`);
           return {
             ...move,
             adjustedValue: move.totalValue,
@@ -345,14 +351,21 @@ export const makeBotMove = async (botMoveSound) => {
       
       // Log the selected move with full details
       const selectedMove = evaluatedMoves[0];
+      
+      // Find where this move ranks in the original points + leave list
+      const originalRank = sortedMoves.findIndex(move => move.word === selectedMove.word) + 1;
+      
       console.log('🤖 Tess - Selected move:', {
         word: selectedMove.word,
         originalValue: selectedMove.totalValue,
         opponentAvgScore: selectedMove.opponentAvgScore,
         adjustedValue: selectedMove.adjustedValue,
         score: selectedMove.score,
-        leave: selectedMove.leave
+        leave: selectedMove.leave,
+        originalRank: originalRank
       });
+      
+      console.log(`🤖 Tess - Move "${selectedMove.word}" was #${originalRank} by points+leave, but #1 by defense-adjusted value`);
       
       botMove = selectedMove; // Best adjusted move
     } else if (botToUse && botToUse.name === 'Novice' && sortedMoves.length >= 30) {

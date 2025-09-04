@@ -1558,6 +1558,12 @@ export const useGameStore = create((set, get) => {
             
             const data = await response.json();
             console.log(`🤖 Tess - API Response for ${move.word}:`, data);
+            console.log(`🤖 Tess - API Response structure for ${move.word}:`, {
+              hasAverageScore: 'averageScore' in data,
+              averageScore: data.averageScore,
+              keys: Object.keys(data),
+              dataType: typeof data
+            });
             
             return { move, data };
           } catch (error) {
@@ -1578,8 +1584,12 @@ export const useGameStore = create((set, get) => {
         setTessOpponentSims(resultsObj);
         console.log('🤖 Tess - Opponent simulation results stored:', resultsObj);
         
+        // Return the results so they can be used immediately
+        return resultsObj;
+        
       } catch (error) {
         console.error('🤖 Tess - Error in opponent simulations:', error);
+        return {};
       } finally {
         setTessIsRunningSims(false);
       }
