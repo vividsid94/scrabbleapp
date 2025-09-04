@@ -970,10 +970,7 @@ export default function Play() {
               >
                 <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom Defense Bot</div>
-                  <div style={{ fontSize: 12, color: '#374151', opacity: 0.8, marginBottom: 8 }}>
-                    Uses defense analysis to find the best move
-                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom Defense</div>
                   <div style={{ fontSize: 11, color: '#374151', opacity: 0.8, marginBottom: 4 }}>
                     Defense Weight: {defenseWeight.toFixed(1)}x
                   </div>
