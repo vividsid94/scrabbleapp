@@ -11,6 +11,7 @@ import { Snackbar, Alert, Tooltip } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
+import Metrics2Modal from '../../components/Modals/Metrics2Modal';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -208,6 +209,10 @@ export default function Play() {
     updateDefenseResults,
     setShowDefenseModal,
     setDefenseMove,
+    
+    // Metrics2 modal
+    showMetrics2Modal,
+    setShowMetrics2Modal,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
@@ -586,6 +591,7 @@ export default function Play() {
             onSimulateMove={simulateMove}
             onOpenSimulationModal={openSimulationModal}
             onAnalyzeDefense={analyzeDefense}
+            onOpenMetrics2Modal={() => setShowMetrics2Modal(true)}
             simulatingMove={simulatingMove}
             boardCoords={boardCoords}
             pool={pool}
@@ -656,6 +662,16 @@ export default function Play() {
           defenseResults={defenseResults}
           isLoading={isDefenseLoading}
           onUpdateResults={updateDefenseResults}
+        />
+
+        <Metrics2Modal
+          open={showMetrics2Modal}
+          onClose={() => {
+            setShowMetrics2Modal(false);
+          }}
+          topMoves={topMoves}
+          boardCoords={boardCoords}
+          pool={pool}
         />
 
       <Snackbar 

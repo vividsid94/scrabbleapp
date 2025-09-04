@@ -18,7 +18,8 @@ const TopMoves = ({
   currentPlayer,
   gameStarted,
   onOpenSimulationModal,
-  onAnalyzeDefense
+  onAnalyzeDefense,
+  onOpenMetrics2Modal
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
@@ -203,6 +204,22 @@ const TopMoves = ({
             }}
           >
             <Box sx={{ fontSize: '11px' }}>Metrics</Box>
+            <Box sx={{ fontSize: '10px' }}></Box>
+          </Box>
+        )}
+        {topMoves.length >= 10 && (
+          <Box 
+            className={styles.topMovesButton} 
+            onClick={() => onOpenMetrics2Modal && onOpenMetrics2Modal()}
+            sx={{
+              height: '16px', // Keep height fixed
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingRight: 0 // Remove right padding
+            }}
+          >
+            <Box sx={{ fontSize: '11px' }}>Metrics (2)</Box>
             <Box sx={{ fontSize: '10px' }}></Box>
           </Box>
         )}

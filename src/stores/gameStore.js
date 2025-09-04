@@ -104,6 +104,9 @@ export const useGameStore = create((set, get) => {
     defenseMove: null,
     defenseResults: null,
     isDefenseLoading: false,
+    
+    // Metrics2 modal state
+    showMetrics2Modal: false,
   };
 
   return {
@@ -212,6 +215,9 @@ export const useGameStore = create((set, get) => {
     setDefenseMove: (move) => set({ defenseMove: move }),
     setDefenseResults: (results) => set({ defenseResults: results }),
     setIsDefenseLoading: (loading) => set({ isDefenseLoading: loading }),
+    
+    // Metrics2 modal actions
+    setShowMetrics2Modal: (show) => set({ showMetrics2Modal: show }),
     
     // Complex actions
     resetGame: () => set({

@@ -120,6 +120,7 @@ export default function PlayerInfo({
   onSimulateMove,
   onOpenSimulationModal,
   onAnalyzeDefense,
+  onOpenMetrics2Modal,
   simulatingMove,
   boardCoords,
   pool,
@@ -483,6 +484,7 @@ export default function PlayerInfo({
         onGetTopMoves={onGetTopMoves}
         onOpenSimulationModal={onOpenSimulationModal}
         onAnalyzeDefense={onAnalyzeDefense}
+        onOpenMetrics2Modal={onOpenMetrics2Modal}
         simulatingMove={simulatingMove}
         currentPlayer={currentPlayer}
         gameStarted={gameStarted}
