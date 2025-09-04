@@ -23,11 +23,11 @@ const gaddag = loadDictionary();
  * Checks if a word exists in the Scrabble dictionary.
  * 
  * @param {string} word - The word to check
- * @returns {boolean} True if the word is valid
+ * @returns {Promise<boolean>} True if the word is valid
  */
-function isValidWord(word) {
+async function isValidWord(word) {
     try {
-        return gaddag.contains(word.toUpperCase());
+        return await gaddag.contains(word.toUpperCase());
     } catch (error) {
         console.error('❌ Dictionary error:', error);
         return false;
@@ -131,9 +131,9 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
  * 
  * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
  * @param {Array<Array<string|null>>} afterBoard - Board state after the move
- * @returns {{isValid: boolean, reason?: string, word?: string, words: string[]}} Validation result
+ * @returns {Promise<{isValid: boolean, reason?: string, word?: string, words: string[]}>} Validation result
  */
-function isValidScrabblePlacement(beforeBoard, afterBoard) {
+async function isValidScrabblePlacement(beforeBoard, afterBoard) {
     const placedTiles = [];
     for (let r = 0; r < 15; r++) {
         for (let c = 0; c < 15; c++) {
@@ -224,7 +224,7 @@ function isValidScrabblePlacement(beforeBoard, afterBoard) {
 
     // Check if all words are valid
     for (const word of newWords) {
-        if (!isValidWord(word)) {
+        if (!(await isValidWord(word))) {
             return { isValid: false, reason: `Invalid word: ${word}`, words: newWords };
         }
     }
@@ -412,7 +412,7 @@ exports.handler = async function(event) {
         
         let result;
         if (action === 'validate') {
-            result = isValidScrabblePlacement(beforeBoard, afterBoard);
+            result = await isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
             result = await scorePlay(beforeBoard, afterBoard);
         } else {

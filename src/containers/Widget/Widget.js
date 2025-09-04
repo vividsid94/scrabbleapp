@@ -36,7 +36,7 @@ const Widget = () => {
     const searchTimeout = setTimeout(() => {
       if (searchTerm.length > 0) {
         if (activeTab === 'anagram') {
-          performSearch(searchTerm);
+        performSearch(searchTerm);
         } else if (activeTab === 'subanagram') {
           performSubanagramSearch(searchTerm);
         }
@@ -261,8 +261,8 @@ const Widget = () => {
               textShadow: '0 2px 4px rgba(0,0,0,0.3)'
             }}
           >
-            Scrabble Widget
-          </Typography>
+          Scrabble Widget
+        </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton 
@@ -471,43 +471,43 @@ const Widget = () => {
                   fontSize: '0.85rem'
                 }}>
                   Subanagram Search
-                </Typography>
+            </Typography>
               </Box>
-              <Box sx={{ position: 'relative' }}>
-                <TextField
-                  size="small"
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                size="small"
                   placeholder="Enter letters to find subanagrams..."
-                  value={searchTerm}
+                value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   autoComplete="off"
-                  InputProps={{
+                InputProps={{
                     startAdornment: <Search sx={{ mr: 1.5, color: '#F59E0B', fontSize: '1.2rem' }} />,
-                    endAdornment: isSearching ? (
+                  endAdornment: isSearching ? (
                       <CircularProgress size={20} sx={{ color: '#F59E0B' }} />
-                    ) : null
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
+                  ) : null
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
                       background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: '0px',
-                      '& fieldset': {
+                    '& fieldset': {
                         borderColor: 'rgba(245, 158, 11, 0.3)',
                         borderWidth: '2px',
-                      },
-                      '&:hover fieldset': {
+                    },
+                    '&:hover fieldset': {
                         borderColor: 'rgba(245, 158, 11, 0.5)',
-                      },
-                      '&.Mui-focused fieldset': {
+                    },
+                    '&.Mui-focused fieldset': {
                         borderColor: '#F59E0B',
                         borderWidth: '2px',
                       },
-                    },
-                  }}
-                />
-              </Box>
-              
+                  },
+                }}
+              />
+            </Box>
+            
               {/* Search Results - Fixed height, no scrollbar */}
-              {searchResults.length > 0 && (
+            {searchResults.length > 0 && (
                 <Box sx={{ 
                   background: 'rgba(255, 255, 255, 0.9)',
                   borderRadius: '0px',
@@ -516,7 +516,7 @@ const Widget = () => {
                   p: 0,
                   overflow: 'hidden'
                 }}>
-                  <List sx={{ 
+              <List sx={{ 
                     height: '100%',
                     p: 0,
                     overflow: 'hidden'
@@ -526,9 +526,9 @@ const Widget = () => {
                       const isSpecialMessage = word === 'Service temporarily unavailable';
                       
                       return (
-                        <ListItem 
-                          key={index} 
-                          sx={{ 
+                  <ListItem 
+                    key={index} 
+                    sx={{ 
                             py: 1, 
                             px: 2,
                             borderBottom: index < searchResults.length - 1 ? '1px solid rgba(245, 158, 11, 0.1)' : 'none',
@@ -537,11 +537,11 @@ const Widget = () => {
                               transform: isSpecialMessage ? 'none' : 'translateX(4px)'
                             },
                             transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <ListItemText 
-                            primary={word} 
-                            primaryTypographyProps={{ 
+                    }}
+                  >
+                    <ListItemText 
+                      primary={word} 
+                      primaryTypographyProps={{ 
                               fontSize: '0.8rem',
                               color: isSpecialMessage ? '#F59E0B' : '#F59E0B',
                               fontWeight: '600',
@@ -837,17 +837,17 @@ const Widget = () => {
                             fontWeight: '600',
                             fontFamily: 'Preahvihear, sans-serif',
                             fontStyle: isSpecialMessage ? 'italic' : 'normal'
-                          }}
-                              />
-                            </ListItem>
+                      }}
+                    />
+                  </ListItem>
                           );
                         })}
-                      </List>
+              </List>
                     </Box>
-                  )}
-                  
-                  {/* No results message */}
-                  {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+            )}
+            
+            {/* No results message */}
+            {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
                     <Box sx={{
                       background: 'rgba(239, 68, 68, 0.1)',
                       borderRadius: '0px',
@@ -865,7 +865,7 @@ const Widget = () => {
                         fontSize: '0.75rem'
                       }}>
                         No anagrams found
-                      </Typography>
+              </Typography>
                     </Box>
                   )}
                   
@@ -880,7 +880,7 @@ const Widget = () => {
                   }}>
                     Type letters to find all possible Scrabble words
                   </Typography>
-                </Box>
+          </Box>
               )}
 
 

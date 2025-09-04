@@ -25,6 +25,7 @@ import TestTheoShake from "./containers/Home/TestTheoShake";
 import TestMindBlow from "./containers/Home/TestMindBlow";
 import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
+import Snakes from "./containers/Snakes/Snakes";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
@@ -68,6 +69,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/test-mind-blow" element={<TestMindBlow />} />
           <Route path="/jigsaw" element={<Jigsaw />} />
           <Route path="/test-jigsaw" element={<Jigsaw />} />
+          <Route path="/snakes" element={<Snakes />} />
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}

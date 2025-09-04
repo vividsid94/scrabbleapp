@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Preahvihear');
+
+.page {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.heroContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 32px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.mascotWrapper {
+  width: 220px;
+  max-width: 80vw;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.title {
+  font-family: 'Preahvihear', sans-serif !important;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: #1F2937;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 1px 0 slategray;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #6B7280;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+.gameContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.roundInfo {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  border: none;
+  border-radius: 16;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.gameArea {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  border: none;
+  border-radius: 16;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  padding: 32px 24px;
+}
+
+.messageBox {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: center;
+  border-radius: 8;
+}
+
+.wordList {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.guessedWord {
+  background: rgba(34, 197, 94, 0.1);
+  border-left: 4px solid #22C55E;
+  margin: 2px 0;
+  border-radius: 4;
+}
+
+.remainingWord {
+  background: rgba(251, 191, 36, 0.1);
+  border-left: 4px solid #FBBF24;
+  margin: 2px 0;
+  border-radius: 4;
+}
+
+.historyContainer {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  border: none;
+  border-radius: 16;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  padding: 24px;
+}
+
+.historyItem {
+  background: rgba(255, 255, 255, 0.6);
+  padding: 12px 16px;
+  border-radius: 8;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .page {
+    background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  }
+  
+  .roundInfo,
+  .gameArea,
+  .historyContainer {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.85));
+    color: #F9FAFB;
+  }
+  
+  .wordList {
+    background: rgba(31, 41, 55, 0.6);
+    color: #F9FAFB;
+  }
+  
+  .guessedWord {
+    background: rgba(34, 197, 94, 0.2);
+  }
+  
+  .remainingWord {
+    background: rgba(251, 191, 36, 0.2);
+  }
+  
+  .historyItem {
+    background: rgba(31, 41, 55, 0.6);
+    color: #F9FAFB;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .heroContainer {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .mascotWrapper {
+    width: 140px;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .gameContainer {
+    padding: 0 16px 32px 16px;
+    gap: 16px;
+  }
+  
+  .roundInfo,
+  .gameArea,
+  .historyContainer {
+    padding: 24px 16px;
+  }
+  
+  .wordList {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .gameContainer {
+    padding: 0 12px 24px 12px;
+    gap: 12px;
+  }
+  
+  .roundInfo,
+  .gameArea,
+  .historyContainer {
+    padding: 20px 12px;
+  }
+}
+

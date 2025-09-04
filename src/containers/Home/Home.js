@@ -71,6 +71,12 @@ export default function Home(){
               boxShadow: '6px 0px 0px #065F46'
             }}>Puzzle (Beta)</button>
           </Link>
+          {/* <Link to="/snakes">
+            <button className={styles.homeButton} style={{ 
+              background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',
+              boxShadow: '6px 0px 0px #5B21B6'
+            }}>Snakes 🐍</button>
+          </Link> */}
           <Link to="/submit-game">
             <button className={styles.submitGameButton}>Submit Game</button>
           </Link>
