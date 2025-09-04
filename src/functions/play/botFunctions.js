@@ -343,12 +343,6 @@ export const makeBotMove = async (botMoveSound) => {
       // Sort by adjusted value
       evaluatedMoves.sort((a, b) => b.adjustedValue - a.adjustedValue);
       
-      // Log top 5 evaluated moves with ranking
-      console.log('🤖 Tess - Top 5 moves ranked by points + leave - defense:');
-      evaluatedMoves.slice(0, 5).forEach((move, index) => {
-        console.log(`  #${index + 1}: ${move.word} - ${move.totalValue} - ${move.opponentAvgScore} = ${move.adjustedValue} (${move.score} pts, ${move.leave} leave)`);
-      });
-      
       // Log the selected move with full details
       const selectedMove = evaluatedMoves[0];
       
