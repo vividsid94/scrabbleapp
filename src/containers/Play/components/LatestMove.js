@@ -110,7 +110,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
         displayWord = 'Error';
       }
     }
-    if (score === 0 && player && player.includes('exchanged')) {
+    if (score === 0 && (word === 'Exchange' || (word && word.startsWith('Exchange')) || (player && player.includes('exchanged')))) {
       displayWord = 'Exchange';
     } else if (score === 0 && (!displayWord || displayWord === '')) {
       displayWord = 'Pass';
@@ -167,7 +167,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
       displayWord = 'Error';
     }
   }
-  if (score === 0 && player && player.includes('exchanged')) {
+  if (score === 0 && (word === 'Exchange' || (word && word.startsWith('Exchange')) || (player && player.includes('exchanged')))) {
     displayWord = 'Exchange';
   } else if (score === 0 && (!displayWord || displayWord === '')) {
     displayWord = 'Pass';

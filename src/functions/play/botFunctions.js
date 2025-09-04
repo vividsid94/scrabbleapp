@@ -352,6 +352,20 @@ export const makeBotMove = async (botMoveSound) => {
       setPlayer2Rack(alphabetizeRack(newRack));
       setPool(newPool);
       
+      // Create move history entry for exchange
+      const moveHistoryEntry = {
+        boardDiff: [],
+        player: player2Name,
+        score: 0,
+        rack: alphabetizeRack(newRack).join(''),
+        total: player2points,
+        word: 'Exchange'
+      };
+      
+      // Add move to history
+      const currentHistory = useGameStore.getState().moveHistory || [];
+      setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
+      
       // Show toast notification for bot's exchange
       //setSnackbarMessage(`SidBot exchanged ${tilesToExchange.length} tiles`);
       //setSnackbarSeverity("info");
@@ -526,6 +540,20 @@ export const makeBotMove = async (botMoveSound) => {
           newPool.push(...tilesToExchange);
           setPlayer2Rack(alphabetizeRack(newRack));
           setPool(newPool);
+          
+          // Create move history entry for exchange
+          const moveHistoryEntry = {
+            boardDiff: [],
+            player: player2Name,
+            score: 0,
+            rack: alphabetizeRack(newRack).join(''),
+            total: player2points,
+            word: 'Exchange'
+          };
+          
+          // Add move to history
+          const currentHistory = useGameStore.getState().moveHistory || [];
+          setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
         } else {
           // Handle regular move
           const tilesToRemove = [];
