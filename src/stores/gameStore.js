@@ -1269,7 +1269,6 @@ export const useGameStore = create((set, get) => {
 
     // Keyboard event handlers
     handleKeyDownWrapper: (e, playerMoveSound, origBoard) => {
-      console.log('🎮 handleKeyDownWrapper called for key:', e.key);
       
       const {
         selectedBoardPosition,
