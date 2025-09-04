@@ -173,21 +173,35 @@ const Widget = () => {
 
     setIsValidating(true);
     try {
-      // Call the Go service to validate the word
-      const response = await fetch(`${GO_SERVICE_URL}/validate-word`, {
+      // Call the Go service to validate the word using batch endpoint
+      const response = await fetch(`${GO_SERVICE_URL}/validate-words`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ word: word })
+        body: JSON.stringify({ words: [word] })
       });
       
       const data = await response.json();
       
+      // Handle the batch response format
+      let isValid = false;
+      let dictionary = 'NWL23';
+      
+      if (data.words && Array.isArray(data.words)) {
+        const wordResult = data.words.find(item => item.word === word.toUpperCase());
+        if (wordResult) {
+          isValid = wordResult.isValid;
+        }
+        dictionary = data.lexicon || 'NWL23';
+      } else if (data.results) {
+        isValid = data.results[word.toUpperCase()] || false;
+      }
+      
       setValidationResult({
-        word: data.word,
-        isValid: data.isValid,
-        dictionary: data.lexicon || data.dictionary || 'NWL23'
+        word: word.toUpperCase(),
+        isValid: isValid,
+        dictionary: dictionary
       });
     } catch (error) {
       console.error('Validation error:', error);

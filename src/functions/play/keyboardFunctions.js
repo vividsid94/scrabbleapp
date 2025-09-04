@@ -6,6 +6,8 @@ const DEBOUNCE_DELAY = 50; // milliseconds
 
 // Add submission guard using timeout to prevent double-submission
 let submissionTimeout = null;
+let lastSubmissionTime = 0;
+const SUBMISSION_COOLDOWN = 1000; // 1 second cooldown instead of 3 second timeout
 
 export const handleKeyDown = ({
   e,
@@ -29,7 +31,16 @@ export const handleKeyDown = ({
   handleWordSubmit,
   playerMoveSound,
   arrowDirection,
-  origBoard
+  origBoard,
+  // Additional parameters for keyboard shortcuts
+  gameStarted,
+  gameEnded,
+  handlePass,
+  handleExchangeClick,
+  handlePlayTopMove,
+  toggleAutoPlayBest,
+  isPlayerThinking,
+  isBotThinking
 }) => {
   // Prevent rapid key presses
   const now = Date.now();
@@ -38,6 +49,30 @@ export const handleKeyDown = ({
     return;
   }
   lastKeyPressTime = now;
+
+  // Handle keyboard shortcuts first (don't require selectedBoardPosition)
+  if (gameStarted && !gameEnded && !isPlayerThinking && !isBotThinking) {
+    const key = e.key.toLowerCase();
+    
+    // Handle number keys for actions
+    if (key === '1') {
+      e.preventDefault();
+      handlePass();
+      return;
+    } else if (key === '2') {
+      e.preventDefault();
+      handleExchangeClick();
+      return;
+    } else if (key === '3') {
+      e.preventDefault();
+      handlePlayTopMove();
+      return;
+    } else if (key === '4') {
+      e.preventDefault();
+      toggleAutoPlayBest();
+      return;
+    }
+  }
 
   if (!selectedBoardPosition) return;
 
@@ -61,26 +96,33 @@ export const handleKeyDown = ({
     return;
   }
 
-  // Handle enter key with timeout-based submission guard
+  // Handle enter key with cooldown-based submission guard
   if (e.key === 'Enter') {
+    console.log('🔍 Enter key pressed - handleKeyDown');
     e.preventDefault();
     
-    // Prevent double-submission using timeout
-    if (submissionTimeout) {
+    const now = Date.now();
+    
+    // Prevent double-submission using cooldown
+    if (now - lastSubmissionTime < SUBMISSION_COOLDOWN) {
+      console.log('🚫 Enter blocked - cooldown active, time remaining:', SUBMISSION_COOLDOWN - (now - lastSubmissionTime), 'ms');
       return;
     }
     
     // Only submit if there are tiles placed
     if (!selectedTiles || !Array.isArray(selectedTiles) || selectedTiles.length === 0) {
+      console.log('🚫 Enter blocked - no tiles selected:', selectedTiles);
       return;
     }
     
-    // Set timeout to block submissions for 3 seconds
-    submissionTimeout = setTimeout(() => {
-      submissionTimeout = null;
-    }, 3000);
+    console.log('✅ Enter processing - submitting word with tiles:', selectedTiles);
+    
+    // Update last submission time
+    lastSubmissionTime = now;
+    console.log('⏰ Submission cooldown set, next allowed at:', new Date(now + SUBMISSION_COOLDOWN).toLocaleTimeString());
     
     // Submit the word
+    console.log('🚀 Calling handleWordSubmit...');
     handleWordSubmit(playerMoveSound);
     
     return;

@@ -257,27 +257,21 @@ export default function Play() {
 
   // Update useEffect to handle keyboard events
   useEffect(() => {
+    console.log('🎹 Adding keyboard event listener');
     const handleKeyDownWrapperWithParams = (e) => {
+      console.log('⌨️ Keyboard event triggered:', e.key);
       handleKeyDownWrapper(e, playerMoveSound, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyDownWrapperWithParams);
     return () => {
+      console.log('🎹 Removing keyboard event listener');
       window.removeEventListener('keydown', handleKeyDownWrapperWithParams);
     };
   }, [handleKeyDownWrapper, playerMoveSound, origBoard]);
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPressWrapperWithParams = (event) => {
-      handleKeyPressWrapper(event, playerMoveSound, origBoard);
-    };
-
-    window.addEventListener('keydown', handleKeyPressWrapperWithParams);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPressWrapperWithParams);
-    };
-  }, [handleKeyPressWrapper, playerMoveSound, origBoard]);
+  // Handle keyboard shortcuts - integrated into handleKeyDownWrapper
+  // Removed duplicate keydown listener to prevent double-press issues
 
   // Update the useEffect for bot turns to use the new makeBotMove
   useEffect(() => { 

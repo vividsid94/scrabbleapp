@@ -41,6 +41,8 @@ import { handleGameEnd } from './gameEndFunctions';
  * @returns {Promise<void>}
  */
 export const handleWordSubmit = async (playerMoveSound) => {
+  console.log('🎯 handleWordSubmit called');
+  
   const {
     boardCoords,
     tempBoardCoords,
@@ -74,31 +76,37 @@ export const handleWordSubmit = async (playerMoveSound) => {
     setSnackbarOpen,
     getBoardDiff
   } = useGameStore.getState();
+  
+  console.log('📊 Word submit state:', {
+    selectedTiles: selectedTiles?.length || 0,
+    currentPlayer,
+    selectedBoardPosition
+  });
 
-  // Validate the move
+  // Validate and score the move in one request
   const response = await fetch('/.netlify/functions/gameLogic', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      action: 'validate',
+      action: 'validateAndScore',
       beforeBoard: boardCoords,
       afterBoard: tempBoardCoords
     })
   });
 
-  const validationResult = await response.json();
-  if (!validationResult.isValid) {
+  const result = await response.json();
+  if (!result.isValid) {
     console.log('Invalid word submission:', {
-      reason: validationResult.reason || 'Word not found in dictionary',
-      word: validationResult.word || 'Unknown',
+      reason: result.reason || 'Word not found in dictionary',
+      word: result.word || 'Unknown',
       position: selectedBoardPosition,
       direction: arrowDirection
     });
 
     // Show toast notification
-    setSnackbarMessage(validationResult.reason);
+    setSnackbarMessage(result.reason);
     setSnackbarSeverity("error");
     setSnackbarOpen(true);
 
@@ -120,20 +128,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
     return;
   }
 
-  // Calculate score
-  const scoreResponse = await fetch('/.netlify/functions/gameLogic', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      action: 'score',
-      beforeBoard: boardCoords,
-      afterBoard: tempBoardCoords
-    })
-  });
-
-  const score = await scoreResponse.json();
+  const score = result.score;
 
   // Play player move sound
   if (playerMoveSound && playerMoveSound.play) {
@@ -153,7 +148,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
     score,
     rack: playerRack.join(''),
     total: runningTotal,
-    word: validationResult.word
+    word: result.words ? result.words[0] : 'Unknown'
   };
 
   // Add move to history

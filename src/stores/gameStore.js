@@ -1256,6 +1256,8 @@ export const useGameStore = create((set, get) => {
 
     // Keyboard event handlers
     handleKeyDownWrapper: (e, playerMoveSound, origBoard) => {
+      console.log('🎮 handleKeyDownWrapper called for key:', e.key);
+      
       const {
         selectedBoardPosition,
         boardCoords,
@@ -1276,7 +1278,17 @@ export const useGameStore = create((set, get) => {
         setPreviewScorePosition,
         handleWordSubmit,
         arrowDirection,
-        getSelectedTiles
+        getSelectedTiles,
+        // Additional parameters for keyboard shortcuts
+        gameStarted,
+        gameEnded,
+        handlePassClick,
+        handleExchangeClick,
+        handlePlayTopMoveClick,
+        autoPlayBest,
+        isPlayerThinking,
+        isBotThinking,
+        setAutoPlayBest
       } = get();
 
       // Get selectedTiles directly from the store to ensure we get the correct value
@@ -1313,7 +1325,16 @@ export const useGameStore = create((set, get) => {
           handleWordSubmit,
           playerMoveSound,
           arrowDirection,
-          origBoard
+          origBoard,
+          // Additional parameters for keyboard shortcuts
+          gameStarted,
+          gameEnded,
+          handlePass: handlePassClick,
+          handleExchangeClick,
+          handlePlayTopMove: handlePlayTopMoveClick,
+          toggleAutoPlayBest: () => setAutoPlayBest(!autoPlayBest),
+          isPlayerThinking,
+          isBotThinking
         });
       });
     },

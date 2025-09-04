@@ -26,8 +26,21 @@ class RailwayDictionary {
    */
   async contains(word) {
     try {
-      const response = await axios.post(`${this.baseUrl}/validate-word`, {
-        word: word
+      const results = await this.containsBatch([word]);
+      return results[word] || false;
+    } catch (error) {
+      console.error('Error calling Railway service:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if multiple words exist in the dictionary (batch validation)
+   */
+  async containsBatch(words) {
+    try {
+      const response = await axios.post(`${this.baseUrl}/validate-words`, {
+        words: words
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -35,10 +48,24 @@ class RailwayDictionary {
         timeout: 10000 // 10 second timeout
       });
 
-      return response.data.isValid || false;
+      // Handle the actual response format from the server
+      const data = response.data;
+      const results = {};
+      
+      if (data.words && Array.isArray(data.words)) {
+        // Convert array format to object format
+        for (const item of data.words) {
+          results[item.word] = item.isValid;
+        }
+      } else if (data.results) {
+        // Handle the expected format if it changes
+        return data.results;
+      }
+      
+      return results;
     } catch (error) {
-      console.error('Error calling Railway service:', error);
-      return false;
+      console.error('Error calling Railway service for batch validation:', error);
+      return {};
     }
   }
 

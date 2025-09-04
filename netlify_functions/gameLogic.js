@@ -223,9 +223,10 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
         return { isValid: false, reason: 'No valid words formed', words: [] };
     }
 
-    // Check if all words are valid
+    // Check if all words are valid (batch validation)
+    const wordValidationResults = await gaddag.containsBatch(newWords);
     for (const word of newWords) {
-        if (!(await isValidWord(word))) {
+        if (!wordValidationResults[word]) {
             return { isValid: false, reason: `Invalid word: ${word}`, words: newWords };
         }
     }
@@ -337,6 +338,30 @@ async function scorePlay(beforeBoard, afterBoard) {
         return wordTiles.length > 1 ? wordTiles : [];
     }
 
+    // Collect all words to validate
+    const wordsToValidate = new Set();
+    for (const placedTile of placedTiles) {
+        const r = placedTile.row;
+        const c = placedTile.col;
+
+        // Check horizontal word
+        const horizontalWord = findWord(afterBoard, r, c, 'horizontal');
+        if (horizontalWord.length > 0) {
+            const wordString = horizontalWord.map(t => t.letter).join('');
+            wordsToValidate.add(wordString);
+        }
+
+        // Check vertical word
+        const verticalWord = findWord(afterBoard, r, c, 'vertical');
+        if (verticalWord.length > 0) {
+            const wordString = verticalWord.map(t => t.letter).join('');
+            wordsToValidate.add(wordString);
+        }
+    }
+
+    // Batch validate all words
+    const wordValidationResults = await gaddag.containsBatch(Array.from(wordsToValidate));
+
     // Score all words
     for (const placedTile of placedTiles) {
         const r = placedTile.row;
@@ -346,12 +371,9 @@ async function scorePlay(beforeBoard, afterBoard) {
         const horizontalWord = findWord(afterBoard, r, c, 'horizontal');
         if (horizontalWord.length > 0) {
             const wordString = horizontalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString)) {
-                const isValid = await isValidWord(wordString);
-                if (isValid) {
-                    totalScore += getWordScore(horizontalWord);
-                    formedWords.add(wordString);
-                }
+            if (!formedWords.has(wordString) && wordValidationResults[wordString]) {
+                totalScore += getWordScore(horizontalWord);
+                formedWords.add(wordString);
             }
         }
 
@@ -359,12 +381,9 @@ async function scorePlay(beforeBoard, afterBoard) {
         const verticalWord = findWord(afterBoard, r, c, 'vertical');
         if (verticalWord.length > 0) {
             const wordString = verticalWord.map(t => t.letter).join('');
-            if (!formedWords.has(wordString)) {
-                const isValid = await isValidWord(wordString);
-                if (isValid) {
-                    totalScore += getWordScore(verticalWord);
-                    formedWords.add(wordString);
-                }
+            if (!formedWords.has(wordString) && wordValidationResults[wordString]) {
+                totalScore += getWordScore(verticalWord);
+                formedWords.add(wordString);
             }
         }
     }
@@ -416,6 +435,19 @@ exports.handler = async function(event) {
             result = await isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
             result = await scorePlay(beforeBoard, afterBoard);
+        } else if (action === 'validateAndScore') {
+            // Combined validation and scoring to avoid duplicate word validation
+            const validationResult = await isValidScrabblePlacement(beforeBoard, afterBoard);
+            if (!validationResult.isValid) {
+                result = validationResult;
+            } else {
+                const score = await scorePlay(beforeBoard, afterBoard);
+                result = {
+                    isValid: true,
+                    score: score,
+                    words: validationResult.words
+                };
+            }
         } else {
             return {
                 statusCode: 400,
