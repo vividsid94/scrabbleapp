@@ -107,6 +107,10 @@ export const useGameStore = create((set, get) => {
     
     // Metrics2 modal state
     showMetrics2Modal: false,
+    
+    // Tess opponent simulation state
+    tessOpponentSims: {},
+    tessIsRunningSims: false,
   };
 
   return {
@@ -218,6 +222,10 @@ export const useGameStore = create((set, get) => {
     
     // Metrics2 modal actions
     setShowMetrics2Modal: (show) => set({ showMetrics2Modal: show }),
+    
+    // Tess opponent simulation actions
+    setTessOpponentSims: (sims) => set({ tessOpponentSims: sims }),
+    setTessIsRunningSims: (running) => set({ tessIsRunningSims: running }),
     
     // Complex actions
     resetGame: () => set({
@@ -1485,6 +1493,96 @@ export const useGameStore = create((set, get) => {
     // Listen for updated defense results from modal
     updateDefenseResults: (results) => {
       set({ defenseResults: results });
+    },
+
+    // Tess opponent simulation function
+    runTessOpponentSims: async (moves, boardCoords, pool) => {
+      const { setTessIsRunningSims, setTessOpponentSims } = get();
+      
+      console.log('🤖 Tess - Starting opponent simulations for', moves.length, 'moves');
+      setTessIsRunningSims(true);
+      setTessOpponentSims({});
+      
+      try {
+        // Take top 15 moves and run 100 sims each
+        const top15Moves = moves.slice(0, 15);
+        const results = {};
+        
+        // Run simulations for each move in parallel
+        const promises = top15Moves.map(async (move, index) => {
+          try {
+            console.log(`🤖 Tess - Analyzing move ${index + 1}/15: ${move.word}`);
+            
+            // Create clean board with this move applied
+            const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
+            
+            // Copy existing board
+            boardCoords.forEach((row, rowIndex) => {
+              row.forEach((cell, colIndex) => {
+                if (typeof cell === 'string' && cell !== '') {
+                  cleanBoard[rowIndex][colIndex] = cell;
+                }
+              });
+            });
+            
+            // Apply the move
+            move.tiles.forEach(tile => {
+              if (tile.isNew) {
+                cleanBoard[tile.row][tile.col] = tile.letter;
+              }
+            });
+            
+            const tilePoolString = pool.join('');
+            
+            console.log(`🤖 Tess - API Request for ${move.word}:`, {
+              board: cleanBoard,
+              tilePool: tilePoolString,
+              iterations: 100
+            });
+            
+            const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                board: cleanBoard,
+                tilePool: tilePoolString,
+                iterations: 100
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log(`🤖 Tess - API Response for ${move.word}:`, data);
+            
+            return { move, data };
+          } catch (error) {
+            console.error(`🤖 Tess - Error analyzing move ${move.word}:`, error);
+            return { move, error: error.message };
+          }
+        });
+        
+        const allResults = await Promise.all(promises);
+        console.log('🤖 Tess - All opponent simulations completed:', allResults);
+        
+        // Convert to object with move word as key
+        const resultsObj = {};
+        allResults.forEach(({ move, data, error }) => {
+          resultsObj[move.word] = { data, error, move };
+        });
+        
+        setTessOpponentSims(resultsObj);
+        console.log('🤖 Tess - Opponent simulation results stored:', resultsObj);
+        
+      } catch (error) {
+        console.error('🤖 Tess - Error in opponent simulations:', error);
+      } finally {
+        setTessIsRunningSims(false);
+      }
     },
   };
 }); 
