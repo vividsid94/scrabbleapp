@@ -295,9 +295,82 @@ export const makeBotMove = async (botMoveSound) => {
     // Sort moves by totalValue (points + leave) from the backend
     const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
     let botToUse = useGameStore.getState().selectedBot;
+    console.log('🤖 Bot selection - Selected bot:', botToUse);
     let botMove;
     
-    if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {
+    if (botToUse && botToUse.name === 'Defense Bot') {
+      // Custom Defense Bot uses opponent simulation with adjustable defense weighting
+      console.log('🤖 Custom Defense Bot - STARTING CUSTOM DEFENSE BOT LOGIC');
+      console.log('🤖 Custom Defense Bot - Bot config:', botToUse);
+      
+      const { runCustomDefenseSims } = useGameStore.getState();
+      
+      console.log('🤖 Custom Defense Bot - Running opponent simulations...');
+      console.log(`🤖 Custom Defense Bot - Defense weight: ${botToUse.defenseWeight}x`);
+      
+      // Wait for simulations to complete and get results
+      const simulationResults = await runCustomDefenseSims(sortedMoves, boardCoords, pool, botToUse.defenseWeight);
+      console.log('🤖 Custom Defense Bot - Simulation results received:', simulationResults);
+      
+      // Only evaluate moves that were actually analyzed (top 15)
+      const movesToEvaluate = sortedMoves.slice(0, 15);
+      const evaluatedMoves = movesToEvaluate.map(move => {
+        const simResult = simulationResults[move.word];
+        console.log(`🤖 Custom Defense Bot - Checking move ${move.word}:`, simResult);
+        
+        if (simResult && simResult.data && !simResult.error) {
+          // Calculate: points + leave - (defenseWeight * opponent average score)
+          const opponentAvgScore = simResult.data.averageScore || 0;
+          const adjustedValue = move.totalValue - (botToUse.defenseWeight * opponentAvgScore);
+          
+          console.log(`🤖 Custom Defense Bot - Move ${move.word}: ${move.totalValue} - ${opponentAvgScore} = ${adjustedValue}`);
+          
+          return {
+            ...move,
+            adjustedValue: adjustedValue,
+            opponentAvgScore: opponentAvgScore
+          };
+        } else {
+          // Fallback to original value if no simulation data
+          console.log(`🤖 Custom Defense Bot - No simulation data for ${move.word}, using original value`);
+          return {
+            ...move,
+            adjustedValue: move.totalValue,
+            opponentAvgScore: 0
+          };
+        }
+      });
+      
+      // Sort by adjusted value
+      evaluatedMoves.sort((a, b) => b.adjustedValue - a.adjustedValue);
+      
+      // Log top 5 evaluated moves with ranking
+      console.log('🤖 Custom Defense Bot - Top 5 moves ranked by points + leave - defense:');
+      evaluatedMoves.slice(0, 5).forEach((move, index) => {
+        console.log(`  #${index + 1}: ${move.word} - ${move.totalValue} - ${move.opponentAvgScore} = ${move.adjustedValue} (${move.score} pts, ${move.leave} leave)`);
+      });
+      
+      // Log the selected move with full details
+      const selectedMove = evaluatedMoves[0];
+      
+      // Find where this move ranks in the original points + leave list
+      const originalRank = sortedMoves.findIndex(move => move.word === selectedMove.word) + 1;
+      
+      console.log('🤖 Custom Defense Bot - Selected move:', {
+        word: selectedMove.word,
+        originalValue: selectedMove.totalValue,
+        opponentAvgScore: selectedMove.opponentAvgScore,
+        defenseWeight: botToUse.defenseWeight,
+        adjustedValue: selectedMove.adjustedValue,
+        score: selectedMove.score,
+        leave: selectedMove.leave,
+        originalRank: originalRank
+      });
+      
+      console.log(`🤖 Custom Defense Bot - Move "${selectedMove.word}" was #${originalRank} by points+leave, but #1 by defense-adjusted value`);
+      
+      botMove = selectedMove; // Best adjusted move
+    } else if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {
       botMove = sortedMoves[botToUse.customRank - 1]; // Custom rank (1-based)
     } else if (botToUse && botToUse.name === 'Tess') {
       // Tess uses opponent simulation to evaluate moves

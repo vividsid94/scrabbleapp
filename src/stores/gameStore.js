@@ -1496,7 +1496,111 @@ export const useGameStore = create((set, get) => {
     },
 
     // Tess opponent simulation function
-    runTessOpponentSims: async (moves, boardCoords, pool) => {
+    runCustomDefenseSims: async (moves, boardCoords, pool, defenseWeight) => {
+    const { setTessIsRunningSims, setTessOpponentSims } = get();
+    
+    setTessIsRunningSims(true);
+    setTessOpponentSims({});
+    
+    try {
+      const top15Moves = moves.slice(0, 15);
+      console.log(`🤖 Custom Defense Bot - Running opponent simulations for top 15 moves with ${defenseWeight}x defense weight:`, top15Moves.map(m => m.word));
+      
+      // Run simulations for each move with 200 iterations
+      const promises = top15Moves.map(async (move, index) => {
+        try {
+          console.log(`🤖 Custom Defense Bot - Analyzing move ${index + 1}/15: ${move.word}`);
+          console.log(`🤖 Custom Defense Bot - Move structure:`, move);
+          
+          // Create a clean board for this move
+          const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
+          
+          // Copy existing board tiles
+          boardCoords.forEach(({ row, col, letter }) => {
+            if (row >= 0 && row < 15 && col >= 0 && col < 15) {
+              cleanBoard[row][col] = letter;
+            }
+          });
+          
+          // Apply the current move
+          if (move.coords && Array.isArray(move.coords)) {
+            move.coords.forEach(({ row, col, letter }) => {
+              if (row >= 0 && row < 15 && col >= 0 && col < 15) {
+                cleanBoard[row][col] = letter;
+              }
+            });
+          } else if (move.tiles && Array.isArray(move.tiles)) {
+            move.tiles.forEach(tile => {
+              if (tile.isNew && tile.row >= 0 && tile.row < 15 && tile.col >= 0 && tile.col < 15) {
+                cleanBoard[tile.row][tile.col] = tile.letter;
+              }
+            });
+          }
+          
+          const tilePoolString = pool.join('');
+          
+          console.log(`🤖 Custom Defense Bot - API Request for ${move.word}:`, {
+            board: cleanBoard,
+            tilePool: tilePoolString,
+            iterations: 200
+          });
+          
+          const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              board: cleanBoard,
+              tilePool: tilePoolString,
+              iterations: 200
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log(`🤖 Custom Defense Bot - API Response for ${move.word}:`, data);
+          console.log(`🤖 Custom Defense Bot - API Response structure for ${move.word}:`, {
+            hasAverageScore: 'averageScore' in data,
+            averageScore: data.averageScore,
+            keys: Object.keys(data),
+            dataType: typeof data
+          });
+          
+          return { move, data };
+        } catch (error) {
+          console.error(`🤖 Custom Defense Bot - Error analyzing move ${move.word}:`, error);
+          return { move, error: error.message };
+        }
+      });
+      
+      const allResults = await Promise.all(promises);
+      console.log('🤖 Custom Defense Bot - All opponent simulations completed:', allResults);
+      
+      // Convert to object with move word as key
+      const resultsObj = {};
+      allResults.forEach(({ move, data, error }) => {
+        resultsObj[move.word] = { data, error, move };
+      });
+      
+      setTessOpponentSims(resultsObj);
+      console.log('🤖 Custom Defense Bot - Opponent simulation results stored:', resultsObj);
+      
+      // Return the results so they can be used immediately
+      return resultsObj;
+      
+    } catch (error) {
+      console.error('🤖 Custom Defense Bot - Error in opponent simulations:', error);
+      return {};
+    } finally {
+      setTessIsRunningSims(false);
+    }
+  },
+
+  runTessOpponentSims: async (moves, boardCoords, pool) => {
       const { setTessIsRunningSims, setTessOpponentSims } = get();
       
       console.log('🤖 Tess - Starting opponent simulations for', moves.length, 'moves');

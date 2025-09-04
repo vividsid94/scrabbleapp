@@ -7,7 +7,7 @@ import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Tooltip } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Slider } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
@@ -234,6 +234,8 @@ export default function Play() {
   ];
   const [customRank, setCustomRank] = useState('');
   const [customBotSelected, setCustomBotSelected] = useState(false);
+  const [customDefenseBotSelected, setCustomDefenseBotSelected] = useState(false);
+  const [defenseWeight, setDefenseWeight] = useState(1.0);
 
   // Initialize sounds (simplified) - only once
   const [sounds, setSounds] = useState(null);
@@ -546,7 +548,7 @@ export default function Play() {
         <Box className={styles.rightPanel}>
           <PlayerInfo
             player1Name={player1Name}
-            player2Name={isBotMode ? selectedBot.name : player2Name}
+                          player2Name={isBotMode ? (selectedBot.name === 'Defense Bot' ? `Defense Bot (${selectedBot.defenseWeight}x)` : selectedBot.name) : player2Name}
             player1Points={player1points}
             player2Points={player2points}
               player1Time={formatTime(player1Time || 0)}
@@ -858,7 +860,7 @@ export default function Play() {
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                     position: 'relative',
                   }}
-                  onClick={() => { setCustomBotSelected(false); handleBotSelect(bot); }}
+                  onClick={() => { setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
                 >
                   <div style={{ marginRight: 8 }}>{bot.icon}</div>
                   <div style={{ flex: 1 }}>
@@ -882,7 +884,7 @@ export default function Play() {
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                       opacity: selectedBot.name === bot.name && !customBotSelected ? 1 : 0.85
                     }}
-                    onClick={e => { e.stopPropagation(); setCustomBotSelected(false); handleBotSelect(bot); }}
+                    onClick={e => { e.stopPropagation(); setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
                   >
                     {selectedBot.name === bot.name && !customBotSelected ? 'Selected' : 'Choose'}
                   </button>
@@ -905,7 +907,7 @@ export default function Play() {
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   position: 'relative',
                 }}
-                onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+                onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
               >
                 <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
                 <div style={{ flex: 1 }}>
@@ -930,9 +932,85 @@ export default function Play() {
                     opacity: customBotSelected ? 1 : 0.85
                   }}
                   disabled={!/^\d+$/.test(customRank) || parseInt(customRank) <= 0}
-                  onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+                  onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
                 >
                   {customBotSelected ? 'Selected' : 'Choose'}
+                </button>
+              </div>
+              
+              {/* Custom Defense Bot item */}
+              <div
+                className={styles.moveHistoryItem}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  background: customDefenseBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
+                  border: customDefenseBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
+                  borderRadius: 12,
+                  boxShadow: customDefenseBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
+                  cursor: 'pointer',
+                  padding: '12px 16px',
+                  marginBottom: 8,
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  position: 'relative',
+                }}
+                onClick={() => { setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
+              >
+                <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom Defense Bot</div>
+                  <div style={{ fontSize: 12, color: '#374151', opacity: 0.8, marginBottom: 8 }}>
+                    Uses defense analysis to find the best move
+                  </div>
+                  <div style={{ fontSize: 11, color: '#374151', opacity: 0.8, marginBottom: 4 }}>
+                    Defense Weight: {defenseWeight.toFixed(1)}x
+                  </div>
+                  <Slider
+                    value={defenseWeight}
+                    onChange={(e, value) => setDefenseWeight(value)}
+                    onClick={(e) => e.stopPropagation()}
+                    min={0.0}
+                    max={10.0}
+                    step={0.1}
+                    size="small"
+                    sx={{
+                      color: '#3D5A80',
+                      '& .MuiSlider-thumb': {
+                        width: 16,
+                        height: 16,
+                      },
+                      '& .MuiSlider-track': {
+                        height: 4,
+                      },
+                      '& .MuiSlider-rail': {
+                        height: 4,
+                        opacity: 0.3,
+                      },
+                    }}
+                  />
+                </div>
+                <button
+                  style={{
+                    background: customDefenseBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '6px 16px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 13,
+                    boxShadow: customDefenseBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: customDefenseBotSelected ? 1 : 0.85
+                  }}
+                  disabled={false}
+                  onClick={e => { e.stopPropagation(); setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
+                >
+                  {customDefenseBotSelected ? 'Selected' : 'Choose'}
                 </button>
               </div>
             </div>
