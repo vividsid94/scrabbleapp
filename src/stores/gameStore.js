@@ -1578,35 +1578,6 @@ export const useGameStore = create((set, get) => {
         setTessOpponentSims(resultsObj);
         console.log('🤖 Tess - Opponent simulation results stored:', resultsObj);
         
-        // Log the top 5 moves with defense analysis
-        const evaluatedMoves = top15Moves.map(move => {
-          const simResult = resultsObj[move.word];
-          if (simResult && simResult.data && !simResult.error) {
-            const opponentAvgScore = simResult.data.averageScore || 0;
-            const adjustedValue = move.totalValue - opponentAvgScore;
-            return {
-              ...move,
-              adjustedValue: adjustedValue,
-              opponentAvgScore: opponentAvgScore
-            };
-          } else {
-            return {
-              ...move,
-              adjustedValue: move.totalValue,
-              opponentAvgScore: 0
-            };
-          }
-        });
-        
-        // Sort by adjusted value
-        evaluatedMoves.sort((a, b) => b.adjustedValue - a.adjustedValue);
-        
-        // Log top 5 evaluated moves with ranking
-        console.log('🤖 Tess - Top 5 moves ranked by points + leave - defense:');
-        evaluatedMoves.slice(0, 5).forEach((move, index) => {
-          console.log(`  #${index + 1}: ${move.word} - ${move.totalValue} - ${move.opponentAvgScore} = ${move.adjustedValue} (${move.score} pts, ${move.leave} leave)`);
-        });
-        
       } catch (error) {
         console.error('🤖 Tess - Error in opponent simulations:', error);
       } finally {

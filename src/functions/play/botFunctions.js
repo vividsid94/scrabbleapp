@@ -303,15 +303,58 @@ export const makeBotMove = async (botMoveSound) => {
       // Tess uses opponent simulation to evaluate moves
       const { runTessOpponentSims, tessOpponentSims, tessIsRunningSims, setTessOpponentSims } = useGameStore.getState();
       
-      // For now, Tess will use a simplified approach: run simulations in background
-      // and use 2nd best move as fallback, but log what would be the best move
-      console.log('🤖 Tess - Running opponent simulations in background...');
+      console.log('🤖 Tess - Running opponent simulations...');
       setTessOpponentSims({}); // Clear old results
-      runTessOpponentSims(sortedMoves, boardCoords, pool);
       
-      // Use 2nd best move as fallback while simulations run
-      botMove = sortedMoves.length >= 2 ? sortedMoves[1] : sortedMoves[0];
-      console.log(`🤖 Tess - Using fallback move "${botMove.word}" while simulations run`);
+      // Wait for simulations to complete
+      await runTessOpponentSims(sortedMoves, boardCoords, pool);
+      
+      // Now use the simulation results to select the best move
+      const evaluatedMoves = sortedMoves.map(move => {
+        const simResult = tessOpponentSims[move.word];
+        if (simResult && simResult.data && !simResult.error) {
+          // Calculate: points + leave - opponent average score
+          const opponentAvgScore = simResult.data.averageScore || 0;
+          const adjustedValue = move.totalValue - opponentAvgScore;
+          
+          console.log(`🤖 Tess - Move ${move.word}: ${move.totalValue} - ${opponentAvgScore} = ${adjustedValue}`);
+          
+          return {
+            ...move,
+            adjustedValue: adjustedValue,
+            opponentAvgScore: opponentAvgScore
+          };
+        } else {
+          // Fallback to original value if no simulation data
+          return {
+            ...move,
+            adjustedValue: move.totalValue,
+            opponentAvgScore: 0
+          };
+        }
+      });
+      
+      // Sort by adjusted value
+      evaluatedMoves.sort((a, b) => b.adjustedValue - a.adjustedValue);
+      
+      // Log top 5 evaluated moves with ranking
+      console.log('🤖 Tess - Top 5 moves ranked by points + leave - defense:');
+      evaluatedMoves.slice(0, 5).forEach((move, index) => {
+        console.log(`  #${index + 1}: ${move.word} - ${move.totalValue} - ${move.opponentAvgScore} = ${move.adjustedValue} (${move.score} pts, ${move.leave} leave)`);
+      });
+      
+      // Log the selected move with full details
+      const selectedMove = evaluatedMoves[0];
+      console.log('🤖 Tess - Selected move:', {
+        word: selectedMove.word,
+        originalValue: selectedMove.totalValue,
+        opponentAvgScore: selectedMove.opponentAvgScore,
+        adjustedValue: selectedMove.adjustedValue,
+        score: selectedMove.score,
+        leave: selectedMove.leave
+      });
+      
+      botMove = selectedMove; // Best adjusted move
     } else if (botToUse && botToUse.name === 'Novice' && sortedMoves.length >= 30) {
       botMove = sortedMoves[29]; // 30th best move
     } else if (botToUse && botToUse.name === 'Beginner' && sortedMoves.length >= 15) {
