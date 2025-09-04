@@ -10,6 +10,7 @@ import { createBoard } from "../../functions/boardFunctions.js";
 import { Snackbar, Alert, Tooltip } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
+import DefenseModal from '../../components/Modals/DefenseModal';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -197,11 +198,22 @@ export default function Play() {
     makeBotMove,
     selectedBot,
     setSelectedBot,
+    
+    // Defense modal
+    showDefenseModal,
+    defenseMove,
+    defenseResults,
+    isDefenseLoading,
+    analyzeDefense,
+    updateDefenseResults,
+    setShowDefenseModal,
+    setDefenseMove,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
+
 
   // Refs (keep these local)
   const complementaryColor = useRef('#9F7A83');
@@ -573,6 +585,7 @@ export default function Play() {
             onMoveSelect={handleMoveSelectClick}
             onSimulateMove={simulateMove}
             onOpenSimulationModal={openSimulationModal}
+            onAnalyzeDefense={analyzeDefense}
             simulatingMove={simulatingMove}
             boardCoords={boardCoords}
             pool={pool}
@@ -631,6 +644,19 @@ export default function Play() {
       </Box>
 
         <GameModal />
+
+              <DefenseModal
+          open={showDefenseModal}
+          onClose={() => {
+            setShowDefenseModal(false);
+          }}
+          move={defenseMove}
+          boardCoords={boardCoords}
+          pool={pool}
+          defenseResults={defenseResults}
+          isLoading={isDefenseLoading}
+          onUpdateResults={updateDefenseResults}
+        />
 
       <Snackbar 
         open={snackbarOpen} 

@@ -98,6 +98,12 @@ export const useGameStore = create((set, get) => {
     botMoveSoundType: 'puzzle',
     // Bot selection
     selectedBot: { name: 'Theo', img: '/images/theomascot.png' },
+    
+    // Defense modal state
+    showDefenseModal: false,
+    defenseMove: null,
+    defenseResults: null,
+    isDefenseLoading: false,
   };
 
   return {
@@ -200,6 +206,12 @@ export const useGameStore = create((set, get) => {
     setPlayerMoveSoundType: (type) => set({ playerMoveSoundType: type }),
     setBotMoveSoundType: (type) => set({ botMoveSoundType: type }),
     setSelectedBot: (bot) => set({ selectedBot: bot }),
+    
+    // Actions - Defense Modal
+    setShowDefenseModal: (show) => set({ showDefenseModal: show }),
+    setDefenseMove: (move) => set({ defenseMove: move }),
+    setDefenseResults: (results) => set({ defenseResults: results }),
+    setIsDefenseLoading: (loading) => set({ isDefenseLoading: loading }),
     
     // Complex actions
     resetGame: () => set({
@@ -654,12 +666,10 @@ export const useGameStore = create((set, get) => {
           // Import required functions
           const [
             { generateExchangeCombinations },
-            { calculateExchangeLeave, fetchLeaveValues },
-            { fetchBoardControl }
+            { calculateExchangeLeave, fetchLeaveValues }
           ] = await Promise.all([
             import('../functions/play/moveFunctions'),
-            import('../functions/play/leaveFunctions'),
-            import('../functions/play/moveFunctions')
+            import('../functions/play/leaveFunctions')
           ]);
 
           // Generate exchange moves
@@ -680,21 +690,12 @@ export const useGameStore = create((set, get) => {
 
           // First, fetch leave values for all moves
           const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-          const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-            fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-            fetchBoardControl(boardCoords, allMoves)
-          ]);
-
-          // Create a map of move words to their control metrics
-          const controlMap = new Map(
-            boardControlMetrics.map(metric => [metric.move, metric])
-          );
+          const updatedLeaveValues = await fetchLeaveValues(allMoves, leaveValues, setLeaveValues);
 
           // Then calculate total values and sort
           const movesWithValues = allMoves
             .map(move => {
               const leaveValue = updatedLeaveValues[move.leave] || 0;
-              const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
               const totalValue = move.isExchange ? 
                 leaveValue : // For exchanges, total value is just the leave value
                 (move.score + leaveValue); // Just points + leave, no control value
@@ -702,8 +703,6 @@ export const useGameStore = create((set, get) => {
                 ...move,
                 totalValue,
                 leaveValue, // Add the leave value to the move object
-                defensiveValue: controlMetrics.defensiveValue,
-                boardControl: controlMetrics.boardControl,
               };
             })
             .sort((a, b) => b.totalValue - a.totalValue)
@@ -1395,6 +1394,91 @@ export const useGameStore = create((set, get) => {
       import('../functions/play/botFunctions').then(({ makeBotMove: makeBotMoveFunction }) => {
         makeBotMoveFunction(botMoveSound);
       });
+    },
+
+    // Defense analysis
+    analyzeDefense: async (move) => {
+      const { 
+        boardCoords, 
+        pool, 
+        setDefenseMove, 
+        setShowDefenseModal, 
+        setIsDefenseLoading, 
+        setDefenseResults 
+      } = get();
+      
+      // Set the move and show modal
+      setDefenseMove(move);
+      setShowDefenseModal(true);
+      setIsDefenseLoading(true);
+      setDefenseResults(null);
+      
+      try {
+        // Create a clean 15x15 board with only strings
+        const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
+        
+        // Copy existing board state (only string values)
+        for (let row = 0; row < 15; row++) {
+          for (let col = 0; col < 15; col++) {
+            if (boardCoords[row] && boardCoords[row][col] && typeof boardCoords[row][col] === 'string') {
+              cleanBoard[row][col] = boardCoords[row][col];
+            }
+          }
+        }
+        
+        // Apply the move to the clean board
+        move.tiles.forEach(tile => {
+          if (tile.isNew) {
+            cleanBoard[tile.row][tile.col] = tile.letter;
+          }
+        });
+        
+        // Convert pool array to string
+        const tilePoolString = pool.join('');
+        
+        // Create the request body
+        const requestBody = {
+          board: cleanBoard,
+          tilePool: tilePoolString,
+          iterations: 5
+        };
+        
+        // Log the parameters being sent to the API
+        console.log('🛡️ Bulk API Parameters:', {
+          board: cleanBoard,
+          tilePool: tilePoolString,
+          iterations: 5
+        });
+        
+        // Call bulk move generation endpoint
+        const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const results = await response.json();
+        setDefenseResults(results);
+      } catch (error) {
+        console.error('Error analyzing defense:', error);
+        setDefenseResults({
+          error: 'Failed to analyze defense',
+          message: error.message
+        });
+      } finally {
+        setIsDefenseLoading(false);
+      }
+    },
+
+    // Listen for updated defense results from modal
+    updateDefenseResults: (results) => {
+      set({ defenseResults: results });
     },
   };
 }); 

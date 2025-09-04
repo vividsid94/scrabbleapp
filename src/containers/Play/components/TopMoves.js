@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -17,10 +17,12 @@ const TopMoves = ({
   simulatingMove,
   currentPlayer,
   gameStarted,
-  onOpenSimulationModal
+  onOpenSimulationModal,
+  onAnalyzeDefense
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
+  const defenseButtonClicked = useRef(false);
 
   // Auto-expand when moves are loaded
   useEffect(() => {
@@ -67,6 +69,21 @@ const TopMoves = ({
     onMoveSelect(move);
   };
 
+  const handleSeeDefenseClick = (e, move) => {
+    e.stopPropagation(); // Prevent the row click from triggering
+    e.preventDefault(); // Prevent any default behavior
+    defenseButtonClicked.current = true; // Mark that defense button was clicked
+
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      defenseButtonClicked.current = false;
+    }, 100);
+
+    if (onAnalyzeDefense) {
+      onAnalyzeDefense(move);
+    }
+  };
+
   const handleSimulateMove = (move) => {
     onSimulateMove(move);
   };
@@ -81,16 +98,20 @@ const TopMoves = ({
     const location = formatLocation(move);
     const isSimulating = simulatingMove && simulatingMove.word === move.word;
 
-    // Get leave value and control metrics
+    // Get leave value
     const leaveValue = move.leaveValue || 0;
-    const defensiveValue = move.defensiveValue || 0;
-    const boardControl = move.boardControl || 0;
 
     return (
       <Box 
         key={index} 
         className={styles.topMoveItem}
-        onClick={() => handleMoveSelect(move)}
+        onClick={(e) => {
+          // Check if the defense button was clicked
+          if (defenseButtonClicked.current) {
+            return;
+          }
+          handleMoveSelect(move);
+        }}
         style={{ cursor: 'pointer' }}
       >
         <Box className={styles.topMoveRank}>{index + 1}</Box>
@@ -101,9 +122,27 @@ const TopMoves = ({
           <Tooltip title="Leave">
             <Box className={styles.topMoveLeaveValue}>{Math.round(leaveValue)}</Box>
           </Tooltip>
-          <Tooltip title="Board Control Estimate">
-            <Box className={styles.topMoveControl}>{Math.round(defensiveValue)}</Box>
-          </Tooltip>
+          <Box 
+            className={styles.seeDefenseButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleSeeDefenseClick(e, move);
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+            style={{ 
+              position: 'relative', 
+              zIndex: 10,
+              pointerEvents: 'auto'
+            }}
+          >
+            see defense
+          </Box>
         </Box>
       </Box>
     );
