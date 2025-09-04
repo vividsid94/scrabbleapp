@@ -3,7 +3,6 @@ import { origPool, origBoard } from '../components/AppContent/References/staticD
 import { TEST_RACKS } from '../components/AppContent/References/testRacks.js';
 import { getBoardDiff } from '../functions/play/boardUtils';
 import { alphabetizeRack } from '../functions/play/rackFunctions';
-import { ensureGoServiceWarmedUp } from '../functions/play/botFunctions';
 
 export const useSandboxStore = create((set, get) => {
   // Initial state
@@ -961,14 +960,6 @@ export const useSandboxStore = create((set, get) => {
         // Convert any '?' in the rack to '*' for the API
         const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
         
-        // Ensure Go service is warmed up before making the actual request
-        console.log('🔥 Ensuring Go service is warmed up...');
-        ensureGoServiceWarmedUp().then(isWarmedUp => {
-          if (!isWarmedUp) {
-            console.warn('⚠️ Go service warmup failed, proceeding with fallback...');
-          }
-        });
-
         // Fix blank tiles in board state for bot API - convert display letters to actual lowercase values
         blankTiles.forEach(blankTile => {
           const { row, col } = blankTile;

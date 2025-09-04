@@ -13,7 +13,6 @@ import { origPool, origBoard } from "../../components/AppContent/References/stat
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
-import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Tooltip } from "@mui/material";
 import Rack from '../../components/AppContent/Board/Rack.js';
@@ -164,15 +163,6 @@ export default function Sandbox() {
     initializePuzzle();
   }, []);
 
-  // Pre-warm the Go service when component mounts
-  useEffect(() => {
-    preWarmGoService();
-    
-    // Cleanup function to stop periodic warmup when component unmounts
-    return () => {
-      stopPeriodicWarmup();
-    };
-  }, []);
 
   // Initialize game using store action
   useEffect(() => {

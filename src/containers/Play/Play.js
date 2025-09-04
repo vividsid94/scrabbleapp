@@ -24,7 +24,6 @@ import { formatTime } from '../../functions/play/timeUtils';
 import { useGameStore } from '../../stores/gameStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
-import { preWarmGoService, stopPeriodicWarmup } from '../../functions/play/botFunctions';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
 import Modal from '@mui/material/Modal';
 import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, ArrowsHorizontal, Gear, Clock, Lightbulb, DotsThree } from '@phosphor-icons/react';
@@ -245,15 +244,6 @@ export default function Play() {
     setSounds(soundObjects);
   }, []);
 
-  // Pre-warm the Go service when component mounts
-  useEffect(() => {
-    preWarmGoService();
-    
-    // Cleanup function to stop periodic warmup when component unmounts
-    return () => {
-      stopPeriodicWarmup();
-    };
-  }, []);
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
@@ -278,7 +268,6 @@ export default function Play() {
   useEffect(() => {
     console.log('🎹 Adding keyboard event listener');
     const handleKeyDownWrapperWithParams = (e) => {
-      console.log('⌨️ Keyboard event triggered:', e.key);
       handleKeyDownWrapper(e, playerMoveSound, origBoard);
     };
 
