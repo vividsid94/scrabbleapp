@@ -253,12 +253,12 @@ export const makeBotMove = async (botMoveSound) => {
         console.log(`🤖 Tess - Checking move ${move.word}:`, simResult);
         
         if (simResult && simResult.data && !simResult.error) {
-          // Calculate: points + leave - opponent average score
+          // Calculate: points + leave - (2x opponent average score)
           const opponentAvgScore = simResult.data.averageScore || 0;
           console.log(`🤖 Tess - Move ${move.word} opponentAvgScore:`, opponentAvgScore);
-          const adjustedValue = move.totalValue - opponentAvgScore;
+          const adjustedValue = move.totalValue - (2 * opponentAvgScore);
           
-          console.log(`🤖 Tess - Move ${move.word}: ${move.totalValue} - ${opponentAvgScore} = ${adjustedValue}`);
+          console.log(`🤖 Tess - Move ${move.word}: ${move.totalValue} - (2 × ${opponentAvgScore}) = ${adjustedValue}`);
           
           return {
             ...move,
