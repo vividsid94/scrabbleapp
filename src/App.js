@@ -26,6 +26,7 @@ import TestMindBlow from "./containers/Home/TestMindBlow";
 import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
 import Snakes from "./containers/Snakes/Snakes";
+import RealEscapeRoom from "./containers/EscapeRoom3D/RealEscapeRoom";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
@@ -66,6 +67,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
           <Route path="/about" element={<About/>} />
           <Route path="/test-theo-shake" element={<TestTheoShake/>} />
+          <Route path="/escape-room-3d" element={<RealEscapeRoom/>} />
           <Route path="/test-mind-blow" element={<TestMindBlow />} />
           <Route path="/jigsaw" element={<Jigsaw />} />
           <Route path="/test-jigsaw" element={<Jigsaw />} />
