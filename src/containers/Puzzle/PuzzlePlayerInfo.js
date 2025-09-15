@@ -2,11 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from "@mui/material";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Pause, Play, GridFour, Lightning, ArrowClockwise } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
@@ -137,59 +133,35 @@ const PuzzlePlayerInfo = React.memo(() => {
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {null} {/* No time icon in puzzle mode */}
-        </Box>
         <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
-          <Box
-            onClick={() => handleBotModeToggle()}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '4px',
-              cursor: 'pointer'
-            }}
-          >
             <SmartToyIcon 
               className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
-              style={{ 
-                fontSize: 24, 
-                cursor: 'pointer',
-                color: gameStarted ? '#FF9800' : '#4CAF50'
-              }}
+            style={{ 
+              fontSize: 20, 
+              cursor: 'pointer',
+              color: gameStarted ? '#FF9800' : '#4CAF50',
+              marginRight: '4px'
+            }}
+            onClick={() => handleBotModeToggle()}
             />
-          </Box>
         </Tooltip>
         <Tooltip title="Puzzle Mode">
-          <Box
-            onClick={() => {
-              const newShowSettings = !showSettingsPanel;
-              setShowSettingsPanelLocal(newShowSettings);
-              // Pause game when settings open, resume when closed
-              setIsManuallyPausedLocal(newShowSettings);
-            }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '4px',
-              cursor: 'pointer',
-              position: 'relative'
-            }}
-          >
-            <ViewModuleIcon 
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <GridFour 
               className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''}`}
               style={{ 
-                fontSize: 24, 
-                cursor: 'pointer'
+                fontSize: 20, 
+                cursor: 'pointer',
+                marginRight: '4px'
+              }}
+              onClick={() => {
+                const newShowSettings = !showSettingsPanel;
+                setShowSettingsPanelLocal(newShowSettings);
+                // Pause game when settings open, resume when closed
+                setIsManuallyPausedLocal(newShowSettings);
               }}
             />
-            <Box sx={{
+            <div style={{
               position: 'absolute',
               top: '-2px',
               right: '-2px',
@@ -207,34 +179,23 @@ const PuzzlePlayerInfo = React.memo(() => {
               {puzzleMode === 'bingo' ? '1' : 
                puzzleMode === 'only-bingo' ? '2' : 
                puzzleMode === 'significant-best' ? '3' : '4'}
-            </Box>
-          </Box>
+            </div>
+          </div>
         </Tooltip>
         <Tooltip title={isFastPlayMode ? "Fast Play On" : "Fast Play Off"}>
-          <Box
-            onClick={() => setIsFastPlayMode(!isFastPlayMode)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '4px',
-              cursor: 'pointer',
-              position: 'relative'
-            }}
-          >
-            <Box 
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <Lightning 
               className={`${styles.keyBtn} ${isFastPlayMode ? styles.active : ''}`}
               style={{ 
-                fontSize: 24, 
+                fontSize: 20, 
                 cursor: 'pointer',
                 color: isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)',
-                fontWeight: 'bold'
+                marginRight: '4px'
               }}
-            >
-              <FlashOnIcon style={{ fontSize: 24 }} />
-            </Box>
+              onClick={() => setIsFastPlayMode(!isFastPlayMode)}
+            />
             {isFastPlayMode && (
-              <Box sx={{
+              <div style={{
                 position: 'absolute',
                 top: '-2px',
                 right: '-2px',
@@ -244,63 +205,44 @@ const PuzzlePlayerInfo = React.memo(() => {
                 height: '12px'
               }} />
             )}
-          </Box>
+          </div>
         </Tooltip>
         {gameStarted && (
           <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
-            <Box
-              onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '6px',
-                cursor: 'pointer'
-              }}
-            >
               {isManuallyPaused ? (
-                <PlayArrowIcon 
-                  className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
-                  style={{ 
-                    fontSize: 24, 
-                    cursor: 'pointer'
-                  }}
-                />
-              ) : (
-                <PauseIcon 
-                  className={`${styles.keyBtn} ${styles.pauseIcon}`}
-                  style={{ 
-                    fontSize: 24, 
-                    cursor: 'pointer'
-                  }}
-                />
+              <Play 
+                className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
+                style={{ 
+                  fontSize: 20, 
+                  cursor: 'pointer'
+                }}
+                onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
+              />
+            ) : (
+              <Pause 
+                className={`${styles.keyBtn} ${styles.pauseIcon}`}
+                style={{ 
+                  fontSize: 20, 
+                  cursor: 'pointer'
+                }}
+                onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
+              />
               )}
-            </Box>
           </Tooltip>
         )}
         {gameStarted && (
           <Tooltip title="Reset Rack">
-            <Box
+            <ArrowClockwise 
+              className={`${styles.keyBtn} ${styles.resetIcon}`}
+              style={{ 
+                fontSize: 20, 
+                cursor: 'pointer'
+              }}
               onClick={() => {
                 console.log(' Reset rack clicked');
                 clearPuzzlePlacement();
               }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '6px',
-                cursor: 'pointer'
-              }}
-            >
-              <RefreshIcon 
-                className={`${styles.keyBtn} ${styles.resetIcon}`}
-                style={{ 
-                  fontSize: 24, 
-                  cursor: 'pointer'
-                }}
-              />
-            </Box>
+            />
           </Tooltip>
         )}
       </Box>
@@ -397,7 +339,6 @@ const PuzzlePlayerInfo = React.memo(() => {
               opacity: 0.7,
               padding: '8px',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '4px'
             }}>
               <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
@@ -429,7 +370,7 @@ const PuzzlePlayerInfo = React.memo(() => {
                   cursor: 'pointer',
                   background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
                   color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',
                   transition: 'all 0.3s ease',
@@ -480,7 +421,7 @@ const PuzzlePlayerInfo = React.memo(() => {
                   cursor: 'pointer',
                   background: 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))',
                   color: 'white',
-                  border: '1px solid rgba(76, 175, 80, 0.3)',
+                  border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',
                   transition: 'all 0.3s ease',
@@ -510,7 +451,7 @@ const PuzzlePlayerInfo = React.memo(() => {
                   cursor: 'pointer',
                   background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
                   color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',
                   transition: 'all 0.3s ease',
@@ -615,7 +556,6 @@ const PuzzlePlayerInfo = React.memo(() => {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
                 fontSize: '14px',
                 position: 'relative'
               }}
@@ -648,7 +588,6 @@ const PuzzlePlayerInfo = React.memo(() => {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'only-bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'only-bingo' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
                 fontSize: '14px',
                 position: 'relative'
               }}
@@ -681,7 +620,6 @@ const PuzzlePlayerInfo = React.memo(() => {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'significant-best' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'significant-best' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
                 fontSize: '14px',
                 position: 'relative'
               }}
@@ -714,7 +652,6 @@ const PuzzlePlayerInfo = React.memo(() => {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'non-bingo-significant' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: puzzleMode === 'non-bingo-significant' ? '1px solid #4CAF50' : '1px solid rgba(255, 255, 255, 0.1)',
                 fontSize: '14px',
                 position: 'relative'
               }}
