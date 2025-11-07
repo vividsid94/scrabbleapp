@@ -1,0 +1,67 @@
+.page {
+  flex: 1;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.header {
+  padding: 32px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tournamentHeader {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tournamentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tournamentName {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tournamentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.section {
+  margin: 32px auto;
+  max-width: 1200px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+}
+
+@media (max-width: 768px) {
+  .tournamentMeta {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section {
+    padding: 16px;
+  }
+}
+

@@ -27,6 +27,9 @@ import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
 import Snakes from "./containers/Snakes/Snakes";
 import RealEscapeRoom from "./containers/EscapeRoom3D/RealEscapeRoom";
+import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
+import Tournament from "./containers/Tournament/Tournament";
+import Tournaments from "./containers/Tournaments/Tournaments";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 
 export const ThemeContext = React.createContext();
@@ -72,6 +75,9 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/jigsaw" element={<Jigsaw />} />
           <Route path="/test-jigsaw" element={<Jigsaw />} />
           <Route path="/snakes" element={<Snakes />} />
+          <Route path="/player/:playerId" element={<PlayerProfile />} />
+          <Route path="/tournament/:tournamentId" element={<Tournament />} />
+          <Route path="/tournaments" element={<Tournaments />} />
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}

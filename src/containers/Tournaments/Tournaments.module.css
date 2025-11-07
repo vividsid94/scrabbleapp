@@ -1,0 +1,113 @@
+.page {
+  flex: 1;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.header {
+  padding: 32px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.content {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tournamentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.tournamentCard {
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.tournamentCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tournamentCardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.tournamentType {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.tournamentCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.tournamentCardAction {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 64px 32px;
+}
+
+.error {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .tournamentsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    padding: 24px 16px;
+  }
+
+  .content {
+    padding: 24px 16px;
+  }
+}
+

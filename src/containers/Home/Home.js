@@ -1,90 +1,556 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Autocomplete from '@mui/material/Autocomplete';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
 import styles from './Home.module.css';
-import { Rocket } from '@phosphor-icons/react';
-import { Link } from 'react-router-dom';
+import { Rocket, MagnifyingGlass, User, Trophy, X } from '@phosphor-icons/react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
+import { searchPlayers, getUpcomingTournaments, getRecentTournaments } from '../../axios/crossTablesApi';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
+  const navigate = useNavigate();
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
+  const [playerOptions, setPlayerOptions] = useState([]);
+  const [upcomingTournaments, setUpcomingTournaments] = useState([]);
+  const [recentTournaments, setRecentTournaments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingTournaments, setLoadingTournaments] = useState(false);
+  const [tournamentTab, setTournamentTab] = useState('upcoming'); // 'upcoming' or 'recent'
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  const touchStartY = useRef(null);
+  const touchCurrentY = useRef(null);
+  const bodyOverflowRef = useRef('');
+
+  const closePanel = () => setSearchPanelOpen(false);
+
+  useEffect(() => {
+    if (searchPanelOpen) {
+      loadTournaments();
+    }
+  }, [searchPanelOpen]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (searchPanelOpen) {
+      bodyOverflowRef.current = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = bodyOverflowRef.current || '';
+    }
+
+    return () => {
+      document.body.style.overflow = bodyOverflowRef.current || '';
+    };
+  }, [searchPanelOpen]);
+
+  useEffect(() => {
+    if (!searchPanelOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closePanel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [searchPanelOpen]);
+
+  const loadTournaments = async () => {
+    try {
+      setLoadingTournaments(true);
+      const [upcoming, recent] = await Promise.all([
+        getUpcomingTournaments(),
+        getRecentTournaments()
+      ]);
+      setUpcomingTournaments(upcoming);
+      setRecentTournaments(recent);
+    } catch (err) {
+      console.error('Error loading tournaments:', err);
+    } finally {
+      setLoadingTournaments(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleTouchStart = (event) => {
+    if (!isMobile) return;
+    touchStartY.current = event.touches[0]?.clientY ?? null;
+    touchCurrentY.current = touchStartY.current;
+  };
+
+  const handleTouchMove = (event) => {
+    if (!isMobile || touchStartY.current === null) return;
+    touchCurrentY.current = event.touches[0]?.clientY ?? touchCurrentY.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile || touchStartY.current === null || touchCurrentY.current === null) {
+      touchStartY.current = null;
+      touchCurrentY.current = null;
+      return;
+    }
+
+    const delta = touchCurrentY.current - touchStartY.current;
+    if (delta > 80) {
+      closePanel();
+    }
+
+    touchStartY.current = null;
+    touchCurrentY.current = null;
+  };
  
   return (
-    <Box sx={{ display: 'flex'}}>
-      <Sidenav/>
-      <Box className={styles.page}>
-        <Box className={styles.heroContainer}>
-          <Box className={styles.mascotWrapper}>
-            <AnimatedMascot />
+    <>
+      <Box sx={{ display: 'flex'}}>
+        <Sidenav/>
+        <Box className={styles.page}>
+          <Box className={styles.heroContainer}>
+            <Box className={styles.mascotWrapper}>
+              <AnimatedMascot />
+            </Box>
+            <Box className={styles.title}
+              style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
+            >
+              Tile Turnover™
+            </Box>
           </Box>
-          <Box className={styles.title}
-            style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
-          >
-            Tile Turnover™
-          </Box>
-        </Box>
-        <Box 
-          className={styles.developmentMessage}
-          style={{ 
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#f0f0f0',
-            color: lightMode === 'dark' ? '#fff' : '#000'
-          }}
-        >
-          Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check the{" "}
-          <Link to="/changelog" style={{
-            color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
-            textDecoration: 'none', 
-            fontWeight: 'bold'
-          }}>changelog</Link>
-          {" "}for all the latest updates!
-          <br /><br />
-          <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
-            Our official release will be after 2025 Nationals, but more beta features are being added to the homepage! Try our new Puzzle and Play modes!
-          </span>
-          <Rocket 
+          <Box 
+            className={styles.developmentMessage}
             style={{ 
-              color: '#F59E0B', 
-              fontSize: '20px', 
-              marginLeft: '8px',
-              verticalAlign: 'middle'
-            }} 
-            weight="fill" 
-          />
+              backgroundColor: lightMode === 'dark' ? '#374151' : '#f0f0f0',
+              color: lightMode === 'dark' ? '#fff' : '#000'
+            }}
+          >
+            Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check the{" "}
+            <Link to="/changelog" style={{
+              color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
+              textDecoration: 'none', 
+              fontWeight: 'bold'
+            }}>changelog</Link>
+            {" "}for all the latest updates!
+            <br /><br />
+            <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
+              Our official release will be after 2025 Nationals, but more beta features are being added to the homepage! Try our new Puzzle and Play modes!
+            </span>
+            <Rocket 
+              style={{ 
+                color: '#F59E0B', 
+                fontSize: '20px', 
+                marginLeft: '8px',
+                verticalAlign: 'middle'
+              }} 
+              weight="fill" 
+            />
+          </Box>
+          
+          <Box className={styles.homeButtonContainer}>
+            <Link to="/viewer">
+              <button className={styles.homeButton}>Game Viewer</button>
+            </Link>
+            <Link to="/3dviewer">
+              <button className={styles.threeDButton}>3D Viewer (Beta)</button>
+            </Link>
+            <Link to="/play">
+              <button className={styles.homeButton} style={{ 
+                background: 'linear-gradient(45deg, transparent 5%, #B91C1C 5%)',
+                boxShadow: '6px 0px 0px #991B1B'
+              }}>Play (Beta)</button>
+            </Link>
+            <Link to="/puzzle">
+              <button className={styles.homeButton} style={{ 
+                background: 'linear-gradient(45deg, transparent 5%, #047857 5%)',
+                boxShadow: '6px 0px 0px #065F46'
+              }}>Puzzle (Beta)</button>
+            </Link>
+            {/* <Link to="/snakes">
+              <button className={styles.homeButton} style={{ 
+                background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',
+                boxShadow: '6px 0px 0px #5B21B6'
+              }}>Snakes 🐍</button>
+            </Link> */}
+            <Link to="/submit-game">
+              <button className={styles.submitGameButton}>Submit Game</button>
+            </Link>
+            <button 
+              className={styles.homeButton} 
+              onClick={() => setSearchPanelOpen(true)}
+              style={{ 
+                background: 'linear-gradient(45deg, transparent 5%, #0891B2 5%)',
+                boxShadow: '6px 0px 0px #0E7490'
+              }}
+              type="button"
+              aria-expanded={searchPanelOpen}
+              aria-controls="resultsPanel"
+            >
+              Results (Beta)
+            </button>
+            {/* <Link to="/play">
+              <button className={styles.homeButton}>Play Scrabble</button>
+            </Link> */}
+          </Box>
         </Box>
-        <Box className={styles.homeButtonContainer}>
-          <Link to="/viewer">
-            <button className={styles.homeButton}>Game Viewer</button>
-          </Link>
-          <Link to="/3dviewer">
-            <button className={styles.threeDButton}>3D Viewer (Beta)</button>
-          </Link>
-          <Link to="/play">
-            <button className={styles.homeButton} style={{ 
-              background: 'linear-gradient(45deg, transparent 5%, #B91C1C 5%)',
-              boxShadow: '6px 0px 0px #991B1B'
-            }}>Play (Beta)</button>
-          </Link>
-          <Link to="/puzzle">
-            <button className={styles.homeButton} style={{ 
-              background: 'linear-gradient(45deg, transparent 5%, #047857 5%)',
-              boxShadow: '6px 0px 0px #065F46'
-            }}>Puzzle (Beta)</button>
-          </Link>
-          {/* <Link to="/snakes">
-            <button className={styles.homeButton} style={{ 
-              background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',
-              boxShadow: '6px 0px 0px #5B21B6'
-            }}>Snakes 🐍</button>
-          </Link> */}
-          <Link to="/submit-game">
-            <button className={styles.submitGameButton}>Submit Game</button>
-          </Link>
-          {/* <Link to="/play">
-            <button className={styles.homeButton}>Play Scrabble</button>
-          </Link> */}
-        </Box>
-      </Box>   
-    </Box>
+      </Box>
+      
+      {/* Right Side Search Panel */}
+      <Box 
+        className={`${styles.searchPanel} ${searchPanelOpen ? styles.searchPanelOpen : ''}`}
+        style={{
+          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
+          borderLeft: `1px solid ${lightMode === 'dark' ? '#374151' : '#e5e7eb'}`
+        }}
+        id="resultsPanel"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+          <Box className={styles.searchPanelHeader}>
+            <h2 style={{ 
+              fontSize: 20, 
+              fontWeight: 600, 
+              margin: 0,
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }}>
+              Results
+            </h2>
+            <IconButton
+              onClick={closePanel}
+              sx={{
+                color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
+                }
+              }}
+            >
+              <X size={20} />
+            </IconButton>
+          </Box>
+          
+          <Box className={styles.searchPanelContent}>
+            {/* Player Search Section */}
+            <Box style={{ marginBottom: 32 }}>
+              <h3 style={{ 
+                fontSize: 16, 
+                fontWeight: 600, 
+                margin: '0 0 16px 0',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <User size={18} />
+                Search Players
+              </h3>
+              
+              <Autocomplete
+                freeSolo
+                options={playerOptions}
+                loading={loading}
+                onInputChange={async (event, newInputValue) => {
+                  if (newInputValue.length >= 2) {
+                    try {
+                      setLoading(true);
+                      const players = await searchPlayers(newInputValue);
+                      setPlayerOptions(players.slice(0, 10));
+                    } catch (err) {
+                      console.error('Search error:', err);
+                    } finally {
+                      setLoading(false);
+                    }
+                  } else {
+                    setPlayerOptions([]);
+                  }
+                }}
+                getOptionLabel={(option) => option.name || ''}
+                renderOption={(props, option) => (
+                  <Box
+                    {...props}
+                    component="li"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '12px',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
+                      }
+                    }}
+                    onClick={() => {
+                      if (option.playerid) {
+                        navigate(`/player/${option.playerid}`);
+                      }
+                    }}
+                  >
+                    {option.photourl || option.photo ? (
+                      <img
+                        src={option.photourl || option.photo}
+                        alt={option.name}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          marginRight: 12,
+                          objectFit: 'cover'
+                        }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          marginRight: 12,
+                          backgroundColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <User size={20} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
+                      </Box>
+                    )}
+                    <Box sx={{ flex: 1 }}>
+                      <div style={{ 
+                        fontWeight: 600, 
+                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                        marginBottom: 4
+                      }}>
+                        {option.name}
+                      </div>
+                      {option.twlrating && (
+                        <div style={{ 
+                          fontSize: 12, 
+                          color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
+                        }}>
+                          TWL: {Math.round(option.twlrating)} | CSW: {option.cswrating ? Math.round(option.cswrating) : 'N/A'}
+                        </div>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Search players..."
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <MagnifyingGlass size={20} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <>
+                          {loading ? <CircularProgress size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      )
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
+                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                        '& fieldset': {
+                          borderColor: lightMode === 'dark' ? '#4b5563' : '#d1d5db'
+                        },
+                        '&:hover fieldset': {
+                          borderColor: lightMode === 'dark' ? '#6b7280' : '#9ca3af'
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#3b82f6'
+                        }
+                      }
+                    }}
+                  />
+                )}
+                PaperComponent={(props) => (
+                  <Paper
+                    {...props}
+                    sx={{
+                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
+                      border: `1px solid ${lightMode === 'dark' ? '#4b5563' : '#e5e7eb'}`,
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                )}
+                sx={{ width: '100%' }}
+              />
+            </Box>
+
+            {/* Tournaments Section */}
+            <Box>
+              <h3 style={{ 
+                fontSize: 16, 
+                fontWeight: 600, 
+                margin: '0 0 16px 0',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <Trophy size={18} />
+                Tournaments
+              </h3>
+
+              <Box className={styles.searchTabs} style={{ marginBottom: 16 }}>
+                <button
+                  onClick={() => setTournamentTab('upcoming')}
+                  className={styles.searchTab}
+                  style={{
+                    backgroundColor: tournamentTab === 'upcoming' 
+                      ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
+                      : 'transparent',
+                    color: tournamentTab === 'upcoming' 
+                      ? '#fff'
+                      : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
+                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                  }}
+                >
+                  Upcoming
+                </button>
+                <button
+                  onClick={() => setTournamentTab('recent')}
+                  className={styles.searchTab}
+                  style={{
+                    backgroundColor: tournamentTab === 'recent' 
+                      ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
+                      : 'transparent',
+                    color: tournamentTab === 'recent' 
+                      ? '#fff'
+                      : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
+                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                  }}
+                >
+                  Recent
+                </button>
+              </Box>
+
+              {loadingTournaments ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <>
+                  {(
+                    tournamentTab === 'upcoming'
+                      ? upcomingTournaments
+                      : recentTournaments
+                  ).length === 0 ? (
+                    <Box sx={{
+                      padding: '16px',
+                      textAlign: 'center',
+                      color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                      fontSize: 14
+                    }}>
+                      No tournaments found.
+                    </Box>
+                  ) : (
+                    <Box className={styles.tournamentsList}>
+                      {(tournamentTab === 'upcoming' ? upcomingTournaments : recentTournaments)
+                        .slice(0, 10)
+                        .map((tournament, index) => (
+                          <Box
+                            key={index}
+                            className={styles.tournamentItem}
+                            style={{
+                              backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
+                              borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                              cursor: tournament.tourneyid ? 'pointer' : 'default'
+                            }}
+                            onClick={() => {
+                              if (tournament.tourneyid) {
+                                navigate(`/tournament/${tournament.tourneyid}`);
+                              }
+                            }}
+                          >
+                            <Box sx={{ flex: 1 }}>
+                              <div style={{ 
+                                fontWeight: 600, 
+                                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                                marginBottom: 4
+                              }}>
+                                {tournament.name || tournament.tourneyname || tournament.mastername}
+                              </div>
+                              {tournament.date && (
+                                <div style={{ 
+                                  fontSize: 12, 
+                                  color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
+                                }}>
+                                  {formatDate(tournament.date)}
+                                </div>
+                              )}
+                              {tournament.location && (
+                                <div style={{ 
+                                  fontSize: 12, 
+                                  color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
+                                }}>
+                                  {tournament.location}
+                                </div>
+                              )}
+                            </Box>
+                            {tournament.tourneyid && (
+                              <Box style={{ 
+                                color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
+                                fontSize: 14,
+                                fontWeight: 500
+                              }}>
+                                →
+                              </Box>
+                            )}
+                          </Box>
+                        ))}
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
+
+            <Box className={styles.panelFooter}>
+              <button
+                className={styles.panelCloseButton}
+                onClick={closePanel}
+              >
+                Close
+              </button>
+            </Box>
+          </Box>
+      </Box>
+      
+      {/* Backdrop overlay when panel is open */}
+      {searchPanelOpen && (
+        <Box 
+          className={styles.searchPanelBackdrop}
+          onClick={closePanel}
+        />
+      )}
+    </>
   )
 }
