@@ -354,6 +354,29 @@ export const searchPlayers = async (playerName) => {
 };
 
 /**
+ * Retrieve top rated players (rankings) via serverless proxy
+ * @param {Object} options
+ * @param {string} options.lexicon - 'twl' or 'csw'
+ * @param {number} options.limit - number of players to return
+ * @returns {Promise<Array>} Array of player summaries
+ */
+export const getTopPlayers = async ({ lexicon = 'twl', limit = 25 } = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (lexicon) {
+      params.append('lexicon', lexicon);
+    }
+    params.append('limit', limit.toString());
+
+    const response = await axios.get(`/.netlify/functions/getTopPlayers?${params.toString()}`);
+    return response.data?.players || [];
+  } catch (error) {
+    console.error('Error fetching top players:', error);
+    return [];
+  }
+};
+
+/**
  * Search for tournaments by name (searches both upcoming and recent)
  * @param {string} searchTerm - Tournament name to search
  * @returns {Promise<Object>} Object with upcoming and recent tournaments

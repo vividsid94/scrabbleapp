@@ -12,19 +12,23 @@ import { Rocket, MagnifyingGlass, User, Trophy, X } from '@phosphor-icons/react'
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
-import { searchPlayers, getUpcomingTournaments, getRecentTournaments } from '../../axios/crossTablesApi';
+import { searchPlayers, getUpcomingTournaments, getRecentTournaments, getTopPlayers } from '../../axios/crossTablesApi';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [searchPanelOpen, setSearchPanelOpen] = useState(false);
-  const [playerOptions, setPlayerOptions] = useState([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState([]);
   const [recentTournaments, setRecentTournaments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [playerRankings, setPlayerRankings] = useState([]);
   const [loadingTournaments, setLoadingTournaments] = useState(false);
+  const [loadingRankings, setLoadingRankings] = useState(false);
   const [tournamentTab, setTournamentTab] = useState('upcoming'); // 'upcoming' or 'recent'
+  const [panelTab, setPanelTab] = useState('rankings'); // 'rankings' or 'tournaments'
+  const [rankingSearchTerm, setRankingSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [loading, setLoading] = useState(false);
 
   const touchStartY = useRef(null);
   const touchCurrentY = useRef(null);
@@ -34,8 +38,12 @@ export default function Home(){
 
   useEffect(() => {
     if (searchPanelOpen) {
+      if (playerRankings.length === 0) {
+        loadPlayerRankings();
+      }
       loadTournaments();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchPanelOpen]);
 
   useEffect(() => {
@@ -90,6 +98,19 @@ export default function Home(){
     }
   };
 
+  const loadPlayerRankings = async () => {
+    try {
+      setLoadingRankings(true);
+      const players = await getTopPlayers({ lexicon: 'twl', limit: 50 });
+      setPlayerRankings(players);
+    } catch (err) {
+      console.error('Error loading player rankings:', err);
+      setPlayerRankings([]);
+    } finally {
+      setLoadingRankings(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -99,6 +120,36 @@ export default function Home(){
       return dateString;
     }
   };
+
+  const filteredRankings = React.useMemo(() => {
+    const term = rankingSearchTerm.trim().toLowerCase();
+    if (!term) {
+      return playerRankings.slice(0, 50);
+    }
+
+    const searchMatches = (player) => {
+      const name = (player.name || '').toLowerCase();
+      const state = (player.state || '').toLowerCase();
+      const country = (player.country || '').toLowerCase();
+      const id = (player.playerid || player.id || '').toString();
+      return (
+        name.includes(term) ||
+        state.includes(term) ||
+        country.includes(term) ||
+        id.includes(term)
+      );
+    };
+
+    const inTopList = playerRankings.filter(searchMatches);
+    const additionalMatches = (searchResults || []).filter((player) => {
+      if (!player) return false;
+      if (!searchMatches(player)) return false;
+      const playerId = player.playerid || player.id;
+      return !playerRankings.some((p) => (p.playerid || p.id) === playerId);
+    });
+
+    return [...inTopList, ...additionalMatches].slice(0, 50);
+  }, [playerRankings, searchResults, rankingSearchTerm]);
 
   const handleTouchStart = (event) => {
     if (!isMobile) return;
@@ -233,7 +284,7 @@ export default function Home(){
       >
           <Box className={styles.searchPanelHeader}>
             <h2 style={{ 
-              fontSize: 20, 
+              fontSize: 16, 
               fontWeight: 600, 
               margin: 0,
               color: lightMode === 'dark' ? '#fff' : '#1F2937'
@@ -254,293 +305,320 @@ export default function Home(){
           </Box>
           
           <Box className={styles.searchPanelContent}>
-            {/* Player Search Section */}
-            <Box style={{ marginBottom: 32 }}>
-              <h3 style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                margin: '0 0 16px 0',
-                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                <User size={18} />
-                Search Players
-              </h3>
-              
-              <Autocomplete
-                freeSolo
-                options={playerOptions}
-                loading={loading}
-                onInputChange={async (event, newInputValue) => {
-                  if (newInputValue.length >= 2) {
-                    try {
-                      setLoading(true);
-                      const players = await searchPlayers(newInputValue);
-                      setPlayerOptions(players.slice(0, 10));
-                    } catch (err) {
-                      console.error('Search error:', err);
-                    } finally {
-                      setLoading(false);
-                    }
-                  } else {
-                    setPlayerOptions([]);
-                  }
-                }}
-                getOptionLabel={(option) => option.name || ''}
-                renderOption={(props, option) => (
-                  <Box
-                    {...props}
-                    component="li"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '12px',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
-                      }
-                    }}
-                    onClick={() => {
-                      if (option.playerid) {
-                        navigate(`/player/${option.playerid}`);
-                      }
-                    }}
-                  >
-                    {option.photourl || option.photo ? (
-                      <img
-                        src={option.photourl || option.photo}
-                        alt={option.name}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 8,
-                          marginRight: 12,
-                          objectFit: 'cover'
-                        }}
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 8,
-                          marginRight: 12,
-                          backgroundColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <User size={20} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                      </Box>
-                    )}
-                    <Box sx={{ flex: 1 }}>
-                      <div style={{ 
-                        fontWeight: 600, 
-                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                        marginBottom: 4
-                      }}>
-                        {option.name}
-                      </div>
-                      {option.twlrating && (
-                        <div style={{ 
-                          fontSize: 12, 
-                          color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
-                        }}>
-                          TWL: {Math.round(option.twlrating)} | CSW: {option.cswrating ? Math.round(option.cswrating) : 'N/A'}
-                        </div>
-                      )}
-                    </Box>
-                  </Box>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Search players..."
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <MagnifyingGlass size={20} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <>
-                          {loading ? <CircularProgress size={20} /> : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      )
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
-                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                        '& fieldset': {
-                          borderColor: lightMode === 'dark' ? '#4b5563' : '#d1d5db'
-                        },
-                        '&:hover fieldset': {
-                          borderColor: lightMode === 'dark' ? '#6b7280' : '#9ca3af'
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#3b82f6'
-                        }
-                      }
-                    }}
-                  />
-                )}
-                PaperComponent={(props) => (
-                  <Paper
-                    {...props}
-                    sx={{
-                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
-                      border: `1px solid ${lightMode === 'dark' ? '#4b5563' : '#e5e7eb'}`,
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-                )}
-                sx={{ width: '100%' }}
-              />
-            </Box>
-
-            {/* Tournaments Section */}
-            <Box>
-              <h3 style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                margin: '0 0 16px 0',
-                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                <Trophy size={18} />
-                Tournaments
-              </h3>
-
-              <Box className={styles.searchTabs} style={{ marginBottom: 16 }}>
-                <button
-                  onClick={() => setTournamentTab('upcoming')}
-                  className={styles.searchTab}
-                  style={{
-                    backgroundColor: tournamentTab === 'upcoming' 
-                      ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
-                      : 'transparent',
-                    color: tournamentTab === 'upcoming' 
-                      ? '#fff'
-                      : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
-                  }}
-                >
-                  Upcoming
-                </button>
-                <button
-                  onClick={() => setTournamentTab('recent')}
-                  className={styles.searchTab}
-                  style={{
-                    backgroundColor: tournamentTab === 'recent' 
-                      ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
-                      : 'transparent',
-                    color: tournamentTab === 'recent' 
-                      ? '#fff'
-                      : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
-                  }}
-                >
-                  Recent
-                </button>
-              </Box>
-
-              {loadingTournaments ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <>
-                  {(
-                    tournamentTab === 'upcoming'
-                      ? upcomingTournaments
-                      : recentTournaments
-                  ).length === 0 ? (
-                    <Box sx={{
-                      padding: '16px',
-                      textAlign: 'center',
-                      color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
-                      fontSize: 14
-                    }}>
-                      No tournaments found.
-                    </Box>
-                  ) : (
-                    <Box className={styles.tournamentsList}>
-                      {(tournamentTab === 'upcoming' ? upcomingTournaments : recentTournaments)
-                        .slice(0, 10)
-                        .map((tournament, index) => (
-                          <Box
-                            key={index}
-                            className={styles.tournamentItem}
-                            style={{
-                              backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-                              borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
-                              cursor: tournament.tourneyid ? 'pointer' : 'default'
-                            }}
-                            onClick={() => {
-                              if (tournament.tourneyid) {
-                                navigate(`/tournament/${tournament.tourneyid}`);
-                              }
-                            }}
-                          >
-                            <Box sx={{ flex: 1 }}>
-                              <div style={{ 
-                                fontWeight: 600, 
-                                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                                marginBottom: 4
-                              }}>
-                                {tournament.name || tournament.tourneyname || tournament.mastername}
-                              </div>
-                              {tournament.date && (
-                                <div style={{ 
-                                  fontSize: 12, 
-                                  color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
-                                }}>
-                                  {formatDate(tournament.date)}
-                                </div>
-                              )}
-                              {tournament.location && (
-                                <div style={{ 
-                                  fontSize: 12, 
-                                  color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' 
-                                }}>
-                                  {tournament.location}
-                                </div>
-                              )}
-                            </Box>
-                            {tournament.tourneyid && (
-                              <Box style={{ 
-                                color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
-                                fontSize: 14,
-                                fontWeight: 500
-                              }}>
-                                →
-                              </Box>
-                            )}
-                          </Box>
-                        ))}
-                    </Box>
-                  )}
-                </>
-              )}
-            </Box>
-
-            <Box className={styles.panelFooter}>
+            <Box className={styles.panelTabs}>
               <button
-                className={styles.panelCloseButton}
-                onClick={closePanel}
+                className={`${styles.panelTab} ${panelTab === 'rankings' ? styles.panelTabActive : ''}`}
+                onClick={() => setPanelTab('rankings')}
+                type="button"
               >
-                Close
+                Rankings
+              </button>
+              <button
+                className={`${styles.panelTab} ${panelTab === 'tournaments' ? styles.panelTabActive : ''}`}
+                onClick={() => setPanelTab('tournaments')}
+                type="button"
+              >
+                Tournaments
               </button>
             </Box>
+
+            {panelTab === 'rankings' ? (
+              <>
+                <Box style={{ marginBottom: 12 }}>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr' },
+                      alignItems: 'center',
+                      gap: 8
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <User size={16} />
+                      <h3
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          margin: 0,
+                          color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                        }}
+                      >
+                        Search Players
+                      </h3>
+                    </Box>
+
+                    <TextField
+                      value={rankingSearchTerm}
+                      onChange={async (event) => {
+                        const value = event.target.value;
+                        setRankingSearchTerm(value);
+
+                        if (value.trim().length >= 2) {
+                          try {
+                            setLoading(true);
+                            const players = await searchPlayers(value.trim());
+                            setSearchResults(players);
+                          } catch (err) {
+                            console.error('Search error:', err);
+                            setSearchResults([]);
+                          } finally {
+                            setLoading(false);
+                          }
+                        } else {
+                          setSearchResults([]);
+                        }
+                      }}
+                      size="small"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <MagnifyingGlass size={15} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          loading ? <CircularProgress size={16} /> : null
+                        )
+                      }}
+                      sx={{
+                        width: '100%',
+                        maxWidth: { xs: '100%', sm: 240 },
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
+                          color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                          borderRadius: '10px',
+                          minHeight: '32px',
+                          '& fieldset': {
+                            borderColor: lightMode === 'dark' ? '#4b5563' : '#d1d5db'
+                          },
+                          '&:hover fieldset': {
+                            borderColor: lightMode === 'dark' ? '#6b7280' : '#9ca3af'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#3b82f6'
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          padding: '5px 8px',
+                          fontSize: '12.5px'
+                        }
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {loadingRankings ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                    <CircularProgress size={20} />
+                  </Box>
+                ) : filteredRankings.length === 0 ? (
+                  <Box
+                    sx={{
+                      padding: '12px',
+                      textAlign: 'center',
+                      color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                      fontSize: 13
+                    }}
+                  >
+                    Rankings unavailable right now.
+                  </Box>
+                ) : (
+                  <Box className={styles.rankingsList}>
+                    {filteredRankings.slice(0, 50).map((player, index) => {
+                      const playerId = player.playerid || player.id || index;
+                      const rank = player.twlrank || player.rank || index + 1;
+                      const rating = player.twlrating || player.rating || player.rating_nwl || 0;
+                      const wins = player.w || player.wins || 0;
+                      const losses = player.l || player.losses || 0;
+                      const locale = player.state || player.country || '';
+
+                      return (
+                        <Box
+                          key={`${playerId}-${rank}`}
+                          className={styles.rankingItem}
+                          onClick={() => {
+                            if (player.playerid) {
+                              navigate(`/player/${player.playerid}`);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(evt) => {
+                            if (evt.key === 'Enter' && player.playerid) {
+                              navigate(`/player/${player.playerid}`);
+                            }
+                          }}
+                        >
+                          <div className={styles.rankingPosition}>#{rank}</div>
+                          <div className={styles.rankingMain}>
+                            <div className={styles.rankingName}>{player.name}</div>
+                            <div className={styles.rankingMeta}>
+                              <span>{Math.round(rating)}</span>
+                              <span>•</span>
+                              <span>{wins}-{losses}</span>
+                              {locale ? (
+                                <>
+                                  <span>•</span>
+                                  <span>{locale}</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className={styles.rankingAction}>View →</div>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
+              </>
+            ) : (
+              <Box>
+                <h3
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    margin: '0 0 10px 0',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  <Trophy size={18} />
+                  Tournaments
+                </h3>
+
+                <Box className={styles.searchTabs} style={{ marginBottom: 12 }}>
+                  <button
+                    onClick={() => setTournamentTab('upcoming')}
+                    className={styles.searchTab}
+                    style={{
+                      backgroundColor: tournamentTab === 'upcoming'
+                        ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
+                        : 'transparent',
+                      color: tournamentTab === 'upcoming'
+                        ? '#fff'
+                        : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
+                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                    }}
+                    type="button"
+                  >
+                    Upcoming
+                  </button>
+                  <button
+                    onClick={() => setTournamentTab('recent')}
+                    className={styles.searchTab}
+                    style={{
+                      backgroundColor: tournamentTab === 'recent'
+                        ? (lightMode === 'dark' ? '#3b82f6' : '#60a5fa')
+                        : 'transparent',
+                      color: tournamentTab === 'recent'
+                        ? '#fff'
+                        : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
+                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                    }}
+                    type="button"
+                  >
+                    Recent
+                  </button>
+                </Box>
+
+                {loadingTournaments ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress size={20} />
+                  </Box>
+                ) : (
+                  <>
+                    {(
+                      tournamentTab === 'upcoming'
+                        ? upcomingTournaments
+                        : recentTournaments
+                    ).length === 0 ? (
+                      <Box
+                        sx={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                          fontSize: 13
+                        }}
+                      >
+                        No tournaments found.
+                      </Box>
+                    ) : (
+                      <Box className={styles.tournamentsList}>
+                        {(tournamentTab === 'upcoming' ? upcomingTournaments : recentTournaments)
+                          .slice(0, 10)
+                          .map((tournament, index) => (
+                            <Box
+                              key={index}
+                              className={styles.tournamentItem}
+                              style={{
+                                backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
+                                borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                                cursor: tournament.tourneyid ? 'pointer' : 'default'
+                              }}
+                              onClick={() => {
+                                if (tournament.tourneyid) {
+                                  navigate(`/tournament/${tournament.tourneyid}`);
+                                }
+                              }}
+                            >
+                              <Box sx={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: 13,
+                                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                                    marginBottom: 2
+                                  }}
+                                >
+                                  {tournament.name || tournament.tourneyname || tournament.mastername}
+                                </div>
+                                {tournament.date && (
+                                  <div
+                                    style={{
+                                      fontSize: 10,
+                                      color: lightMode === 'dark' ? '#9ca3af' : '#6b7280'
+                                    }}
+                                  >
+                                    {formatDate(tournament.date)}
+                                  </div>
+                                )}
+                                {tournament.location && (
+                                  <div
+                                    style={{
+                                      fontSize: 10,
+                                      color: lightMode === 'dark' ? '#9ca3af' : '#6b7280'
+                                    }}
+                                  >
+                                    {tournament.location}
+                                  </div>
+                                )}
+                              </Box>
+                              {tournament.tourneyid && (
+                                <Box
+                                  style={{
+                                    color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
+                                    fontSize: 13,
+                                    fontWeight: 500
+                                  }}
+                                >
+                                  →
+                                </Box>
+                              )}
+                            </Box>
+                          ))}
+                      </Box>
+                    )}
+                  </>
+                )}
+              </Box>
+            )}
           </Box>
       </Box>
       

@@ -299,19 +299,19 @@
 
 .searchTabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 24px;
 }
 
 .searchTab {
   display: flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.2s;
 }
 
@@ -330,7 +330,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 450px;
+  width: 380px;
   height: 100vh;
   z-index: 1000;
   transform: translateX(100%);
@@ -362,15 +362,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .searchPanelContent {
-  padding: 24px;
+  padding: 16px;
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 96px;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .tournamentsList {
@@ -383,7 +386,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   transition: background-color 0.2s, transform 0.2s;
@@ -400,42 +403,6 @@
   }
 }
 
-.panelFooter {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 24px 24px;
-  background: linear-gradient(180deg, rgba(249, 250, 251, 0) 0%, rgba(249, 250, 251, 0.9) 55%, rgba(249, 250, 251, 1) 100%);
-  display: flex;
-  justify-content: center;
-}
-
-.panelCloseButton {
-  width: 100%;
-  max-width: 360px;
-  height: 48px;
-  border-radius: 9999px;
-  border: none;
-  font-weight: 600;
-  font-size: 16px;
-  background: linear-gradient(45deg, #3b82f6, #60a5fa);
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.panelCloseButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 32px rgba(59, 130, 246, 0.3);
-}
-
-@media (prefers-color-scheme: dark) {
-  .panelFooter {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0) 0%, rgba(17, 24, 39, 0.65) 55%, rgba(17, 24, 39, 0.92) 100%);
-  }
-}
 
 @media (max-width: 768px) {
   .searchPanel {
@@ -453,16 +420,7 @@
   }
 
   .searchPanelContent {
-    padding: 20px 20px 110px;
-  }
-
-  .panelFooter {
-    padding: 20px;
-    background: linear-gradient(180deg, rgba(249, 250, 251, 0) 0%, rgba(249, 250, 251, 0.94) 60%, rgba(249, 250, 251, 1) 100%);
-  }
-
-  .panelCloseButton {
-    max-width: none;
+    padding: 16px 16px 70px;
   }
 
   .tournamentItem:hover {
@@ -470,9 +428,146 @@
   }
 }
 
-@media (max-width: 768px) and (prefers-color-scheme: dark) {
-  .panelFooter {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0) 0%, rgba(17, 24, 39, 0.85) 55%, rgba(17, 24, 39, 1) 100%);
+.panelTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.panelTab {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background-color: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.panelTab:hover {
+  background-color: rgba(96, 165, 250, 0.12);
+  color: #1f2937;
+}
+
+.panelTabActive {
+  background: linear-gradient(45deg, #3b82f6, #60a5fa);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.25);
+}
+
+.rankingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rankingItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background-color: rgba(148, 163, 184, 0.08);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.rankingItem:hover {
+  transform: translateX(-2px);
+  box-shadow: 0 8px 18px rgba(148, 163, 184, 0.25);
+}
+
+.rankingPosition {
+  width: 40px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #3b82f6;
+  text-align: right;
+}
+
+.rankingMain {
+  flex: 1;
+}
+
+.rankingName {
+  font-weight: 600;
+  font-size: 13px;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.rankingMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.rankingMeta span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rankingAction {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .panelTab {
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+
+  .panelTab:hover {
+    background-color: rgba(96, 165, 250, 0.15);
+    color: #f9fafb;
+  }
+
+  .rankingItem {
+    border-color: #4b5563;
+    background-color: rgba(55, 65, 81, 0.7);
+  }
+
+  .rankingName {
+    color: #f9fafb;
+  }
+
+  .rankingPosition,
+  .rankingAction {
+    color: #60a5fa;
+  }
+
+  .rankingMeta {
+    color: #9ca3af;
   }
 }
+
+@media (max-width: 768px) {
+  .panelTabs {
+    margin-bottom: 14px;
+  }
+
+  .panelTab {
+    font-size: 12.5px;
+    padding: 6px 10px;
+  }
+
+  .rankingItem {
+    padding: 8px;
+  }
+
+  .rankingPosition {
+    width: 32px;
+    font-size: 12.5px;
+  }
+}
+
 
