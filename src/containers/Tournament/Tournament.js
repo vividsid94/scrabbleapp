@@ -5,16 +5,10 @@ import { ThemeContext } from '../../App';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
 import styles from './Tournament.module.css';
 import { getTournament, getResults } from '../../axios/crossTablesApi';
-import { Trophy, Calendar, MapPin, Users, Trophy as TrophyIcon } from '@phosphor-icons/react';
+import { Trophy, Calendar, MapPin, Users, ArrowLeft } from '@phosphor-icons/react';
 
 export default function Tournament() {
   const { tournamentId } = useParams();
@@ -115,10 +109,22 @@ export default function Tournament() {
       <Box className={styles.page}>
         {/* Header */}
         <Box className={styles.header} style={{
-          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#f9fafb',
+          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
           borderBottom: `1px solid ${lightMode === 'dark' ? '#374151' : '#e5e7eb'}`
         }}>
           <Box className={styles.tournamentHeader}>
+            <IconButton
+              onClick={() => navigate('/')}
+              sx={{
+                color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
+                },
+                marginRight: 1
+              }}
+            >
+              <ArrowLeft size={18} />
+            </IconButton>
             <Box className={styles.tournamentInfo}>
               <h1 className={styles.tournamentName} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
                 {tournament.name || tournament.tourneyname}
@@ -126,19 +132,19 @@ export default function Tournament() {
               <Box className={styles.tournamentMeta}>
                 {tournament.date && (
                   <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <Calendar size={18} style={{ marginRight: 8 }} />
+                    <Calendar size={16} style={{ marginRight: 6 }} />
                     {formatDate(tournament.date)}
                   </Box>
                 )}
                 {tournament.location && (
                   <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <MapPin size={18} style={{ marginRight: 8 }} />
+                    <MapPin size={16} style={{ marginRight: 6 }} />
                     {tournament.location}
                   </Box>
                 )}
                 {tournament.entrants !== undefined && (
                   <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <Users size={18} style={{ marginRight: 8 }} />
+                    <Users size={16} style={{ marginRight: 6 }} />
                     {tournament.entrants} players
                   </Box>
                 )}
@@ -157,113 +163,127 @@ export default function Tournament() {
               Tournament Information
             </h2>
             {tournament.description && (
-              <p style={{ color: lightMode === 'dark' ? '#d1d5db' : '#4b5563', marginBottom: 16 }}>
+              <p style={{ 
+                color: lightMode === 'dark' ? '#d1d5db' : '#4b5563', 
+                marginBottom: 12,
+                fontSize: 13,
+                lineHeight: 1.5
+              }}>
                 {tournament.description}
               </p>
             )}
             {tournament.format && (
-              <p style={{ color: lightMode === 'dark' ? '#d1d5db' : '#4b5563' }}>
+              <p style={{ 
+                color: lightMode === 'dark' ? '#d1d5db' : '#4b5563',
+                fontSize: 13
+              }}>
                 <strong>Format:</strong> {tournament.format}
               </p>
             )}
           </Box>
         )}
 
-        {/* Results Table */}
+        {/* Results List */}
         {sortedResults.length > 0 && (
           <Box className={styles.section} style={{
             backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
             borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
           }}>
             <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-              <TrophyIcon size={20} weight="fill" style={{ marginRight: 8 }} />
+              <Trophy size={18} weight="fill" style={{ marginRight: 8 }} />
               Final Results
             </h2>
             {loadingResults ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress size={24} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={20} />
               </Box>
             ) : (
-              <TableContainer 
-                component={Paper} 
-                sx={{ 
-                  backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
-                  boxShadow: 'none',
-                  border: `1px solid ${lightMode === 'dark' ? '#4b5563' : '#e5e7eb'}`
-                }}
-              >
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: lightMode === 'dark' ? '#1F2937' : '#f9fafb' }}>
-                      <TableCell sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Rank</TableCell>
-                      <TableCell sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Player</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Wins</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Losses</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Spread</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>Rating Change</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sortedResults.map((result, index) => (
-                      <TableRow 
-                        key={index}
-                        sx={{ 
-                          '&:hover': { 
-                            backgroundColor: lightMode === 'dark' ? '#4b5563' : '#f9fafb' 
-                          },
-                          '&:nth-of-type(odd)': {
-                            backgroundColor: lightMode === 'dark' ? '#374151' : 'transparent'
-                          }
-                        }}
-                      >
-                        <TableCell sx={{ 
-                          fontWeight: result.rank === 1 ? 700 : 500,
-                          color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                          fontSize: result.rank === 1 ? '18px' : '14px'
-                        }}>
-                          {result.rank || '-'}
-                        </TableCell>
-                        <TableCell>
-                          {result.playerid ? (
-                            <Link 
-                              to={`/player/${result.playerid}`}
-                              style={{ 
-                                color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
-                                textDecoration: 'none',
-                                fontWeight: 500
-                              }}
-                            >
-                              {result.playername || result.name || 'Unknown'}
-                            </Link>
-                          ) : (
-                            <span style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                              {result.playername || result.name || 'Unknown'}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: lightMode === 'dark' ? '#d1d5db' : '#4b5563' }}>
-                          {result.wins !== undefined ? result.wins : '-'}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: lightMode === 'dark' ? '#d1d5db' : '#4b5563' }}>
-                          {result.losses !== undefined ? result.losses : '-'}
-                        </TableCell>
-                        <TableCell align="right" sx={{ 
-                          color: result.spread >= 0 ? (lightMode === 'dark' ? '#10b981' : '#059669') : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
-                          fontWeight: 600
-                        }}>
-                          {result.spread !== undefined ? (result.spread >= 0 ? '+' : '') + result.spread : '-'}
-                        </TableCell>
-                        <TableCell align="right" sx={{ 
-                          color: result.ratingchange >= 0 ? (lightMode === 'dark' ? '#10b981' : '#059669') : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
-                          fontWeight: 600
-                        }}>
-                          {result.ratingchange !== undefined ? (result.ratingchange >= 0 ? '+' : '') + result.ratingchange : '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Box className={styles.resultsList}>
+                {sortedResults.map((result, index) => (
+                  <Box
+                    key={index}
+                    className={styles.resultItem}
+                    style={{
+                      backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
+                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                      cursor: result.playerid ? 'pointer' : 'default'
+                    }}
+                    onClick={() => {
+                      if (result.playerid) {
+                        navigate(`/player/${result.playerid}`);
+                      }
+                    }}
+                  >
+                    <Box className={styles.resultRankBox}>
+                      <span className={styles.resultRank} style={{ 
+                        color: result.rank === 1 
+                          ? (lightMode === 'dark' ? '#f59e0b' : '#d97706')
+                          : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
+                        fontWeight: result.rank === 1 ? 700 : 600
+                      }}>
+                        #{result.rank || '-'}
+                      </span>
+                    </Box>
+                    <Box className={styles.resultInfo}>
+                      <div className={styles.resultPlayer} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                        {result.playername || result.name || 'Unknown'}
+                      </div>
+                      <Box className={styles.resultStats}>
+                        {result.wins !== undefined && (
+                          <span style={{ 
+                            color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                            fontSize: 11,
+                            marginRight: 8
+                          }}>
+                            W: {result.wins}
+                          </span>
+                        )}
+                        {result.losses !== undefined && (
+                          <span style={{ 
+                            color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                            fontSize: 11,
+                            marginRight: 8
+                          }}>
+                            L: {result.losses}
+                          </span>
+                        )}
+                        {result.spread !== undefined && (
+                          <span style={{ 
+                            color: result.spread >= 0 
+                              ? (lightMode === 'dark' ? '#10b981' : '#059669')
+                              : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
+                            fontSize: 11,
+                            fontWeight: 600,
+                            marginRight: 8
+                          }}>
+                            Spread: {result.spread >= 0 ? '+' : ''}{result.spread}
+                          </span>
+                        )}
+                        {result.ratingchange !== undefined && (
+                          <span style={{ 
+                            color: result.ratingchange >= 0 
+                              ? (lightMode === 'dark' ? '#10b981' : '#059669')
+                              : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
+                            fontSize: 11,
+                            fontWeight: 600
+                          }}>
+                            Rating: {result.ratingchange >= 0 ? '+' : ''}{result.ratingchange}
+                          </span>
+                        )}
+                      </Box>
+                    </Box>
+                    {result.playerid && (
+                      <Box style={{ 
+                        color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
+                        fontSize: 13,
+                        fontWeight: 500
+                      }}>
+                        →
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Box>
             )}
           </Box>
         )}

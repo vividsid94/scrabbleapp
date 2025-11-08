@@ -5,25 +5,25 @@
 }
 
 .header {
-  padding: 32px;
+  padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .profileHeader {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .profilePhoto {
-  width: 120px;
-  height: 120px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   object-fit: cover;
-  border: 3px solid #60a5fa;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #60a5fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profileInfo {
@@ -31,21 +31,21 @@
 }
 
 .playerName {
-  font-size: 32px;
+  font-size: 18px;
   font-weight: 700;
-  margin: 0 0 8px 0;
+  margin: 0 0 2px 0;
 }
 
 .location {
-  font-size: 16px;
+  font-size: 12px;
   margin: 0;
 }
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
-  padding: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 16px 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -53,16 +53,16 @@
 .statCard {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 24px;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
   border: 1px solid #e5e7eb;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .statCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 18px rgba(148, 163, 184, 0.25);
 }
 
 .statContent {
@@ -70,56 +70,56 @@
 }
 
 .statLabel {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .statValue {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .statRank {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .section {
-  margin: 32px auto;
+  margin: 16px auto;
   max-width: 1200px;
-  padding: 24px;
-  border-radius: 12px;
+  padding: 16px 20px;
+  border-radius: 10px;
   border: 1px solid #e5e7eb;
 }
 
 .sectionTitle {
   display: flex;
   align-items: center;
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 24px 0;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
 }
 
 .resultsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .resultItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.18s ease;
 }
 
 .resultItem:hover {
-  background-color: #f3f4f6;
+  background-color: rgba(96, 165, 250, 0.12);
+  transform: translateX(-2px);
 }
 
 .resultInfo {
@@ -127,13 +127,13 @@
 }
 
 .resultTournament {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .resultMeta {
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .resultStats {
@@ -144,7 +144,7 @@
 
 .resultRank {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 13px;
 }
 
 .showMoreButton {
@@ -159,18 +159,26 @@
 
 @media (max-width: 768px) {
   .profileHeader {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row;
+    text-align: left;
   }
 
   .statsGrid {
     grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 16px;
   }
 
   .resultItem {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .section {
+    padding: 12px 16px;
+    margin: 12px auto;
   }
 }
 

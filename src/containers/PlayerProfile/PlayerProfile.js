@@ -5,9 +5,10 @@ import { ThemeContext } from '../../App';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
 import styles from './PlayerProfile.module.css';
-import { getPlayer, getResults, searchTournaments } from '../../axios/crossTablesApi';
-import { Trophy, Calendar, ChartLineUp, GameController, Users } from '@phosphor-icons/react';
+import { getPlayer, getResults, searchTournaments, getPlayers } from '../../axios/crossTablesApi';
+import { Trophy, Calendar, ChartLineUp, GameController, Users, User, ArrowLeft } from '@phosphor-icons/react';
 
 export default function PlayerProfile() {
   const { playerId } = useParams();
@@ -29,14 +30,39 @@ export default function PlayerProfile() {
       setLoading(true);
       setError(null);
       
-      const playerData = await getPlayer({
-        player: parseInt(playerId),
-        partialresults: true,
-        upcoming: true,
-        allowwgpo: true
-      });
+      // Fetch both detailed player data and list data (for consistent field names)
+      const [playerData, listData] = await Promise.all([
+        getPlayer({
+          player: parseInt(playerId),
+          partialresults: true,
+          upcoming: true,
+          allowwgpo: true
+        }),
+        getPlayers({ playerlist: playerId.toString() })
+      ]);
       
-      setPlayer(playerData);
+      // Merge list data (which has the same structure as panel) with detailed data
+      const listPlayer = listData && listData.length > 0 ? listData[0] : null;
+      const mergedPlayer = {
+        ...playerData,
+        // Override with list data fields if they exist (for consistent field names)
+        ...(listPlayer && {
+          twlrating: listPlayer.twlrating || playerData.twlrating,
+          cswrating: listPlayer.cswrating || playerData.cswrating,
+          twlrank: listPlayer.twlrank || playerData.twlrank,
+          cswrank: listPlayer.cswrank || playerData.cswrank,
+          w: listPlayer.w || playerData.w,
+          l: listPlayer.l || playerData.l,
+          t: listPlayer.t || playerData.t,
+          wins: listPlayer.wins || playerData.wins,
+          losses: listPlayer.losses || playerData.losses,
+          ties: listPlayer.ties || playerData.ties,
+          rating: listPlayer.rating || playerData.rating,
+          rank: listPlayer.rank || playerData.rank
+        })
+      };
+      
+      setPlayer(mergedPlayer);
       
       // Load tournament results
       try {
@@ -57,7 +83,8 @@ export default function PlayerProfile() {
   };
 
   const formatRating = (rating) => {
-    return rating ? Math.round(rating) : 'N/A';
+    if (rating === undefined || rating === null || rating === '') return 'N/A';
+    return Math.round(rating);
   };
 
   const formatDate = (dateString) => {
@@ -100,6 +127,15 @@ export default function PlayerProfile() {
 
   const playerResults = showFullResults ? results : results.slice(0, 10);
   const playerPhoto = player.photourl || player.photo;
+  
+  // Handle different possible field names from API
+  const twlRating = player.twlrating || player.rating || player.rating_nwl || player.twl_rating;
+  const cswRating = player.cswrating || player.csw_rating;
+  const twlRank = player.twlrank || player.rank || player.twl_rank;
+  const cswRank = player.cswrank || player.csw_rank;
+  const wins = player.w || player.wins || 0;
+  const losses = player.l || player.losses || 0;
+  const ties = player.t || player.ties || 0;
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -107,10 +143,22 @@ export default function PlayerProfile() {
       <Box className={styles.page}>
         {/* Header */}
         <Box className={styles.header} style={{
-          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#f9fafb',
+          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
           borderBottom: `1px solid ${lightMode === 'dark' ? '#374151' : '#e5e7eb'}`
         }}>
           <Box className={styles.profileHeader}>
+            <IconButton
+              onClick={() => navigate('/')}
+              sx={{
+                color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
+                },
+                marginRight: 1
+              }}
+            >
+              <ArrowLeft size={18} />
+            </IconButton>
             {playerPhoto && (
               <img 
                 src={playerPhoto} 
@@ -135,54 +183,54 @@ export default function PlayerProfile() {
         {/* Stats Grid */}
         <Box className={styles.statsGrid}>
           <Box className={styles.statCard} style={{
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
             borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
           }}>
-            <Trophy size={24} weight="fill" style={{ color: '#f59e0b' }} />
+            <Trophy size={20} weight="fill" style={{ color: '#f59e0b' }} />
             <Box className={styles.statContent}>
-              <div className={styles.statLabel}>TWL Rating</div>
+              <div className={styles.statLabel} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>TWL Rating</div>
               <div className={styles.statValue} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                {formatRating(player.twlrating)}
+                {formatRating(twlRating)}
               </div>
-              {player.twlrank && (
+              {twlRank && (
                 <div className={styles.statRank} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                  #{player.twlrank} rank
+                  #{twlRank} rank
                 </div>
               )}
             </Box>
           </Box>
 
           <Box className={styles.statCard} style={{
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
             borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
           }}>
-            <Trophy size={24} weight="fill" style={{ color: '#10b981' }} />
+            <Trophy size={20} weight="fill" style={{ color: '#10b981' }} />
             <Box className={styles.statContent}>
-              <div className={styles.statLabel}>CSW Rating</div>
+              <div className={styles.statLabel} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>CSW Rating</div>
               <div className={styles.statValue} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                {formatRating(player.cswrating)}
+                {formatRating(cswRating)}
               </div>
-              {player.cswrank && (
+              {cswRank && (
                 <div className={styles.statRank} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                  #{player.cswrank} rank
+                  #{cswRank} rank
                 </div>
               )}
             </Box>
           </Box>
 
           <Box className={styles.statCard} style={{
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
             borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
           }}>
-            <GameController size={24} weight="fill" style={{ color: '#3b82f6' }} />
+            <GameController size={20} weight="fill" style={{ color: '#3b82f6' }} />
             <Box className={styles.statContent}>
-              <div className={styles.statLabel}>Record</div>
+              <div className={styles.statLabel} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>Record</div>
               <div className={styles.statValue} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                {player.w || 0}W - {player.l || 0}L
+                {wins}W - {losses}L
               </div>
-              {player.t && player.t > 0 && (
+              {ties > 0 && (
                 <div className={styles.statRank} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                  {player.t} ties
+                  {ties} ties
                 </div>
               )}
             </Box>
@@ -196,7 +244,7 @@ export default function PlayerProfile() {
             borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
           }}>
             <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-              <Calendar size={20} weight="fill" style={{ marginRight: 8 }} />
+              <Calendar size={18} weight="fill" style={{ marginRight: 8 }} />
               Recent Tournaments
             </h2>
             <Box className={styles.resultsList}>
@@ -206,7 +254,13 @@ export default function PlayerProfile() {
                   className={styles.resultItem}
                   style={{
                     backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                    cursor: result.tourneyid ? 'pointer' : 'default'
+                  }}
+                  onClick={() => {
+                    if (result.tourneyid) {
+                      navigate(`/tournament/${result.tourneyid}`);
+                    }
                   }}
                 >
                   <Box className={styles.resultInfo}>
@@ -224,17 +278,19 @@ export default function PlayerProfile() {
                       </span>
                     )}
                     {result.wins !== undefined && result.losses !== undefined && (
-                      <span style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280', marginLeft: 12 }}>
+                      <span style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280', marginLeft: 8, fontSize: 12 }}>
                         {result.wins}W - {result.losses}L
                       </span>
                     )}
                     {result.tourneyid && (
-                      <Link 
-                        to={`/tournament/${result.tourneyid}`}
-                        style={{ marginLeft: 12, color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6', textDecoration: 'none' }}
-                      >
-                        View →
-                      </Link>
+                      <Box style={{ 
+                        color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6', 
+                        fontSize: 13,
+                        fontWeight: 500,
+                        marginLeft: 8
+                      }}>
+                        →
+                      </Box>
                     )}
                   </Box>
                 </Box>
@@ -249,8 +305,10 @@ export default function PlayerProfile() {
                   backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: '8px 16px',
-                  marginTop: 16
+                  padding: '8px 12px',
+                  marginTop: 12,
+                  fontSize: 12,
+                  fontWeight: 500
                 }}
               >
                 Show all {player.results.length} tournaments
@@ -266,7 +324,7 @@ export default function PlayerProfile() {
             borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
           }}>
             <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-              <Calendar size={20} weight="fill" style={{ marginRight: 8 }} />
+              <Calendar size={18} weight="fill" style={{ marginRight: 8 }} />
               Upcoming Tournaments
             </h2>
             <Box className={styles.resultsList}>
@@ -276,7 +334,13 @@ export default function PlayerProfile() {
                   className={styles.resultItem}
                   style={{
                     backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                    cursor: tourney.tourneyid ? 'pointer' : 'default'
+                  }}
+                  onClick={() => {
+                    if (tourney.tourneyid) {
+                      navigate(`/tournament/${tourney.tourneyid}`);
+                    }
                   }}
                 >
                   <Box className={styles.resultInfo}>
@@ -287,6 +351,15 @@ export default function PlayerProfile() {
                       {tourney.date && formatDate(tourney.date)}
                     </div>
                   </Box>
+                  {tourney.tourneyid && (
+                    <Box style={{ 
+                      color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6', 
+                      fontSize: 13,
+                      fontWeight: 500
+                    }}>
+                      →
+                    </Box>
+                  )}
                 </Box>
               ))}
             </Box>
@@ -300,12 +373,12 @@ export default function PlayerProfile() {
             borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
           }}>
             <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-              <ChartLineUp size={20} weight="fill" style={{ marginRight: 8 }} />
+              <ChartLineUp size={18} weight="fill" style={{ marginRight: 8 }} />
               All Tournament Results
             </h2>
             {loadingResults ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress size={24} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={20} />
               </Box>
             ) : (
               <Box className={styles.resultsList}>
@@ -315,7 +388,13 @@ export default function PlayerProfile() {
                     className={styles.resultItem}
                     style={{
                       backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb'
+                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
+                      cursor: result.tourneyid ? 'pointer' : 'default'
+                    }}
+                    onClick={() => {
+                      if (result.tourneyid) {
+                        navigate(`/tournament/${result.tourneyid}`);
+                      }
                     }}
                   >
                     <Box className={styles.resultInfo}>
@@ -333,12 +412,14 @@ export default function PlayerProfile() {
                         </span>
                       )}
                       {result.tourneyid && (
-                        <Link 
-                          to={`/tournament/${result.tourneyid}`}
-                          style={{ marginLeft: 12, color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6', textDecoration: 'none' }}
-                        >
-                          View →
-                        </Link>
+                        <Box style={{ 
+                          color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6', 
+                          fontSize: 13,
+                          fontWeight: 500,
+                          marginLeft: 8
+                        }}>
+                          →
+                        </Box>
                       )}
                     </Box>
                   </Box>
@@ -354,8 +435,10 @@ export default function PlayerProfile() {
                   backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: '8px 16px',
-                  marginTop: 16
+                  padding: '8px 12px',
+                  marginTop: 12,
+                  fontSize: 12,
+                  fontWeight: 500
                 }}
               >
                 Show all {results.length} results
