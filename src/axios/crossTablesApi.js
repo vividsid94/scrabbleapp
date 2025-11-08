@@ -377,6 +377,36 @@ export const getTopPlayers = async ({ lexicon = 'twl', limit = 25 } = {}) => {
 };
 
 /**
+ * Get annotated games for a player by player ID
+ * @param {number} playerId - Player ID
+ * @returns {Promise<Array>} Array of game objects with gameNum, opponentName, tournament, date
+ */
+export const getAnnotatedGames = async (playerId) => {
+  try {
+    const response = await axios.get(`/.netlify/functions/proxy?url=${encodeURIComponent(`https://www.cross-tables.com/anno.php?p=${playerId}`)}`);
+    const text = response.data;
+    
+    // Extract game numbers, opponent names, dates, and tournaments from the table
+    const gameData = [];
+    const tableRegex = /<tr class='row[01]'[^>]*>.*?<td><a href='annotated\.php\?u=(\d+)'>View<\/a><\/td>.*?<td class='nowrap'><a[^>]*>([^<]+)<\/a><\/td>.*?<td><a[^>]*>([^<]+)<\/a><\/td>.*?<td>([^<]+)<\/td>/gs;
+    
+    let match;
+    while ((match = tableRegex.exec(text)) !== null) {
+      const gameNum = match[1];
+      const opponentName = match[2].trim();
+      const tournament = match[3].trim();
+      const date = match[4].trim();
+      gameData.push({ gameNum, opponentName, tournament, date });
+    }
+    
+    return gameData;
+  } catch (error) {
+    console.error('Error fetching annotated games:', error);
+    return [];
+  }
+};
+
+/**
  * Search for tournaments by name (searches both upcoming and recent)
  * @param {string} searchTerm - Tournament name to search
  * @returns {Promise<Object>} Object with upcoming and recent tournaments
