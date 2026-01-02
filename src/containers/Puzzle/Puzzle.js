@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from "react";
+import React, { useEffect, useRef, useMemo, useState, useContext } from "react";
 import { createPortal } from "react-dom";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
@@ -25,8 +25,10 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import { Snackbar, Alert } from "@mui/material";
 import PuzzlePlayerInfo from './PuzzlePlayerInfo.js';
+import { ThemeContext } from '../../App';
 
 export default function Puzzle() {
+  const { lightMode } = useContext(ThemeContext);
   // Refs (keep these local like Play.js)
   const complementaryColor = useRef('#9F7A83');
   const timerRef = useRef(null);
@@ -377,6 +379,7 @@ export default function Puzzle() {
                 onTileDrop={isPausedForBingo ? handleTileDrop : undefined}
                 selectedPosition={isPausedForBingo ? selectedBoardPosition : null}
                 arrowDirection={isPausedForBingo ? arrowDirection : 'right'}
+                lightMode={lightMode}
               />   
             </Box>
           </Box>

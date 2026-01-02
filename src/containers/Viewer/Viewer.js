@@ -286,7 +286,7 @@ export default function Viewer({ onChange }){
     };
   }, [currentMoveRef, setMoveDirection, handleMoveWrapper]);
 
-  const iconList = createIconList(
+  const iconList = useMemo(() => createIconList(
     beginningOfGameStore,
     currentMoveRef,
     setMoveDirection,
@@ -304,10 +304,11 @@ export default function Viewer({ onChange }){
     setShowUnlockText,
     setMode,
     wooglesMode,
-    randomizeWooglesGame
-  );
+    randomizeWooglesGame,
+    lightMode
+  ), [lightMode, parsedMoves, mode, wooglesMode]);
 
-  const groupedIcons = createGroupedIcons(
+  const groupedIcons = useMemo(() => createGroupedIcons(
     handleGamesHistoryOpen,
     handleRecentGamesOpen,
     handleDictionaryTilesOpen,
@@ -329,8 +330,33 @@ export default function Viewer({ onChange }){
     currentWooglesGame,
     handleOpenPlayersModal,
     handleRevealElo,
-    handleOpenSubmittedGamesModal
-  );
+    handleOpenSubmittedGamesModal,
+    lightMode
+  ), [
+    handleGamesHistoryOpen,
+    handleRecentGamesOpen,
+    handleDictionaryTilesOpen,
+    setModalContent,
+    setOpen,
+    name1,
+    name2,
+    setRevealedName1,
+    setRevealedName2,
+    tourneyNum,
+    setRevealedElo,
+    setRevealedElo2,
+    mode,
+    gameNum,
+    revealPlayers,
+    revealElo,
+    toggleWooglesMode,
+    wooglesMode,
+    currentWooglesGame,
+    handleOpenPlayersModal,
+    handleRevealElo,
+    handleOpenSubmittedGamesModal,
+    lightMode
+  ]);
 
   const actionButtonStyle = {
     width: '24px',
@@ -414,32 +440,44 @@ export default function Viewer({ onChange }){
                 onBoardChildClick={() => {}}
                 showDictionary={false}
                 commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
+                lightMode={lightMode}
               />
             </Box>
           </Box>
           <Box className={styles.rightPanel}>
 
-            <Box className={styles.playerPanel} style={{color: '#fff', paddingTop: '0px'}}>
+            <Box className={styles.playerPanel} sx={{
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              paddingTop: '0px',
+              background: lightMode === 'dark' 
+                ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              boxShadow: 'none',
+              backgroundImage: 'none'
+            }}>
               {/* Dictionary and Platform Info */}
-              <Box style={{
+              <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
                 padding: '8px 0',
                 fontSize: '14px',
-                fontWeight: 500
+                fontWeight: 500,
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Book 
                     size={16} 
-                    color="#fff" 
+                    color={lightMode === 'dark' ? "#fff" : "#1F2937"} 
                     style={{ opacity: 0.8 }} 
                     weight="regular"
                   />
                   <span>{gameDictionary}</span>
                 </Box>
-                <span style={{opacity: 0.4}}>•</span>
+                <span style={{opacity: lightMode === 'dark' ? 0.4 : 0.5}}>•</span>
                 <span>
                   {wooglesMode ? 'Woogles' : 'Cross-Tables'}
                 </span>
@@ -461,7 +499,7 @@ export default function Viewer({ onChange }){
                         >
                           <icon.icon
                             size={icon.size}
-                            color={icon.color}
+                            color={lightMode === 'dark' ? '#fff' : '#1F2937'}
                             weight={hoveredIcon === `nav-${index}` ? 'fill' : 'regular'}
                           />
                         </Box>
@@ -475,7 +513,7 @@ export default function Viewer({ onChange }){
                             onMouseLeave={() => setIs3DHovered(false)}
                             style={{ marginLeft: 2, marginRight: 2 }}
                           >
-                            <Cube size={20} color="#60A5FA" weight={is3DHovered ? 'fill' : 'regular'} />
+                            <Cube size={20} color={lightMode === 'dark' ? "#60A5FA" : "#3B82F6"} weight={is3DHovered ? 'fill' : 'regular'} />
                           </Box>
                         </Tooltip>
                       )}
@@ -518,7 +556,7 @@ export default function Viewer({ onChange }){
                   
                   {/* Tier 1 - Crucial Controls */}
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                    <Box sx={{ fontSize: '12px', color: '#fff', opacity: 0.7, fontWeight: 500 }}>Main</Box>
+                    <Box sx={{ fontSize: '12px', color: lightMode === 'dark' ? '#fff' : '#1F2937', opacity: 0.7, fontWeight: 500 }}>Main</Box>
                     <Box sx={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                       <Tooltip title={wooglesMode ? 
                         (mode === "VIEWER" ? "Switch to Guess ELO (Woogles)" : "Switch to Viewer (Woogles)") :
@@ -532,7 +570,7 @@ export default function Viewer({ onChange }){
                         >
                           <ArrowsLeftRight 
                             size={20} 
-                            color="#fff" 
+                            color={lightMode === 'dark' ? "#fff" : "#1F2937"} 
                             weight={hoveredIcon === 'mode' ? 'fill' : 'regular'}
                           />
                         </Box>
@@ -547,7 +585,7 @@ export default function Viewer({ onChange }){
                         >
                           <Plus 
                             size={20} 
-                            color="#fff" 
+                            color={lightMode === 'dark' ? "#fff" : "#1F2937"} 
                             weight={hoveredIcon === 'new' ? 'fill' : 'regular'}
                           />
                         </Box>
@@ -636,7 +674,7 @@ export default function Viewer({ onChange }){
                                     justifyContent: 'center'
                                   }}
                                 >
-                                  {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                  {React.createElement(groupedIcons[0].icon4.icon, { sx: { fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' } })}
                                 </Box>
                               </Tooltip>
                             )}
@@ -714,8 +752,8 @@ export default function Viewer({ onChange }){
                                   }}
                                 >
                                   {groupedIcons[1].icon2.icon === Typography
-                                    ? <Typography sx={{ fontSize: 20, fontFamily: '"Dancing Script", cursive !important', fontWeight: 500, color: '#fff', opacity: 0.8 }}>Elo</Typography>
-                                    : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                    ? <Typography sx={{ fontSize: 20, fontFamily: '"Dancing Script", cursive !important', fontWeight: 500, color: lightMode === 'dark' ? '#fff' : '#1F2937', opacity: 0.8 }}>Elo</Typography>
+                                    : React.createElement(groupedIcons[1].icon2.icon, { sx: { fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' } })}
                                 </Box>
                               </Tooltip>
                             )}
@@ -748,7 +786,7 @@ export default function Viewer({ onChange }){
                                     ...(groupedIcons[1].icon4.condition || {})
                                   }}
                                 >
-                                  {React.createElement(groupedIcons[1].icon4.icon, { sx: { fontSize: 20, color: '#fff' } })}
+                                  {React.createElement(groupedIcons[1].icon4.icon, { sx: { fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' } })}
                                 </Box>
                               </Tooltip>
                             )}
@@ -805,6 +843,7 @@ export default function Viewer({ onChange }){
               currentMoveCoords={currentMoveCoords}
               parsedMoves={parsedMoves}
               gameNum={gameNum}
+              lightMode={lightMode}
               onTurnClick={(turn) => {
                 if (turn >= 0 && turn < parsedMoves.length) {
                   // Reset board to initial state
@@ -834,6 +873,7 @@ export default function Viewer({ onChange }){
               parsedMoves={parsedMoves}
               pool={getCurrentPool()}
               gameDictionary={gameDictionary}
+              lightMode={lightMode}
               onMoveSelect={(move) => {
                 console.log('Selected move:', move);
                 // You could add visualization or highlighting here
@@ -851,12 +891,14 @@ export default function Viewer({ onChange }){
             {/* Collapsible Pool Section */}
             <Box 
               className={styles.poolBox} 
-              style={{
-                color: '#fff',
-                background: 'rgba(255, 255, 255, 0.05)',
+              sx={{
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
                 padding: '12px',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                borderRadius: '4px'
               }}
               onClick={() => setPoolExpanded(!poolExpanded)}
             >
@@ -886,9 +928,9 @@ export default function Viewer({ onChange }){
                   )}
                 </Box>
                 {poolExpanded ? (
-                  <CaretUp size={16} color="#fff" weight="regular" />
+                  <CaretUp size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
                 ) : (
-                  <CaretDown size={16} color="#fff" weight="regular" />
+                  <CaretDown size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
                 )}
               </Box>
               

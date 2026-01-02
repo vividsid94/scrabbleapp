@@ -7,11 +7,33 @@ const Footer = () => {
   const { lightMode } = useContext(ThemeContext);
 
   const getBackgroundColor = () => {
-    return '#1F2937';
+    return lightMode === 'dark' ? '#1F2937' : '#ffffff';
   };
 
   const getTextColor = () => {
-    return lightMode === 'dark' ? '#fff' : '#f5f5f5';
+    return lightMode === 'dark' ? '#fff' : '#1F2937';
+  };
+
+  const getBackgroundGradient = () => {
+    if (lightMode === 'dark') {
+      return `
+        radial-gradient(circle at 20% 30%, rgba(55, 65, 81, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(17, 24, 39, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(31, 41, 55, 0.2) 0%, transparent 60%),
+        radial-gradient(circle at 70% 20%, rgba(55, 65, 81, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 30% 80%, rgba(17, 24, 39, 0.3) 0%, transparent 50%),
+        #1F2937
+      `;
+    } else {
+      return `
+        radial-gradient(circle at 20% 30%, rgba(243, 244, 246, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(229, 231, 235, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(249, 250, 251, 0.2) 0%, transparent 60%),
+        radial-gradient(circle at 70% 20%, rgba(243, 244, 246, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 30% 80%, rgba(229, 231, 235, 0.3) 0%, transparent 50%),
+        #ffffff
+      `;
+    }
   };
 
   return (
@@ -20,7 +42,7 @@ const Footer = () => {
       sx={{
         backgroundColor: getBackgroundColor(),
         color: getTextColor(),
-        backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
+        background: getBackgroundGradient(),
       }}
     >
       <span className={styles.footerText}>"Step up your game with every tile turned - Sid @ Tile Turnover" - ChatGPT</span>

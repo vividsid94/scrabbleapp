@@ -1,10 +1,15 @@
 import React from 'react';
 import styles from './Pool.module.css';
 
-const PlayPool = React.memo(({ pool, player1Rack, player2Rack, gameStarted }) => {
+const PlayPool = React.memo(({ pool, player1Rack, player2Rack, gameStarted, lightMode = 'dark' }) => {
+  const textColor = lightMode === 'dark' ? '#fff' : '#1F2937';
+  
   if (!gameStarted) {
     return (
-      <div className={styles.poolTbl}>
+      <div 
+        className={styles.poolTbl}
+        style={{ color: textColor }}
+      >
         Bag is collapsed in a wrinkled heap on the table.
       </div>
     );
@@ -42,7 +47,10 @@ const PlayPool = React.memo(({ pool, player1Rack, player2Rack, gameStarted }) =>
   const totalTilesShown = poolTiles.length + player2Rack.length;
 
   return (
-    <div className={styles.poolTbl}>
+    <div 
+      className={styles.poolTbl}
+      style={{ color: textColor }}
+    >
       {tileDisplay} <br/>({totalTilesShown} unseen to you)
     </div>
   );

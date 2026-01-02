@@ -196,8 +196,10 @@ export default function Home(){
           <Box 
             className={styles.developmentMessage}
             style={{ 
-              backgroundColor: lightMode === 'dark' ? '#374151' : '#f0f0f0',
-              color: lightMode === 'dark' ? '#fff' : '#000'
+              backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              border: lightMode === 'dark' ? 'none' : '1px solid #e5e7eb',
+              boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)'
             }}
           >
             Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check the{" "}
@@ -208,7 +210,7 @@ export default function Home(){
             }}>changelog</Link>
             {" "}for all the latest updates!
             <br /><br />
-            <span style={{ fontSize: '0.75em', opacity: 0.6 }}>
+            <span style={{ fontSize: '0.75em', opacity: lightMode === 'dark' ? 0.6 : 0.7, color: lightMode === 'dark' ? undefined : '#4B5563' }}>
               Our official release will be after 2025 Nationals, but more beta features are being added to the homepage! Try our new Puzzle and Play modes!
             </span>
             <Rocket 
@@ -223,46 +225,82 @@ export default function Home(){
           </Box>
           
           <Box className={styles.homeButtonContainer}>
-            <Link to="/viewer">
-              <button className={styles.homeButton}>Game Viewer</button>
-            </Link>
-            <Link to="/3dviewer">
-              <button className={styles.threeDButton}>3D Viewer (Beta)</button>
-            </Link>
             <Link to="/play">
-              <button className={styles.homeButton} style={{ 
-                background: 'linear-gradient(45deg, transparent 5%, #B91C1C 5%)',
-                boxShadow: '6px 0px 0px #991B1B'
-              }}>Play (Beta)</button>
+              <button 
+                className={styles.homeButtonPrimary}
+                style={{
+                  boxShadow: lightMode === 'light' ? '6px 0px 0px #B45309, 0 2px 8px rgba(217, 119, 6, 0.2)' : '6px 0px 0px #B45309'
+                }}
+              >
+                Play
+              </button>
             </Link>
             <Link to="/puzzle">
-              <button className={styles.homeButton} style={{ 
-                background: 'linear-gradient(45deg, transparent 5%, #047857 5%)',
-                boxShadow: '6px 0px 0px #065F46'
-              }}>Puzzle (Beta)</button>
+              <button 
+                className={styles.homeButtonPrimary}
+                style={{
+                  boxShadow: lightMode === 'light' ? '6px 0px 0px #B45309, 0 2px 8px rgba(217, 119, 6, 0.2)' : '6px 0px 0px #B45309'
+                }}
+              >
+                Puzzle
+              </button>
             </Link>
+            <Link to="/viewer">
+              <button 
+                className={styles.homeButton}
+                style={{
+                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
+                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
+                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                Game Viewer
+              </button>
+            </Link>
+            <Link to="/3dviewer">
+              <button 
+                className={styles.threeDButton}
+                style={{
+                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
+                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
+                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                3D Viewer
+              </button>
+            </Link>
+            <Link to="/submit-game">
+              <button 
+                className={styles.submitGameButton}
+                style={{
+                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
+                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
+                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                Submit Game
+              </button>
+            </Link>
+            <button 
+              className={styles.homeButton} 
+              onClick={() => setSearchPanelOpen(true)}
+              type="button"
+              aria-expanded={searchPanelOpen}
+              aria-controls="resultsPanel"
+              style={{
+                borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
+                color: lightMode === 'dark' ? '#D97706' : '#D97706',
+                boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Results
+            </button>
             {/* <Link to="/snakes">
               <button className={styles.homeButton} style={{ 
                 background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',
                 boxShadow: '6px 0px 0px #5B21B6'
               }}>Snakes 🐍</button>
             </Link> */}
-            <Link to="/submit-game">
-              <button className={styles.submitGameButton}>Submit Game</button>
-            </Link>
-            <button 
-              className={styles.homeButton} 
-              onClick={() => setSearchPanelOpen(true)}
-              style={{ 
-                background: 'linear-gradient(45deg, transparent 5%, #0891B2 5%)',
-                boxShadow: '6px 0px 0px #0E7490'
-              }}
-              type="button"
-              aria-expanded={searchPanelOpen}
-              aria-controls="resultsPanel"
-            >
-              Results (Beta)
-            </button>
             {/* <Link to="/play">
               <button className={styles.homeButton}>Play Scrabble</button>
             </Link> */}

@@ -25,29 +25,59 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx, mascotRef, botImage }) => (
-  <Box className={styles.playerPanel} sx={sx}>
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx, mascotRef, botImage, lightMode = 'dark' }) => {
+  const panelBackground = lightMode === 'dark' 
+    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+    : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)';
+  
+  const panelBorder = lightMode === 'dark' 
+    ? '1px solid rgba(255, 255, 255, 0.1)' 
+    : '1px solid rgba(0, 0, 0, 0.08)';
+  
+  const panelShadow = lightMode === 'dark'
+    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+    : '0 2px 8px rgba(0, 0, 0, 0.08)';
+
+  return (
+  <Box 
+    className={styles.playerPanel} 
+    sx={{
+      ...sx,
+      background: panelBackground,
+      border: panelBorder,
+      boxShadow: panelShadow,
+      backgroundImage: 'none'
+    }}
+  >
     <Box className={styles.playerInfo}>
-      <Box className={styles.playerName} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Box 
+        className={styles.playerName} 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 8,
+          color: lightMode === 'dark' ? '#fff' : '#1F2937'
+        }}
+      >
         {name}
       </Box>
       <Box 
         className={styles.timer}
         sx={{
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
           padding: '2px 6px',
           fontSize: '12px',
-          color: '#fff',
+          color: lightMode === 'dark' ? '#fff' : '#1F2937',
           fontFamily: 'monospace',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+          boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
           backdropFilter: 'blur(10px)',
           transition: 'all 0.3s ease',
           '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+            borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
             transform: 'translateY(-1px)',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)'
+            boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(0, 0, 0, 0.15)' : '0 2px 6px rgba(0, 0, 0, 0.12)'
           }
         }}
       >
@@ -58,7 +88,8 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       className={styles.points} 
       sx={{
         fontSize: '24px',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        color: lightMode === 'dark' ? 'darkcyan' : '#0D9488'
       }}
     >
       {points}
@@ -74,7 +105,8 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       </Box>
     )}
   </Box>
-);
+  );
+};
 
 export default function PlayerInfo({
   player1Name,
@@ -120,7 +152,8 @@ export default function PlayerInfo({
   pool,
   icons,
   mascotRef,
-  botImage
+  botImage,
+  lightMode = 'dark'
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -194,7 +227,7 @@ export default function PlayerInfo({
               justifyContent: 'center'
             }}
           >
-            <DotsThree size={20} color="white" />
+            <DotsThree size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
           </Box>
         </Tooltip>
         <Box sx={{
@@ -256,7 +289,7 @@ export default function PlayerInfo({
                   borderRadius: '4px'
                 }}
               >
-                <PlayArrowIcon sx={{ fontSize: 20 }} />
+                <PlayArrowIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
                 <Box sx={{
                   position: 'absolute',
                   top: -8,
@@ -288,7 +321,7 @@ export default function PlayerInfo({
                   position: 'relative'
                 }}
               >
-                <CancelIcon sx={{ fontSize: 20 }} />
+                <CancelIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
                 <Box sx={{
                   position: 'absolute',
                   top: -8,
@@ -320,7 +353,7 @@ export default function PlayerInfo({
                   position: 'relative'
                 }}
               >
-                <SwapHorizIcon sx={{ fontSize: 20 }} />
+                <SwapHorizIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
                 <Box sx={{
                   position: 'absolute',
                   top: -8,
@@ -342,7 +375,7 @@ export default function PlayerInfo({
               </Box>
             </Tooltip>
           </Box>
-          <Box sx={{ display: 'flex', gap: '16px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '8px' }}>
+          <Box sx={{ display: 'flex', gap: '16px', borderLeft: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', paddingLeft: '8px' }}>
             <Tooltip title="Settings">
               <Box 
                 className={styles.bestMoveButton}
@@ -401,21 +434,21 @@ export default function PlayerInfo({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {player.name}
               <Box sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                border: '1px solid rgba(255, 255, 255, 0.4)',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.4)' : '1px solid rgba(0, 0, 0, 0.15)',
                 borderRadius: '12px',
                 padding: '4px 12px',
                 fontSize: '0.9em',
                 fontWeight: 500,
-                color: 'rgb(255, 255, 255)',
+                color: lightMode === 'dark' ? 'rgb(255, 255, 255)' : '#1F2937',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 3px 6px rgba(255, 255, 255, 0.2)',
+                boxShadow: lightMode === 'dark' ? '0 3px 6px rgba(255, 255, 255, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 4px 8px rgba(255, 255, 255, 0.25)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)',
+                  boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(255, 255, 255, 0.25)' : '0 3px 6px rgba(0, 0, 0, 0.15)',
                   transform: 'translateY(-1px)'
                 }
               }}>
@@ -435,6 +468,7 @@ export default function PlayerInfo({
           selectedTiles={selectedTiles}
           isBot={player.isBot}
           currentPlayer={currentPlayer}
+          lightMode={lightMode}
           sx={player.isBot ? {
             '& .rack': {
               background: 'linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1))',
@@ -476,6 +510,7 @@ export default function PlayerInfo({
         allMoves={moveHistory}
         boardCoords={boardCoords}
         pool={pool}
+        lightMode={lightMode}
       />
 
       <TopMoves 
@@ -491,6 +526,7 @@ export default function PlayerInfo({
         simulatingMove={simulatingMove}
         currentPlayer={currentPlayer}
         gameStarted={gameStarted}
+        lightMode={lightMode}
       />
     </Box>
   );

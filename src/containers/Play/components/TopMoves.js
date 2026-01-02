@@ -19,11 +19,18 @@ const TopMoves = ({
   gameStarted,
   onOpenSimulationModal,
   onAnalyzeDefense,
-  onOpenMetrics2Modal
+  onOpenMetrics2Modal,
+  lightMode = 'dark'
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const defenseButtonClicked = useRef(false);
+  
+  const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
+  const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
+  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
   // Auto-expand when moves are loaded
   useEffect(() => {
@@ -113,11 +120,33 @@ const TopMoves = ({
           }
           handleMoveSelect(move);
         }}
-        style={{ cursor: 'pointer' }}
+        style={{ 
+          cursor: 'pointer',
+          borderBottomColor: borderColor
+        }}
       >
-        <Box className={styles.topMoveRank}>{index + 1}</Box>
-        <Box className={styles.topMoveLocation}>{location || ''}</Box>
-        <Box className={styles.topMoveWord}>{move.word}</Box>
+        <Box 
+          className={styles.topMoveRank}
+          style={{ color: secondaryTextColor }}
+        >
+          {index + 1}
+        </Box>
+        <Box 
+          className={styles.topMoveLocation}
+          style={{ 
+            color: mutedTextColor,
+            backgroundColor: bgColor,
+            borderColor: borderColor
+          }}
+        >
+          {location || ''}
+        </Box>
+        <Box 
+          className={styles.topMoveWord}
+          style={{ color: textColor }}
+        >
+          {move.word}
+        </Box>
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
           <Tooltip title="Leave">
@@ -153,11 +182,18 @@ const TopMoves = ({
     return (
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
-          <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-            <LightbulbIcon style={{ fontSize: 16 }} />
-            <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
+          <Box 
+            className={styles.topMovesButton} 
+            onClick={handleGetTopMoves}
+            style={{ color: secondaryTextColor }}
+          >
+            <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
+            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
           </Box>
-          <Box className={styles.loadingText}>
+          <Box 
+            className={styles.loadingText}
+            style={{ color: mutedTextColor }}
+          >
             {isDictionaryLoading ? 'Loading dictionary...' : (
               <Box className={styles.thinkingDots}>
                 <div></div>
@@ -175,9 +211,13 @@ const TopMoves = ({
     return (
       <Box className={styles.topMovesPanel}>
         <Box className={styles.topMovesContent}>
-          <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-            <LightbulbIcon style={{ fontSize: 16 }} />
-            <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
+          <Box 
+            className={styles.topMovesButton} 
+            onClick={handleGetTopMoves}
+            style={{ color: secondaryTextColor }}
+          >
+            <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
+            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
           </Box>
         </Box>
       </Box>
@@ -186,10 +226,19 @@ const TopMoves = ({
 
   return (
     <Box className={styles.topMovesPanel}>
-      <Box className={`${styles.topMovesContent} ${animationClass}`}>
-        <Box className={styles.topMovesButton} onClick={handleGetTopMoves}>
-          <LightbulbIcon style={{ fontSize: 16 }} />
-          <Box sx={{ fontSize: '10px', marginLeft: '2px' }}>(15)</Box>
+      <Box 
+        className={`${styles.topMovesContent} ${animationClass}`}
+        style={{
+          borderBottomColor: borderColor
+        }}
+      >
+        <Box 
+          className={styles.topMovesButton} 
+          onClick={handleGetTopMoves}
+          style={{ color: secondaryTextColor }}
+        >
+          <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
+          <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
         </Box>
         {topMoves.length >= 15 && (
           <Box 
@@ -203,7 +252,7 @@ const TopMoves = ({
               paddingRight: 0 // Remove right padding
             }}
           >
-            <Box sx={{ fontSize: '11px' }}>Metrics</Box>
+            <Box sx={{ fontSize: '11px', color: secondaryTextColor }}>Metrics</Box>
             <Box sx={{ fontSize: '10px' }}></Box>
           </Box>
         )}
@@ -219,13 +268,17 @@ const TopMoves = ({
               paddingRight: 0 // Remove right padding
             }}
           >
-            <Box sx={{ fontSize: '11px' }}>Metrics (2)</Box>
+            <Box sx={{ fontSize: '11px', color: secondaryTextColor }}>Metrics (2)</Box>
             <Box sx={{ fontSize: '10px' }}></Box>
           </Box>
         )}
         {topMoves.length > 0 && (
-          <Box className={styles.expandIcon} onClick={handleExpandClick}>
-            {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
+          <Box 
+            className={styles.expandIcon} 
+            onClick={handleExpandClick}
+            style={{ color: secondaryTextColor }}
+          >
+            {isExpanded ? <ExpandLessIcon style={{ fontSize: 16, color: secondaryTextColor }} /> : <ExpandMoreIcon style={{ fontSize: 16, color: secondaryTextColor }} />}
           </Box>
         )}
       </Box>

@@ -39,15 +39,33 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
 
-  const getHeaderBackgroundColor = () => {
-    return lightMode === 'dark' ? '#1F2937' : '#808080';
+  const getHeaderBackground = () => {
+    if (lightMode === 'dark') {
+      return `
+        radial-gradient(circle at 20% 30%, rgba(55, 65, 81, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(17, 24, 39, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(31, 41, 55, 0.2) 0%, transparent 60%),
+        radial-gradient(circle at 70% 20%, rgba(55, 65, 81, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 30% 80%, rgba(17, 24, 39, 0.3) 0%, transparent 50%),
+        #1F2937
+      `;
+    } else {
+      return `
+        radial-gradient(circle at 20% 30%, rgba(243, 244, 246, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(229, 231, 235, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(249, 250, 251, 0.2) 0%, transparent 60%),
+        radial-gradient(circle at 70% 20%, rgba(243, 244, 246, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 30% 80%, rgba(229, 231, 235, 0.3) 0%, transparent 50%),
+        #ffffff
+      `;
+    }
   };
 
   return (
     <div className="App">
       <header className="App-header" style={{
-        backgroundColor: getHeaderBackgroundColor(),
-        color: lightMode === 'dark' ? '#fff' : '#000'
+        background: getHeaderBackground(),
+        color: lightMode === 'dark' ? '#fff' : '#1F2937'
       }}>
         <Routes>
           <Route path="/minigames" element={<Minigames/>} />
@@ -87,11 +105,18 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
-  const [lightMode, setLightMode] = useState('light');
+  const [lightMode, setLightMode] = useState('dark');
   
   // Get the colors from the store
   const boardColor = useColorSchemeStore(state => state.boardColor);
   const tileColor = useColorSchemeStore(state => state.color);
+  const updateColor = useColorSchemeStore(state => state.updateColor);
+  
+  // Update protiles color based on light mode
+  useEffect(() => {
+    const protilesColor = lightMode === 'dark' ? '#d1d5db' : '#4b5563';
+    updateColor(protilesColor);
+  }, [lightMode, updateColor]);
   
   // Initialize CSS custom properties when the app starts
   useEffect(() => {

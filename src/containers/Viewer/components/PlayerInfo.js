@@ -5,12 +5,29 @@ import Rack from '../../../components/AppContent/Board/Rack';
 import { createRack } from '../../../functions/rackFunctions.js';
 import { ThemeContext } from '../../../App';
 
-const PlayerInfoSection = ({ name, points, rack, color, tiles, isCurrentPlayer, textColor }) => (
-  <Box className={styles.playerPanel} style={{padding: '10px 0px'}}>
+const PlayerInfoSection = ({ name, points, rack, color, tiles, isCurrentPlayer, textColor, lightMode = 'dark' }) => (
+  <Box className={styles.playerPanel} sx={{
+    padding: '10px 0px',
+    background: lightMode === 'dark' 
+      ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+      : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)',
+    border: lightMode === 'dark' 
+      ? '1px solid rgba(255, 255, 255, 0.1)' 
+      : '1px solid rgba(0, 0, 0, 0.08)',
+    borderRadius: '8px',
+    boxShadow: lightMode === 'dark'
+      ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+      : '0 2px 8px rgba(0, 0, 0, 0.08)',
+    backgroundImage: 'none'
+  }}>
     <Box className={styles.playerInfo}>
-      <Box className={styles.playerName} style={{color: '#333'}}>{name}</Box>
+      <Box className={styles.playerName} sx={{color: lightMode === 'dark' ? '#fff' : '#1F2937'}}>{name}</Box>
     </Box>
-    <Box className={styles.points}>
+    <Box className={styles.points} sx={{
+      fontSize: '24px',
+      fontWeight: 'bold',
+      color: lightMode === 'dark' ? 'darkcyan' : '#0D9488'
+    }}>
       {points}
     </Box>
     {rack && (
@@ -66,6 +83,7 @@ const PlayerInfo = ({
         tiles={tiles}
         isCurrentPlayer={isPlayer1Active}
         textColor={textColor}
+        lightMode={lightMode}
       />
       <PlayerInfoSection
         name={player2FullName}
@@ -75,6 +93,7 @@ const PlayerInfo = ({
         tiles={tiles}
         isCurrentPlayer={!isPlayer1Active}
         textColor={textColor}
+        lightMode={lightMode}
       />
     </>
   );

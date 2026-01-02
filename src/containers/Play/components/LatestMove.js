@@ -8,7 +8,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import styles from '../Play.module.css';
 import { generateGCGContent, downloadGCGFile } from '../../../functions/gcgUtils';
 
-const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, allMoves = [], boardCoords, player1Rack = [], player2Rack = [], pool = [] }) => {
+const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, allMoves = [], boardCoords, player1Rack = [], player2Rack = [], pool = [], lightMode = 'dark' }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -37,10 +37,11 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
 
   // Helper function to get player icon
   const getPlayerIcon = (playerName) => {
+    const iconColor = lightMode === 'dark' ? '#fff' : '#1F2937';
     if (playerName === 'Theo' || playerName === 'Bot') {
-      return <SmartToyIcon style={{ fontSize: 16 }} />;
+      return <SmartToyIcon style={{ fontSize: 16, color: iconColor }} />;
     } else {
-      return <PersonIcon style={{ fontSize: 16 }} />;
+      return <PersonIcon style={{ fontSize: 16, color: iconColor }} />;
     }
   };
 
@@ -132,11 +133,17 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     );
   };
 
+  const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
+  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
+  const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
   if (allMoves.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
         <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-          <Box className={styles.noMoveText}>No moves yet</Box>
+          <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
     );
@@ -149,7 +156,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     return (
       <Box className={styles.latestMovePanel}>
         <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-          <Box className={styles.noMoveText}>No moves yet</Box>
+          <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
     );
@@ -178,17 +185,45 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
 
   return (
     <Box className={styles.latestMovePanel}>
-      <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-        <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
-        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{displayWord}</Box>
+      <Box 
+        className={`${styles.latestMoveContent} ${animationClass}`}
+        style={{
+          borderBottomColor: borderColor
+        }}
+      >
+        <Box 
+          className={styles.moveHistoryTurnNumber}
+          style={{ color: mutedTextColor }}
+        >
+          {turnNumber}
+        </Box>
+        <Box 
+          className={styles.moveHistoryLocation}
+          style={{ 
+            color: mutedTextColor,
+            backgroundColor: bgColor,
+            borderColor: borderColor
+          }}
+        >
+          {location || ''}
+        </Box>
+        <Box 
+          className={styles.moveHistoryWord}
+          style={{ color: textColor }}
+        >
+          {displayWord}
+        </Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
         </Box>
         <Box className={styles.moveHistoryActions}>
           {allMoves.length > 1 && (
-            <Box className={styles.expandIcon} onClick={handleExpandClick}>
+            <Box 
+              className={styles.expandIcon} 
+              onClick={handleExpandClick}
+              style={{ color: secondaryTextColor }}
+            >
               {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
             </Box>
           )}
@@ -197,18 +232,18 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
               <Box sx={{
                 fontSize: '10px',
                 fontWeight: '600',
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: secondaryTextColor,
                 padding: '2px 6px',
                 borderRadius: '3px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                backgroundColor: bgColor,
+                border: `1px solid ${borderColor}`,
                 fontFamily: 'monospace',
                 letterSpacing: '0.5px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                <DownloadIcon style={{ fontSize: 14 }} />
+                <DownloadIcon style={{ fontSize: 14, color: secondaryTextColor }} />
                 GCG
               </Box>
             </Box>

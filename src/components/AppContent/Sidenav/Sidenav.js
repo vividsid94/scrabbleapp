@@ -67,7 +67,6 @@ export default function MiniDrawer() {
     width: (isColorSectionExpanded || isDecorationSectionExpanded) ? '200px' : '55px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
-    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     transition: '0.3s ease',
     '@media (max-width: 992px)': {
       width: '100%',
@@ -91,7 +90,6 @@ export default function MiniDrawer() {
   const MyAppBar = styled(AppBar)({
     position: 'fixed',
     background: getBackgroundColor(),
-    backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
     display: "flex",
     justifyContent: "space-between"
   });
@@ -700,7 +698,6 @@ export default function MiniDrawer() {
             left: '50%',
             transform: 'translate(-50%, -50%)',
             backgroundColor: '#1F2937',
-            backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
             padding: '24px',
             borderRadius: '12px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
@@ -799,7 +796,6 @@ export default function MiniDrawer() {
             left: '50%',
             transform: 'translate(-50%, -50%)',
             backgroundColor: '#1F2937',
-            backgroundImage: "url('https://www.transparenttextures.com/patterns/diagonal-noise.png')",
             padding: '24px',
             borderRadius: '12px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',

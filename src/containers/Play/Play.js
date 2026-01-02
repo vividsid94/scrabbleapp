@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useMemo, useState } from "react";
+import React, { useEffect, useRef, useMemo, useState, useContext } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import styles from './Play.module.css';
+import { ThemeContext } from '../../App';
 import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
@@ -42,6 +43,7 @@ const bots = [
 ];
 
 export default function Play() {
+  const { lightMode } = useContext(ThemeContext);
   // Use Zustand Game Store
   const {
     // Board state
@@ -504,6 +506,7 @@ export default function Play() {
           <Board 
             board={board}
             boardMode={theme}
+            lightMode={lightMode}
             onBoardChildClick={(row, col) => handleBoardPositionSelect({
               row,
               col,
@@ -609,12 +612,12 @@ export default function Play() {
             boardCoords={boardCoords}
             pool={pool}
             icons={{
-              settings: <Gear size={20} color="white" />,
+              settings: <Gear size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />,
               time: (
                 <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
                   <Clock 
                     size={20} 
-                    color={showTimeSlider ? "#1976d2" : "white"}
+                    color={showTimeSlider ? "#1976d2" : (lightMode === 'dark' ? "white" : "#1F2937")}
                     onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
                     style={{ cursor: gameStarted ? 'not-allowed' : 'pointer' }}
                   />
@@ -622,23 +625,38 @@ export default function Play() {
               ),
               botMode: <SmartToyIcon 
                   className={`${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
+                  sx={{
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
               />,
-              topMoves: <Lightbulb size={20} color="white" />,
+              topMoves: <Lightbulb size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />,
               vs: gameStarted ? (
                 <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <User size={20} color="white" />
-                  <ArrowsHorizontal size={20} color="white" />
+                  <User size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
+                  <ArrowsHorizontal size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
                   {isBotMode ? getBotIcon(selectedBot.name) : <img src="/images/player.png" alt="Opponent" width={20} height={20} />}
                 </Box>
               ) : null,
             }}
+            lightMode={lightMode}
             mascotRef={mascotRef}
             botImage={isBotMode ? getBotIcon(selectedBot.name) : undefined}
           />
 
           {showTimeSlider && !gameStarted && (
-              <Box className={styles.timeSliderContainer}>
-                <Box className={styles.timeSliderLabel}>
+              <Box 
+                className={styles.timeSliderContainer}
+                style={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  border: lightMode === 'light' ? '1px solid #e5e7eb' : 'none'
+                }}
+              >
+                <Box 
+                  className={styles.timeSliderLabel}
+                  style={{
+                    color: lightMode === 'dark' ? '#6B7280' : '#4B5563'
+                  }}
+                >
                 Game Time: {gameTime} min
               </Box>
                 <Box className={styles.timeSliderWrapper}>
@@ -646,12 +664,18 @@ export default function Play() {
                     <Box
                       key={value}
                       className={styles.timeSliderMark}
-                      style={{ left: `${((value - 5) / 25) * 100}%` }}
+                      style={{ 
+                        left: `${((value - 5) / 25) * 100}%`,
+                        backgroundColor: lightMode === 'dark' ? '#bfbfbf' : '#9ca3af'
+                      }}
                     />
                   ))}
                   <Box
                     className={styles.timeSliderThumb}
-                    style={{ left: `${((gameTime - 5) / 25) * 100}%` }}
+                    style={{ 
+                      left: `${((gameTime - 5) / 25) * 100}%`,
+                      backgroundColor: lightMode === 'dark' ? '#4CAF50' : '#059669'
+                    }}
                       onMouseDown={(e) => handleTimeSliderMouseDown(e, setGameTime)}
                   />
               </Box>
@@ -665,6 +689,7 @@ export default function Play() {
                 player1Rack={player1Rack} 
                 player2Rack={player2Rack}
                 gameStarted={gameStarted}
+                lightMode={lightMode}
               />  
             </Box>
           </Box>

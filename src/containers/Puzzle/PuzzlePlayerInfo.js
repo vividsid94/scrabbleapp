@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from "@mui/material";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -7,10 +7,12 @@ import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
+import { ThemeContext } from '../../App';
 import styles from './Puzzle.module.css';
 
 // Memoized LatestMove component that only subscribes to what it needs
 const MemoizedLatestMove = React.memo(() => {
+  const { lightMode } = useContext(ThemeContext);
   const moveHistory = usePuzzleStore(state => state.moveHistory);
   const player1Name = usePuzzleStore(state => state.player1Name);
   const player2Name = usePuzzleStore(state => state.player2Name);
@@ -31,11 +33,13 @@ const MemoizedLatestMove = React.memo(() => {
       player1Rack={player1Rack}
       player2Rack={player2Rack}
       pool={pool}
+      lightMode={lightMode}
     />
   );
 });
 
 const PuzzlePlayerInfo = React.memo(() => {
+  const { lightMode } = useContext(ThemeContext);
   // Get global color scheme
   const color = useColorSchemeStore(state => state.color);
   
@@ -143,6 +147,7 @@ const PuzzlePlayerInfo = React.memo(() => {
               marginRight: '4px'
             }}
             onClick={() => handleBotModeToggle()}
+            sx={{ color: lightMode === 'dark' ? (gameStarted ? '#FF9800' : '#4CAF50') : (gameStarted ? '#EA580C' : '#059669') }}
             />
         </Tooltip>
         <Tooltip title="Puzzle Mode">
@@ -152,7 +157,8 @@ const PuzzlePlayerInfo = React.memo(() => {
               style={{ 
                 fontSize: 20, 
                 cursor: 'pointer',
-                marginRight: '4px'
+                marginRight: '4px',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
               onClick={() => {
                 const newShowSettings = !showSettingsPanel;
@@ -189,7 +195,9 @@ const PuzzlePlayerInfo = React.memo(() => {
               style={{ 
                 fontSize: 20, 
                 cursor: 'pointer',
-                color: isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)',
+                color: lightMode === 'dark' 
+                  ? (isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)')
+                  : (isFastPlayMode ? '#EA580C' : 'rgba(31, 41, 55, 0.7)'),
                 marginRight: '4px'
               }}
               onClick={() => setIsFastPlayMode(!isFastPlayMode)}
@@ -214,7 +222,8 @@ const PuzzlePlayerInfo = React.memo(() => {
                 className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
                 style={{ 
                   fontSize: 20, 
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
                 }}
                 onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
               />
@@ -223,7 +232,8 @@ const PuzzlePlayerInfo = React.memo(() => {
                 className={`${styles.keyBtn} ${styles.pauseIcon}`}
                 style={{ 
                   fontSize: 20, 
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
                 }}
                 onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
               />
@@ -236,7 +246,8 @@ const PuzzlePlayerInfo = React.memo(() => {
               className={`${styles.keyBtn} ${styles.resetIcon}`}
               style={{ 
                 fontSize: 20, 
-                cursor: 'pointer'
+                cursor: 'pointer',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
               onClick={() => {
                 console.log(' Reset rack clicked');
@@ -251,14 +262,14 @@ const PuzzlePlayerInfo = React.memo(() => {
       <Box sx={{
         marginTop: '16px',
         padding: '8px 12px',
-        backgroundColor: 'transparent',
-        color: 'white',
+        backgroundColor: lightMode === 'dark' ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+        color: lightMode === 'dark' ? 'white' : '#1F2937',
         fontSize: '12px',
         fontWeight: '500',
         textAlign: 'center',
         backdropFilter: 'blur(10px)',
-        border: 'none',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+        border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+        boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -277,9 +288,24 @@ const PuzzlePlayerInfo = React.memo(() => {
       </Box>
 
       {gameStarted && (
-        <Box className={styles.playerPanel}>
+        <Box className={styles.playerPanel} sx={{
+          background: lightMode === 'dark' 
+            ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+            : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)',
+          border: lightMode === 'dark' 
+            ? '1px solid rgba(255, 255, 255, 0.1)' 
+            : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: lightMode === 'dark'
+            ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+            : '0 2px 8px rgba(0, 0, 0, 0.08)',
+          backgroundImage: 'none'
+        }}>
           <Box className={styles.playerInfo}>
-            <Box className={styles.playerName} style={{ minWidth: '120px', textAlign: 'center' }}>
+            <Box className={styles.playerName} style={{ 
+              minWidth: '120px', 
+              textAlign: 'center',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }}>
               {currentName}
               <Box component="span" className={styles.thinkingEmoji} style={{ 
                 visibility: isBotThinking ? 'visible' : 'hidden',
@@ -308,18 +334,27 @@ const PuzzlePlayerInfo = React.memo(() => {
 
       {/* Bingo challenge section */}
       {isPausedForBingo && (
-        <Box className={styles.playerPanel} style={{ 
+        <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
-            <Box style={{ fontSize: '14px', marginBottom: '8px' }}>
+            <Box sx={{ 
+              fontSize: '14px', 
+              marginBottom: '8px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }}>
               {currentPlayer === 1 ? player1Name : player2Name} found a {puzzleMode === 'bingo' || puzzleMode === 'only-bingo' ? 'bingo' : 'significant play'}!
             </Box>
-            <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
+            <Box sx={{ 
+              fontSize: '12px', 
+              marginBottom: '12px', 
+              opacity: lightMode === 'dark' ? 0.8 : 0.7,
+              color: lightMode === 'dark' ? '#fff' : '#4B5563'
+            }}>
               {puzzleMode === 'only-bingo' 
                 ? 'There is only one. Can you find it?'
                 : puzzleMode === 'bingo'
@@ -333,15 +368,16 @@ const PuzzlePlayerInfo = React.memo(() => {
             </Box>
             
             {/* Instructions */}
-            <Box style={{ 
+            <Box sx={{ 
               fontSize: '11px', 
               marginBottom: '12px', 
-              opacity: 0.7,
+              opacity: lightMode === 'dark' ? 0.7 : 0.8,
               padding: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '4px'
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              borderRadius: '4px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
             }}>
-              <Box style={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
+              <Box sx={{ marginBottom: '4px', fontWeight: 'bold' }}>How to play:</Box>
               <Box>• Place your guess on the board, or reveal the answer by clicking the button below.</Box>
             </Box>
             
@@ -513,17 +549,27 @@ const PuzzlePlayerInfo = React.memo(() => {
 
       {/* Game ended message */}
       {gameEnded && (
-        <Box className={styles.playerPanel} style={{ 
+        <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: 'none'
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: lightMode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <Box style={{ textAlign: 'center' }}>
-            <Box style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+            <Box sx={{ 
+              fontSize: '14px', 
+              fontWeight: 'bold', 
+              marginBottom: '8px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }}>
               Game Ended
             </Box>
-            <Box style={{ fontSize: '12px', opacity: 0.8 }}>
+            <Box sx={{ 
+              fontSize: '12px', 
+              opacity: lightMode === 'dark' ? 0.8 : 0.7,
+              color: lightMode === 'dark' ? '#fff' : '#4B5563'
+            }}>
               Too few tiles left. There aren't any more matching puzzles for this game. Start a new one!
             </Box>
           </Box>
@@ -532,18 +578,28 @@ const PuzzlePlayerInfo = React.memo(() => {
 
       {/* Settings panel */}
       {showSettingsPanel && (
-        <Box className={styles.playerPanel} style={{ 
+        <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <Box style={{ marginBottom: '12px' }}>
-            <Box style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+            <Box sx={{ 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              marginBottom: '8px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }}>
               Puzzle Challenge Mode
             </Box>
-            <Box style={{ fontSize: '12px', marginBottom: '12px', opacity: 0.8 }}>
+            <Box sx={{ 
+              fontSize: '12px', 
+              marginBottom: '12px', 
+              opacity: lightMode === 'dark' ? 0.8 : 0.7,
+              color: lightMode === 'dark' ? '#fff' : '#4B5563'
+            }}>
               Choose when to pause for puzzle challenges
             </Box>
           </Box>
@@ -551,13 +607,17 @@ const PuzzlePlayerInfo = React.memo(() => {
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <Box 
               onClick={() => handlePuzzleModeChange('bingo')}
-              style={{
+              sx={{
                 padding: '8px 12px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: puzzleMode === 'bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: puzzleMode === 'bingo' 
+                  ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
                 fontSize: '14px',
-                position: 'relative'
+                position: 'relative',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
               <Box style={{
@@ -578,18 +638,22 @@ const PuzzlePlayerInfo = React.memo(() => {
               }}>
                 1
               </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>All Bingos</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when a bingo is found</Box>
+              <Box sx={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>All Bingos</Box>
+              <Box sx={{ fontSize: '12px', opacity: lightMode === 'dark' ? 0.8 : 0.7, marginLeft: '40px' }}>Pause when a bingo is found</Box>
             </Box>
             <Box 
               onClick={() => handlePuzzleModeChange('only-bingo')}
-              style={{
+              sx={{
                 padding: '8px 12px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: puzzleMode === 'only-bingo' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: puzzleMode === 'only-bingo' 
+                  ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
                 fontSize: '14px',
-                position: 'relative'
+                position: 'relative',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
               <Box style={{
@@ -610,18 +674,22 @@ const PuzzlePlayerInfo = React.memo(() => {
               }}>
                 2
               </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Only Bingo</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when there's exactly 1 bingo available</Box>
+              <Box sx={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Only Bingo</Box>
+              <Box sx={{ fontSize: '12px', opacity: lightMode === 'dark' ? 0.8 : 0.7, marginLeft: '40px' }}>Pause when there's exactly 1 bingo available</Box>
             </Box>
             <Box 
               onClick={() => handlePuzzleModeChange('significant-best')}
-              style={{
+              sx={{
                 padding: '8px 12px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: puzzleMode === 'significant-best' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: puzzleMode === 'significant-best' 
+                  ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
                 fontSize: '14px',
-                position: 'relative'
+                position: 'relative',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
               <Box style={{
@@ -642,18 +710,22 @@ const PuzzlePlayerInfo = React.memo(() => {
               }}>
                 3
               </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Move</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is 10+ equity better than next best move</Box>
+              <Box sx={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Move</Box>
+              <Box sx={{ fontSize: '12px', opacity: lightMode === 'dark' ? 0.8 : 0.7, marginLeft: '40px' }}>Pause when the best move is 10+ equity better than next best move</Box>
             </Box>
             <Box 
               onClick={() => handlePuzzleModeChange('non-bingo-significant')}
-              style={{
+              sx={{
                 padding: '8px 12px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: puzzleMode === 'non-bingo-significant' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: puzzleMode === 'non-bingo-significant' 
+                  ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
                 fontSize: '14px',
-                position: 'relative'
+                position: 'relative',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
               <Box style={{
@@ -674,8 +746,8 @@ const PuzzlePlayerInfo = React.memo(() => {
               }}>
                 4
               </Box>
-              <Box style={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Non-Bingo Move</Box>
-              <Box style={{ fontSize: '12px', opacity: 0.8, marginLeft: '40px' }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
+              <Box sx={{ fontWeight: 'bold', marginBottom: '2px', marginLeft: '40px' }}>Significant Non-Bingo Move</Box>
+              <Box sx={{ fontSize: '12px', opacity: lightMode === 'dark' ? 0.8 : 0.7, marginLeft: '40px' }}>Pause when the best move is a non-bingo that is 10+ equity better than next best move</Box>
             </Box>
           </Box>
         </Box>

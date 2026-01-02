@@ -3,6 +3,7 @@
 
 .poolBox{
 	padding: 10px;
+	margin-top: -30px;
 }
 
 .movePosition {
@@ -198,12 +199,12 @@
 .playerPanel{
   height: auto;
   padding: 10px 0px;
-  background-image: url("https://www.transparenttextures.com/patterns/bright-squares.png");
   border: 0;
   color: #fff;
   position: relative;
   display: flex;
   flex-direction: column;
+  border-radius: 8px;
 }
 
 .playerInfo {
@@ -1156,11 +1157,11 @@
 }
 
 .victoryCardPlayer {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png");
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .victoryCardBot {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%), url("https://www.transparenttextures.com/patterns/bright-squares.png");
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 .victoryIcon {

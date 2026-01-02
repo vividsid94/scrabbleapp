@@ -7,6 +7,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Cube } from '@phosphor-icons/react';
 import styles from '../Viewer.module.css';
 import { processParsedMove } from '../../../functions/boardFunctions';
+import { ThemeContext } from '../../../App';
 
 
 const LatestMove = ({ 
@@ -19,8 +20,15 @@ const LatestMove = ({
   currentMoveCoords = [],
   onTurnClick,
   parsedMoves = [],
-  gameNum = null
+  gameNum = null,
+  lightMode = 'dark'
 }) => {
+  const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
+  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
+  const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+  const scoreBgColor = lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)';
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -31,12 +39,13 @@ const LatestMove = ({
 
   // Helper function to get player icon
   const getPlayerIcon = (playerName) => {
-    if (!playerName) return <PersonIcon style={{ fontSize: 16 }} />;
+    const iconColor = lightMode === 'dark' ? '#fff' : '#1F2937';
+    if (!playerName) return <PersonIcon style={{ fontSize: 16, color: iconColor }} />;
     
     if (playerName === 'Theo' || playerName === 'Bot' || playerName.includes('Bot')) {
-      return <SmartToyIcon style={{ fontSize: 16 }} />;
+      return <SmartToyIcon style={{ fontSize: 16, color: iconColor }} />;
     } else {
-      return <PersonIcon style={{ fontSize: 16 }} />;
+      return <PersonIcon style={{ fontSize: 16, color: iconColor }} />;
     }
   };
 
@@ -89,18 +98,23 @@ const LatestMove = ({
     const turnNumber = index + 1;
 
     return (
-      <Box key={index} className={styles.moveHistoryItem}>
+      <Box key={index} className={styles.moveHistoryItem} sx={{ borderBottom: `1px solid ${borderColor}` }}>
         <Box 
           className={styles.moveHistoryTurnNumber}
           onClick={() => onTurnClick && onTurnClick(turnIndex)}
-          style={{ cursor: onTurnClick ? 'pointer' : 'default' }}
+          sx={{ 
+            cursor: onTurnClick ? 'pointer' : 'default',
+            color: textColor,
+            background: bgColor,
+            border: `1px solid ${borderColor}`
+          }}
         >
           {turnNumber}
         </Box>
-        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{processedWord || 'Pass'}</Box>
+        <Box className={styles.moveHistoryLocation} sx={{ color: mutedTextColor }}>{location || ''}</Box>
+        <Box className={styles.moveHistoryWord} sx={{ color: textColor }}>{processedWord || 'Pass'}</Box>
         <Box className={styles.moveHistoryDetails}>
-          <Box className={styles.moveHistoryScore}>{score || 0}</Box>
+          <Box className={styles.moveHistoryScore} sx={{ color: textColor, background: scoreBgColor, border: `1px solid ${borderColor}` }}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
         </Box>
       </Box>
@@ -110,8 +124,8 @@ const LatestMove = ({
   if (parsedMoves.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-          <Box className={styles.noMoveText}>No moves yet</Box>
+        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
+          <Box className={styles.noMoveText} sx={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
     );
@@ -124,8 +138,8 @@ const LatestMove = ({
   if (!currentMove) {
     return (
       <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`}>
-          <Box className={styles.noMoveText}>No moves yet</Box>
+        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
+          <Box className={styles.noMoveText} sx={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
     );
@@ -140,24 +154,29 @@ const LatestMove = ({
   return (
     <Box className={styles.latestMovePanel}>
       {/* Remove Cube icon from here, just keep the rest of the content */}
-      <Box className={`${styles.latestMoveContent} ${animationClass}`}>
+      <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
         <Box 
           className={styles.moveHistoryTurnNumber}
           onClick={() => onTurnClick && onTurnClick(currentMoveIndex)}
-          style={{ cursor: onTurnClick ? 'pointer' : 'default' }}
+          sx={{ 
+            cursor: onTurnClick ? 'pointer' : 'default',
+            color: textColor,
+            background: bgColor,
+            border: `1px solid ${borderColor}`
+          }}
         >
           {turnNumber}
         </Box>
-        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{processedWord || 'Pass'}</Box>
+        <Box className={styles.moveHistoryLocation} sx={{ color: mutedTextColor }}>{location || ''}</Box>
+        <Box className={styles.moveHistoryWord} sx={{ color: textColor }}>{processedWord || 'Pass'}</Box>
         <Box className={styles.moveHistoryDetails}>
-          <Box className={styles.moveHistoryScore}>{score || 0}</Box>
+          <Box className={styles.moveHistoryScore} sx={{ color: textColor, background: scoreBgColor, border: `1px solid ${borderColor}` }}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
         </Box>
         <Box className={styles.moveHistoryActions}>
           {parsedMoves.length > 1 && (
-            <Box className={styles.expandIcon} onClick={handleExpandClick}>
-              {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
+            <Box className={styles.expandIcon} onClick={handleExpandClick} sx={{ color: secondaryTextColor }}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} /> : <ExpandMoreIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />}
             </Box>
           )}
         </Box>

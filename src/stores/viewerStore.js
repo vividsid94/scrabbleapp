@@ -9,7 +9,7 @@ export const useViewerStore = create((set, get) => {
   // Initial state
   const initialState = {
     // Game state
-    gameNum: 37033,
+    gameNum: 28179,
     boardClickCount: 0,
   
     currentMoveCoords: [],

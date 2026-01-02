@@ -120,13 +120,28 @@ export default function Board({
 
     const getHeaderStyle = () => ({
         backgroundColor: lightMode === 'dark' ? 'rgb(12, 12, 59)' : '#b8b6a9',
-        color: lightMode === 'dark' ? '#fff' : '#000'
+        color: lightMode === 'dark' ? '#fff' : '#1F2937'
+    });
+
+    const getFooterStyle = () => ({
+        backgroundColor: lightMode === 'dark' ? 'rgb(108, 4, 4)' : '#c8a882',
+        color: lightMode === 'dark' ? '#fff' : '#1F2937'
     });
 
 
 
+    const getBoardContainerStyle = () => ({
+        backgroundColor: 'transparent',
+        borderRadius: lightMode === 'light' ? '12px' : '0',
+        boxShadow: lightMode === 'light' ? '0 2px 8px rgba(0, 0, 0, 0.08)' : 'none',
+        border: lightMode === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : 'none'
+    });
+
     return (
-        <Box className={`${styles.BoardContainer} ${styles[boardTheme]}`}>
+        <Box 
+            className={`${styles.BoardContainer} ${styles[boardTheme]}`}
+            style={getBoardContainerStyle()}
+        >
 
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`} style={getHeaderStyle()}>
                 <Box className={styles.headerContent}>
@@ -248,7 +263,15 @@ export default function Board({
                             <tr> 
                                 <th className={`${styles.sideNumbering} ${styles.NWcell}`}/>
                                 {Object.keys(letterLookup).map(letter => (
-                                    <th className={styles.sideNumbering} key={letter}>{letter.toLowerCase()}</th>
+                                    <th 
+                                        className={styles.sideNumbering} 
+                                        key={letter}
+                                        style={{
+                                            color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                                        }}
+                                    >
+                                        {letter.toLowerCase()}
+                                    </th>
                                 ))}
                                 <th className={`${styles.sideNumbering} ${styles.NEcell}`}/>
                             </tr>
@@ -256,7 +279,14 @@ export default function Board({
                         <tbody>
                             {board.map((row, rowIndex) =>
                                 <tr key={rowIndex}>
-                                    <td className={styles.sideNumbering}>{letterLookup[Object.keys(letterLookup)[rowIndex]]}</td>
+                                    <td 
+                                        className={styles.sideNumbering}
+                                        style={{
+                                            color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                                        }}
+                                    >
+                                        {letterLookup[Object.keys(letterLookup)[rowIndex]]}
+                                    </td>
                                     {row.map((col, colIndex) => (
                                         <td 
                                             key={colIndex}
@@ -302,7 +332,15 @@ export default function Board({
             )}
 
             <Modal open={open} onClose={handleClose}>
-                <Box className={styles.modalContainer}>
+                <Box 
+                    className={styles.modalContainer}
+                    style={{
+                        background: lightMode === 'dark' 
+                            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))'
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95))',
+                        color: lightMode === 'dark' ? '#000' : '#1F2937'
+                    }}
+                >
                     {modalContent === "slip" && <SlipContent />}
                 </Box>
             </Modal>  

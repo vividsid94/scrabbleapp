@@ -32,14 +32,15 @@ export const createIconList = (
   setShowUnlockText,
   setMode,
   wooglesMode,
-  randomizeWooglesGame
+  randomizeWooglesGame,
+  lightMode = 'dark'
 ) => [
   {
     icon: SkipBack,
     toolTip: "Beginning of game",
     onClick: () => beginningOfGame(),
     size: 20,
-    color: '#fff'
+    color: lightMode === 'dark' ? '#fff' : '#1F2937'
   },
   {
     icon: CaretLeft,
@@ -52,7 +53,7 @@ export const createIconList = (
       }
     },
     size: 20,
-    color: '#fff'
+    color: lightMode === 'dark' ? '#fff' : '#1F2937'
   },
   {
     icon: CaretRight,
@@ -65,7 +66,7 @@ export const createIconList = (
       }
     },
     size: 20,
-    color: '#fff'
+    color: lightMode === 'dark' ? '#fff' : '#1F2937'
   },
 
 
@@ -93,7 +94,8 @@ export const createGroupedIcons = (
   currentWooglesGame,
   handleOpenPlayersModal,
   handleRevealElo,
-  handleOpenSubmittedGamesModal
+  handleOpenSubmittedGamesModal,
+  lightMode = 'dark'
 ) => [
   {
     icon1: {
@@ -101,21 +103,21 @@ export const createGroupedIcons = (
       toolTip: "Games History",
       onClick: () => handleGamesHistoryOpen(setModalContent, setOpen),
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
     icon2: {
       icon: Clock,
       toolTip: "Recent Games",
       onClick: () => handleRecentGamesOpen(setModalContent, setOpen),
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
     icon3: {
       icon: Gear,
       toolTip: "Settings",
       onClick: () => handleDictionaryTilesOpen(setModalContent, setOpen),
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
 
     icon5: {
@@ -123,7 +125,7 @@ export const createGroupedIcons = (
       toolTip: "Browse Players",
       onClick: () => handleOpenPlayersModal(),
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
     icon6: {
       icon: Books,
@@ -131,7 +133,7 @@ export const createGroupedIcons = (
       onClick: () => handleOpenSubmittedGamesModal(),
       condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     }
   },
   {
@@ -141,7 +143,7 @@ export const createGroupedIcons = (
       onClick: () => revealPlayers(name1, name2, setRevealedName1, setRevealedName2),
       condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
     icon2: {
       icon: Typography,
@@ -150,7 +152,7 @@ export const createGroupedIcons = (
       text: 'Elo',
       condition: { display: mode !== "VIEWER" ? 'flex' : 'none' },
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
     icon3: {
       icon: ArrowSquareOut,
@@ -163,7 +165,7 @@ export const createGroupedIcons = (
         }
       },
       size: 20,
-      color: '#fff'
+      color: lightMode === 'dark' ? '#fff' : '#1F2937'
     },
 
   }
