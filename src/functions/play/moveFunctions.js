@@ -662,7 +662,7 @@ export const handlePlayTopMove = async () => {
       
       // Check if game should end
       if (stateUpdates.newRack.length === 0 && stateUpdates.newPool.length === 0) {
-        handleGameEnd({
+        await handleGameEnd({
           winnerRack: stateUpdates.newRack,
           winnerName: currentPlayer === 1 ? player1Name : player2Name,
           loserRack: currentPlayer === 1 ? player2Rack : player1Rack,

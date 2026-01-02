@@ -450,7 +450,7 @@ export const useGameStore = create((set, get) => {
     },
     
     // Victory celebration actions
-    handleVictory: (winnerRack, winnerName, loserRack, loserPoints) => {
+    handleVictory: async (winnerRack, winnerName, loserRack, loserPoints) => {
       const { 
         setGameEnded, 
         setWinner, 
@@ -460,7 +460,8 @@ export const useGameStore = create((set, get) => {
         setShowVictoryOverlay,
         player1Name,
         player1points,
-        player2points
+        player2points,
+        isBotMode
       } = get();
       
       setGameEnded(true);
@@ -473,6 +474,24 @@ export const useGameStore = create((set, get) => {
       // Set final scores
       setFinalPlayer1Score(player1points);
       setFinalPlayer2Score(player2points);
+      
+      // Update user stats if in bot mode and user is logged in
+      if (isBotMode) {
+        try {
+          // Dynamically import to avoid circular dependencies
+          const { updateUserStats } = await import('../utils/stats');
+          const { supabase } = await import('../utils/supabase');
+          
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const won = winner === 'player';
+            await updateUserStats(user.id, won, player1points);
+          }
+        } catch (error) {
+          console.error('Error updating user stats:', error);
+          // Don't block victory celebration if stats update fails
+        }
+      }
       
       // Trigger victory celebration
       setShowConfetti(true);

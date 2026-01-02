@@ -12,9 +12,11 @@ export default function CellType(type, lightenedCell){
             hasBorder: false
         };
     } else {
+        // For letters (tiles), use the default board color
         result = {
             value: type,
-            hasBorder: lightenedCell
+            hasBorder: lightenedCell,
+            color: cellColors[0].color // Use the default board color (var(--board-color, white))
         };
     }
     return result;

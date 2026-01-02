@@ -432,7 +432,7 @@ export const makeBotMove = async (botMoveSound) => {
         player1Score: player1points,
         player1Rack: player1Rack
       });
-      handleGameEnd({
+      await handleGameEnd({
         winnerRack: newRack,
         winnerName: player2Name,
         loserRack: player1Rack || [],
@@ -600,7 +600,7 @@ export const makeBotMove = async (botMoveSound) => {
         // Check if game should end
         if (newRack.length === 0 && newPool.length === 0) {
           console.log('🎯 GAME END: Bot played all tiles and pool is empty!');
-          handleGameEnd({
+          await handleGameEnd({
             winnerRack: newRack,
             winnerName: player2Name,
             loserRack: player1Rack || [],

@@ -22,7 +22,7 @@ import { useGameStore } from '../../stores/gameStore';
  * @param {Function} params.setAutoPlayBest - Function to update auto-play state
  * @returns {void}
  */
-export const handleGameEnd = ({
+export const handleGameEnd = async ({
   winnerRack,
   winnerName,
   loserRack,
@@ -59,7 +59,12 @@ export const handleGameEnd = ({
     setFinalPlayer2Score,
     setShowConfetti,
     setShowVictoryOverlay,
-    setTimerActive
+    setTimerActive,
+    boardCoords,
+    moveHistory,
+    gameTime,
+    player1Time,
+    player2Time
   } = useGameStore.getState();
 
   // Calculate sum of loser's remaining tiles
@@ -104,6 +109,75 @@ export const handleGameEnd = ({
   // Set final scores
   setFinalPlayer1Score(finalPlayer1Score);
   setFinalPlayer2Score(finalPlayer2Score);
+  
+  // Update user stats if user is logged in (only track player 1 stats for now)
+  // Only update if playing against a bot (isBotMode)
+  const { isBotMode } = useGameStore.getState();
+  console.log('📊 Stats update check:', { isBotMode, isPlayerWinner, finalPlayer1Score, finalPlayer2Score });
+  
+  if (isBotMode) {
+    try {
+      console.log('📊 Attempting to update stats and save game...');
+      // Dynamically import to avoid circular dependencies
+      const { updateUserStats } = await import('../../utils/stats');
+      const { saveGame } = await import('../../utils/games');
+      const { supabase } = await import('../../utils/supabase');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('📊 User check:', { user: !!user, userId: user?.id, error: userError });
+      
+      if (user) {
+        // User is always player 1 in bot mode
+        const won = isPlayerWinner;
+        
+        // Update stats
+        console.log('📊 Updating stats:', { userId: user.id, won, score: finalPlayer1Score });
+        const statsResult = await updateUserStats(user.id, won, finalPlayer1Score);
+        console.log('✅ Stats update result:', statsResult);
+        
+        if (statsResult.error) {
+          console.error('❌ Stats update error:', statsResult.error);
+        } else {
+          console.log('✅ Stats successfully updated:', statsResult.data);
+        }
+        
+        // Save game to database
+        // Calculate game duration: total time minus remaining time
+        const totalTimeSeconds = gameTime * 60;
+        const remainingTimeSeconds = Math.min(player1Time, player2Time);
+        const gameDurationSeconds = Math.max(0, totalTimeSeconds - remainingTimeSeconds);
+        
+        console.log('💾 Saving game to database...');
+        const gameResult = await saveGame({
+          userId: user.id,
+          gameType: 'bot',
+          opponentName: player2Name,
+          opponentType: 'bot',
+          playerScore: finalPlayer1Score,
+          opponentScore: finalPlayer2Score,
+          won: won,
+          gameDurationSeconds: gameDurationSeconds,
+          finalBoardState: boardCoords,
+          moveHistory: moveHistory || [],
+          playerRackFinal: (player1Rack || []).join(''),
+          opponentRackFinal: (player2Rack || []).join(''),
+        });
+        
+        if (gameResult.error) {
+          console.error('❌ Game save error:', gameResult.error);
+        } else {
+          console.log('✅ Game successfully saved:', gameResult.data);
+        }
+      } else {
+        console.log('⚠️ No user logged in, skipping stats update and game save');
+      }
+    } catch (error) {
+      console.error('❌ Exception updating stats/saving game:', error);
+      // Don't block victory celebration if stats update fails
+    }
+  } else {
+    console.log('⚠️ Not in bot mode, skipping stats update and game save');
+  }
   
   // Trigger victory celebration
   setShowConfetti(true);

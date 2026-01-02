@@ -181,7 +181,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
 
   // Check if game should end
   if (newRack.length === 0 && pool.length === 0) {
-    handleGameEnd({
+    await handleGameEnd({
       winnerRack: newRack,
       winnerName: currentPlayer === 1 ? player1Name : player2Name,
       loserRack: currentPlayer === 1 ? player2Rack : player1Rack,

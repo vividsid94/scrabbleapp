@@ -202,99 +202,196 @@ export default function Home(){
               boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)'
             }}
           >
-            Welcome! Meet Theo, your word game fox! We're a front-end focused project that's getting a huge upgrade! Check the{" "}
-            <Link to="/changelog" style={{
+            Welcome! Meet Theo, your word game fox. We're in beta!{" "}
+            <Link to="/getting-started" style={{
               color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
               textDecoration: 'none', 
               fontWeight: 'bold'
-            }}>changelog</Link>
-            {" "}for all the latest updates!
-            <br /><br />
-            <span style={{ fontSize: '0.75em', opacity: lightMode === 'dark' ? 0.6 : 0.7, color: lightMode === 'dark' ? undefined : '#4B5563' }}>
-              Our official release will be after 2025 Nationals, but more beta features are being added to the homepage! Try our new Puzzle and Play modes!
-            </span>
-            <Rocket 
-              style={{ 
-                color: '#F59E0B', 
-                fontSize: '20px', 
-                marginLeft: '8px',
-                verticalAlign: 'middle'
-              }} 
-              weight="fill" 
-            />
+            }}>Get started</Link>
+            {" "}to explore all our features!
           </Box>
           
-          <Box className={styles.homeButtonContainer}>
-            <Link to="/play">
-              <button 
-                className={styles.homeButtonPrimary}
-                style={{
-                  boxShadow: lightMode === 'light' ? '6px 0px 0px #B45309, 0 2px 8px rgba(217, 119, 6, 0.2)' : '6px 0px 0px #B45309'
-                }}
-              >
-                Play
-              </button>
-            </Link>
-            <Link to="/puzzle">
-              <button 
-                className={styles.homeButtonPrimary}
-                style={{
-                  boxShadow: lightMode === 'light' ? '6px 0px 0px #B45309, 0 2px 8px rgba(217, 119, 6, 0.2)' : '6px 0px 0px #B45309'
-                }}
-              >
-                Puzzle
-              </button>
-            </Link>
-            <Link to="/viewer">
-              <button 
-                className={styles.homeButton}
-                style={{
-                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
-                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
-                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                }}
-              >
-                Game Viewer
-              </button>
-            </Link>
-            <Link to="/3dviewer">
-              <button 
-                className={styles.threeDButton}
-                style={{
-                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
-                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
-                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                }}
-              >
-                3D Viewer
-              </button>
-            </Link>
-            <Link to="/submit-game">
-              <button 
-                className={styles.submitGameButton}
-                style={{
-                  borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
-                  color: lightMode === 'dark' ? '#D97706' : '#D97706',
-                  boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                }}
-              >
-                Submit Game
-              </button>
-            </Link>
-            <button 
-              className={styles.homeButton} 
-              onClick={() => setSearchPanelOpen(true)}
-              type="button"
-              aria-expanded={searchPanelOpen}
-              aria-controls="resultsPanel"
-              style={{
-                borderColor: lightMode === 'dark' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(217, 119, 6, 0.5)',
-                color: lightMode === 'dark' ? '#D97706' : '#D97706',
-                boxShadow: lightMode === 'light' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+          <Box 
+            className={styles.homeButtonContainer}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
+              gap: '12px',
+              maxWidth: '450px',
+              margin: '0 auto',
+              width: '100%',
+              padding: '0 16px',
+              justifyItems: 'center'
+            }}
+          >
+            <Box sx={{ gridColumn: { xs: '1', sm: '1' }, width: { xs: '100%', sm: '120px' } }}>
+              <Link to="/play" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                <button 
+                  style={{
+                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '7px 20px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 15,
+                    boxShadow: '6px 0px 0px #B45309',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'block',
+                    width: '100%',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Play
+                </button>
+              </Link>
+            </Box>
+            <Box sx={{ gridColumn: { xs: '2', sm: '2' }, width: { xs: '100%', sm: '120px' } }}>
+              <Link to="/puzzle" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                <button 
+                  style={{
+                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '7px 20px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 15,
+                    boxShadow: '6px 0px 0px #B45309',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'block',
+                    width: '100%',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Puzzle
+                </button>
+              </Link>
+            </Box>
+            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '3' }, width: { xs: '100%', sm: '120px' } }}>
+              <Link to="/viewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                <button 
+                  style={{
+                    background: 'transparent',
+                    color: '#D97706',
+                    border: '2px solid #D97706',
+                    borderRadius: 0,
+                    padding: '5px 0px',
+                    fontWeight: 'normal',
+                    letterSpacing: 1,
+                    fontSize: 15,
+                    boxShadow: 'none',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'block',
+                    width: '100%',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Viewer
+                </button>
+              </Link>
+            </Box>
+            <Box 
+              sx={{ 
+                gridColumn: { xs: '1 / 3', sm: '1 / 4' },
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '12px',
+                width: '100%'
               }}
             >
-              Results
-            </button>
+              <Box sx={{ width: { xs: '100%', sm: '120px' } }}>
+                <Link to="/3dviewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                  <button 
+                    style={{
+                      background: 'transparent',
+                      color: '#D97706',
+                      border: '2px solid #D97706',
+                      borderRadius: 0,
+                      padding: '5px 0px',
+                      fontWeight: 'normal',
+                      letterSpacing: 1,
+                      fontSize: 15,
+                      boxShadow: 'none',
+                      outline: 'transparent',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      display: 'block',
+                      width: '100%',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      opacity: 0.95
+                    }}
+                  >
+                    3D Viewer
+                  </button>
+                </Link>
+              </Box>
+              <Box sx={{ width: { xs: '100%', sm: '120px' } }}>
+                <Link to="/submit-game" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                  <button 
+                    style={{
+                      background: 'transparent',
+                      color: '#D97706',
+                      border: '2px solid #D97706',
+                      borderRadius: 0,
+                      padding: '5px 0px',
+                      fontWeight: 'normal',
+                      letterSpacing: 1,
+                      fontSize: 15,
+                      boxShadow: 'none',
+                      outline: 'transparent',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      display: 'block',
+                      width: '100%',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      opacity: 0.95
+                    }}
+                  >
+                    Submit
+                  </button>
+                </Link>
+              </Box>
+            </Box>
+            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '2' }, width: { xs: '100%', sm: '120px' } }}>
+              <button 
+                onClick={() => setSearchPanelOpen(true)}
+                type="button"
+                aria-expanded={searchPanelOpen}
+                aria-controls="resultsPanel"
+                style={{
+                  background: 'transparent',
+                  color: '#D97706',
+                  border: '2px solid #D97706',
+                  borderRadius: 0,
+                  padding: '5px 0px',
+                  fontWeight: 'normal',
+                  letterSpacing: 1,
+                  fontSize: 15,
+                  boxShadow: 'none',
+                  outline: 'transparent',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'block',
+                  width: '100%',
+                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                  opacity: 0.95
+                }}
+              >
+                Results
+              </button>
+            </Box>
             {/* <Link to="/snakes">
               <button className={styles.homeButton} style={{ 
                 background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',

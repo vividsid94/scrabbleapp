@@ -123,7 +123,8 @@ export default function Viewer({ onChange }){
     chooseGame: chooseGameStore,
     toggleWooglesMode,
     randomizeWooglesGame,
-    loadWooglesGameData
+    loadWooglesGameData,
+    loadSavedGame
   } = useViewerStore();
 
 
@@ -192,7 +193,17 @@ export default function Viewer({ onChange }){
 
   // Load initial game data
   useEffect(() => {
-    loadGameData();
+    // Check if we're loading a saved game from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const savedGameId = urlParams.get('saved');
+    
+    if (savedGameId) {
+      // Load saved game
+      loadSavedGame(savedGameId);
+    } else {
+      // Load default game
+      loadGameData();
+    }
   }, []); // Only run once on mount
 
   // Create board with useMemo like Play.js

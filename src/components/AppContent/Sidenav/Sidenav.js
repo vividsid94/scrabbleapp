@@ -13,6 +13,9 @@ import Modal from '@mui/material/Modal';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
+import { useAuth } from '../../../contexts/AuthContext';
+import AuthModal from '../../Auth/AuthModal';
+import { Link as RouterLink } from 'react-router-dom';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -29,7 +32,9 @@ import {
   Sun,
   Moon,
   Cube,
-  PuzzlePiece
+  PuzzlePiece,
+  User,
+  SignOut
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -39,12 +44,15 @@ import styles from './Sidenav.module.css';
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
+  const { user, profile, signOut } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [showColorPicker, setShowColorPicker] = React.useState(false);
   const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
   const [showDecorations, setShowDecorations] = React.useState(false);
   const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [authMode, setAuthMode] = React.useState('signin');
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
@@ -679,6 +687,78 @@ export default function MiniDrawer() {
             </ListItem>
           </a>
         </List>
+        
+        {/* User Menu */}
+        <List className={styles.btnContainer}>
+          {user ? (
+            <>
+              <RouterLink to="/profile" style={{ textDecoration: 'none' }}>
+                <ListItem className={styles.listItem} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Tooltip title={profile?.display_name || profile?.username || 'Profile'} placement="right">
+                      <User 
+                        className={styles.homeLogo} 
+                        style={{ 
+                          color: location.pathname === '/profile' ? '#D97706' : getTextColor(),
+                          fontSize: location.pathname === '/profile' ? '24px' : '20px'
+                        }} 
+                        weight={location.pathname === '/profile' ? "fill" : (hoveredIcon === 'user' ? "fill" : "regular")}
+                        onMouseEnter={() => setHoveredIcon('user')}
+                        onMouseLeave={() => setHoveredIcon(null)}
+                      />
+                    </Tooltip>
+                  </ListItemIcon>
+                </ListItem>
+              </RouterLink>
+              <ListItem 
+                className={styles.listItem} 
+                onClick={async () => {
+                  await signOut();
+                }}
+                sx={{ ...listItemStyle, cursor: 'pointer' }}
+              >
+                <ListItemIcon sx={iconStyle}>
+                  <Tooltip title="Sign Out" placement="right">
+                    <SignOut 
+                      className={styles.homeLogo} 
+                      style={{ 
+                        color: getTextColor(),
+                        fontSize: '20px'
+                      }} 
+                      weight={hoveredIcon === 'signout' ? "fill" : "regular"}
+                      onMouseEnter={() => setHoveredIcon('signout')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    />
+                  </Tooltip>
+                </ListItemIcon>
+              </ListItem>
+            </>
+          ) : (
+            <ListItem 
+              className={styles.listItem} 
+              onClick={() => {
+                setAuthMode('signin');
+                setShowAuthModal(true);
+              }}
+              sx={{ ...listItemStyle, cursor: 'pointer' }}
+            >
+              <ListItemIcon sx={iconStyle}>
+                <Tooltip title="Sign In" placement="right">
+                  <User 
+                    className={styles.homeLogo} 
+                    style={{ 
+                      color: getTextColor(),
+                      fontSize: '20px'
+                    }} 
+                    weight={hoveredIcon === 'signin' ? "fill" : "regular"}
+                    onMouseEnter={() => setHoveredIcon('signin')}
+                    onMouseLeave={() => setHoveredIcon(null)}
+                  />
+                </Tooltip>
+              </ListItemIcon>
+            </ListItem>
+          )}
+        </List>
       </Drawer>
       
       {/* Mobile Color Picker Modal */}
@@ -899,6 +979,12 @@ export default function MiniDrawer() {
           </Box>
         </Box>
       </Modal>
+
+      <AuthModal 
+        open={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        initialMode={authMode}
+      />
       
     </Box>
   );

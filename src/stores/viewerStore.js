@@ -604,6 +604,143 @@ export const useViewerStore = create((set, get) => {
       
       // Load the new game data after setting the game number
       get().loadGameData();
+    },
+    
+    loadSavedGame: async (gameId) => {
+      try {
+        const { getSavedGame } = await import('../utils/games');
+        const { data: game, error } = await getSavedGame(gameId);
+        
+        if (error || !game) {
+          console.error('Error loading saved game:', error);
+          get().randomizeGame();
+          return;
+        }
+        
+        // Reset board to initial state
+        let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+        document.title = 'Saved Game Viewer';
+        
+        set({
+          boardCoords: parsedOrigBoardCoords,
+          player1points: 0,
+          player2points: 0,
+          pointsScored: 0,
+          revealedName1: game.opponent_name || "Player 1",
+          revealedName2: "You",
+          revealedElo: "",
+          revealedElo2: "",
+          name1: game.opponent_name || "Opponent",
+          name2: "You",
+          gameDictionary: "TWL", // Default, could be stored in game data later
+          gameNum: `saved-${gameId}`,
+          wooglesMode: false,
+          open: true,
+          loadingMsg: "Loading saved game...",
+          modalContent: "loading"
+        });
+        
+        // Convert moveHistory to parsedMoves format
+        // The moveHistory has: boardDiff, player, score, rack, total, word
+        // parsedMoves format: { player, rack, location, word, score, total }
+        const parsedMoves = [];
+        
+        // Determine which player is player 1 (the user)
+        const userIsPlayer1 = true; // In bot mode, user is always player 1
+        const player1Name = userIsPlayer1 ? "You" : game.opponent_name;
+        const player2Name = userIsPlayer1 ? game.opponent_name : "You";
+        
+        for (let i = 0; i < game.move_history.length; i++) {
+          const move = game.move_history[i];
+          
+          // Determine location from boardDiff
+          let location = "--"; // Default to pass/exchange
+          if (move.boardDiff && move.boardDiff.length > 0 && move.word && move.word !== "Pass" && move.word !== "Exchange") {
+            // Get the first tile position (starting position)
+            const firstTile = move.boardDiff[0];
+            if (firstTile.row !== undefined && firstTile.col !== undefined) {
+              // Convert row/col to location format (e.g., H7, A1)
+              // Row is 0-14, Col is 0-14
+              // Location format: row letter (A-O) + col number (1-15)
+              const rowLetter = String.fromCharCode(65 + firstTile.row); // A=65, so row 0=A, row 7=H, row 14=O
+              const colNumber = firstTile.col + 1; // col 0 -> 1, col 14 -> 15
+              location = `${rowLetter}${colNumber}`;
+            }
+          }
+          
+          // Determine which player made this move
+          // In saved games, player name might be "You", player1Name, or player2Name
+          let movePlayer = move.player;
+          if (!movePlayer || movePlayer === "Player 1") {
+            movePlayer = player1Name;
+          } else if (movePlayer === "Player 2") {
+            movePlayer = player2Name;
+          }
+          
+          // Create parsed move format matching parseGCG output
+          // Store boardDiff for saved games so we can use it directly
+          const parsedMove = {
+            player: movePlayer,
+            rack: move.rack || "",
+            location: location,
+            word: move.word || (location === "--" ? undefined : ""),
+            score: move.score || 0,
+            total: move.total || 0,
+            boardDiff: move.boardDiff || null, // Store boardDiff for saved games
+            isSavedGame: true // Flag to indicate this is from a saved game
+          };
+          
+          parsedMoves.push(parsedMove);
+        }
+        
+        // Build board state by applying all moves sequentially
+        // This ensures the board state matches what it should be after all moves
+        let currentBoard = parsedOrigBoardCoords.map(row => row.map(cell => cell));
+        let currentPlayer1Points = 0;
+        let currentPlayer2Points = 0;
+        
+        // Apply each move sequentially to build up the board
+        for (let i = 0; i < parsedMoves.length; i++) {
+          const move = parsedMoves[i];
+          
+          // Update board using boardDiff
+          if (move.boardDiff && move.boardDiff.length > 0) {
+            move.boardDiff.forEach(({ row, col, value }) => {
+              if (row !== undefined && col !== undefined && row >= 0 && row < 15 && col >= 0 && col < 15) {
+                currentBoard[row][col] = value;
+              }
+            });
+          }
+          
+          // Update scores based on which player made the move
+          if (move.player === player1Name) {
+            currentPlayer1Points = move.total || currentPlayer1Points;
+          } else if (move.player === player2Name) {
+            currentPlayer2Points = move.total || currentPlayer2Points;
+          }
+        }
+        
+        // Set final state - start at the last move with the correct board state
+        set({
+          parsedMoves: parsedMoves,
+          origPlayerRaw: parsedMoves.length > 0 ? parsedMoves[0].player : player1Name,
+          boardCoords: currentBoard, // Board with all moves applied
+          player1points: userIsPlayer1 ? currentPlayer1Points : currentPlayer2Points,
+          player2points: userIsPlayer1 ? currentPlayer2Points : currentPlayer1Points,
+          notes: [],
+          currentMoveRef: { current: parsedMoves.length - 1 }, // At final move
+          gamesViewed: [...get().gamesViewed, `saved-${gameId}`]
+        });
+        
+        console.log("Saved game loaded.");
+        setTimeout(() => {
+          set({ open: false });
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error loading saved game:', error);
+        get().randomizeGame();
+      }
     }
   };
 }); 

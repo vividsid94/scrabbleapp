@@ -11,6 +11,7 @@ import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
 import Changelog from "./containers/Changelog/Changelog";
+import GettingStarted from "./containers/GettingStarted/GettingStarted";
 import Study from "./containers/Study/Study";
 import Boggle from "./containers/Boggle/Boggle";
 import Puzzle from "./containers/Puzzle/Puzzle";
@@ -30,7 +31,9 @@ import RealEscapeRoom from "./containers/EscapeRoom3D/RealEscapeRoom";
 import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
 import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
+import Profile from "./containers/Profile/Profile";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
+import { AuthProvider } from "./contexts/AuthContext";
 
 export const ThemeContext = React.createContext();
 
@@ -77,6 +80,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/playground" element={<Play/>}/>
           <Route path="/play" element={<Play/>}/>
           <Route path="/changelog" element={<Changelog/>}/>
+          <Route path="/getting-started" element={<GettingStarted/>}/>
           <Route path="/study" element={<Study/>}/>
           <Route path="/boggle" element={<Boggle/>}/>
           <Route path="/puzzle" element={<Puzzle/>}/>
@@ -96,6 +100,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/player/:playerId" element={<PlayerProfile />} />
           <Route path="/tournament/:tournamentId" element={<Tournament />} />
           <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </header>
       {!isWidgetRoute && <Footer></Footer>}
@@ -128,14 +133,16 @@ function App() {
 
   return (
     <ThemeContext.Provider value={{ lightMode, setLightMode }}>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AppContent 
-          appState={appState} 
-          setAppState={setAppState} 
-          lightMode={lightMode} 
-          setLightMode={setLightMode} 
-        />
-      </Router>
+      <AuthProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AppContent 
+            appState={appState} 
+            setAppState={setAppState} 
+            lightMode={lightMode} 
+            setLightMode={setLightMode} 
+          />
+        </Router>
+      </AuthProvider>
     </ThemeContext.Provider>
   )
 }

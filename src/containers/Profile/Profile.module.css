@@ -1,0 +1,95 @@
+.container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.profileName {
+  font-weight: 700;
+  margin-bottom: 0;
+  font-size: 20px;
+}
+
+.profileUsername {
+  font-size: 14px;
+}
+
+.statsGrid {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.statCard {
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statCard svg {
+  margin-bottom: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .statsGrid {
+    gap: 10px;
+  }
+  
+  .statCard {
+    padding: 10px 12px;
+    min-width: 90px;
+  }
+}
+
