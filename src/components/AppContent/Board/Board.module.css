@@ -55,6 +55,7 @@
 .sideNumbering{
   font-size: 7px;
   color: white;
+  padding-left: 4px;
 }
 
 .tableContainer {
