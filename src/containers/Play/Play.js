@@ -8,7 +8,7 @@ import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Tooltip, Slider } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Slider, Collapse } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
@@ -228,6 +228,7 @@ export default function Play() {
   const mascotRef = useRef();
   const [botSelectOpen, setBotSelectOpen] = useState(false);
   const [showSkillBots, setShowSkillBots] = useState(false);
+  const [poolExpanded, setPoolExpanded] = useState(false);
   const skillBots = [
     { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={32} color="#60A5FA" /> },
     { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={32} color="#8B7355" /> },
@@ -683,14 +684,66 @@ export default function Play() {
           )}
 
           <Box className={styles.playerPanel}>
-            <Box className={styles.poolBox}>
-              <PlayPool 
-                pool={pool} 
-                player1Rack={player1Rack} 
-                player2Rack={player2Rack}
-                gameStarted={gameStarted}
-                lightMode={lightMode}
-              />  
+            {/* Collapsible Pool Section */}
+            <Box 
+              className={styles.poolBox} 
+              sx={{
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                padding: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
+                borderRadius: '4px'
+              }}
+              onClick={() => setPoolExpanded(!poolExpanded)}
+            >
+              {/* Pool Header */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: poolExpanded ? '8px' : '0'
+              }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}>
+                  {gameStarted ? (
+                    <span>
+                      {pool.length + player2Rack.length}
+                    </span>
+                  ) : (
+                    <span>Pool</span>
+                  )}
+                </Box>
+                {poolExpanded ? (
+                  <CaretUp size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
+                ) : (
+                  <CaretDown size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
+                )}
+              </Box>
+              
+              {/* Pool Content */}
+              {poolExpanded && (
+                <Collapse in={poolExpanded}>
+                  <Box sx={{ 
+                    borderTop: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.12)',
+                    paddingTop: '8px'
+                  }}>
+                    <PlayPool 
+                      pool={pool} 
+                      player1Rack={player1Rack} 
+                      player2Rack={player2Rack}
+                      gameStarted={gameStarted}
+                      lightMode={lightMode}
+                    />  
+                  </Box>
+                </Collapse>
+              )}
             </Box>
           </Box>
         </Box>

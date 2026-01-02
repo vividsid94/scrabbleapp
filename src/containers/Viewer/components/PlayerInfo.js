@@ -10,14 +10,14 @@ const PlayerInfoSection = ({ name, points, rack, color, tiles, isCurrentPlayer, 
     padding: '10px 0px',
     background: lightMode === 'dark' 
       ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-      : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)',
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
     border: lightMode === 'dark' 
       ? '1px solid rgba(255, 255, 255, 0.1)' 
-      : '1px solid rgba(0, 0, 0, 0.08)',
+      : '1px solid rgba(0, 0, 0, 0.12)',
     borderRadius: '8px',
     boxShadow: lightMode === 'dark'
       ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-      : '0 2px 8px rgba(0, 0, 0, 0.08)',
+      : '0 2px 8px rgba(0, 0, 0, 0.1)',
     backgroundImage: 'none'
   }}>
     <Box className={styles.playerInfo}>

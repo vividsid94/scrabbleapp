@@ -93,6 +93,12 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     setIsExpanded(!isExpanded);
   };
 
+  const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
+  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
+  const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
   const renderMoveItem = (move, index) => {
     // Add null check for move
     if (!move) {
@@ -121,7 +127,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     const turnNumber = allMoves.length - index; // Start from 1, not 0
 
     return (
-      <Box key={index} className={styles.moveHistoryItem}>
+      <Box key={index} className={styles.moveHistoryItem} sx={{ borderBottom: `1px solid ${borderColor}` }}>
         <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
         <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
         <Box className={styles.moveHistoryWord}>{displayWord}</Box>
@@ -133,16 +139,10 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     );
   };
 
-  const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
-  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
-  const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
-  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-
   if (allMoves.length === 0) {
     return (
       <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`}>
+        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
           <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
@@ -155,7 +155,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   if (!latestMoveData) {
     return (
       <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`}>
+        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
           <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
         </Box>
       </Box>
@@ -187,8 +187,8 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     <Box className={styles.latestMovePanel}>
       <Box 
         className={`${styles.latestMoveContent} ${animationClass}`}
-        style={{
-          borderBottomColor: borderColor
+        sx={{
+          borderBottom: `1px solid ${borderColor}`
         }}
       >
         <Box 

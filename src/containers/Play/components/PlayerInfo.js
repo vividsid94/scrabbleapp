@@ -28,15 +28,15 @@ const actionButtonStyle = {
 const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx, mascotRef, botImage, lightMode = 'dark' }) => {
   const panelBackground = lightMode === 'dark' 
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-    : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)';
+    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
   
   const panelBorder = lightMode === 'dark' 
     ? '1px solid rgba(255, 255, 255, 0.1)' 
-    : '1px solid rgba(0, 0, 0, 0.08)';
+    : '1px solid rgba(0, 0, 0, 0.12)';
   
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-    : '0 2px 8px rgba(0, 0, 0, 0.08)';
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
 
   return (
   <Box 
@@ -64,8 +64,8 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       <Box 
         className={styles.timer}
         sx={{
-          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-          border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+          border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
           padding: '2px 6px',
           fontSize: '12px',
           color: lightMode === 'dark' ? '#fff' : '#1F2937',
@@ -241,7 +241,15 @@ export default function PlayerInfo({
       </Box>
 
       <Collapse in={showBestMove}>
-        <Box className={styles.bestMoveSection} sx={{ display: 'flex', gap: '50px', padding: '8px 0' }}>
+        <Box className={styles.bestMoveSection} sx={{ 
+          display: 'flex', 
+          gap: '50px', 
+          padding: '8px 0',
+          backgroundColor: lightMode === 'dark' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.06)',
+          borderRadius: '8px',
+          marginTop: '8px'
+        }}>
           <Box sx={{ display: 'flex', gap: '4px' }}>
             <Tooltip title="Play Best Move">
               <Box

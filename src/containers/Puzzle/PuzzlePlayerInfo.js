@@ -268,8 +268,8 @@ const PuzzlePlayerInfo = React.memo(() => {
         fontWeight: '500',
         textAlign: 'center',
         backdropFilter: 'blur(10px)',
-        border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
-        boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
+        border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
+        boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -291,13 +291,13 @@ const PuzzlePlayerInfo = React.memo(() => {
         <Box className={styles.playerPanel} sx={{
           background: lightMode === 'dark' 
             ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-            : 'linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.9) 100%)',
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
           border: lightMode === 'dark' 
             ? '1px solid rgba(255, 255, 255, 0.1)' 
-            : '1px solid rgba(0, 0, 0, 0.08)',
+            : '1px solid rgba(0, 0, 0, 0.12)',
           boxShadow: lightMode === 'dark'
             ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-            : '0 2px 8px rgba(0, 0, 0, 0.08)',
+            : '0 2px 8px rgba(0, 0, 0, 0.1)',
           backgroundImage: 'none'
         }}>
           <Box className={styles.playerInfo}>
@@ -337,8 +337,8 @@ const PuzzlePlayerInfo = React.memo(() => {
         <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
-          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.03)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
           boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <Box style={{ textAlign: 'center', marginBottom: '12px' }}>
@@ -373,7 +373,7 @@ const PuzzlePlayerInfo = React.memo(() => {
               marginBottom: '12px', 
               opacity: lightMode === 'dark' ? 0.7 : 0.8,
               padding: '8px',
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
               borderRadius: '4px',
               color: lightMode === 'dark' ? '#fff' : '#1F2937'
             }}>
@@ -552,9 +552,9 @@ const PuzzlePlayerInfo = React.memo(() => {
         <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
-          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
-          boxShadow: lightMode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.08)'
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.03)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
+          boxShadow: lightMode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
         }}>
           <Box style={{ textAlign: 'center' }}>
             <Box sx={{ 
@@ -581,8 +581,8 @@ const PuzzlePlayerInfo = React.memo(() => {
         <Box className={styles.playerPanel} sx={{ 
           marginTop: '16px',
           padding: '16px',
-          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.02)',
-          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.03)',
+          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
           boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <Box style={{ marginBottom: '12px' }}>
@@ -613,10 +613,10 @@ const PuzzlePlayerInfo = React.memo(() => {
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'bingo' 
                   ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
-                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                 fontSize: '14px',
                 position: 'relative',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
@@ -649,10 +649,10 @@ const PuzzlePlayerInfo = React.memo(() => {
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'only-bingo' 
                   ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
-                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                 fontSize: '14px',
                 position: 'relative',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
@@ -685,10 +685,10 @@ const PuzzlePlayerInfo = React.memo(() => {
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'significant-best' 
                   ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
-                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                 fontSize: '14px',
                 position: 'relative',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >
@@ -721,10 +721,10 @@ const PuzzlePlayerInfo = React.memo(() => {
                 cursor: 'pointer',
                 backgroundColor: puzzleMode === 'non-bingo-significant' 
                   ? (lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)')
-                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'),
+                  : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                 fontSize: '14px',
                 position: 'relative',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
             >

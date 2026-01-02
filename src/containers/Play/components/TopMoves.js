@@ -120,9 +120,9 @@ const TopMoves = ({
           }
           handleMoveSelect(move);
         }}
-        style={{ 
+        sx={{ 
           cursor: 'pointer',
-          borderBottomColor: borderColor
+          borderBottom: `1px solid ${borderColor}`
         }}
       >
         <Box 
@@ -181,7 +181,7 @@ const TopMoves = ({
   if (isLoadingTopMoves || isDictionaryLoading) {
     return (
       <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent}>
+        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
           <Box 
             className={styles.topMovesButton} 
             onClick={handleGetTopMoves}
@@ -210,7 +210,7 @@ const TopMoves = ({
   if (!topMoves || topMoves.length === 0) {
     return (
       <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent}>
+        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
           <Box 
             className={styles.topMovesButton} 
             onClick={handleGetTopMoves}
