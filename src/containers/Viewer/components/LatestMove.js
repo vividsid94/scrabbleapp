@@ -28,7 +28,7 @@ const LatestMove = ({
   const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
   const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
   const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const scoreBgColor = lightMode === 'dark' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(5, 150, 105, 0.15)';
+  const scoreBgColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.15)';
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);

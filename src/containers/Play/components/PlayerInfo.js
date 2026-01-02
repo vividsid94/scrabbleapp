@@ -89,7 +89,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
       sx={{
         fontSize: '24px',
         fontWeight: 'bold',
-        color: lightMode === 'dark' ? 'darkcyan' : '#0D9488'
+        color: '#D97706'
       }}
     >
       {points}

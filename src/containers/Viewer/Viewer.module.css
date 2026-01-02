@@ -562,10 +562,10 @@ form{
   font-size: 12px;
   font-weight: 600;
   color: white;
-  background: darkcyan;
+  background: #D97706;
   padding: 1px 3px;
   border-radius: 3px;
-  border: 1px solid rgba(0, 139, 139, 0.3);
+  border: 1px solid rgba(217, 119, 6, 0.3);
   width: 22px;
   height: 18px;
   display: flex;
@@ -713,7 +713,7 @@ form{
 .points {
   font-size: 24px;
   font-weight: bold;
-  color: darkcyan;
+  color: #D97706;
 }
 
 /* TopMoves Styles */
@@ -871,10 +871,10 @@ form{
   font-size: 12px;
   font-weight: 600;
   color: white;
-  background: darkcyan;
+  background: #D97706;
   padding: 1px 3px;
   border-radius: 3px;
-  border: 1px solid rgba(0, 139, 139, 0.3);
+  border: 1px solid rgba(217, 119, 6, 0.3);
   width: 22px;
   height: 18px;
   display: flex;

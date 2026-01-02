@@ -26,7 +26,7 @@ const PlayerInfoSection = ({ name, points, rack, color, tiles, isCurrentPlayer, 
     <Box className={styles.points} sx={{
       fontSize: '24px',
       fontWeight: 'bold',
-      color: lightMode === 'dark' ? 'darkcyan' : '#0D9488'
+      color: '#D97706'
     }}>
       {points}
     </Box>

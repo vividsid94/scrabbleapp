@@ -819,14 +819,14 @@ export default function Play() {
         aria-labelledby="bot-select-modal-title"
         aria-describedby="bot-select-modal-description"
       >
-        <Box className={styles.modalContainer} style={{ minWidth: 340, maxWidth: 480, alignItems: 'center', animation: 'none', border: 'none', boxShadow: 'none' }}>
-          <div className={styles.modalTitle} id="bot-select-modal-title" style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, textAlign: 'center', letterSpacing: '0.04em' }}>
+        <Box className={styles.modalContainer} style={{ minWidth: 280, maxWidth: 380, alignItems: 'center', animation: 'none', border: 'none', boxShadow: 'none' }}>
+          <div className={styles.modalTitle} id="bot-select-modal-title" style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, textAlign: 'center', letterSpacing: '0.04em' }}>
             Who will you play against today?
           </div>
-          <div style={{ fontSize: 15, color: '#374151', marginBottom: 24, textAlign: 'center', fontWeight: 500, opacity: 0.85 }}>
+          <div style={{ fontSize: 12, color: '#374151', marginBottom: 16, textAlign: 'center', fontWeight: 500, opacity: 0.85 }}>
             Each fox has a unique style. Pick your challenger!
           </div>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 24, justifyContent: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 16, justifyContent: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
             {bots.map(bot => (
               <div
                 key={bot.name}
@@ -834,35 +834,35 @@ export default function Play() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 8,
-                  border: selectedBot.name === bot.name ? '3px solid #3D5A80' : '2px solid #e5e7eb',
-                  borderRadius: 16,
-                  padding: '18px 18px 12px 18px',
+                  gap: 6,
+                  border: selectedBot.name === bot.name ? '2px solid #3D5A80' : '1px solid #e5e7eb',
+                  borderRadius: 12,
+                  padding: '12px 12px 8px 12px',
                   background: selectedBot.name === bot.name ? 'rgba(96,165,250,0.08)' : '#fff',
                   boxShadow: selectedBot.name === bot.name ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
                   cursor: 'pointer',
-                  minWidth: 120,
-                  maxWidth: 160,
+                  minWidth: 100,
+                  maxWidth: 130,
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   position: 'relative',
                 }}
                 onClick={() => handleBotSelect(bot)}
               >
-                <img src={bot.img} alt={bot.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#eee', marginBottom: 4, boxShadow: selectedBot.name === bot.name ? '0 0 0 3px #60A5FA' : 'none', transition: 'box-shadow 0.2s' }} />
-                <div style={{ fontWeight: 700, fontSize: 18, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
-                <div style={{ fontSize: 13, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 44, maxHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{bot.desc}</div>
+                <img src={bot.img} alt={bot.name} style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', background: '#eee', marginBottom: 3, boxShadow: selectedBot.name === bot.name ? '0 0 0 2px #60A5FA' : 'none', transition: 'box-shadow 0.2s' }} />
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
+                <div style={{ fontSize: 11, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 32, maxHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{bot.desc}</div>
                 <button
                   style={{
-                    marginTop: 10,
+                    marginTop: 6,
                     background: selectedBot.name === bot.name ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
                     color: '#fff',
                     border: 0,
-                    borderRadius: 8,
-                    padding: '7px 20px',
+                    borderRadius: 6,
+                    padding: '5px 14px',
                     fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 15,
-                    boxShadow: selectedBot.name === bot.name ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    letterSpacing: 0.5,
+                    fontSize: 12,
+                    boxShadow: selectedBot.name === bot.name ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
                     outline: 'transparent',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -876,8 +876,8 @@ export default function Play() {
               </div>
             ))}
           </div>
-          <div style={{ width: '100%', marginBottom: 8 }}>
-            <div className={styles.moveHistoryList} style={{ marginTop: 8, width: '100%', maxHeight: 220, overflowY: 'auto' }}>
+          <div style={{ width: '100%', marginBottom: 6 }}>
+            <div className={styles.moveHistoryList} style={{ marginTop: 6, width: '100%', maxHeight: 180, overflowY: 'auto' }}>
               {skillBots.map(bot => (
                 <div
                   key={bot.name}
@@ -885,35 +885,35 @@ export default function Play() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 16,
+                    gap: 12,
                     background: selectedBot.name === bot.name && !customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
                     border: selectedBot.name === bot.name && !customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                    borderRadius: 12,
+                    borderRadius: 10,
                     boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
                     cursor: 'pointer',
-                    padding: '12px 16px',
-                    marginBottom: 8,
+                    padding: '8px 12px',
+                    marginBottom: 6,
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                     position: 'relative',
                   }}
                   onClick={() => { setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
                 >
-                  <div style={{ marginRight: 8 }}>{bot.icon}</div>
+                  <div style={{ marginRight: 6 }}>{bot.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
-                    <div style={{ fontSize: 12, color: '#374151', opacity: 0.8 }}>{bot.desc}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>{bot.name}</div>
+                    <div style={{ fontSize: 10, color: '#374151', opacity: 0.8 }}>{bot.desc}</div>
                   </div>
                   <button
                     style={{
                       background: selectedBot.name === bot.name && !customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
                       color: '#fff',
                       border: 0,
-                      borderRadius: 8,
-                      padding: '6px 16px',
+                      borderRadius: 6,
+                      padding: '4px 12px',
                       fontWeight: 'bold',
-                      letterSpacing: 1,
-                      fontSize: 13,
-                      boxShadow: selectedBot.name === bot.name && !customBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                      letterSpacing: 0.5,
+                      fontSize: 11,
+                      boxShadow: selectedBot.name === bot.name && !customBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
                       outline: 'transparent',
                       cursor: 'pointer',
                       userSelect: 'none',
@@ -932,35 +932,35 @@ export default function Play() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 16,
+                  gap: 12,
                   background: customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
                   border: customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                  borderRadius: 12,
+                  borderRadius: 10,
                   boxShadow: customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
                   cursor: 'pointer',
-                  padding: '12px 16px',
-                  marginBottom: 8,
+                  padding: '8px 12px',
+                  marginBottom: 6,
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   position: 'relative',
                 }}
                 onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
               >
-                <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
+                <div style={{ marginRight: 6 }}><Robot size={24} color="#9CA3AF" /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom</div>
-                  <div style={{ fontSize: 12, color: '#374151', opacity: 0.8 }}>Play <input type="text" value={customRank} onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }} placeholder="X" style={{ width: 32, fontSize: 12, textAlign: 'center', border: '1px solid #e5e7eb', borderRadius: 4, margin: '0 4px' }} />th by points + leave</div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>Custom</div>
+                  <div style={{ fontSize: 10, color: '#374151', opacity: 0.8 }}>Play <input type="text" value={customRank} onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }} placeholder="X" style={{ width: 24, fontSize: 10, textAlign: 'center', border: '1px solid #e5e7eb', borderRadius: 3, margin: '0 3px', padding: '2px' }} />th by points + leave</div>
                 </div>
                 <button
                   style={{
                     background: customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
                     color: '#fff',
                     border: 0,
-                    borderRadius: 8,
-                    padding: '6px 16px',
+                    borderRadius: 6,
+                    padding: '4px 12px',
                     fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 13,
-                    boxShadow: customBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    letterSpacing: 0.5,
+                    fontSize: 11,
+                    boxShadow: customBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
                     outline: 'transparent',
                     cursor: /^\d+$/.test(customRank) && parseInt(customRank) > 0 ? 'pointer' : 'not-allowed',
                     userSelect: 'none',
@@ -980,23 +980,23 @@ export default function Play() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 16,
+                  gap: 12,
                   background: customDefenseBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
                   border: customDefenseBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                  borderRadius: 12,
+                  borderRadius: 10,
                   boxShadow: customDefenseBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
                   cursor: 'pointer',
-                  padding: '12px 16px',
-                  marginBottom: 8,
+                  padding: '8px 12px',
+                  marginBottom: 6,
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   position: 'relative',
                 }}
                 onClick={() => { setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
               >
-                <div style={{ marginRight: 8 }}><Robot size={32} color="#9CA3AF" /></div>
+                <div style={{ marginRight: 6 }}><Robot size={24} color="#9CA3AF" /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#1F2937', marginBottom: 2 }}>Custom Defense</div>
-                  <div style={{ fontSize: 11, color: '#374151', opacity: 0.8, marginBottom: 4 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>Custom Defense</div>
+                  <div style={{ fontSize: 9, color: '#374151', opacity: 0.8, marginBottom: 3 }}>
                     Defense Weight: {defenseWeight.toFixed(1)}x
                   </div>
                   <Slider
@@ -1010,14 +1010,14 @@ export default function Play() {
                     sx={{
                       color: '#3D5A80',
                       '& .MuiSlider-thumb': {
-                        width: 16,
-                        height: 16,
+                        width: 12,
+                        height: 12,
                       },
                       '& .MuiSlider-track': {
-                        height: 4,
+                        height: 3,
                       },
                       '& .MuiSlider-rail': {
-                        height: 4,
+                        height: 3,
                         opacity: 0.3,
                       },
                     }}
@@ -1028,12 +1028,12 @@ export default function Play() {
                     background: customDefenseBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
                     color: '#fff',
                     border: 0,
-                    borderRadius: 8,
-                    padding: '6px 16px',
+                    borderRadius: 6,
+                    padding: '4px 12px',
                     fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 13,
-                    boxShadow: customDefenseBotSelected ? '6px 0px 0px #60A5FA' : '6px 0px 0px #374151',
+                    letterSpacing: 0.5,
+                    fontSize: 11,
+                    boxShadow: customDefenseBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
                     outline: 'transparent',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -1050,13 +1050,14 @@ export default function Play() {
           </div>
           <button
             style={{
-              marginTop: 8,
+              marginTop: 6,
               background: '#f0f0f0',
               color: '#1F2937',
               border: 'none',
-              borderRadius: 8,
-              padding: '6px 16px',
+              borderRadius: 6,
+              padding: '4px 12px',
               fontWeight: 'bold',
+              fontSize: 12,
               cursor: 'pointer',
               alignSelf: 'center',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
