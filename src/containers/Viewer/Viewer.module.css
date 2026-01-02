@@ -28,12 +28,14 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-.page{
+.container {
+  display: flex;
+}
+
+.page {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  position: relative;
-  min-height: 100vh;
 }
 
 form{
@@ -148,7 +150,6 @@ form{
 
 .mainPanel{
   display: grid;
-  gap: 24px;
   grid-template-columns: 1fr 380px;
   grid-template-rows: auto 1fr;
   grid-template-areas: 
@@ -179,18 +180,23 @@ form{
   grid-area: board;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  height: 100%;
+}
+
+.mainBox {
+  flex-grow: 1;
+  padding: 24px;
 }
 
 .rightPanel{
 	grid-area: panel;
+	width: 380px;
+	padding: 24px;
 	display: flex;
 	flex-direction: column;
   justify-content: flex-start;
-  gap: 12px;
-  position: relative;
+  gap: 20px;
   z-index: 1000;
+  position: relative;
 }
 
 .Arrows{

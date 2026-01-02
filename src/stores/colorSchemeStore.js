@@ -2,9 +2,9 @@ import { create } from 'zustand';
 
 export const useColorSchemeStore = create((set, get) => {
   // Initial state - using the viewer's color scheme as the global default
-  // Default lightMode is 'dark', so protiles color starts as light grey
+  // Default lightMode is 'dark', so protiles color starts as lighter orange
   const initialState = {
-    color: { current: '#d1d5db' },
+    color: { current: '#F97316' },
     boardColor: { current: '#fff' },
     showWoodenCircle: { current: false },
     showApplePolygon: { current: false },

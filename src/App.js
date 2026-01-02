@@ -114,7 +114,9 @@ function App() {
   
   // Update protiles color based on light mode
   useEffect(() => {
-    const protilesColor = lightMode === 'dark' ? '#d1d5db' : '#4b5563';
+    // Dark mode: lighter, less saturated orange for softer appearance on dark background
+    // Light mode: darker amber/orange for contrast on white background (matches Theo's theme)
+    const protilesColor = lightMode === 'dark' ? '#F97316' : '#92400E';
     updateColor(protilesColor);
   }, [lightMode, updateColor]);
   

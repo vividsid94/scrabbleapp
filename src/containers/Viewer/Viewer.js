@@ -370,7 +370,7 @@ export default function Viewer({ onChange }){
   const [is3DHovered, setIs3DHovered] = useState(false);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    <Box className={styles.container}>
       <Sidenav/>
       {/* No header panel, move 3D link to player panel below */}
       {/* Modal and main content */}
