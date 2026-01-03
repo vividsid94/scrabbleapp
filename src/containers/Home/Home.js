@@ -386,7 +386,7 @@ export default function Home(){
                   padding: { xs: '6px 0px', sm: '5px 0px' }
                 }}
               >
-                Tools <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+                More <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
               </button>
               <Menu
                 anchorEl={toolsMenuAnchor}
