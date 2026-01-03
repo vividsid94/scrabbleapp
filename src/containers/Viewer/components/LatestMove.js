@@ -29,6 +29,12 @@ const LatestMove = ({
   const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
   const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
   const scoreBgColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.15)';
+  const panelBackground = lightMode === 'dark' 
+    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
+  const panelShadow = lightMode === 'dark'
+    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -122,13 +128,7 @@ const LatestMove = ({
   };
 
   if (parsedMoves.length === 0) {
-    return (
-      <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.noMoveText} sx={{ color: mutedTextColor }}>No moves yet</Box>
-        </Box>
-      </Box>
-    );
+    return null;
   }
 
   // Get the current move (based on currentMoveRef)
@@ -136,13 +136,7 @@ const LatestMove = ({
   const currentMove = currentMoveIndex >= 0 && currentMoveIndex < parsedMoves.length ? parsedMoves[currentMoveIndex] : null;
   
   if (!currentMove) {
-    return (
-      <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.noMoveText} sx={{ color: mutedTextColor }}>No moves yet</Box>
-        </Box>
-      </Box>
-    );
+    return null;
   }
 
   const playerName = currentMove.player;
@@ -152,31 +146,55 @@ const LatestMove = ({
   const turnNumber = currentMoveIndex + 1;
 
   return (
-    <Box className={styles.latestMovePanel}>
-      {/* Remove Cube icon from here, just keep the rest of the content */}
-      <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-        <Box 
-          className={styles.moveHistoryTurnNumber}
-          onClick={() => onTurnClick && onTurnClick(currentMoveIndex)}
-          sx={{ 
-            cursor: onTurnClick ? 'pointer' : 'default',
-            color: textColor,
-            background: bgColor,
-            border: `1px solid ${borderColor}`
-          }}
-        >
-          {turnNumber}
+    <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '16px' }}>
+      <Box 
+        onClick={parsedMoves.length > 1 ? handleExpandClick : undefined}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px',
+          background: panelBackground,
+          borderRadius: '8px',
+          boxShadow: panelShadow,
+          cursor: parsedMoves.length > 1 ? 'pointer' : 'default',
+          transition: 'all 0.2s ease',
+          width: '100%',
+          boxSizing: 'border-box',
+          '&:hover': parsedMoves.length > 1 ? {
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+          } : {},
+          marginBottom: isExpanded ? '8px' : '0'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+          <Box 
+            className={styles.moveHistoryTurnNumber}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onTurnClick) onTurnClick(currentMoveIndex);
+            }}
+            style={{ color: secondaryTextColor }}
+          >
+            {turnNumber}
+          </Box>
+          {location && (
+            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor }}>
+              {location}
+            </Box>
+          )}
+          <Box className={styles.moveHistoryWord} style={{ color: textColor }}>
+            {processedWord || 'Pass'}
+          </Box>
+          <Box className={styles.moveHistoryDetails}>
+            <Box className={styles.moveHistoryScore}>{score || 0}</Box>
+            <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
+          </Box>
         </Box>
-        <Box className={styles.moveHistoryLocation} sx={{ color: mutedTextColor }}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord} sx={{ color: textColor }}>{processedWord || 'Pass'}</Box>
-        <Box className={styles.moveHistoryDetails}>
-          <Box className={styles.moveHistoryScore} sx={{ color: textColor, background: scoreBgColor, border: `1px solid ${borderColor}` }}>{score || 0}</Box>
-          <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(playerName)}</Box>
-        </Box>
-        <Box className={styles.moveHistoryActions}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {parsedMoves.length > 1 && (
-            <Box className={styles.expandIcon} onClick={handleExpandClick} sx={{ color: secondaryTextColor }}>
-              {isExpanded ? <ExpandLessIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} /> : <ExpandMoreIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />}
+            <Box sx={{ color: secondaryTextColor, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
             </Box>
           )}
         </Box>

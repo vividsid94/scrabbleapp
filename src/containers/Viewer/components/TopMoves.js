@@ -5,8 +5,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { createRack } from '../../../functions/rackFunctions.js';
 import { ThemeContext } from '../../../App';
-
 import styles from '../Viewer.module.css';
+import sidenavStyles from '../../../components/AppContent/Sidenav/Sidenav.module.css';
 
 const TopMoves = ({ 
   boardCoords,
@@ -29,6 +29,12 @@ const TopMoves = ({
   const buttonBgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
   const scoreBgColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.15)';
   const leaveValueBgColor = lightMode === 'dark' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(37, 99, 235, 0.15)';
+  const panelBackground = lightMode === 'dark' 
+    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
+  const panelShadow = lightMode === 'dark'
+    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [topMoves, setTopMoves] = useState([]);
@@ -355,11 +361,11 @@ const TopMoves = ({
           }
         }}
       >
-        <Box className={styles.topMoveRank} sx={{ color: textColor, background: bgColor, border: `1px solid ${borderColor}` }}>{index + 1}</Box>
-        <Box className={styles.topMoveLocation} sx={{ color: mutedTextColor }}>{location || ''}</Box>
-        <Box className={styles.topMoveWord} sx={{ color: textColor }}>{move.word}</Box>
+        <Box className={styles.topMoveRank} style={{ color: secondaryTextColor }}>{index + 1}</Box>
+        <Box className={styles.topMoveLocation} style={{ color: mutedTextColor }}>{location || ''}</Box>
+        <Box className={styles.topMoveWord} style={{ color: textColor }}>{move.word}</Box>
         <Box className={styles.topMoveDetails}>
-          <Box className={styles.topMoveScore} sx={{ background: scoreBgColor, border: `1px solid ${borderColor}` }}>{move.score}</Box>
+          <Box className={styles.topMoveScore}>{move.score}</Box>
           <Tooltip title="Leave">
             <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
               {Math.round(leaveValue)} ({leaveString})
@@ -370,38 +376,65 @@ const TopMoves = ({
     );
   };
 
+  const topScore = topMoves && topMoves.length > 0 ? topMoves[0].score : 0;
+
   if (isLoadingTopMoves || isDictionaryLoading) {
     return (
-      <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.topMovesButton} onClick={handleGetTopMoves} sx={{ 
-            background: buttonBgColor,
-            color: textColor,
+      <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '8px' }}>
+        <Box 
+          onClick={handleGetTopMoves}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px',
+            background: panelBackground,
+            borderRadius: '8px',
+            boxShadow: panelShadow,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            width: '100%',
+            boxSizing: 'border-box',
             '&:hover': {
-              background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+              boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
             }
-          }}>
-            <img 
-              src="/images/theomascot.png" 
-              alt="Theo Fox" 
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'grayscale(1) contrast(200%) brightness(0.5)',
-                opacity: 0.6
-              }} 
-            />
-            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: textColor }}>Ask Theo</Box>
-            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: mutedTextColor }}>(15)</Box>
-          </Box>
-          <Box className={styles.loadingText} sx={{ color: mutedTextColor }}>
-            {isDictionaryLoading ? 'Loading dictionary...' : (
-              <Box className={styles.thinkingDots}>
-                <div style={{ background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)' }}></div>
-                <div style={{ background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)' }}></div>
-                <div style={{ background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)' }}></div>
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+            <Box sx={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '6px',
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              <img 
+                src="/images/theomascot.png" 
+                alt="Theo" 
+                className={sidenavStyles.sidenavFoxStencil}
+                style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Box sx={{ fontSize: '13px', fontWeight: '600', color: textColor }}>
+                Ask Theo
               </Box>
-            )}
+              {(isLoadingTopMoves || isDictionaryLoading) && (
+                <Box sx={{ fontSize: '12px', color: mutedTextColor }}>
+                  {isDictionaryLoading ? 'Loading dictionary...' : (
+                    <Box className={styles.thinkingDots}>
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -410,27 +443,50 @@ const TopMoves = ({
 
   if (!topMoves || topMoves.length === 0) {
     return (
-      <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.topMovesButton} onClick={handleGetTopMoves} sx={{ 
-            background: buttonBgColor,
-            color: textColor,
+      <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '8px' }}>
+        <Box 
+          onClick={handleGetTopMoves}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px',
+            background: panelBackground,
+            borderRadius: '8px',
+            boxShadow: panelShadow,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            width: '100%',
+            boxSizing: 'border-box',
             '&:hover': {
-              background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+              boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
             }
-          }}>
-            <img 
-              src="/images/theomascot.png" 
-              alt="Theo Fox" 
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                filter: 'grayscale(1) contrast(200%) brightness(0.5)',
-                opacity: 0.6
-              }} 
-            />
-            <Box sx={{ fontSize: '10px', marginLeft: '4px', color: textColor }}>Ask Theo</Box>
-            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: mutedTextColor }}>(15)</Box>
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+            <Box sx={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '6px',
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              <img 
+                src="/images/theomascot.png" 
+                alt="Theo" 
+                className={sidenavStyles.sidenavFoxStencil}
+                style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Box sx={{ fontSize: '13px', fontWeight: '600', color: textColor }}>
+                Ask Theo
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -438,47 +494,95 @@ const TopMoves = ({
   }
 
   return (
-    <Box className={styles.topMovesPanel}>
-      <Box className={`${styles.topMovesContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-        <Box className={styles.topMovesButton} onClick={handleGetTopMoves} sx={{ 
-          background: buttonBgColor,
-          color: textColor,
+    <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '8px' }}>
+      {/* Card Header */}
+      <Box 
+        onClick={topMoves && topMoves.length > 0 ? handleExpandClick : handleGetTopMoves}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px',
+          background: panelBackground,
+          borderRadius: '8px',
+          boxShadow: panelShadow,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          width: '100%',
+          boxSizing: 'border-box',
           '&:hover': {
-            background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
-          }
-        }}>
-          <img 
-            src="/images/theomascot.png" 
-            alt="Theo Fox" 
-            style={{ 
-              width: '24px', 
-              height: '24px', 
-              filter: 'grayscale(1) contrast(200%) brightness(0.5)',
-              opacity: 0.6
-            }} 
-          />
-          <Box sx={{ fontSize: '10px', marginLeft: '4px', color: textColor }}>Ask Theo</Box>
-          <Box sx={{ fontSize: '10px', marginLeft: '2px', color: mutedTextColor }}>(15)</Box>
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+          },
+          marginBottom: isExpanded ? '8px' : '0'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+          {topMoves && topMoves.length > 0 ? (
+            <>
+              <Box className={styles.topMoveRank} style={{ color: secondaryTextColor }}>
+                1
+              </Box>
+              {formatLocation(topMoves[0]) && (
+                <Box className={styles.topMoveLocation} style={{ color: mutedTextColor }}>
+                  {formatLocation(topMoves[0])}
+                </Box>
+              )}
+              <Box className={styles.topMoveWord} style={{ color: textColor }}>
+                {topMoves[0].word}
+              </Box>
+              <Box className={styles.topMoveDetails}>
+                <Box className={styles.topMoveScore}>{topScore}</Box>
+                {topMoves[0].leaveValue !== undefined && (
+                  <Tooltip title="Leave">
+                    <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+                      {Math.round(topMoves[0].leaveValue || 0)} ({topMoves[0].leave || ''})
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box sx={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '6px',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                overflow: 'hidden'
+              }}>
+                <img 
+                  src="/images/theomascot.png" 
+                  alt="Theo" 
+                  className={sidenavStyles.sidenavFoxStencil}
+                  style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Box sx={{ fontSize: '13px', fontWeight: '600', color: textColor }}>
+                  Ask Theo
+                </Box>
+              </Box>
+            </>
+          )}
         </Box>
-        {topMoves.length > 0 && (
-          <Box className={styles.expandIcon} onClick={handleExpandClick} sx={{ color: secondaryTextColor }}>
-            {isExpanded ? <ExpandLessIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} /> : <ExpandMoreIcon style={{ fontSize: 16, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />}
-          </Box>
-        )}
-      </Box>
-      
-      {topMoves.length > 0 && (
-        <>
-          {/* Always show the top move */}
-          {renderMoveItem(topMoves[0], 0)}
-          
-          {/* Show additional moves when expanded */}
-          {isExpanded && (
-            <Box className={styles.topMovesList}>
-              {topMoves.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {topMoves && topMoves.length > 0 && (
+            <Box sx={{ color: secondaryTextColor, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
             </Box>
           )}
-        </>
+        </Box>
+      </Box>
+      
+      {/* Expanded Content */}
+      {isExpanded && topMoves && topMoves.length > 0 && (
+        <Box className={styles.topMovesList}>
+          {topMoves.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
+        </Box>
       )}
     </Box>
   );

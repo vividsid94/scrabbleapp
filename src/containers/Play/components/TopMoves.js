@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import styles from '../Play.module.css';
+import sidenavStyles from '../../../components/AppContent/Sidenav/Sidenav.module.css';
 
 const TopMoves = ({ 
   topMoves, 
@@ -18,19 +18,26 @@ const TopMoves = ({
   currentPlayer,
   gameStarted,
   onOpenSimulationModal,
-  onAnalyzeDefense,
   onOpenMetrics2Modal,
   lightMode = 'dark'
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
-  const defenseButtonClicked = useRef(false);
   
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
   const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
   const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
-  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)';
+  const leaveValueBgColor = lightMode === 'dark' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(37, 99, 235, 0.15)';
+  const panelBackground = lightMode === 'dark' 
+    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
+  const panelBorder = lightMode === 'dark' 
+    ? '1px solid rgba(255, 255, 255, 0.1)' 
+    : '1px solid rgba(0, 0, 0, 0.12)';
+  const panelShadow = lightMode === 'dark'
+    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
 
   // Auto-expand when moves are loaded
   useEffect(() => {
@@ -77,21 +84,6 @@ const TopMoves = ({
     onMoveSelect(move);
   };
 
-  const handleSeeDefenseClick = (e, move) => {
-    e.stopPropagation(); // Prevent the row click from triggering
-    e.preventDefault(); // Prevent any default behavior
-    defenseButtonClicked.current = true; // Mark that defense button was clicked
-
-    // Reset the flag after a short delay
-    setTimeout(() => {
-      defenseButtonClicked.current = false;
-    }, 100);
-
-    if (onAnalyzeDefense) {
-      onAnalyzeDefense(move);
-    }
-  };
-
   const handleSimulateMove = (move) => {
     onSimulateMove(move);
   };
@@ -106,20 +98,15 @@ const TopMoves = ({
     const location = formatLocation(move);
     const isSimulating = simulatingMove && simulatingMove.word === move.word;
 
-    // Get leave value
+    // Get leave value and leave string
     const leaveValue = move.leaveValue || 0;
+    const leaveString = move.leave || '';
 
     return (
       <Box 
         key={index} 
         className={styles.topMoveItem}
-        onClick={(e) => {
-          // Check if the defense button was clicked
-          if (defenseButtonClicked.current) {
-            return;
-          }
-          handleMoveSelect(move);
-        }}
+        onClick={() => handleMoveSelect(move)}
         sx={{ 
           cursor: 'pointer',
           borderBottom: `1px solid ${borderColor}`
@@ -135,7 +122,7 @@ const TopMoves = ({
           className={styles.topMoveLocation}
           style={{ 
             color: mutedTextColor,
-            backgroundColor: bgColor,
+            backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
             borderColor: borderColor
           }}
         >
@@ -150,150 +137,170 @@ const TopMoves = ({
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
           <Tooltip title="Leave">
-            <Box className={styles.topMoveLeaveValue}>{Math.round(leaveValue)}</Box>
+            <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+              {Math.round(leaveValue)} ({leaveString})
+            </Box>
           </Tooltip>
-          <Box 
-            className={styles.seeDefenseButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              handleSeeDefenseClick(e, move);
-            }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-            }}
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-            style={{ 
-              position: 'relative', 
-              zIndex: 10,
-              pointerEvents: 'auto'
-            }}
-          >
-            see defense
-          </Box>
         </Box>
       </Box>
     );
   };
 
-  if (isLoadingTopMoves || isDictionaryLoading) {
-    return (
-      <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box 
-            className={styles.topMovesButton} 
-            onClick={handleGetTopMoves}
-            style={{ color: secondaryTextColor }}
-          >
-            <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
-            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
-          </Box>
-          <Box 
-            className={styles.loadingText}
-            style={{ color: mutedTextColor }}
-          >
-            {isDictionaryLoading ? 'Loading dictionary...' : (
-              <Box className={styles.thinkingDots}>
-                <div></div>
-                <div></div>
-                <div></div>
-              </Box>
-            )}
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
 
-  if (!topMoves || topMoves.length === 0) {
-    return (
-      <Box className={styles.topMovesPanel}>
-        <Box className={styles.topMovesContent} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box 
-            className={styles.topMovesButton} 
-            onClick={handleGetTopMoves}
-            style={{ color: secondaryTextColor }}
-          >
-            <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
-            <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
+  const topScore = topMoves && topMoves.length > 0 ? topMoves[0].score : 0;
+  const moveCount = topMoves ? topMoves.length : 0;
 
   return (
-    <Box className={styles.topMovesPanel}>
+    <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '8px' }}>
+      {/* Card Header */}
       <Box 
-        className={`${styles.topMovesContent} ${animationClass}`}
-        style={{
-          borderBottomColor: borderColor
+        onClick={topMoves && topMoves.length > 0 ? handleExpandClick : handleGetTopMoves}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px',
+          background: panelBackground,
+          borderRadius: '8px',
+          boxShadow: panelShadow,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          width: '100%',
+          boxSizing: 'border-box',
+          '&:hover': {
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+          },
+          marginBottom: isExpanded ? '8px' : '0'
         }}
       >
-        <Box 
-          className={styles.topMovesButton} 
-          onClick={handleGetTopMoves}
-          style={{ color: secondaryTextColor }}
-        >
-          <LightbulbIcon style={{ fontSize: 16, color: secondaryTextColor }} />
-          <Box sx={{ fontSize: '10px', marginLeft: '2px', color: secondaryTextColor }}>(15)</Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+          {topMoves && topMoves.length > 0 ? (
+            <>
+              <Box className={styles.topMoveRank} style={{ color: secondaryTextColor }}>
+                1
+              </Box>
+              {formatLocation(topMoves[0]) && (
+                <Box className={styles.topMoveLocation} style={{ color: mutedTextColor }}>
+                  {formatLocation(topMoves[0])}
+                </Box>
+              )}
+              <Box className={styles.topMoveWord} style={{ color: textColor }}>
+                {topMoves[0].word}
+              </Box>
+              <Box className={styles.topMoveDetails}>
+                <Box className={styles.topMoveScore}>{topScore}</Box>
+                {topMoves[0].leaveValue !== undefined && (
+                  <Tooltip title="Leave">
+                    <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+                      {Math.round(topMoves[0].leaveValue || 0)} ({topMoves[0].leave || ''})
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box sx={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '6px',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                overflow: 'hidden'
+              }}>
+                <img 
+                  src="/images/theomascot.png" 
+                  alt="Theo" 
+                  className={sidenavStyles.sidenavFoxStencil}
+                  style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Box sx={{ fontSize: '13px', fontWeight: '600', color: textColor }}>
+                  Ask Theo
+                </Box>
+                {(isLoadingTopMoves || isDictionaryLoading) && (
+                  <Box sx={{ fontSize: '12px', color: mutedTextColor }}>
+                    {isDictionaryLoading ? 'Loading dictionary...' : (
+                      <Box className={styles.thinkingDots}>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </>
+          )}
         </Box>
-        {topMoves.length >= 15 && (
-          <Box 
-            className={styles.topMovesButton} 
-            onClick={() => onOpenSimulationModal()}
-            sx={{
-              height: '16px', // Keep height fixed
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingRight: 0 // Remove right padding
-            }}
-          >
-            <Box sx={{ fontSize: '11px', color: secondaryTextColor }}>Metrics</Box>
-            <Box sx={{ fontSize: '10px' }}></Box>
-          </Box>
-        )}
-        {topMoves.length >= 10 && (
-          <Box 
-            className={styles.topMovesButton} 
-            onClick={() => onOpenMetrics2Modal && onOpenMetrics2Modal()}
-            sx={{
-              height: '16px', // Keep height fixed
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingRight: 0 // Remove right padding
-            }}
-          >
-            <Box sx={{ fontSize: '11px', color: secondaryTextColor }}>Metrics (2)</Box>
-            <Box sx={{ fontSize: '10px' }}></Box>
-          </Box>
-        )}
-        {topMoves.length > 0 && (
-          <Box 
-            className={styles.expandIcon} 
-            onClick={handleExpandClick}
-            style={{ color: secondaryTextColor }}
-          >
-            {isExpanded ? <ExpandLessIcon style={{ fontSize: 16, color: secondaryTextColor }} /> : <ExpandMoreIcon style={{ fontSize: 16, color: secondaryTextColor }} />}
-          </Box>
-        )}
-      </Box>
-      
-      {topMoves.length > 0 && (
-        <>
-          {/* Always show the top move */}
-          {renderMoveItem(topMoves[0], 0)}
-          
-          {/* Show additional moves when expanded */}
-          {isExpanded && (
-            <Box className={styles.topMovesList}>
-              {topMoves.slice(1).map((move, index) => renderMoveItem(move, index + 1))}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {topMoves && topMoves.length > 0 && (
+            <Box sx={{ color: secondaryTextColor, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
             </Box>
           )}
+        </Box>
+      </Box>
+      
+      {/* Expanded Content */}
+      {isExpanded && topMoves && topMoves.length > 0 && (
+        <>
+          {/* Metrics buttons when expanded */}
+          {(topMoves.length >= 15 || topMoves.length >= 10) && (
+            <Box sx={{ display: 'flex', gap: '6px', marginBottom: '8px', padding: '0 4px' }}>
+              {topMoves.length >= 15 && (
+                <Box 
+                  onClick={() => onOpenSimulationModal()}
+                  sx={{
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: secondaryTextColor,
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                    border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.18)'
+                    }
+                  }}
+                >
+                  Metrics
+                </Box>
+              )}
+              {topMoves.length >= 10 && (
+                <Box 
+                  onClick={() => onOpenMetrics2Modal && onOpenMetrics2Modal()}
+                  sx={{
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: secondaryTextColor,
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                    border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.18)'
+                    }
+                  }}
+                >
+                  Metrics (2)
+                </Box>
+              )}
+            </Box>
+          )}
+          <Box className={styles.topMovesList}>
+            {topMoves.map((move, index) => renderMoveItem(move, index))}
+          </Box>
         </>
       )}
     </Box>

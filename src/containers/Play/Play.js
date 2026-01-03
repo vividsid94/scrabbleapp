@@ -8,7 +8,7 @@ import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Tooltip, Slider, Collapse } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
@@ -27,7 +27,9 @@ import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
 import Modal from '@mui/material/Modal';
-import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, ArrowsHorizontal, Gear, Clock, Lightbulb, DotsThree } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon } from '@phosphor-icons/react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const bots = [
   {
@@ -206,7 +208,6 @@ export default function Play() {
     defenseMove,
     defenseResults,
     isDefenseLoading,
-    analyzeDefense,
     updateDefenseResults,
     setShowDefenseModal,
     setDefenseMove,
@@ -227,6 +228,10 @@ export default function Play() {
   const botMoveMadeRef = useRef(false);
   const mascotRef = useRef();
   const [botSelectOpen, setBotSelectOpen] = useState(false);
+  const [showTimeControls, setShowTimeControls] = useState(false);
+  const [pendingBot, setPendingBot] = useState(null);
+  const [selectedDictionary, setSelectedDictionary] = useState('NWL');
+  const [gameMode, setGameMode] = useState('Normal');
   const [showSkillBots, setShowSkillBots] = useState(false);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const skillBots = [
@@ -344,10 +349,17 @@ export default function Play() {
     }
   };
 
-  // When a bot is selected, set the bot and start bot mode
+  // When a bot is selected, show time controls slideout
   const handleBotSelect = (bot) => {
     setSelectedBot(bot);
     setPlayer2Name(bot.name);
+    setPendingBot(bot);
+    setShowTimeControls(true);
+  };
+
+  // Start the game after time controls are set
+  const handleStartGame = () => {
+    setShowTimeControls(false);
     setBotSelectOpen(false);
     handleBotModeToggle(gameStartSound, botMoveSound);
   };
@@ -500,7 +512,10 @@ export default function Play() {
     <Box className={styles.container}>
       <Sidenav/>
       <Box className={styles.page}>
-        <Box className={styles.mainPanel}>
+        <Box className={styles.mainPanel} sx={{
+          gridTemplateColumns: gameStarted ? '1fr 380px' : '1fr',
+          gridTemplateAreas: gameStarted ? '"title ." "board panel"' : '"title" "board"'
+        }}>
 
           <Box className={styles.leftContainer}>
             <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
@@ -556,11 +571,66 @@ export default function Play() {
             previewScore={previewScore}
             previewScorePosition={previewScorePosition}
             lastMoveCoordinates={lastMoveCoordinates}
-          />   
+          />
+          {/* Overlay Play Button */}
+          {!gameStarted && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 'calc(50% + 6px)',
+              left: 'calc(50% + 10px)',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: 0,
+              padding: 0
+            }}
+          >
+            <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (gameStarted ? "New Game" : "Start Game")}>
+              <Box
+                component="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
+                  handleBotModeToggleWithSounds();
+                }}
+                sx={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
+                  opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
+                  pointerEvents: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'none' : 'auto',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.2s ease',
+                  border: 'none',
+                  outline: 'none',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
+                    backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 1)' : 'rgba(217, 119, 6, 1)'
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)'
+                  }
+                }}
+              >
+                <PlayIcon size={28} color="#fff" weight="fill" />
+              </Box>
+            </Tooltip>
+          </Box>
+          )}
             </Box>
         </Box>
 
-        <Box className={styles.rightPanel}>
+        <Box className={styles.rightPanel} sx={{ display: gameStarted ? 'flex' : 'none' }}>
           <PlayerInfo
             player1Name={player1Name}
                           player2Name={isBotMode ? (selectedBot.name === 'Defense Bot' ? `Defense Bot (${selectedBot.defenseWeight}x)` : selectedBot.name) : player2Name}
@@ -607,23 +677,13 @@ export default function Play() {
             onMoveSelect={handleMoveSelectClick}
             onSimulateMove={simulateMove}
             onOpenSimulationModal={openSimulationModal}
-            onAnalyzeDefense={analyzeDefense}
             onOpenMetrics2Modal={() => setShowMetrics2Modal(true)}
             simulatingMove={simulatingMove}
             boardCoords={boardCoords}
             pool={pool}
             icons={{
               settings: <Gear size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />,
-              time: (
-                <Tooltip title={gameStarted ? "Game time cannot be changed after game starts" : "Set game time"}>
-                  <Clock 
-                    size={20} 
-                    color={showTimeSlider ? "#1976d2" : (lightMode === 'dark' ? "white" : "#1F2937")}
-                    onClick={() => !gameStarted && setShowTimeSlider(!showTimeSlider)}
-                    style={{ cursor: gameStarted ? 'not-allowed' : 'pointer' }}
-                  />
-                </Tooltip>
-              ),
+              time: null,
               botMode: <SmartToyIcon 
                   className={`${styles.botIcon} ${isBotMode ? styles.active : ''} ${isBotMode && currentPlayer === 2 ? styles.thinking : ''}`}
                   sx={{
@@ -634,7 +694,7 @@ export default function Play() {
               vs: gameStarted ? (
                 <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <User size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
-                  <ArrowsHorizontal size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: lightMode === 'dark' ? "white" : "#1F2937" }}>vs</span>
                   {isBotMode ? getBotIcon(selectedBot.name) : <img src="/images/player.png" alt="Opponent" width={20} height={20} />}
                 </Box>
               ) : null,
@@ -689,12 +749,18 @@ export default function Play() {
               className={styles.poolBox} 
               sx={{
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                padding: '12px',
+                background: lightMode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
+                padding: '10px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
-                borderRadius: '4px'
+                borderRadius: '8px',
+                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                '&:hover': {
+                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+                },
+                marginBottom: poolExpanded ? '8px' : '0'
               }}
               onClick={() => setPoolExpanded(!poolExpanded)}
             >
@@ -720,11 +786,9 @@ export default function Play() {
                     <span>Pool</span>
                   )}
                 </Box>
-                {poolExpanded ? (
-                  <CaretUp size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
-                ) : (
-                  <CaretDown size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
-                )}
+                <Box sx={{ color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  {poolExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
+                </Box>
               </Box>
               
               {/* Pool Content */}
@@ -868,11 +932,226 @@ export default function Play() {
 
       <Modal
         open={botSelectOpen}
-        onClose={() => setBotSelectOpen(false)}
+        onClose={() => { setBotSelectOpen(false); setShowTimeControls(false); }}
         aria-labelledby="bot-select-modal-title"
         aria-describedby="bot-select-modal-description"
       >
-        <Box className={styles.modalContainer} style={{ minWidth: 280, maxWidth: 380, alignItems: 'center', animation: 'none', border: 'none', boxShadow: 'none' }}>
+        <Box 
+          className={styles.modalContainer} 
+          style={{ 
+            minWidth: 280, 
+            maxWidth: 380, 
+            alignItems: 'center', 
+            animation: 'none', 
+            border: 'none', 
+            boxShadow: 'none',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Time Controls Slideout */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#ffffff',
+              transform: showTimeControls ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '16px',
+              zIndex: 10,
+              overflowY: 'hidden',
+              justifyContent: 'flex-start'
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 10, textAlign: 'center', letterSpacing: '0.04em', color: '#1F2937' }}>
+              Options
+            </div>
+            
+            {/* Time Controls */}
+            <Box sx={{ width: '100%', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Time
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, color: '#1F2937' }}>
+                {gameTime} {gameTime === 1 ? 'minute' : 'minutes'}
+              </div>
+              <Slider
+                value={gameTime}
+                onChange={(e, value) => setGameTime(value)}
+                min={1}
+                max={30}
+                step={1}
+                sx={{
+                  color: '#3D5A80',
+                  marginBottom: 0,
+                  '& .MuiSlider-thumb': {
+                    width: 16,
+                    height: 16,
+                  },
+                  '& .MuiSlider-track': {
+                    height: 3,
+                  },
+                  '& .MuiSlider-rail': {
+                    height: 3,
+                    opacity: 0.3,
+                  },
+                }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 0.75, marginTop: 0.75 }}>
+                {[5, 10, 15, 30].map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setGameTime(time)}
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: gameTime === time ? '#fff' : '#374151',
+                      backgroundColor: gameTime === time ? '#3D5A80' : 'rgba(0, 0, 0, 0.04)',
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      flex: 1,
+                      opacity: gameTime === time ? 1 : 0.85
+                    }}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Divider */}
+            <Box style={{ width: '100%', height: '1px', backgroundColor: '#e5e7eb', marginBottom: '6px', marginTop: 0, marginLeft: 0, marginRight: 0 }} />
+
+            {/* Dictionary Dropdown */}
+            <Box sx={{ width: '100%', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Dictionary
+              </div>
+              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
+                <Select
+                  value={selectedDictionary}
+                  onChange={(e) => setSelectedDictionary(e.target.value)}
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#1F2937',
+                    backgroundColor: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e5e7eb',
+                      borderWidth: '1px'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: '#6B7280',
+                      fontSize: '20px'
+                    }
+                  }}
+                >
+                  <MenuItem value="NWL" sx={{ fontSize: '14px', fontWeight: 600 }}>NWL</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Divider */}
+            <Box style={{ width: '100%', height: '1px', backgroundColor: '#e5e7eb', marginBottom: '6px', marginTop: 0, marginLeft: 0, marginRight: 0 }} />
+
+            {/* Game Mode Dropdown */}
+            <Box sx={{ width: '100%', marginBottom: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Game Mode
+              </div>
+              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
+                <Select
+                  value={gameMode}
+                  onChange={(e) => setGameMode(e.target.value)}
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#1F2937',
+                    backgroundColor: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e5e7eb',
+                      borderWidth: '1px'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: '#6B7280',
+                      fontSize: '20px'
+                    }
+                  }}
+                >
+                  <MenuItem value="Normal" sx={{ fontSize: '14px', fontWeight: 600 }}>Normal</MenuItem>
+                  <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: '14px', opacity: 0.4 }}>Randomize bonus squares</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 8, width: '100%', marginTop: 10 }}>
+              <button
+                onClick={() => setShowTimeControls(false)}
+                style={{
+                  flex: 1,
+                  marginTop: 6,
+                  background: '#f0f0f0',
+                  color: '#1F2937',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '4px 12px',
+                  fontWeight: 'bold',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleStartGame}
+                style={{
+                  flex: 1,
+                  marginTop: 6,
+                  background: '#f0f0f0',
+                  color: '#1F2937',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '4px 12px',
+                  fontWeight: 'bold',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}
+              >
+                Start Game
+              </button>
+            </Box>
+          </Box>
+
+          {/* Bot Selection Content */}
+          <Box
+            sx={{
+              transform: showTimeControls ? 'translateX(-100%)' : 'translateX(0)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              width: '100%'
+            }}
+          >
           <div className={styles.modalTitle} id="bot-select-modal-title" style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, textAlign: 'center', letterSpacing: '0.04em' }}>
             Who will you play against today?
           </div>
@@ -1119,6 +1398,7 @@ export default function Play() {
           >
             Cancel
           </button>
+          </Box>
         </Box>
       </Modal>
     </Box>

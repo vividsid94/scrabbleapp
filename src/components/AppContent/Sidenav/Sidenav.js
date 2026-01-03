@@ -13,6 +13,7 @@ import Modal from '@mui/material/Modal';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
+import { useGameStore } from '../../../stores/gameStore';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthModal from '../../Auth/AuthModal';
 import { Link as RouterLink } from 'react-router-dom';
@@ -20,7 +21,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Tooltip } from "@mui/material";
+import { Tooltip, Select, FormControl } from "@mui/material";
 
 import { 
   House, 
@@ -34,7 +35,8 @@ import {
   Cube,
   PuzzlePiece,
   User,
-  SignOut
+  SignOut,
+  SpeakerHigh
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -50,6 +52,7 @@ export default function MiniDrawer() {
   const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
   const [showDecorations, setShowDecorations] = React.useState(false);
   const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
+  const [isSoundSectionExpanded, setIsSoundSectionExpanded] = React.useState(false);
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('signin');
@@ -62,6 +65,10 @@ export default function MiniDrawer() {
   const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
   const updateShowWoodenCircle = useColorSchemeStore(state => state.updateShowWoodenCircle);
   const updateShowApplePolygon = useColorSchemeStore(state => state.updateShowApplePolygon);
+  const playerMoveSoundType = useGameStore(state => state.playerMoveSoundType);
+  const botMoveSoundType = useGameStore(state => state.botMoveSoundType);
+  const setPlayerMoveSoundType = useGameStore(state => state.setPlayerMoveSoundType);
+  const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
 
   const getBackgroundColor = () => {
     return '#1F2937';
@@ -72,7 +79,7 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: (isColorSectionExpanded || isDecorationSectionExpanded) ? '200px' : '55px',
+    width: (isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded) ? '200px' : '55px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
     transition: '0.3s ease',
@@ -127,6 +134,10 @@ export default function MiniDrawer() {
   const toggleDecorations = () => {
     setIsDecorationSectionExpanded(!isDecorationSectionExpanded);
     setShowDecorations(!showDecorations);
+  };
+
+  const toggleSoundOptions = () => {
+    setIsSoundSectionExpanded(!isSoundSectionExpanded);
   };
 
   const handleColorChange = (event) => {
@@ -563,6 +574,24 @@ export default function MiniDrawer() {
             </ListItemIcon>
           </ListItem>
         </List>
+        <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={toggleSoundOptions} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+              <Tooltip title="Sound Options" placement="right">
+                <SpeakerHigh 
+                  className={styles.homeLogo} 
+                  style={{ 
+                    color: isSoundSectionExpanded ? '#10B981' : getTextColor(),
+                    fontSize: isSoundSectionExpanded ? '24px' : '20px'
+                  }} 
+                  weight={isSoundSectionExpanded ? "fill" : (hoveredIcon === 'sound' ? "fill" : "regular")}
+                  onMouseEnter={() => setHoveredIcon('sound')}
+                  onMouseLeave={() => setHoveredIcon(null)}
+                />
+              </Tooltip>
+            </ListItemIcon>
+          </ListItem>
+        </List>
         
         {/* Color Picker Section - Slides out when expanded */}
         {isColorSectionExpanded && (
@@ -744,6 +773,100 @@ export default function MiniDrawer() {
               onClick={() => {
                 setIsDecorationSectionExpanded(false);
                 setShowDecorations(false);
+              }}
+            >
+              Click to close
+            </Box>
+          </Box>
+        )}
+        
+        {/* Sound Options Section - Slides out when expanded */}
+        {isSoundSectionExpanded && (
+          <Box
+            sx={{
+              padding: '16px',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              minHeight: '120px',
+              justifyContent: 'center'
+            }}
+          >
+            <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
+              Sound Options
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <FormControl fullWidth size="small">
+                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>Player Move Sound</Box>
+                <Select
+                  value={playerMoveSoundType}
+                  onChange={(e) => setPlayerMoveSoundType(e.target.value)}
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#10B981'
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: '#fff'
+                    }
+                  }}
+                >
+                  <MenuItem value="classic" sx={{ fontSize: '12px', color: '#1F2937' }}>Classic</MenuItem>
+                  <MenuItem value="sword" sx={{ fontSize: '12px', color: '#1F2937' }}>Sword</MenuItem>
+                  <MenuItem value="puzzle" sx={{ fontSize: '12px', color: '#1F2937' }}>Puzzle</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>Bot Move Sound</Box>
+                <Select
+                  value={botMoveSoundType}
+                  onChange={(e) => setBotMoveSoundType(e.target.value)}
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#10B981'
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: '#fff'
+                    }
+                  }}
+                >
+                  <MenuItem value="classic" sx={{ fontSize: '12px', color: '#1F2937' }}>Classic</MenuItem>
+                  <MenuItem value="sword" sx={{ fontSize: '12px', color: '#1F2937' }}>Sword</MenuItem>
+                  <MenuItem value="puzzle" sx={{ fontSize: '12px', color: '#1F2937' }}>Puzzle</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+            <Box 
+              sx={{ 
+                color: '#fff', 
+                fontSize: '10px', 
+                textAlign: 'center',
+                opacity: 0.7,
+                cursor: 'pointer',
+                '&:hover': { opacity: 1 }
+              }}
+              onClick={() => {
+                setIsSoundSectionExpanded(false);
               }}
             >
               Click to close

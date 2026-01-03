@@ -183,17 +183,18 @@
 
 .mainPanel{
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas: 
-    "title ."
-    "board panel";
+    "title"
+    "board";
 }
 
 .leftContainer {
   grid-area: board;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .playerPanel{
@@ -565,6 +566,7 @@
 .mainBox {
   flex-grow: 1;
   padding: 24px;
+  position: relative;
 }
 
 .snackbarAlert {
@@ -951,11 +953,9 @@
   font-size: 11px;
   font-weight: 600;
   color: white;
-  background: #9C27B0;
-  padding: 1px 3px;
+  padding: 1px 4px;
   border-radius: 3px;
-  border: 1px solid rgba(156, 39, 176, 0.3);
-  width: 22px;
+  min-width: 22px;
   height: 18px;
   display: flex;
   align-items: center;
@@ -963,32 +963,6 @@
   flex-shrink: 0;
 }
 
-.seeDefenseButton {
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  background: #FF9800;
-  padding: 2px 8px;
-  border-radius: 3px;
-  border: 1px solid rgba(255, 152, 0, 0.3);
-  height: 20px;
-  min-width: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  pointer-events: auto;
-  position: relative;
-  z-index: 10;
-}
-
-.seeDefenseButton:hover {
-  background: #FFB74D;
-  border-color: rgba(255, 183, 77, 0.5);
-}
 
 .topMoveActions {
   display: flex;

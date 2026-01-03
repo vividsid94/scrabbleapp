@@ -19,6 +19,8 @@ import {
   CaretUp,
   Cube
 } from '@phosphor-icons/react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
@@ -904,12 +906,19 @@ export default function Viewer({ onChange }){
               className={styles.poolBox} 
               sx={{
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                background: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                padding: '12px',
+                background: lightMode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
+                padding: '10px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.08)',
-                borderRadius: '4px'
+                borderRadius: '8px',
+                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                '&:hover': {
+                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+                },
+                marginTop: '8px',
+                marginBottom: poolExpanded ? '8px' : '0'
               }}
               onClick={() => setPoolExpanded(!poolExpanded)}
             >
@@ -938,11 +947,9 @@ export default function Viewer({ onChange }){
                     <span>Pool</span>
                   )}
                 </Box>
-                {poolExpanded ? (
-                  <CaretUp size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
-                ) : (
-                  <CaretDown size={16} color={lightMode === 'dark' ? "#fff" : "#1F2937"} weight="regular" />
-                )}
+                <Box sx={{ color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  {poolExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
+                </Box>
               </Box>
               
               {/* Pool Content */}

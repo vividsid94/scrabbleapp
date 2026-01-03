@@ -96,8 +96,16 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
   const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
   const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
-  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)';
+  const panelBackground = lightMode === 'dark' 
+    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
+  const panelBorder = lightMode === 'dark' 
+    ? '1px solid rgba(255, 255, 255, 0.1)' 
+    : '1px solid rgba(0, 0, 0, 0.12)';
+  const panelShadow = lightMode === 'dark'
+    ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
 
   const renderMoveItem = (move, index) => {
     // Add null check for move
@@ -140,26 +148,14 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   };
 
   if (allMoves.length === 0) {
-    return (
-      <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
-        </Box>
-      </Box>
-    );
+    return null;
   }
 
   // Get the latest move
   const latestMoveData = allMoves[allMoves.length - 1];
   
   if (!latestMoveData) {
-    return (
-      <Box className={styles.latestMovePanel}>
-        <Box className={`${styles.latestMoveContent} ${animationClass}`} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Box className={styles.noMoveText} style={{ color: mutedTextColor }}>No moves yet</Box>
-        </Box>
-      </Box>
-    );
+    return null;
   }
 
   const { score, player, word, boardDiff } = latestMoveData;
@@ -184,75 +180,86 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   const turnNumber = allMoves.length;
 
   return (
-    <Box className={styles.latestMovePanel}>
+    <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '16px' }}>
+      {/* Card Header */}
       <Box 
-        className={`${styles.latestMoveContent} ${animationClass}`}
+        onClick={allMoves.length > 1 ? handleExpandClick : undefined}
         sx={{
-          borderBottom: `1px solid ${borderColor}`
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px',
+          background: panelBackground,
+          borderRadius: '8px',
+          boxShadow: panelShadow,
+          cursor: allMoves.length > 1 ? 'pointer' : 'default',
+          transition: 'all 0.2s ease',
+          width: '100%',
+          boxSizing: 'border-box',
+          '&:hover': allMoves.length > 1 ? {
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+          } : {},
+          marginBottom: isExpanded ? '8px' : '0'
         }}
       >
-        <Box 
-          className={styles.moveHistoryTurnNumber}
-          style={{ color: mutedTextColor }}
-        >
-          {turnNumber}
-        </Box>
-        <Box 
-          className={styles.moveHistoryLocation}
-          style={{ 
-            color: mutedTextColor,
-            backgroundColor: bgColor,
-            borderColor: borderColor
-          }}
-        >
-          {location || ''}
-        </Box>
-        <Box 
-          className={styles.moveHistoryWord}
-          style={{ color: textColor }}
-        >
-          {displayWord}
-        </Box>
-        <Box className={styles.moveHistoryDetails}>
-          <Box className={styles.moveHistoryScore}>{score || 0}</Box>
-          <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
-        </Box>
-        <Box className={styles.moveHistoryActions}>
-          {allMoves.length > 1 && (
-            <Box 
-              className={styles.expandIcon} 
-              onClick={handleExpandClick}
-              style={{ color: secondaryTextColor }}
-            >
-              {isExpanded ? <ExpandLessIcon style={{ fontSize: 16 }} /> : <ExpandMoreIcon style={{ fontSize: 16 }} />}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+          <Box className={styles.moveHistoryTurnNumber} style={{ color: secondaryTextColor }}>
+            {turnNumber}
+          </Box>
+          {location && (
+            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor }}>
+              {location}
             </Box>
           )}
+          <Box className={styles.moveHistoryWord} style={{ color: textColor }}>
+            {displayWord}
+          </Box>
+          <Box className={styles.moveHistoryDetails}>
+            <Box className={styles.moveHistoryScore}>{score || 0}</Box>
+            <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {allMoves.length > 0 && (
-            <Box className={styles.downloadIcon} onClick={handleDownloadGCG} title="Download .gcg file">
-              <Box sx={{
+            <Box 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownloadGCG();
+              }}
+              sx={{
                 fontSize: '10px',
                 fontWeight: '600',
                 color: secondaryTextColor,
-                padding: '2px 6px',
-                borderRadius: '3px',
-                backgroundColor: bgColor,
-                border: `1px solid ${borderColor}`,
+                padding: '4px 8px',
+                borderRadius: '4px',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+                border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
                 fontFamily: 'monospace',
                 letterSpacing: '0.5px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
-              }}>
-                <DownloadIcon style={{ fontSize: 14, color: secondaryTextColor }} />
-                GCG
-              </Box>
+                gap: '4px',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <DownloadIcon style={{ fontSize: 12, color: secondaryTextColor }} />
+              GCG
+            </Box>
+          )}
+          {allMoves.length > 1 && (
+            <Box sx={{ color: secondaryTextColor, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              {isExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
             </Box>
           )}
         </Box>
       </Box>
       
+      {/* Expanded Content */}
       {isExpanded && allMoves.length > 1 && (
-        <Box className={styles.moveHistoryList}>
+        <Box className={styles.moveHistoryList} sx={{ marginTop: '8px' }}>
           {allMoves.slice(0, -1).reverse().filter(move => move).map((move, index) => renderMoveItem(move, index + 1))}
         </Box>
       )}

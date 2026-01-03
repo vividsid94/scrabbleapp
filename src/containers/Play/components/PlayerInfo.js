@@ -145,7 +145,6 @@ export default function PlayerInfo({
   onMoveSelect,
   onSimulateMove,
   onOpenSimulationModal,
-  onAnalyzeDefense,
   onOpenMetrics2Modal,
   simulatingMove,
   boardCoords,
@@ -187,13 +186,15 @@ export default function PlayerInfo({
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {icons.time}
-        </Box>
+        {icons.time && (
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            {icons.time}
+          </Box>
+        )}
         <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (isBotMode ? "New Game" : "Play")}>
           <Box
             onClick={() => {
@@ -383,34 +384,6 @@ export default function PlayerInfo({
               </Box>
             </Tooltip>
           </Box>
-          <Box sx={{ display: 'flex', gap: '16px', borderLeft: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', paddingLeft: '8px' }}>
-            <Tooltip title="Settings">
-              <Box 
-                className={styles.bestMoveButton}
-                onClick={onSettingsOpen}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {icons.settings}
-              </Box>
-            </Tooltip>
-            <Tooltip title="Color Scheme">
-              <Box
-                className={styles.bestMoveButton}
-                onClick={onColorSchemeOpen}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {icons.colorScheme}
-              </Box>
-            </Tooltip>
-          </Box>
         </Box>
       </Collapse>
 
@@ -525,12 +498,11 @@ export default function PlayerInfo({
         topMoves={topMoves}
         isLoadingTopMoves={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
-        onMoveSelect={onMoveSelect}
-        onSimulateMove={onSimulateMove}
-        onGetTopMoves={onGetTopMoves}
-        onOpenSimulationModal={onOpenSimulationModal}
-        onAnalyzeDefense={onAnalyzeDefense}
-        onOpenMetrics2Modal={onOpenMetrics2Modal}
+            onMoveSelect={onMoveSelect}
+            onSimulateMove={onSimulateMove}
+            onGetTopMoves={onGetTopMoves}
+            onOpenSimulationModal={onOpenSimulationModal}
+            onOpenMetrics2Modal={onOpenMetrics2Modal}
         simulatingMove={simulatingMove}
         currentPlayer={currentPlayer}
         gameStarted={gameStarted}
