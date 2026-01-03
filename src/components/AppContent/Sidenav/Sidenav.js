@@ -212,9 +212,111 @@ export default function MiniDrawer() {
       
       <MyAppBar className={styles.myAppBar}>
         <MyToolbar>
-          <IconButton color="inherit" onClick={handleClick}>
-            <MenuIcon sx={{ color: getTextColor() }}/>
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconButton color="inherit" onClick={handleClick}>
+              <MenuIcon sx={{ color: getTextColor() }}/>
+            </IconButton>
+            {!user ? (
+              <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={() => {
+                    setAuthMode('signin');
+                    setShowAuthModal(true);
+                  }}
+                  style={{
+                    background: 'transparent',
+                    color: '#D97706',
+                    border: '2px solid #D97706',
+                    borderRadius: 8,
+                    padding: '5px 16px',
+                    fontWeight: 'normal',
+                    letterSpacing: 1,
+                    fontSize: 14,
+                    boxShadow: 'none',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Log In
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setShowAuthModal(true);
+                  }}
+                  style={{
+                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    padding: '7px 16px',
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                    fontSize: 14,
+                    boxShadow: '6px 0px 0px #B45309',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Sign Up
+                </button>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Link to="/profile" style={{ textDecoration: 'none' }}>
+                  <button
+                    style={{
+                      background: 'transparent',
+                      color: '#D97706',
+                      border: '2px solid #D97706',
+                      borderRadius: 8,
+                      padding: '5px 16px',
+                      fontWeight: 'normal',
+                      letterSpacing: 1,
+                      fontSize: 14,
+                      boxShadow: 'none',
+                      outline: 'transparent',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      opacity: 0.95
+                    }}
+                  >
+                    {profile?.display_name || profile?.username || 'Profile'}
+                  </button>
+                </Link>
+                <button
+                  onClick={async () => {
+                    await signOut();
+                  }}
+                  style={{
+                    background: 'transparent',
+                    color: '#D97706',
+                    border: '2px solid #D97706',
+                    borderRadius: 8,
+                    padding: '5px 16px',
+                    fontWeight: 'normal',
+                    letterSpacing: 1,
+                    fontSize: 14,
+                    boxShadow: 'none',
+                    outline: 'transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    opacity: 0.95
+                  }}
+                >
+                  Sign Out
+                </button>
+              </Box>
+            )}
+          </Box>
           <Menu
             id="simple-menu"
             anchorEl={anchorEl}
@@ -272,7 +374,7 @@ export default function MiniDrawer() {
               alignItems: 'center',
               gap: '8px'
             }}>
-                              <Palette style={{ fontSize: 18 }} />
+              <Palette style={{ fontSize: 18 }} />
               Color Scheme
             </MenuItem>
           </Menu>
@@ -688,77 +790,6 @@ export default function MiniDrawer() {
           </a>
         </List>
         
-        {/* User Menu */}
-        <List className={styles.btnContainer}>
-          {user ? (
-            <>
-              <RouterLink to="/profile" style={{ textDecoration: 'none' }}>
-                <ListItem className={styles.listItem} sx={{ ...listItemStyle, cursor: 'pointer' }}>
-                  <ListItemIcon sx={iconStyle}>
-                    <Tooltip title={profile?.display_name || profile?.username || 'Profile'} placement="right">
-                      <User 
-                        className={styles.homeLogo} 
-                        style={{ 
-                          color: location.pathname === '/profile' ? '#D97706' : getTextColor(),
-                          fontSize: location.pathname === '/profile' ? '24px' : '20px'
-                        }} 
-                        weight={location.pathname === '/profile' ? "fill" : (hoveredIcon === 'user' ? "fill" : "regular")}
-                        onMouseEnter={() => setHoveredIcon('user')}
-                        onMouseLeave={() => setHoveredIcon(null)}
-                      />
-                    </Tooltip>
-                  </ListItemIcon>
-                </ListItem>
-              </RouterLink>
-              <ListItem 
-                className={styles.listItem} 
-                onClick={async () => {
-                  await signOut();
-                }}
-                sx={{ ...listItemStyle, cursor: 'pointer' }}
-              >
-                <ListItemIcon sx={iconStyle}>
-                  <Tooltip title="Sign Out" placement="right">
-                    <SignOut 
-                      className={styles.homeLogo} 
-                      style={{ 
-                        color: getTextColor(),
-                        fontSize: '20px'
-                      }} 
-                      weight={hoveredIcon === 'signout' ? "fill" : "regular"}
-                      onMouseEnter={() => setHoveredIcon('signout')}
-                      onMouseLeave={() => setHoveredIcon(null)}
-                    />
-                  </Tooltip>
-                </ListItemIcon>
-              </ListItem>
-            </>
-          ) : (
-            <ListItem 
-              className={styles.listItem} 
-              onClick={() => {
-                setAuthMode('signin');
-                setShowAuthModal(true);
-              }}
-              sx={{ ...listItemStyle, cursor: 'pointer' }}
-            >
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Sign In" placement="right">
-                  <User 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: getTextColor(),
-                      fontSize: '20px'
-                    }} 
-                    weight={hoveredIcon === 'signin' ? "fill" : "regular"}
-                    onMouseEnter={() => setHoveredIcon('signin')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          )}
-        </List>
       </Drawer>
       
       {/* Mobile Color Picker Modal */}

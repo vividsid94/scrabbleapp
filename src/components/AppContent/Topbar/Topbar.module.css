@@ -1,0 +1,44 @@
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 24px;
+  padding-bottom: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(31, 41, 55, 1);
+  width: calc(100% - 55px);
+  float: right;
+}
+
+@media screen and (max-width: 992px) {
+  .topbar {
+    display: none;
+  }
+}
+
+.topbar[data-light-mode="light"] {
+  background: rgba(255, 255, 255, 1);
+}
+
+.topbarContent {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+
+@media screen and (max-width: 992px) {
+  .topbar {
+    display: none;
+  }
+  
+  .App-header {
+    width: 100%;
+  }
+}
+

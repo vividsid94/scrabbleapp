@@ -33,7 +33,8 @@ import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
 import Profile from "./containers/Profile/Profile";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Topbar from "./components/AppContent/Topbar/Topbar";
 
 export const ThemeContext = React.createContext();
 
@@ -41,6 +42,7 @@ export const ThemeContext = React.createContext();
 const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
+  const { user } = useAuth();
 
   const getHeaderBackground = () => {
     if (lightMode === 'dark') {
@@ -66,9 +68,11 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 
   return (
     <div className="App">
+      <Topbar />
       <header className="App-header" style={{
         background: getHeaderBackground(),
-        color: lightMode === 'dark' ? '#fff' : '#1F2937'
+        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+        marginTop: '36px'
       }}>
         <Routes>
           <Route path="/minigames" element={<Minigames/>} />

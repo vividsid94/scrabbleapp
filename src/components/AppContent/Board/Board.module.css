@@ -193,6 +193,27 @@ td {
   padding-left: 15px;
 }
 
+.boardWrapper:hover .controlButtons {
+  opacity: 1;
+}
+
+.controlButtons {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.controlButtons > * {
+  pointer-events: auto;
+}
+
 @media screen and (max-width: 992px) {
   .boardWrapper {
     position: relative;
@@ -216,9 +237,6 @@ td {
     display: none !important;
   }
 
-  .resizeHandleBottomLeft {
-    display: none !important;
-  }
 
   .panButton {
     display: none !important;
@@ -334,10 +352,7 @@ td {
 }
 
 .resizeHandle {
-  position: absolute;
-  top: -25px;
-  left: -25px;
-  z-index: 1000;
+  position: relative;
   width: 32px;
   height: 32px;
   display: flex;
@@ -360,38 +375,9 @@ td {
   transform: scale(0.95);
 }
 
-.resizeHandleBottomLeft {
-  position: absolute;
-  bottom: -25px;
-  left: -25px;
-  z-index: 1000;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  cursor: grab;
-  user-select: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.resizeHandleBottomLeft:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.resizeHandleBottomLeft:active {
-  cursor: grabbing;
-  transform: scale(0.95);
-}
 
 .panButton {
-  position: absolute;
-  left: -15px;
-  top: 50%;
-  z-index: 1001;
+  position: relative;
   width: 32px;
   height: 32px;
   display: flex;
@@ -402,9 +388,6 @@ td {
   user-select: none;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: auto;
-  visibility: visible;
-  opacity: 1;
 }
 
 .panButton:hover {

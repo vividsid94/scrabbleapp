@@ -39,7 +39,6 @@ export default function Board({
     const [circledLetters, setCircledLetters] = useState([]);
     const [boardScale, setBoardScale] = useState(1);
     const [isDragging, setIsDragging] = useState(false);
-    const [dragHandle, setDragHandle] = useState(null); // 'top-left' or 'bottom-left'
     const [dragStart, setDragStart] = useState({ x: 0, y: 0, scale: 1 });
     const [isPanning, setIsPanning] = useState(false);
     const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
@@ -75,26 +74,17 @@ export default function Board({
         }
     }, [boardScale]);
     
-    const handleMouseDown = (e, handlePosition) => {
+    const handleMouseDown = (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (boardRef.current) {
             const rect = boardRef.current.getBoundingClientRect();
             
-            let initialDistance;
-            if (handlePosition === 'top-left') {
-                // Distance to bottom-right corner
-                initialDistance = Math.sqrt(
-                    Math.pow(e.clientX - rect.right, 2) + 
-                    Math.pow(e.clientY - rect.bottom, 2)
-                );
-            } else {
-                // Distance to top-right corner
-                initialDistance = Math.sqrt(
-                    Math.pow(e.clientX - rect.right, 2) + 
-                    Math.pow(e.clientY - rect.top, 2)
-                );
-            }
+            // Distance to bottom-right corner
+            const initialDistance = Math.sqrt(
+                Math.pow(e.clientX - rect.right, 2) + 
+                Math.pow(e.clientY - rect.bottom, 2)
+            );
             
             setDragStart({
                 mouseX: e.clientX,
@@ -102,47 +92,34 @@ export default function Board({
                 scale: boardScale,
                 initialDistance: Math.max(initialDistance, 50) // Prevent division by zero
             });
-            setDragHandle(handlePosition);
             setIsDragging(true);
         }
     };
 
     useEffect(() => {
         const handleMouseMove = (e) => {
-            if (!isDragging || !boardRef.current || !dragHandle) return;
+            if (!isDragging || !boardRef.current) return;
             
             const rect = boardRef.current.getBoundingClientRect();
-            let currentDistance;
             
-            if (dragHandle === 'top-left') {
-                // Calculate distance from mouse to bottom-right corner
-                const bottomRightX = rect.right;
-                const bottomRightY = rect.bottom;
-                currentDistance = Math.sqrt(
-                    Math.pow(e.clientX - bottomRightX, 2) + 
-                    Math.pow(e.clientY - bottomRightY, 2)
-                );
-            } else {
-                // Calculate distance from mouse to top-right corner
-                const topRightX = rect.right;
-                const topRightY = rect.top;
-                currentDistance = Math.sqrt(
-                    Math.pow(e.clientX - topRightX, 2) + 
-                    Math.pow(e.clientY - topRightY, 2)
-                );
-            }
+            // Calculate distance from mouse to bottom-right corner
+            const bottomRightX = rect.right;
+            const bottomRightY = rect.bottom;
+            const currentDistance = Math.sqrt(
+                Math.pow(e.clientX - bottomRightX, 2) + 
+                Math.pow(e.clientY - bottomRightY, 2)
+            );
             
             // Scale based on ratio of current distance to initial distance
             // This prevents feedback loops by using stored initial values
             const distanceRatio = currentDistance / dragStart.initialDistance;
-            const newScale = Math.max(1, Math.min(3, dragStart.scale * distanceRatio));
+            const newScale = Math.max(1, Math.min(1.5, dragStart.scale * distanceRatio));
             
             setBoardScale(newScale);
         };
 
         const handleMouseUp = () => {
             setIsDragging(false);
-            setDragHandle(null);
         };
 
         if (isDragging) {
@@ -154,7 +131,7 @@ export default function Board({
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging, dragStart, dragHandle]);
+    }, [isDragging, dragStart]);
 
     const handlePanMouseDown = (e) => {
         e.preventDefault();
@@ -172,7 +149,11 @@ export default function Board({
             
             const newX = e.clientX - panStart.x;
             const newY = e.clientY - panStart.y;
-            setPanPosition({ x: newX, y: newY });
+            
+            // Prevent panning further right than the original position (right wall at x = 0)
+            const constrainedX = Math.min(newX, 0);
+            
+            setPanPosition({ x: constrainedX, y: newY });
         };
 
         const handlePanMouseUp = () => {
@@ -188,7 +169,7 @@ export default function Board({
             document.removeEventListener('mousemove', handlePanMouseMove);
             document.removeEventListener('mouseup', handlePanMouseUp);
         };
-    }, [isPanning, panStart, panPosition]);
+    }, [isPanning, panStart]);
 
     useEffect(() => {
         const lowercaseLetters = move.match(/(?<![a-z(])[a-z](?![a-z)])/g);
@@ -291,65 +272,51 @@ export default function Board({
 
     return (
         <Box className={styles.boardWrapper}>
-            {!isMobile && (
-                <Tooltip title="Click and drag to pan board" placement="right">
-                    <Box
-                        className={styles.panButton}
-                        onMouseDown={handlePanMouseDown}
-                        style={{
-                            backgroundColor: isPanning 
-                                ? (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)')
-                                : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
-                            cursor: isPanning ? 'grabbing' : 'grab',
-                            color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                            transform: `translate(${panPosition.x}px, calc(${panPosition.y}px - 50% + ${dragHandle === 'bottom-left' ? (boardScale - 1) * boardHeight / 2 : -(boardScale - 1) * boardHeight / 2}px)) scale(${boardScale})`,
-                            transformOrigin: 'left center',
-                            transition: (isPanning || isDragging) ? 'none' : 'transform 0.1s ease-out'
-                        }}
-                    >
-                        <Hand size={16} weight="bold" />
-                    </Box>
-                </Tooltip>
-            )}
             <Box 
                 ref={boardRef}
                 className={`${styles.BoardContainer} ${styles[boardTheme]}`}
                 style={{
                     ...getBoardContainerStyle(),
                     transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${boardScale})`,
-                    transformOrigin: dragHandle === 'bottom-left' ? '100% 0%' : '100% 100%',
+                    transformOrigin: '100% 100%',
                     transition: (isDragging || isPanning) ? 'none' : 'transform 0.1s ease-out'
                 }}
             >
             {!isMobile && (
-                <>
+                <Box className={styles.controlButtons}>
                     <Tooltip title="Drag to resize board" placement="right">
                         <Box
                             className={styles.resizeHandle}
-                            onMouseDown={(e) => handleMouseDown(e, 'top-left')}
+                            onMouseDown={handleMouseDown}
                             style={{
                                 backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-                                cursor: isDragging && dragHandle === 'top-left' ? 'grabbing' : 'grab',
-                                color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                                cursor: isDragging ? 'grabbing' : 'grab',
+                                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                                transform: `scale(${boardScale})`,
+                                transformOrigin: 'left center'
                             }}
                         >
                             <ArrowsOut size={16} weight="bold" />
                         </Box>
                     </Tooltip>
-                    <Tooltip title="Drag to resize board" placement="left">
+                    <Tooltip title="Click and drag to pan board" placement="right">
                         <Box
-                            className={styles.resizeHandleBottomLeft}
-                            onMouseDown={(e) => handleMouseDown(e, 'bottom-left')}
+                            className={styles.panButton}
+                            onMouseDown={handlePanMouseDown}
                             style={{
-                                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-                                cursor: isDragging && dragHandle === 'bottom-left' ? 'grabbing' : 'grab',
-                                color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                                backgroundColor: isPanning 
+                                    ? (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)')
+                                    : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
+                                cursor: isPanning ? 'grabbing' : 'grab',
+                                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                                transform: `scale(${boardScale})`,
+                                transformOrigin: 'left center'
                             }}
                         >
-                            <ArrowsOut size={16} weight="bold" />
+                            <Hand size={16} weight="bold" />
                         </Box>
                     </Tooltip>
-                </>
+                </Box>
             )}
 
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`} style={getHeaderStyle()}>
