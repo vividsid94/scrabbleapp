@@ -7,7 +7,8 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 12px 24px 0 24px;
+  padding: 12px 24px;
+  height: 48px;
   backdrop-filter: blur(10px);
   background: rgba(31, 41, 55, 1);
 }
