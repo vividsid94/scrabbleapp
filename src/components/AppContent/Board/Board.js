@@ -61,13 +61,17 @@ export default function Board({
     useEffect(() => {
         if (boardRef.current) {
             const updateHeight = () => {
-                const rect = boardRef.current.getBoundingClientRect();
-                setBoardHeight(rect.height);
+                if (boardRef.current) {
+                    const rect = boardRef.current.getBoundingClientRect();
+                    setBoardHeight(rect.height);
+                }
             };
             updateHeight();
             const resizeObserver = new ResizeObserver(updateHeight);
             resizeObserver.observe(boardRef.current);
-            return () => resizeObserver.disconnect();
+            return () => {
+                resizeObserver.disconnect();
+            };
         }
     }, [boardScale]);
     

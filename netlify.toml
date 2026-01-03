@@ -2,6 +2,7 @@
     command = "npm run build"
     functions = "netlify_functions"
     publish = "build"
+    ignore = "node_modules"
     include = [
         "netlify_functions/dictionary.gaddag.json",
         "netlify_functions/leaves.json",
