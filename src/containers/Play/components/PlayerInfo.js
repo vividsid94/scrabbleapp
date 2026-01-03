@@ -25,7 +25,7 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, sx, mascotRef, botImage, lightMode = 'dark' }) => {
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark' }) => {
   const panelBackground = lightMode === 'dark' 
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
     : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
@@ -37,6 +37,9 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
     : '0 2px 8px rgba(0, 0, 0, 0.1)';
+
+  // Active turn indicator: small indicator light
+  const isActive = currentPlayer === playerNumber;
 
   return (
   <Box 
@@ -59,6 +62,28 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           color: lightMode === 'dark' ? '#fff' : '#1F2937'
         }}
       >
+        {isActive && (
+          <Box
+            sx={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#D97706',
+              boxShadow: '0 0 8px rgba(217, 119, 6, 0.8), 0 0 12px rgba(217, 119, 6, 0.5)',
+              animation: 'pulse 2s ease-in-out infinite',
+              '@keyframes pulse': {
+                '0%, 100%': {
+                  opacity: 1,
+                  transform: 'scale(1)'
+                },
+                '50%': {
+                  opacity: 0.7,
+                  transform: 'scale(1.1)'
+                }
+              }
+            }}
+          />
+        )}
         {name}
       </Box>
       <Box 
@@ -362,7 +387,7 @@ export default function PlayerInfo({
                   position: 'relative'
                 }}
               >
-                <SwapHorizIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
+                <SwapHorizIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937', fontWeight: '700' }} />
                 <Box sx={{
                   position: 'absolute',
                   top: -8,
@@ -408,9 +433,12 @@ export default function PlayerInfo({
       ].sort((a, b) => {
         // If currentPlayer is 2, bot should be first
         return currentPlayer === 2 ? (a.isBot ? -1 : 1) : (a.isBot ? 1 : -1);
-      }).map((player, index) => (
+      }).map((player, index) => {
+        const playerNumber = player.isBot ? 2 : 1;
+        return (
         <PlayerInfoSection
           key={index}
+          playerNumber={playerNumber}
           name={player.isThinking ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {player.name}
@@ -482,7 +510,8 @@ export default function PlayerInfo({
           mascotRef={player.isBot ? mascotRef : undefined}
           botImage={player.botImage}
         />
-      ))}
+      );
+      })}
 
       <LatestMove 
         latestMove={latestMove} 

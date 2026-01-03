@@ -41,6 +41,7 @@ export const ThemeContext = React.createContext();
 const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
+  const is3DViewerRoute = location.pathname === '/3dviewer';
   const { user } = useAuth();
 
   const getHeaderBackground = () => {
@@ -67,44 +68,49 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 
   return (
     <div className="App">
-      <Topbar />
-      <header className="App-header" style={{
-        background: getHeaderBackground(),
-        color: lightMode === 'dark' ? '#fff' : '#1F2937',
-        marginTop: '36px'
-      }}>
+      {!is3DViewerRoute && <Topbar />}
+      {!is3DViewerRoute ? (
+        <header className="App-header" style={{
+          background: getHeaderBackground(),
+          color: lightMode === 'dark' ? '#fff' : '#1F2937',
+          marginTop: '36px'
+        }}>
+          <Routes>
+            <Route path="/minigames" element={<Minigames/>} />
+            <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
+            <Route path="/" element={<Home/>} />
+            <Route path="/memory" element={<Memory/>} />
+            <Route path="/words" element={<WordTable/>}/>
+            <Route path="/series" element={<Series/>}/>
+            <Route path="/playground" element={<Play/>}/>
+            <Route path="/play" element={<Play/>}/>
+            <Route path="/changelog" element={<Changelog/>}/>
+            <Route path="/study" element={<Study/>}/>
+            <Route path="/boggle" element={<Boggle/>}/>
+            <Route path="/puzzle" element={<Puzzle/>}/>
+            <Route path="/sandbox" element={<Sandbox/>}/>
+            <Route path="/widget" element={<WidgetPage/>}/>
+            <Route path="/widget-landing" element={<WidgetLanding/>}/>
+            <Route path="/submit-game" element={<SubmitGame/>}/>
+            <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
+            <Route path="/about" element={<About/>} />
+            <Route path="/test-theo-shake" element={<TestTheoShake/>} />
+            <Route path="/escape-room-3d" element={<RealEscapeRoom/>} />
+            <Route path="/test-mind-blow" element={<TestMindBlow />} />
+            <Route path="/jigsaw" element={<Jigsaw />} />
+            <Route path="/test-jigsaw" element={<Jigsaw />} />
+            <Route path="/snakes" element={<Snakes />} />
+            <Route path="/player/:playerId" element={<PlayerProfile />} />
+            <Route path="/tournament/:tournamentId" element={<Tournament />} />
+            <Route path="/tournaments" element={<Tournaments />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </header>
+      ) : (
         <Routes>
-          <Route path="/minigames" element={<Minigames/>} />
-          <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
-          <Route path="/" element={<Home/>} />
-          <Route path="/memory" element={<Memory/>} />
-          <Route path="/words" element={<WordTable/>}/>
-          <Route path="/series" element={<Series/>}/>
-          <Route path="/playground" element={<Play/>}/>
-          <Route path="/play" element={<Play/>}/>
-          <Route path="/changelog" element={<Changelog/>}/>
-          <Route path="/study" element={<Study/>}/>
-          <Route path="/boggle" element={<Boggle/>}/>
-          <Route path="/puzzle" element={<Puzzle/>}/>
-          <Route path="/sandbox" element={<Sandbox/>}/>
           <Route path="/3dviewer" element={<Scrabble3D/>}/>
-          <Route path="/widget" element={<WidgetPage/>}/>
-          <Route path="/widget-landing" element={<WidgetLanding/>}/>
-          <Route path="/submit-game" element={<SubmitGame/>}/>
-          <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
-          <Route path="/about" element={<About/>} />
-          <Route path="/test-theo-shake" element={<TestTheoShake/>} />
-          <Route path="/escape-room-3d" element={<RealEscapeRoom/>} />
-          <Route path="/test-mind-blow" element={<TestMindBlow />} />
-          <Route path="/jigsaw" element={<Jigsaw />} />
-          <Route path="/test-jigsaw" element={<Jigsaw />} />
-          <Route path="/snakes" element={<Snakes />} />
-          <Route path="/player/:playerId" element={<PlayerProfile />} />
-          <Route path="/tournament/:tournamentId" element={<Tournament />} />
-          <Route path="/tournaments" element={<Tournaments />} />
-          <Route path="/profile" element={<Profile />} />
         </Routes>
-      </header>
+      )}
       {!isWidgetRoute && <Footer></Footer>}
     </div>
   );

@@ -228,7 +228,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
               }}
               sx={{
                 fontSize: '10px',
-                fontWeight: '600',
+                fontWeight: '700',
                 color: secondaryTextColor,
                 padding: '4px 8px',
                 borderRadius: '4px',
