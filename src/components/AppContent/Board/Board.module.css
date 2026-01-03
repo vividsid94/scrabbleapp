@@ -186,7 +186,21 @@ td {
   }
 }
 
+.boardWrapper {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+  padding-left: 15px;
+}
+
 @media screen and (max-width: 992px) {
+  .boardWrapper {
+    position: relative;
+    display: inline-block;
+    overflow: visible;
+    padding-left: 0;
+  }
+
   .BoardContainer {
     border: none;
     background: none;
@@ -196,6 +210,18 @@ td {
   .innerBox{
     display: flex;
     justify-content: center;
+  }
+
+  .resizeHandle {
+    display: none !important;
+  }
+
+  .resizeHandleBottomLeft {
+    display: none !important;
+  }
+
+  .panButton {
+    display: none !important;
   }
 }
 
@@ -305,4 +331,86 @@ td {
   font-size: 13px;
   line-height: 18px;
   color: white;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: -25px;
+  left: -25px;
+  z-index: 1000;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.resizeHandle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.resizeHandle:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.resizeHandleBottomLeft {
+  position: absolute;
+  bottom: -25px;
+  left: -25px;
+  z-index: 1000;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.resizeHandleBottomLeft:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.resizeHandleBottomLeft:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.panButton {
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  z-index: 1001;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+}
+
+.panButton:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.panButton:active {
+  cursor: grabbing;
 }

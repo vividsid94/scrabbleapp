@@ -117,11 +117,9 @@ function App() {
   const tileColor = useColorSchemeStore(state => state.color);
   const updateColor = useColorSchemeStore(state => state.updateColor);
   
-  // Update protiles color based on light mode
+  // Update protiles color - same for both light and dark mode
   useEffect(() => {
-    // Dark mode: lighter, less saturated orange for softer appearance on dark background
-    // Light mode: darker amber/orange for contrast on white background (matches Theo's theme)
-    const protilesColor = lightMode === 'dark' ? '#F97316' : '#92400E';
+    const protilesColor = '#92400E'; // Same color for both light and dark mode
     updateColor(protilesColor);
   }, [lightMode, updateColor]);
   

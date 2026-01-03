@@ -5,6 +5,7 @@ import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
+import { ArrowsOut, Hand } from '@phosphor-icons/react';
 
 export default function Board({
     boardMode = "STANDARD",
@@ -36,7 +37,154 @@ export default function Board({
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
     const [circledLetters, setCircledLetters] = useState([]);
+    const [boardScale, setBoardScale] = useState(1);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragHandle, setDragHandle] = useState(null); // 'top-left' or 'bottom-left'
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0, scale: 1 });
+    const [isPanning, setIsPanning] = useState(false);
+    const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+    const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+    const [isMobile, setIsMobile] = useState(false);
+    const [boardHeight, setBoardHeight] = useState(0);
+    const boardRef = useRef(null);
     const handleClose = () => setOpen(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 992);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    useEffect(() => {
+        if (boardRef.current) {
+            const updateHeight = () => {
+                const rect = boardRef.current.getBoundingClientRect();
+                setBoardHeight(rect.height);
+            };
+            updateHeight();
+            const resizeObserver = new ResizeObserver(updateHeight);
+            resizeObserver.observe(boardRef.current);
+            return () => resizeObserver.disconnect();
+        }
+    }, [boardScale]);
+    
+    const handleMouseDown = (e, handlePosition) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (boardRef.current) {
+            const rect = boardRef.current.getBoundingClientRect();
+            
+            let initialDistance;
+            if (handlePosition === 'top-left') {
+                // Distance to bottom-right corner
+                initialDistance = Math.sqrt(
+                    Math.pow(e.clientX - rect.right, 2) + 
+                    Math.pow(e.clientY - rect.bottom, 2)
+                );
+            } else {
+                // Distance to top-right corner
+                initialDistance = Math.sqrt(
+                    Math.pow(e.clientX - rect.right, 2) + 
+                    Math.pow(e.clientY - rect.top, 2)
+                );
+            }
+            
+            setDragStart({
+                mouseX: e.clientX,
+                mouseY: e.clientY,
+                scale: boardScale,
+                initialDistance: Math.max(initialDistance, 50) // Prevent division by zero
+            });
+            setDragHandle(handlePosition);
+            setIsDragging(true);
+        }
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!isDragging || !boardRef.current || !dragHandle) return;
+            
+            const rect = boardRef.current.getBoundingClientRect();
+            let currentDistance;
+            
+            if (dragHandle === 'top-left') {
+                // Calculate distance from mouse to bottom-right corner
+                const bottomRightX = rect.right;
+                const bottomRightY = rect.bottom;
+                currentDistance = Math.sqrt(
+                    Math.pow(e.clientX - bottomRightX, 2) + 
+                    Math.pow(e.clientY - bottomRightY, 2)
+                );
+            } else {
+                // Calculate distance from mouse to top-right corner
+                const topRightX = rect.right;
+                const topRightY = rect.top;
+                currentDistance = Math.sqrt(
+                    Math.pow(e.clientX - topRightX, 2) + 
+                    Math.pow(e.clientY - topRightY, 2)
+                );
+            }
+            
+            // Scale based on ratio of current distance to initial distance
+            // This prevents feedback loops by using stored initial values
+            const distanceRatio = currentDistance / dragStart.initialDistance;
+            const newScale = Math.max(1, Math.min(3, dragStart.scale * distanceRatio));
+            
+            setBoardScale(newScale);
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            setDragHandle(null);
+        };
+
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragStart, dragHandle]);
+
+    const handlePanMouseDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsPanning(true);
+        setPanStart({
+            x: e.clientX - panPosition.x,
+            y: e.clientY - panPosition.y
+        });
+    };
+
+    useEffect(() => {
+        const handlePanMouseMove = (e) => {
+            if (!isPanning) return;
+            
+            const newX = e.clientX - panStart.x;
+            const newY = e.clientY - panStart.y;
+            setPanPosition({ x: newX, y: newY });
+        };
+
+        const handlePanMouseUp = () => {
+            setIsPanning(false);
+        };
+
+        if (isPanning) {
+            document.addEventListener('mousemove', handlePanMouseMove);
+            document.addEventListener('mouseup', handlePanMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handlePanMouseMove);
+            document.removeEventListener('mouseup', handlePanMouseUp);
+        };
+    }, [isPanning, panStart, panPosition]);
 
     useEffect(() => {
         const lowercaseLetters = move.match(/(?<![a-z(])[a-z](?![a-z)])/g);
@@ -138,10 +286,67 @@ export default function Board({
     });
 
     return (
-        <Box 
-            className={`${styles.BoardContainer} ${styles[boardTheme]}`}
-            style={getBoardContainerStyle()}
-        >
+        <Box className={styles.boardWrapper}>
+            {!isMobile && (
+                <Tooltip title="Click and drag to pan board" placement="right">
+                    <Box
+                        className={styles.panButton}
+                        onMouseDown={handlePanMouseDown}
+                        style={{
+                            backgroundColor: isPanning 
+                                ? (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)')
+                                : (lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'),
+                            cursor: isPanning ? 'grabbing' : 'grab',
+                            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                            transform: `translate(${panPosition.x}px, calc(${panPosition.y}px - 50% + ${dragHandle === 'bottom-left' ? (boardScale - 1) * boardHeight / 2 : -(boardScale - 1) * boardHeight / 2}px)) scale(${boardScale})`,
+                            transformOrigin: 'left center',
+                            transition: (isPanning || isDragging) ? 'none' : 'transform 0.1s ease-out'
+                        }}
+                    >
+                        <Hand size={16} weight="bold" />
+                    </Box>
+                </Tooltip>
+            )}
+            <Box 
+                ref={boardRef}
+                className={`${styles.BoardContainer} ${styles[boardTheme]}`}
+                style={{
+                    ...getBoardContainerStyle(),
+                    transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${boardScale})`,
+                    transformOrigin: dragHandle === 'bottom-left' ? '100% 0%' : '100% 100%',
+                    transition: (isDragging || isPanning) ? 'none' : 'transform 0.1s ease-out'
+                }}
+            >
+            {!isMobile && (
+                <>
+                    <Tooltip title="Drag to resize board" placement="right">
+                        <Box
+                            className={styles.resizeHandle}
+                            onMouseDown={(e) => handleMouseDown(e, 'top-left')}
+                            style={{
+                                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                                cursor: isDragging && dragHandle === 'top-left' ? 'grabbing' : 'grab',
+                                color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                            }}
+                        >
+                            <ArrowsOut size={16} weight="bold" />
+                        </Box>
+                    </Tooltip>
+                    <Tooltip title="Drag to resize board" placement="left">
+                        <Box
+                            className={styles.resizeHandleBottomLeft}
+                            onMouseDown={(e) => handleMouseDown(e, 'bottom-left')}
+                            style={{
+                                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                                cursor: isDragging && dragHandle === 'bottom-left' ? 'grabbing' : 'grab',
+                                color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                            }}
+                        >
+                            <ArrowsOut size={16} weight="bold" />
+                        </Box>
+                    </Tooltip>
+                </>
+            )}
 
             <Box className={`${styles.Header} ${!showDictionary ? styles.hidden : ''}`} style={getHeaderStyle()}>
                 <Box className={styles.headerContent}>
@@ -343,7 +548,8 @@ export default function Board({
                 >
                     {modalContent === "slip" && <SlipContent />}
                 </Box>
-            </Modal>  
+            </Modal>
+        </Box>
         </Box>
     )
 }
