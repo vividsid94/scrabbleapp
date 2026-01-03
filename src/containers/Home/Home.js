@@ -201,6 +201,12 @@ export default function Home(){
               border: lightMode === 'dark' ? 'none' : '1px solid #e5e7eb',
               boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)'
             }}
+            sx={{
+              fontSize: { xs: '0.85em', sm: '1em' },
+              padding: { xs: '12px', sm: '15px' },
+              margin: { xs: '10px auto', sm: '15px auto' },
+              width: { xs: '90%', sm: '65%' }
+            }}
           >
             Welcome! Meet Theo, your word game fox. We're in beta!{" "}
             <Link to="/getting-started" style={{
@@ -216,11 +222,11 @@ export default function Home(){
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
-              gap: '12px',
-              maxWidth: '450px',
+              gap: { xs: '8px', sm: '12px' },
+              maxWidth: { xs: '100%', sm: '450px' },
               margin: '0 auto',
               width: '100%',
-              padding: '0 16px',
+              padding: { xs: '0 12px', sm: '0 16px' },
               justifyItems: 'center'
             }}
           >
@@ -283,7 +289,7 @@ export default function Home(){
                     background: 'transparent',
                     color: '#D97706',
                     border: '2px solid #D97706',
-                    borderRadius: 0,
+                    borderRadius: 8,
                     padding: '5px 0px',
                     fontWeight: 'normal',
                     letterSpacing: 1,
@@ -297,6 +303,10 @@ export default function Home(){
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                     opacity: 0.95
                   }}
+                  sx={{
+                    fontSize: { xs: 14, sm: 15 },
+                    padding: { xs: '6px 0px', sm: '5px 0px' }
+                  }}
                 >
                   Viewer
                 </button>
@@ -307,18 +317,19 @@ export default function Home(){
                 gridColumn: { xs: '1 / 3', sm: '1 / 4' },
                 display: 'flex',
                 justifyContent: 'center',
-                gap: '12px',
-                width: '100%'
+                gap: { xs: '8px', sm: '12px' },
+                width: '100%',
+                flexWrap: { xs: 'wrap', sm: 'nowrap' }
               }}
             >
-              <Box sx={{ width: { xs: '100%', sm: '120px' } }}>
+              <Box sx={{ width: { xs: 'calc(50% - 4px)', sm: '120px' } }}>
                 <Link to="/3dviewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
                   <button 
                     style={{
                       background: 'transparent',
                       color: '#D97706',
                       border: '2px solid #D97706',
-                      borderRadius: 0,
+                      borderRadius: 8,
                       padding: '5px 0px',
                       fontWeight: 'normal',
                       letterSpacing: 1,
@@ -332,19 +343,23 @@ export default function Home(){
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                       opacity: 0.95
                     }}
+                    sx={{
+                      fontSize: { xs: 14, sm: 15 },
+                      padding: { xs: '6px 0px', sm: '5px 0px' }
+                    }}
                   >
                     3D Viewer
                   </button>
                 </Link>
               </Box>
-              <Box sx={{ width: { xs: '100%', sm: '120px' } }}>
+              <Box sx={{ width: { xs: 'calc(50% - 4px)', sm: '120px' } }}>
                 <Link to="/submit-game" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
                   <button 
                     style={{
                       background: 'transparent',
                       color: '#D97706',
                       border: '2px solid #D97706',
-                      borderRadius: 0,
+                      borderRadius: 8,
                       padding: '5px 0px',
                       fontWeight: 'normal',
                       letterSpacing: 1,
@@ -357,6 +372,10 @@ export default function Home(){
                       width: '100%',
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                       opacity: 0.95
+                    }}
+                    sx={{
+                      fontSize: { xs: 14, sm: 15 },
+                      padding: { xs: '6px 0px', sm: '5px 0px' }
                     }}
                   >
                     Submit
@@ -374,7 +393,7 @@ export default function Home(){
                   background: 'transparent',
                   color: '#D97706',
                   border: '2px solid #D97706',
-                  borderRadius: 0,
+                  borderRadius: 8,
                   padding: '5px 0px',
                   fontWeight: 'normal',
                   letterSpacing: 1,
@@ -387,6 +406,10 @@ export default function Home(){
                   width: '100%',
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   opacity: 0.95
+                }}
+                sx={{
+                  fontSize: { xs: 14, sm: 15 },
+                  padding: { xs: '6px 0px', sm: '5px 0px' }
                 }}
               >
                 Results
