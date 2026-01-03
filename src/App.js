@@ -11,7 +11,6 @@ import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
 import Changelog from "./containers/Changelog/Changelog";
-import GettingStarted from "./containers/GettingStarted/GettingStarted";
 import Study from "./containers/Study/Study";
 import Boggle from "./containers/Boggle/Boggle";
 import Puzzle from "./containers/Puzzle/Puzzle";
@@ -84,7 +83,6 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
           <Route path="/playground" element={<Play/>}/>
           <Route path="/play" element={<Play/>}/>
           <Route path="/changelog" element={<Changelog/>}/>
-          <Route path="/getting-started" element={<GettingStarted/>}/>
           <Route path="/study" element={<Study/>}/>
           <Route path="/boggle" element={<Boggle/>}/>
           <Route path="/puzzle" element={<Puzzle/>}/>

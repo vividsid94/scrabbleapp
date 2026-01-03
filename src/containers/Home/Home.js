@@ -7,8 +7,12 @@ import Autocomplete from '@mui/material/Autocomplete';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Modal from '@mui/material/Modal';
+import Typography from '@mui/material/Typography';
 import styles from './Home.module.css';
-import { Rocket, MagnifyingGlass, User, Trophy, X } from '@phosphor-icons/react';
+import { Rocket, MagnifyingGlass, User, Trophy, X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
@@ -29,10 +33,21 @@ export default function Home(){
   const [searchResults, setSearchResults] = useState([]);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [loading, setLoading] = useState(false);
+  const [toolsMenuAnchor, setToolsMenuAnchor] = useState(null);
+  const toolsMenuOpen = Boolean(toolsMenuAnchor);
+  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
 
   const touchStartY = useRef(null);
   const touchCurrentY = useRef(null);
   const bodyOverflowRef = useRef('');
+
+  const handleToolsMenuClick = (event) => {
+    setToolsMenuAnchor(event.currentTarget);
+  };
+
+  const handleToolsMenuClose = () => {
+    setToolsMenuAnchor(null);
+  };
 
   const closePanel = () => setSearchPanelOpen(false);
 
@@ -194,40 +209,74 @@ export default function Home(){
             </Box>
           </Box>
           <Box 
-            className={styles.developmentMessage}
             style={{ 
               backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              color: lightMode === 'dark' ? '#ffffff' : '#1F2937',
               border: lightMode === 'dark' ? 'none' : '1px solid #e5e7eb',
-              boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)'
+              boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease-in-out'
             }}
             sx={{
-              fontSize: { xs: '0.85em', sm: '1em' },
-              padding: { xs: '12px', sm: '15px' },
-              margin: { xs: '10px auto', sm: '15px auto' },
-              width: { xs: '90%', sm: '65%' }
+              fontSize: { xs: '0.85em', sm: '0.95em' },
+              padding: { xs: '10px 12px', sm: '12px 15px' },
+              margin: { xs: '8px auto', sm: '12px auto' },
+              width: { xs: '90%', sm: '384px' },
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: { xs: '12px', sm: '16px' }
             }}
           >
-            Welcome! Meet Theo, your word game fox. We're in beta!{" "}
-            <Link to="/getting-started" style={{
-              color: lightMode === 'dark' ? '#60A5FA' : '#3D5A80', 
-              textDecoration: 'none', 
-              fontWeight: 'bold'
-            }}>Get started</Link>
-            {" "}to explore all our features!
+            <Box sx={{ textAlign: { xs: 'center', sm: 'left' }, flex: 1 }}>
+              Welcome! Meet Theo, your word game fox. We're in beta!
+            </Box>
+            <button
+              onClick={() => setHowItWorksOpen(true)}
+              style={{
+                background: 'transparent',
+                color: '#D97706',
+                border: '1px solid #D97706',
+                borderRadius: 6,
+                padding: '4px 16px',
+                fontWeight: 'normal',
+                letterSpacing: 0.5,
+                fontSize: 13,
+                boxShadow: 'none',
+                outline: 'transparent',
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                opacity: 0.9,
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.opacity = '1';
+                e.target.style.backgroundColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.1)' : 'rgba(217, 119, 6, 0.05)';
+                e.target.style.borderColor = '#B45309';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.opacity = '0.9';
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.borderColor = '#D97706';
+              }}
+            >
+              How It Works
+            </button>
           </Box>
           
           <Box 
             className={styles.homeButtonContainer}
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: '120px 120px 120px' },
               gap: { xs: '8px', sm: '12px' },
-              maxWidth: { xs: '100%', sm: '450px' },
+              width: { xs: '100%', sm: '384px' },
               margin: '0 auto',
-              width: '100%',
-              padding: { xs: '0 12px', sm: '0 16px' },
-              justifyItems: 'center'
+              padding: { xs: '0 12px', sm: '0' },
+              justifyItems: { xs: 'center', sm: 'start' }
             }}
           >
             <Box sx={{ gridColumn: { xs: '1', sm: '1' }, width: { xs: '100%', sm: '120px' } }}>
@@ -278,7 +327,7 @@ export default function Home(){
                     opacity: 0.95
                   }}
                 >
-                  Puzzle
+                  Puzzles
                 </button>
               </Link>
             </Box>
@@ -286,15 +335,15 @@ export default function Home(){
               <Link to="/viewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
                 <button 
                   style={{
-                    background: 'transparent',
-                    color: '#D97706',
-                    border: '2px solid #D97706',
+                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
+                    color: '#fff',
+                    border: 0,
                     borderRadius: 8,
-                    padding: '5px 0px',
-                    fontWeight: 'normal',
+                    padding: '7px 20px',
+                    fontWeight: 'bold',
                     letterSpacing: 1,
                     fontSize: 15,
-                    boxShadow: 'none',
+                    boxShadow: '6px 0px 0px #B45309',
                     outline: 'transparent',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -303,92 +352,14 @@ export default function Home(){
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                     opacity: 0.95
                   }}
-                  sx={{
-                    fontSize: { xs: 14, sm: 15 },
-                    padding: { xs: '6px 0px', sm: '5px 0px' }
-                  }}
                 >
                   Viewer
                 </button>
               </Link>
             </Box>
-            <Box 
-              sx={{ 
-                gridColumn: { xs: '1 / 3', sm: '1 / 4' },
-                display: 'flex',
-                justifyContent: 'center',
-                gap: { xs: '8px', sm: '12px' },
-                width: '100%',
-                flexWrap: { xs: 'wrap', sm: 'nowrap' }
-              }}
-            >
-              <Box sx={{ width: { xs: 'calc(50% - 4px)', sm: '120px' } }}>
-                <Link to="/3dviewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                  <button 
-                    style={{
-                      background: 'transparent',
-                      color: '#D97706',
-                      border: '2px solid #D97706',
-                      borderRadius: 8,
-                      padding: '5px 0px',
-                      fontWeight: 'normal',
-                      letterSpacing: 1,
-                      fontSize: 15,
-                      boxShadow: 'none',
-                      outline: 'transparent',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      display: 'block',
-                      width: '100%',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      opacity: 0.95
-                    }}
-                    sx={{
-                      fontSize: { xs: 14, sm: 15 },
-                      padding: { xs: '6px 0px', sm: '5px 0px' }
-                    }}
-                  >
-                    3D Viewer
-                  </button>
-                </Link>
-              </Box>
-              <Box sx={{ width: { xs: 'calc(50% - 4px)', sm: '120px' } }}>
-                <Link to="/submit-game" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                  <button 
-                    style={{
-                      background: 'transparent',
-                      color: '#D97706',
-                      border: '2px solid #D97706',
-                      borderRadius: 8,
-                      padding: '5px 0px',
-                      fontWeight: 'normal',
-                      letterSpacing: 1,
-                      fontSize: 15,
-                      boxShadow: 'none',
-                      outline: 'transparent',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      display: 'block',
-                      width: '100%',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      opacity: 0.95
-                    }}
-                    sx={{
-                      fontSize: { xs: 14, sm: 15 },
-                      padding: { xs: '6px 0px', sm: '5px 0px' }
-                    }}
-                  >
-                    Submit
-                  </button>
-                </Link>
-              </Box>
-            </Box>
-            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '2' }, width: { xs: '100%', sm: '120px' } }}>
-              <button 
-                onClick={() => setSearchPanelOpen(true)}
-                type="button"
-                aria-expanded={searchPanelOpen}
-                aria-controls="resultsPanel"
+            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '2' }, width: { xs: '100%', sm: '126px' } }}>
+              <button
+                onClick={handleToolsMenuClick}
                 style={{
                   background: 'transparent',
                   color: '#D97706',
@@ -402,7 +373,10 @@ export default function Home(){
                   outline: 'transparent',
                   cursor: 'pointer',
                   userSelect: 'none',
-                  display: 'block',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
                   width: '100%',
                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                   opacity: 0.95
@@ -412,8 +386,72 @@ export default function Home(){
                   padding: { xs: '6px 0px', sm: '5px 0px' }
                 }}
               >
-                Results
+                Tools <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
               </button>
+              <Menu
+                anchorEl={toolsMenuAnchor}
+                open={toolsMenuOpen}
+                onClose={handleToolsMenuClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+                PaperProps={{
+                  sx: {
+                    backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+                    border: '1px solid',
+                    borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '8px',
+                    boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
+                    minWidth: '160px',
+                    mt: '4px'
+                  }
+                }}
+              >
+                <MenuItem 
+                  onClick={() => { handleToolsMenuClose(); navigate('/3dviewer'); }}
+                  sx={{
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    fontSize: '14px',
+                    padding: '10px 16px',
+                    '&:hover': {
+                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  3D Viewer
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
+                  sx={{
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    fontSize: '14px',
+                    padding: '10px 16px',
+                    '&:hover': {
+                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  Submit Game
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => { handleToolsMenuClose(); setSearchPanelOpen(true); }}
+                  sx={{
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    fontSize: '14px',
+                    padding: '10px 16px',
+                    '&:hover': {
+                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  Results
+                </MenuItem>
+              </Menu>
             </Box>
             {/* <Link to="/snakes">
               <button className={styles.homeButton} style={{ 
@@ -787,6 +825,397 @@ export default function Home(){
           onClick={closePanel}
         />
       )}
+
+      {/* How It Works Modal */}
+      <Modal
+        open={howItWorksOpen}
+        onClose={() => setHowItWorksOpen(false)}
+        aria-labelledby="how-it-works-modal"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: { xs: '16px', sm: '0' }
+        }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+            borderRadius: '12px',
+            padding: { xs: '20px', sm: '24px' },
+            maxWidth: '480px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            outline: 'none',
+            boxShadow: lightMode === 'dark' ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.2)',
+            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <IconButton
+            onClick={() => setHowItWorksOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: '8px',
+              top: '8px',
+              color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
+              '&:hover': {
+                backgroundColor: lightMode === 'dark' ? '#4b5563' : '#f3f4f6'
+              }
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+          
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={{
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              fontSize: { xs: '18px', sm: '20px' }
+            }}
+          >
+            How It Works
+          </Typography>
+
+          {/* Main Features */}
+          <Typography
+            sx={{
+              fontWeight: '600',
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#9CA3AF',
+              marginBottom: '12px',
+              marginTop: '4px'
+            }}
+          >
+            Main Features
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+            {/* Play */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <GameController size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Play
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Play a live game against people or bots.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Puzzles */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <PuzzlePiece size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Puzzles
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Solve curated positions to improve.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Viewer */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <Eye size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Viewer
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Analyze games, explore boards, study words.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Extra Features */}
+          <Typography
+            sx={{
+              fontWeight: '600',
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#9CA3AF',
+              marginBottom: '12px',
+              marginTop: '4px'
+            }}
+          >
+            Extra Features
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+            {/* Ask Theo */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <Sparkle size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Ask Theo
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Get move suggestions when you're stuck.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* 3D Viewer */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <Cube size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  3D Viewer
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Explore boards in immersive 3D.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Submit Game */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <PaperPlaneTilt size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Submit Game
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Share your games for analysis.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Results */}
+            <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Box
+                sx={{
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <SearchIcon size={18} color="#D97706" weight="fill" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    marginBottom: '2px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  }}
+                >
+                  Results
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Search players, rankings, and tournaments.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+            <button
+              onClick={() => setHowItWorksOpen(false)}
+              style={{
+                background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
+                color: '#fff',
+                border: 0,
+                borderRadius: 8,
+                padding: '8px 24px',
+                fontWeight: 'bold',
+                letterSpacing: 0.5,
+                fontSize: 13,
+                boxShadow: '6px 0px 0px #B45309',
+                outline: 'transparent',
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                opacity: 0.95
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.opacity = '1';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '8px 2px 0px #B45309';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.opacity = '0.95';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '6px 0px 0px #B45309';
+              }}
+            >
+              Got it — Let me play
+            </button>
+          </Box>
+        </Box>
+      </Modal>
     </>
   )
 }

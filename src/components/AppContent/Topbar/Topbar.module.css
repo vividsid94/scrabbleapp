@@ -1,18 +1,15 @@
 .topbar {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 55px;
   right: 0;
   z-index: 1100;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 12px 24px;
-  padding-bottom: 0;
+  padding: 12px 24px 0 24px;
   backdrop-filter: blur(10px);
   background: rgba(31, 41, 55, 1);
-  width: calc(100% - 55px);
-  float: right;
 }
 
 @media screen and (max-width: 992px) {
