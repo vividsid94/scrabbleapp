@@ -1,6 +1,7 @@
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
+import { validateMoveClient } from './validateMoveClient.js';
 
 /**
  * Handles the submission of a word to the board
@@ -84,25 +85,10 @@ export const handleWordSubmit = async (playerMoveSound) => {
   });
 
   // Set move status
-  const { setMoveStatus } = useGameStore.getState();
-  setMoveStatus('Checking placement...');
+  const { setMoveStatus, previewScore } = useGameStore.getState();
 
-  // Validate and score the move in one request
-  setMoveStatus('Checking validity...');
-  const response = await fetch('/.netlify/functions/gameLogic', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      action: 'validateAndScore',
-      beforeBoard: boardCoords,
-      afterBoard: tempBoardCoords
-    })
-  });
-
-  setMoveStatus('Validating words...');
-  const result = await response.json();
+  // Validate using client-side placement validation + Go service for words
+  const result = await validateMoveClient(boardCoords, tempBoardCoords, setMoveStatus);
   if (!result.isValid) {
     setMoveStatus(null);
     console.log('Invalid word submission:', {
@@ -135,7 +121,8 @@ export const handleWordSubmit = async (playerMoveSound) => {
     return;
   }
 
-  const score = result.score;
+  // Use the preview score that's already calculated client-side
+  const score = previewScore || 0;
   
   // Clear move status
   setMoveStatus(null);
