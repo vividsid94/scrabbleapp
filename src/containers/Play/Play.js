@@ -440,9 +440,10 @@ export default function Play() {
       color.current, 
       complementaryColor.current, 
       blankTiles,
-      lastMoveCoordinates
+      lastMoveCoordinates,
+      lightMode
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode]);
 
   // Update player time states when gameTime changes
   useEffect(() => {

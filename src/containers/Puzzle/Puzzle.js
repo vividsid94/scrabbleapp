@@ -307,9 +307,10 @@ export default function Puzzle() {
       color.current, 
       complementaryColor.current, 
       blankTiles,
-      lastMoveCoordinates
+      lastMoveCoordinates,
+      lightMode
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode]);
 
   // Resume after bingo challenge
   const handleResume = () => {

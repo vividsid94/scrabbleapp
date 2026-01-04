@@ -1,13 +1,15 @@
-import { cellColors } from '../References/cellColors';
+import { getCellColors, cellColors } from '../References/cellColors';
 
-export default function CellType(type, lightenedCell){
+export default function CellType(type, lightenedCell, lightMode = 'dark'){
     let result;
     let boxShadowColor = 'rgb(185, 174, 166)';
     let regBoxShadow = 'inset 0.15px 0.15px ' + boxShadowColor + ', inset -0.15px -0.15px ' + boxShadowColor;
+    
+    const colors = getCellColors(lightMode);
 
-    if (type in cellColors) {
+    if (type in colors) {
         result = {
-            ...cellColors[type],
+            ...colors[type],
             boxShadow: regBoxShadow,
             hasBorder: false
         };
@@ -16,7 +18,7 @@ export default function CellType(type, lightenedCell){
         result = {
             value: type,
             hasBorder: lightenedCell,
-            color: cellColors[0].color // Use the default board color (var(--board-color, white))
+            color: colors[0].color // Use the default board color (var(--board-color, white))
         };
     }
     return result;

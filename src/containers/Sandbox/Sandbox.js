@@ -296,7 +296,8 @@ export default function Sandbox() {
       color.current, 
       complementaryColor.current, 
       blankTiles,
-      lastMoveCoordinates
+      lastMoveCoordinates,
+      'dark' // Default to dark mode for Sandbox
     );
   }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates]);
 

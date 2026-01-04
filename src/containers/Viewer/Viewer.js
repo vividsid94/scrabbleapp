@@ -258,10 +258,12 @@ export default function Viewer({ onChange }){
       boardCoords, 
       currentMoveCoords, 
       tiles, 
-      lightMode, 
+      "STANDARD", 
       color.current, 
       null, // complementaryColor
-      calculatedBlankTiles
+      calculatedBlankTiles,
+      [],
+      lightMode
     );
     return result;
   }, [boardCoords, currentMoveCoords, tiles, lightMode, color.current, currentMoveRef.current, parsedMoves]);

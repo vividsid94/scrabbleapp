@@ -110,7 +110,7 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = []) => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = [], lightMode = 'dark') => {
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
@@ -131,7 +131,7 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
           return Cell({
             rowIndex,
             colIndex,
-            bonus: cellType(displayLetter, lightenedCell),
+            bonus: cellType(displayLetter, lightenedCell, lightMode),
             type: "board",
             theme,
             tiles,

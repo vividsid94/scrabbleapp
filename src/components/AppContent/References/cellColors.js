@@ -1,22 +1,37 @@
-export const cellColors = {
+export const getCellColors = (lightMode = 'dark') => {
+  const isDark = lightMode === 'dark';
+  
+  return {
     0: {
         value: "",
         color: "var(--board-color, white)",
     },
     1: {
         value: "",
-        color: "linear-gradient(to right bottom, rgba(126, 214, 221, 0.3), rgba(126, 214, 221, 0.95))",
+        color: isDark 
+          ? "linear-gradient(to right bottom, rgba(126, 214, 221, 0.5), rgba(126, 214, 221, 0.95))"
+          : "linear-gradient(to right bottom, rgba(126, 214, 221, 0), rgba(126, 214, 221, 0.95))",
     },
     2: {
         value: "",
-        color: "linear-gradient(to right bottom, rgba(114, 105, 214, 0.6), rgba(114, 105, 214, 0.95))",
+        color: isDark
+          ? "linear-gradient(to right bottom, rgba(114, 105, 214, 0.6), rgba(114, 105, 214, 0.95))"
+          : "linear-gradient(to right bottom, rgba(114, 105, 214, 0), rgba(114, 105, 214, 0.95))",
     },
     3: {
         value: "",
-        color: "linear-gradient(to right bottom, rgba(244, 159, 212, 0.5), rgba(244, 159, 212, 0.9))",
+        color: isDark
+          ? "linear-gradient(to right bottom, rgba(244, 159, 212, 0.6), rgba(244, 159, 212, 0.9))"
+          : "linear-gradient(to right bottom, rgba(244, 159, 212, 0), rgba(244, 159, 212, 0.9))",
     },
     4: {
         value: "",
-        color: "linear-gradient(to right bottom, rgba(206, 34, 34, 0.5), rgba(206, 34, 34, 0.9))",
+        color: isDark
+          ? "linear-gradient(to right bottom, rgba(206, 34, 34, 0.6), rgba(206, 34, 34, 0.9))"
+          : "linear-gradient(to right bottom, rgba(206, 34, 34, 0), rgba(206, 34, 34, 0.9))",
     }
-}; 
+  };
+};
+
+// Keep the old export for backward compatibility
+export const cellColors = getCellColors('dark'); 
