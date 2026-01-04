@@ -83,7 +83,12 @@ export const handleWordSubmit = async (playerMoveSound) => {
     selectedBoardPosition
   });
 
+  // Set move status
+  const { setMoveStatus } = useGameStore.getState();
+  setMoveStatus('Checking placement...');
+
   // Validate and score the move in one request
+  setMoveStatus('Checking validity...');
   const response = await fetch('/.netlify/functions/gameLogic', {
     method: 'POST',
     headers: {
@@ -96,8 +101,10 @@ export const handleWordSubmit = async (playerMoveSound) => {
     })
   });
 
+  setMoveStatus('Validating words...');
   const result = await response.json();
   if (!result.isValid) {
+    setMoveStatus(null);
     console.log('Invalid word submission:', {
       reason: result.reason || 'Word not found in dictionary',
       word: result.word || 'Unknown',
@@ -129,6 +136,9 @@ export const handleWordSubmit = async (playerMoveSound) => {
   }
 
   const score = result.score;
+  
+  // Clear move status
+  setMoveStatus(null);
 
   // Play player move sound
   if (playerMoveSound && playerMoveSound.play) {

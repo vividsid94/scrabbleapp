@@ -89,6 +89,10 @@ export default function Play() {
     // Bot state
     isBotThinking,
     isPlayerThinking,
+    
+    // Move status
+    moveStatus,
+    setMoveStatus,
 
     // Timer state
     player1Time,
@@ -506,8 +510,9 @@ export default function Play() {
       (snackbarMessage.toLowerCase().includes('not valid') || snackbarMessage.toLowerCase().includes('invalid word'))
     ) {
       mascotRef.current?.shake();
+      setMoveStatus(null); // Clear move status on error
     }
-  }, [snackbarMessage, snackbarSeverity]);
+  }, [snackbarMessage, snackbarSeverity, setMoveStatus]);
 
   return (
     <Box className={styles.container}>
@@ -703,6 +708,7 @@ export default function Play() {
             lightMode={lightMode}
             mascotRef={mascotRef}
             botImage={isBotMode ? getBotIcon(selectedBot.name) : undefined}
+            moveStatus={moveStatus}
           />
 
           {showTimeSlider && !gameStarted && (

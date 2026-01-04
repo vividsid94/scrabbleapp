@@ -25,7 +25,7 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark' }) => {
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null }) => {
   const panelBackground = lightMode === 'dark' 
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
     : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
@@ -86,27 +86,52 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
         )}
         {name}
       </Box>
-      <Box 
-        className={styles.timer}
-        sx={{
-          backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-          border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
-          padding: '2px 6px',
-          fontSize: '12px',
-          color: lightMode === 'dark' ? '#fff' : '#1F2937',
-          fontFamily: 'monospace',
-          boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
-          backdropFilter: 'blur(10px)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-            borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
-            transform: 'translateY(-1px)',
-            boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(0, 0, 0, 0.15)' : '0 2px 6px rgba(0, 0, 0, 0.12)'
-          }
-        }}
-      >
-        {time}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Box 
+          className={styles.timer}
+          sx={{
+            backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+            padding: '2px 6px',
+            fontSize: '12px',
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontFamily: 'monospace',
+            boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+              borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
+              transform: 'translateY(-1px)',
+              boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(0, 0, 0, 0.15)' : '0 2px 6px rgba(0, 0, 0, 0.12)'
+            }
+          }}
+        >
+          {time}
+        </Box>
+        {moveStatus && currentPlayer === playerNumber && (
+          <Box 
+            sx={{
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+              border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+              padding: '2px 6px',
+              fontSize: '12px',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              fontFamily: 'monospace',
+              boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
+                transform: 'translateY(-1px)',
+                boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(0, 0, 0, 0.15)' : '0 2px 6px rgba(0, 0, 0, 0.12)'
+              }
+            }}
+          >
+            {moveStatus}
+          </Box>
+        )}
       </Box>
     </Box>
     <Box 
@@ -177,7 +202,8 @@ export default function PlayerInfo({
   icons,
   mascotRef,
   botImage,
-  lightMode = 'dark'
+  lightMode = 'dark',
+  moveStatus = null
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -509,6 +535,7 @@ export default function PlayerInfo({
           } : undefined}
           mascotRef={player.isBot ? mascotRef : undefined}
           botImage={player.botImage}
+          moveStatus={moveStatus}
         />
       );
       })}

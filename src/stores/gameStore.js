@@ -39,6 +39,9 @@ export const useGameStore = create((set, get) => {
     isPlayerThinking: false,
     botGoesFirst: false,
     
+    // Move status
+    moveStatus: null,
+    
     // Timer state
     player1Time: 20 * 60, // 20 minutes in seconds
     player2Time: 20 * 60,
@@ -154,6 +157,9 @@ export const useGameStore = create((set, get) => {
     setIsBotThinking: (thinking) => set({ isBotThinking: thinking }),
     setIsPlayerThinking: (thinking) => set({ isPlayerThinking: thinking }),
     setBotGoesFirst: (goesFirst) => set({ botGoesFirst: goesFirst }),
+    
+    // Actions - Move status
+    setMoveStatus: (status) => set({ moveStatus: status }),
     
     // Actions - Timer
     setPlayer1Time: (time) => set({ player1Time: time }),
