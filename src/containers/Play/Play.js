@@ -1289,19 +1289,19 @@ export default function Play() {
               padding: '12px',
               zIndex: 10,
               overflowY: 'auto',
-              justifyContent: 'flex-start'
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, textAlign: 'center', letterSpacing: '0.04em', color: '#1F2937' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6, textAlign: 'center', letterSpacing: '0.04em', color: '#1F2937' }}>
               Options
             </div>
             
             {/* Time Controls */}
             <Box sx={{ width: '100%', marginBottom: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 1, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Time
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3, color: '#1F2937' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2, color: '#1F2937' }}>
                 {gameTime} {gameTime === 1 ? 'minute' : 'minutes'}
               </div>
               <Slider
@@ -1351,12 +1351,9 @@ export default function Play() {
               </Box>
             </Box>
 
-            {/* Divider */}
-            <Box style={{ width: '100%', height: '1px', backgroundColor: '#e5e7eb', marginBottom: '4px', marginTop: 0, marginLeft: 0, marginRight: 0 }} />
-
             {/* Dictionary Dropdown */}
             <Box sx={{ width: '100%', marginBottom: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Dictionary
               </div>
               <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
@@ -1364,7 +1361,7 @@ export default function Play() {
                   value={selectedDictionary}
                   onChange={(e) => setSelectedDictionary(e.target.value)}
                   sx={{
-                    fontSize: '14px',
+                    fontSize: '11px',
                     fontWeight: 600,
                     color: '#1F2937',
                     backgroundColor: '#fff',
@@ -1380,21 +1377,18 @@ export default function Play() {
                     },
                     '& .MuiSvgIcon-root': {
                       color: '#6B7280',
-                      fontSize: '20px'
+                      fontSize: '16px'
                     }
                   }}
                 >
-                  <MenuItem value="NWL" sx={{ fontSize: '14px', fontWeight: 600 }}>NWL</MenuItem>
+                  <MenuItem value="NWL" sx={{ fontSize: '11px', fontWeight: 600 }}>NWL</MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
-            {/* Divider */}
-            <Box style={{ width: '100%', height: '1px', backgroundColor: '#e5e7eb', marginBottom: '4px', marginTop: 0, marginLeft: 0, marginRight: 0 }} />
-
             {/* Game Mode Dropdown */}
-            <Box sx={{ width: '100%', marginBottom: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Box sx={{ width: '100%', marginBottom: 4 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Game Mode
               </div>
               <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
@@ -1402,7 +1396,7 @@ export default function Play() {
                   value={gameMode}
                   onChange={(e) => setGameMode(e.target.value)}
                   sx={{
-                    fontSize: '14px',
+                    fontSize: '11px',
                     fontWeight: 600,
                     color: '#1F2937',
                     backgroundColor: '#fff',
@@ -1418,54 +1412,22 @@ export default function Play() {
                     },
                     '& .MuiSvgIcon-root': {
                       color: '#6B7280',
-                      fontSize: '20px'
+                      fontSize: '16px'
                     }
                   }}
                 >
-                  <MenuItem value="Normal" sx={{ fontSize: '14px', fontWeight: 600 }}>Normal</MenuItem>
-                  <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: '14px', opacity: 0.4 }}>Randomize bonus squares</MenuItem>
+                  <MenuItem value="Normal" sx={{ fontSize: '11px', fontWeight: 600 }}>Normal</MenuItem>
+                  <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: '11px', opacity: 0.4 }}>Randomize bonus squares</MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
             {/* Move Coach & Theo Yell Toggles - Grouped, Mutually Exclusive */}
-            <Box sx={{ width: '100%', marginTop: 3, marginBottom: 3 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 4, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Box sx={{ width: '100%', marginTop: 3, marginBottom: 'auto' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Analysis Mode
               </div>
               
-              {/* Move Coach Option - Disabled/Greyed Out */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  padding: '6px 10px',
-                  backgroundColor: '#f5f5f5',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  marginBottom: '6px',
-                  cursor: 'not-allowed',
-                  opacity: 0.5
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Brain size={14} color="#9CA3AF" weight="regular" />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}>
-                    Move Coach
-                  </span>
-                </Box>
-                <Box
-                  sx={{
-                    width: '14px',
-                    height: '14px',
-                    borderRadius: '50%',
-                    border: '2px solid #9CA3AF',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-              </Box>
-
               {/* Theo Yell Option */}
               <Box>
                 <Box 
@@ -1510,19 +1472,34 @@ export default function Play() {
                       Have Theo Yell at You
                     </span>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {theoYellEnabled && (
                       <Box
                         onClick={(e) => {
                           e.stopPropagation();
                           setTheoYellSettingsExpanded(!theoYellSettingsExpanded);
                         }}
-                        sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        sx={{ 
+                          cursor: 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: theoYellSettingsExpanded ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: 'rgba(217, 119, 6, 0.2)'
+                          }
+                        }}
                       >
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
+                          {theoYellSettingsExpanded ? 'Hide' : 'Settings'}
+                        </span>
                         {theoYellSettingsExpanded ? (
-                          <CaretUp size={12} color="#D97706" weight="bold" />
+                          <CaretUp size={14} color="#D97706" weight="bold" />
                         ) : (
-                          <CaretDown size={12} color="#D97706" weight="bold" />
+                          <CaretDown size={14} color="#D97706" weight="bold" />
                         )}
                       </Box>
                     )}
@@ -1541,10 +1518,42 @@ export default function Play() {
                 
                 {/* Expandable Settings */}
                 <Collapse in={theoYellEnabled && theoYellSettingsExpanded}>
-                  <Box sx={{ marginTop: 1.5, padding: '8px', backgroundColor: 'rgba(217, 119, 6, 0.05)', borderRadius: '6px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 6, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <Box sx={{ marginTop: 1, padding: '6px', backgroundColor: 'rgba(217, 119, 6, 0.05)', borderRadius: '6px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 4, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Trigger When
                     </div>
+                    
+                    {/* Bingo Miss Option */}
+                    <Box 
+                      onClick={() => setTheoYellCriteria('bingo')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 8px',
+                        marginBottom: '4px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: theoYellCriteria === 'bingo' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                        '&:hover': {
+                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          border: theoYellCriteria === 'bingo' ? '3px solid #D97706' : '2px solid #9CA3AF',
+                          backgroundColor: theoYellCriteria === 'bingo' ? '#D97706' : 'transparent',
+                          transition: 'all 0.2s ease'
+                        }}
+                      />
+                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#1F2937' }}>
+                        When I miss a bingo
+                      </span>
+                    </Box>
                     
                     {/* Score Threshold Option */}
                     <Box 
@@ -1553,8 +1562,7 @@ export default function Play() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        padding: '6px 8px',
-                        marginBottom: '6px',
+                        padding: '5px 8px',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         backgroundColor: theoYellCriteria === 'score' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
@@ -1596,43 +1604,44 @@ export default function Play() {
                         <span style={{ fontSize: '11px', color: '#6B7280', marginLeft: '4px' }}>points</span>
                       )}
                     </Box>
-                    
-                    {/* Bingo Miss Option */}
-                    <Box 
-                      onClick={() => setTheoYellCriteria('bingo')}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 8px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        backgroundColor: theoYellCriteria === 'bingo' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
-                        '&:hover': {
-                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
-                        }
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          border: theoYellCriteria === 'bingo' ? '3px solid #D97706' : '2px solid #9CA3AF',
-                          backgroundColor: theoYellCriteria === 'bingo' ? '#D97706' : 'transparent',
-                          transition: 'all 0.2s ease'
-                        }}
-                      />
-                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#1F2937' }}>
-                        When I miss a bingo
-                      </span>
-                    </Box>
                   </Box>
                 </Collapse>
               </Box>
+
+              {/* Move Coach Option - Disabled/Greyed Out */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  padding: '6px 10px',
+                  backgroundColor: '#f5f5f5',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  marginTop: '4px',
+                  cursor: 'not-allowed',
+                  opacity: 0.5
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Brain size={14} color="#9CA3AF" weight="regular" />
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}>
+                    Move Coach
+                  </span>
+                </Box>
+                <Box
+                  sx={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    border: '2px solid #9CA3AF',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+              </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 8, width: '100%', marginTop: 3 }}>
+            <Box sx={{ display: 'flex', gap: 8, width: '100%', marginTop: 'auto', paddingTop: 2 }}>
               <button
                 onClick={() => setShowTimeControls(false)}
                 style={{
