@@ -229,6 +229,19 @@ export const handleWordSubmit = async (playerMoveSound) => {
   // Save board state before move for board control calculation
   const boardBeforeMove = JSON.parse(JSON.stringify(boardCoords));
   
+  // Capture tile count BEFORE clearing selectedTiles (for bingo detection)
+  // Count all tiles placed, including blanks (blanks are represented as '*' in selectedTiles)
+  // selectedTiles structure: [{ tile: 'A' or '*', row, col }, ...]
+  // A bingo uses all 7 tiles from the rack, so we just need to count selectedTiles.length
+  const tilesPlacedCount = selectedTiles.length;
+  
+  // Debug: log what tiles were placed
+  console.log('🎯 Tiles placed for bingo check:', {
+    tilesPlacedCount,
+    selectedTiles: selectedTiles.map(t => ({ tile: t.tile, row: t.row, col: t.col })),
+    hasBlanks: selectedTiles.some(t => t.tile === '*')
+  });
+  
   setTimeout(async () => {
     try {
       const { setMoveCoachData, setShowMoveCoach, topMoves, leaveValues, moveCoachEnabled, theoYellEnabled } = useGameStore.getState();
@@ -239,13 +252,14 @@ export const handleWordSubmit = async (playerMoveSound) => {
       }
       
       // Calculate leave for the move
-      // selectedTiles structure: [{ tile: 'A', row: 7, col: 7 }, ...]
+      // Use the captured selectedTiles from closure (before it was cleared)
       const moveForLeave = {
         tiles: selectedTiles.map(t => ({
-          letter: t.tile,
+          letter: t.tile === '*' ? '?' : t.tile, // Convert blank representation
           isNew: true,
           row: t.row,
-          col: t.col
+          col: t.col,
+          isBlank: t.tile === '*' // Mark if it's a blank
         })),
         word: result.words ? result.words[0] : 'Unknown'
       };
@@ -347,13 +361,15 @@ export const handleWordSubmit = async (playerMoveSound) => {
         } else if (theoYellCriteria === 'bingo') {
           // Check if player missed a bingo
           // A bingo is when you use all 7 tiles from your rack
-          const playerMoveIsBingo = selectedTiles.length === 7;
+          // Use the captured count from before selectedTiles was cleared
+          const playerMoveIsBingo = tilesPlacedCount === 7;
           
           // Check if there's a bingo available in top moves
-          // A bingo move uses exactly 7 tiles
+          // A bingo move uses exactly 7 tiles from the rack
           const hasBingoAvailable = topMoves && topMoves.some(move => {
             if (!move.tiles) return false;
             // Count only new tiles (tiles from the rack)
+            // This includes both regular tiles and blanks
             const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
             return newTilesCount === 7;
           });
@@ -361,7 +377,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
           shouldYell = hasBingoAvailable && !playerMoveIsBingo;
           console.log('🎯 Bingo-based check:', { 
             playerMoveIsBingo,
-            playerTilesUsed: selectedTiles.length,
+            playerTilesUsed: tilesPlacedCount,
             hasBingoAvailable,
             topMovesLength: topMoves?.length,
             topMovesSample: topMoves?.slice(0, 3).map(m => ({
