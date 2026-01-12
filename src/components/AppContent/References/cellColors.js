@@ -1,6 +1,5 @@
 export const getCellColors = (lightMode = 'dark') => {
-  const isDark = lightMode === 'dark';
-  
+  // Use the same gradients for both light and dark mode
   return {
     0: {
         value: "",
@@ -8,27 +7,19 @@ export const getCellColors = (lightMode = 'dark') => {
     },
     1: {
         value: "",
-        color: isDark 
-          ? "linear-gradient(to right bottom, rgba(126, 214, 221, 0.5), rgba(126, 214, 221, 0.95))"
-          : "linear-gradient(to right bottom, rgba(126, 214, 221, 0), rgba(126, 214, 221, 0.95))",
+        color: "linear-gradient(to right bottom, rgba(126, 214, 221, 0.5), rgba(126, 214, 221, 0.95))",
     },
     2: {
         value: "",
-        color: isDark
-          ? "linear-gradient(to right bottom, rgba(114, 105, 214, 0.6), rgba(114, 105, 214, 0.95))"
-          : "linear-gradient(to right bottom, rgba(114, 105, 214, 0), rgba(114, 105, 214, 0.95))",
+        color: "linear-gradient(to right bottom, rgba(114, 105, 214, 0.6), rgba(114, 105, 214, 0.95))",
     },
     3: {
         value: "",
-        color: isDark
-          ? "linear-gradient(to right bottom, rgba(244, 159, 212, 0.6), rgba(244, 159, 212, 0.9))"
-          : "linear-gradient(to right bottom, rgba(244, 159, 212, 0), rgba(244, 159, 212, 0.9))",
+        color: "linear-gradient(to right bottom, rgba(244, 159, 212, 0.6), rgba(244, 159, 212, 0.9))",
     },
     4: {
         value: "",
-        color: isDark
-          ? "linear-gradient(to right bottom, rgba(206, 34, 34, 0.6), rgba(206, 34, 34, 0.9))"
-          : "linear-gradient(to right bottom, rgba(206, 34, 34, 0), rgba(206, 34, 34, 0.9))",
+        color: "linear-gradient(to right bottom, rgba(206, 34, 34, 0.6), rgba(206, 34, 34, 0.9))",
     }
   };
 };
