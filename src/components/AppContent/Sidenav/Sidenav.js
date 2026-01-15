@@ -366,6 +366,12 @@ export default function MiniDrawer() {
             }}>
               Puzzle (Beta) {isCurrentPage('/puzzle') && '✓'}
             </MenuItem>
+            <MenuItem onClick={handleClose} component={Link} to="/camera-scan" sx={{ 
+              backgroundColor: isCurrentPage('/camera-scan') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              fontWeight: isCurrentPage('/camera-scan') ? '600' : '400'
+            }}>
+              📷 Camera Scanner {isCurrentPage('/camera-scan') && '✓'}
+            </MenuItem>
             <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
               backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
               fontWeight: isCurrentPage('/changelog') ? '600' : '400'

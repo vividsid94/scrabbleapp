@@ -31,6 +31,7 @@ import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
 import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
 import Profile from "./containers/Profile/Profile";
+import CameraScan from "./containers/CameraScan/CameraScan";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Topbar from "./components/AppContent/Topbar/Topbar";
@@ -104,6 +105,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/tournament/:tournamentId" element={<Tournament />} />
             <Route path="/tournaments" element={<Tournaments />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/camera-scan" element={<CameraScan />} />
           </Routes>
         </header>
       ) : (
