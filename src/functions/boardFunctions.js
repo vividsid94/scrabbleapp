@@ -110,7 +110,7 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = [], lightMode = 'dark') => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = [], lightMode = 'dark', invalidWordCoords = []) => {
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
@@ -121,6 +121,7 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
             return matches;
           });
           const isLastMove = lastMoveCoordinates.some(coord => coord.row === rowIndex && coord.col === colIndex);
+          const isInvalidWord = invalidWordCoords.some(coord => coord.row === rowIndex && coord.col === colIndex);
           
           // For blank tiles, we need to pass the lowercase letter to show the curved effect
           let displayLetter = col;
@@ -137,7 +138,8 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
             tiles,
             color,
             isBlank,
-            isLastMove
+            isLastMove,
+            isInvalidWord
           });
           })
       ))

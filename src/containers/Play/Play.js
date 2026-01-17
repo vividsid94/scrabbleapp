@@ -84,6 +84,7 @@ export default function Play() {
     arrowDirection,
     tilesToExchange,
     blankTiles,
+    invalidWordCoords,
     setSelectedTiles,
     setSelectedBoardPosition,
     setArrowDirection,
@@ -476,9 +477,10 @@ export default function Play() {
       complementaryColor.current, 
       blankTiles,
       lastMoveCoordinates,
-      lightMode
+      lightMode,
+      invalidWordCoords
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -1173,7 +1175,11 @@ export default function Play() {
         open={snackbarOpen} 
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        autoHideDuration={snackbarMessage === 'Loading dictionary.. (up to 30s)' ? null : 3000}
+        autoHideDuration={
+          snackbarSeverity === 'error' && snackbarMessage.includes('Invalid word')
+            ? 5000
+            : 3000
+        }
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 

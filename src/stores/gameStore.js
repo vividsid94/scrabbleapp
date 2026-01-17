@@ -33,6 +33,7 @@ export const useGameStore = create((set, get) => {
     arrowDirection: 'right',
     tilesToExchange: [],
     blankTiles: [],
+    invalidWordCoords: [], // Coordinates of invalid words for highlighting
     
     // Bot state
     isBotThinking: false,
@@ -163,6 +164,7 @@ export const useGameStore = create((set, get) => {
     setArrowDirection: (direction) => set({ arrowDirection: direction }),
     setTilesToExchange: (tiles) => set({ tilesToExchange: tiles }),
     setBlankTiles: (tiles) => set({ blankTiles: tiles }),
+    setInvalidWordCoords: (coords) => set({ invalidWordCoords: coords }),
     
     // Actions - Bot
     setIsBotThinking: (thinking) => set({ isBotThinking: thinking }),
@@ -372,7 +374,6 @@ export const useGameStore = create((set, get) => {
           
           const data = await response.json();
           setIsDictionaryLoading(false);
-          get().setSnackbarOpen(false);
         } catch (error) {
           console.error('Error checking dictionary:', error);
           setTimeout(checkDictionary, 1000);
@@ -380,9 +381,7 @@ export const useGameStore = create((set, get) => {
       };
       
       setIsDictionaryLoading(true);
-      get().setSnackbarMessage('Loading dictionary.. (up to 30s)');
-      get().setSnackbarSeverity('info');
-      get().setSnackbarOpen(true);
+      // Dictionary loads in background - no snackbar needed
       checkDictionary();
     },
     
@@ -1278,13 +1277,10 @@ export const useGameStore = create((set, get) => {
     },
 
     checkDictionary: async () => {
-      const { setIsDictionaryLoading, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen } = get();
+      const { setIsDictionaryLoading } = get();
       
-      // Set initial loading state
+      // Set initial loading state (no snackbar - loads in background)
       setIsDictionaryLoading(true);
-      setSnackbarMessage('Loading dictionary.. (up to 30s)');
-      setSnackbarSeverity('info');
-      setSnackbarOpen(true);
       
       try {
         const response = await fetch('/.netlify/functions/gameLogic', {
@@ -1306,7 +1302,6 @@ export const useGameStore = create((set, get) => {
         const data = await response.json();
         // Set loading to false if we get any response
         setIsDictionaryLoading(false);
-        setSnackbarOpen(false);
       } catch (error) {
         console.error('Error checking dictionary:', error);
         // Retry after a short delay

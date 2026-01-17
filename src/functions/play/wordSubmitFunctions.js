@@ -119,35 +119,35 @@ export const handleWordSubmit = async (playerMoveSound) => {
   
   if (!result.isValid) {
     setMoveStatus(null);
+    const { setInvalidWordCoords } = useGameStore.getState();
+    
     console.log('Invalid word submission:', {
       reason: result.reason || 'Word not found in dictionary',
-      word: result.word || 'Unknown',
+      invalidWords: result.invalidWords || [],
+      invalidWordCoords: result.invalidWordCoords || [],
       position: selectedBoardPosition,
       direction: arrowDirection
     });
 
-    // Show toast notification
-    setSnackbarMessage(result.reason);
-    setSnackbarSeverity("error");
-    setSnackbarOpen(true);
-
-    // Return tiles to the current player's rack
-    const rackToUpdate = currentPlayer === 1 ? player1Rack : player2Rack;
-    // Extract just the tile values from selectedTiles
-    const tilesToReturn = selectedTiles.map(tile => tile.tile);
-    const updatedRack = [...rackToUpdate, ...tilesToReturn];
-    if (currentPlayer === 1) {
-      setPlayer1Rack(alphabetizeRack(updatedRack));
-    } else {
-      setPlayer2Rack(alphabetizeRack(updatedRack));
+    // Set invalid word coordinates for visual highlighting
+    // Tiles stay on board - user can manually remove them
+    if (result.invalidWordCoords && result.invalidWordCoords.length > 0) {
+      setInvalidWordCoords(result.invalidWordCoords);
+      // Clear invalid coords after 3 seconds (visual feedback duration)
+      setTimeout(() => {
+        setInvalidWordCoords([]);
+      }, 3000);
     }
+    
+    // Don't return tiles to rack - let user see the error and decide what to do
 
-    // Reset the board state
-    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-    setSelectedTiles([]);
-    setSelectedBoardPosition(null);
+    // No snackbar - visual feedback only (red border + animation)
     return;
   }
+  
+  // Clear invalid word coords on successful validation
+  const { setInvalidWordCoords: clearInvalidCoords } = useGameStore.getState();
+  clearInvalidCoords([]);
 
   // Use the preview score that's already calculated client-side
   const score = previewScore || 0;

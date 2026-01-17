@@ -20,7 +20,7 @@ function lightenColor(color) {
  
 preload();  
 
-export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank, isLastMove }) {
+export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, color, isBlank, isLastMove, isInvalidWord }) {
   function cell(letter) {
     if (letter) {
       // For blank tiles, use the actual letter (uppercase) for the image, not the blank '_'
@@ -36,15 +36,18 @@ export default function Cell({ rowIndex, colIndex, bonus, type, theme, tiles, co
         
         return (
           <div
-            className={styles.Cell}
+            className={`${styles.Cell} ${isInvalidWord ? styles.invalidWord : ''}`}
             style={{
-              boxShadow: bonus?.boxShadow,
-              backgroundColor: isLastMove ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color),
+              boxShadow: isInvalidWord 
+                ? '0 0 25px rgba(239, 68, 68, 0.9), 0 0 50px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.4)'
+                : bonus?.boxShadow,
+              backgroundColor: isInvalidWord 
+                ? 'rgba(239, 68, 68, 0.35)' 
+                : (isLastMove ? lightenColor(color) : (bonus?.hasBorder ? lightenColor(color) : color)),
               boxSizing: 'border-box',
               opacity: isLastMove ? 0.85 : 1,
-              border: 'none',
-              borderRadius: '0',
               position: isBlank ? 'relative' : 'static',
+              zIndex: isInvalidWord ? 10 : 1,
             }}
           >
             {!isBlank && (

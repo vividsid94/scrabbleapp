@@ -8,16 +8,18 @@ import { isValidWordsBatchLocal, isDictionaryLoaded, initializeDictionary } from
 const GO_SERVICE_URL = 'https://scrabble-move-generator-production.up.railway.app';
 
 /**
- * Find all new words formed by placed tiles
+ * Find all new words formed by placed tiles, with their coordinates
  */
 function findNewWords(beforeBoard, afterBoard, placedTiles) {
   const newWords = new Set();
+  const wordCoords = new Map(); // Map word -> array of {row, col} coordinates
   
-  // Helper function to get word at position
+  // Helper function to get word at position with coordinates
   function getWordAt(board, row, col, direction) {
     let word = "";
     let r = row;
     let c = col;
+    const coords = [];
 
     if (direction === "horizontal") {
       while (c >= 0 && typeof board[r][c] === 'string' && board[r][c].match(/[A-Z]/)) {
@@ -26,6 +28,7 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
       c++;
       while (c < 15 && typeof board[r][c] === 'string' && board[r][c].match(/[A-Z]/)) {
         word += board[r][c];
+        coords.push({ row: r, col: c });
         c++;
       }
     } else if (direction === "vertical") {
@@ -35,27 +38,30 @@ function findNewWords(beforeBoard, afterBoard, placedTiles) {
       r++;
       while (r < 15 && typeof board[r][c] === 'string' && board[r][c].match(/[A-Z]/)) {
         word += board[r][c];
+        coords.push({ row: r, col: c });
         r++;
       }
     }
-    return word.length > 1 ? word : null;
+    return word.length > 1 ? { word, coords } : null;
   }
 
   for (const tile of placedTiles) {
     const { row, col } = tile;
 
-    const horizontalWord = getWordAt(afterBoard, row, col, "horizontal");
-    if (horizontalWord) {
-      newWords.add(horizontalWord);
+    const horizontalResult = getWordAt(afterBoard, row, col, "horizontal");
+    if (horizontalResult) {
+      newWords.add(horizontalResult.word);
+      wordCoords.set(horizontalResult.word, horizontalResult.coords);
     }
 
-    const verticalWord = getWordAt(afterBoard, row, col, "vertical");
-    if (verticalWord) {
-      newWords.add(verticalWord);
+    const verticalResult = getWordAt(afterBoard, row, col, "vertical");
+    if (verticalResult) {
+      newWords.add(verticalResult.word);
+      wordCoords.set(verticalResult.word, verticalResult.coords);
     }
   }
 
-  return Array.from(newWords);
+  return { words: Array.from(newWords), wordCoords };
 }
 
 /**
@@ -144,13 +150,13 @@ function validatePlacement(beforeBoard, afterBoard) {
     return { isValid: false, reason: 'First move must cover center star or connect to existing tiles', words: [] };
   }
 
-  // Find all new words
-  const newWords = findNewWords(beforeBoard, afterBoard, placedTiles);
+  // Find all new words with their coordinates
+  const { words: newWords, wordCoords } = findNewWords(beforeBoard, afterBoard, placedTiles);
   if (newWords.length === 0) {
-    return { isValid: false, reason: 'No valid words formed', words: [] };
+    return { isValid: false, reason: 'No valid words formed', words: [], invalidWordCoords: [] };
   }
 
-  return { isValid: true, words: newWords, placedTiles };
+  return { isValid: true, words: newWords, placedTiles, wordCoords };
 }
 
 /**
@@ -225,14 +231,32 @@ export async function validateMoveClient(beforeBoard, afterBoard, setMoveStatus 
   // Step 2: Validate words using local dictionary (instant) or API fallback
   if (setMoveStatus) setMoveStatus('Validating words...');
   const wordValidationResults = await validateWords(placementResult.words);
+  const invalidWords = [];
+  const invalidWordCoords = [];
+  
   for (const word of placementResult.words) {
     if (!wordValidationResults[word]) {
-      if (setMoveStatus) setMoveStatus(null);
-      return { isValid: false, reason: `Invalid word: ${word}`, words: placementResult.words };
+      invalidWords.push(word);
+      // Get coordinates for this invalid word
+      if (placementResult.wordCoords && placementResult.wordCoords.has(word)) {
+        invalidWordCoords.push(...placementResult.wordCoords.get(word));
+      }
     }
+  }
+  
+  if (invalidWords.length > 0) {
+    if (setMoveStatus) setMoveStatus(null);
+    const invalidWordList = invalidWords.join(', ');
+    return { 
+      isValid: false, 
+      reason: `Invalid word${invalidWords.length > 1 ? 's' : ''}: ${invalidWordList}`, 
+      words: placementResult.words,
+      invalidWords,
+      invalidWordCoords
+    };
   }
 
   if (setMoveStatus) setMoveStatus(null);
-  return { isValid: true, words: placementResult.words };
+  return { isValid: true, words: placementResult.words, invalidWordCoords: [] };
 }
 
