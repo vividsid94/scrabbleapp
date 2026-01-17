@@ -1,7 +1,9 @@
 /**
  * Client-side move validation
- * Validates placement rules client-side and uses Go service for word validation
+ * Validates placement rules client-side and uses local dictionary with API fallback for word validation
  */
+
+import { isValidWordsBatchLocal, isDictionaryLoaded, initializeDictionary } from '../../utils/localDictionary';
 
 const GO_SERVICE_URL = 'https://scrabble-move-generator-production.up.railway.app';
 
@@ -152,9 +154,27 @@ function validatePlacement(beforeBoard, afterBoard) {
 }
 
 /**
- * Validate words using Go service (bulk validation)
+ * Validate words using local dictionary first, fallback to Go service
  */
 async function validateWords(words) {
+  // Try local dictionary first (instant, no network call)
+  const localResults = isValidWordsBatchLocal(words);
+  if (localResults !== null) {
+    // All words validated locally
+    console.log(`✅ Word validation: Using LOCAL dictionary (${words.length} word${words.length !== 1 ? 's' : ''})`);
+    return localResults;
+  }
+
+  // Local dictionary not loaded, try to initialize it
+  if (!isDictionaryLoaded()) {
+    // Try to initialize in background (non-blocking)
+    initializeDictionary().catch(err => {
+      console.warn('Background dictionary initialization failed:', err);
+    });
+  }
+
+  // Fallback to API validation
+  console.log(`🌐 Word validation: Using RAILWAY API (${words.length} word${words.length !== 1 ? 's' : ''}) - local dictionary not loaded`);
   try {
     const response = await fetch(`${GO_SERVICE_URL}/validate-words`, {
       method: 'POST',
@@ -182,13 +202,13 @@ async function validateWords(words) {
     
     return results;
   } catch (error) {
-    console.error('Error validating words:', error);
+    console.error('❌ Error validating words via API:', error);
     throw error;
   }
 }
 
 /**
- * Main validation function - validates placement client-side, then words via Go service
+ * Main validation function - validates placement client-side, then words via local dictionary (with API fallback)
  * @param {Array} beforeBoard - Board state before move
  * @param {Array} afterBoard - Board state after move
  * @param {Function} setMoveStatus - Optional function to update move status
@@ -202,7 +222,7 @@ export async function validateMoveClient(beforeBoard, afterBoard, setMoveStatus 
     return placementResult;
   }
 
-  // Step 2: Validate words using Go service (bulk validation)
+  // Step 2: Validate words using local dictionary (instant) or API fallback
   if (setMoveStatus) setMoveStatus('Validating words...');
   const wordValidationResults = await validateWords(placementResult.words);
   for (const word of placementResult.words) {

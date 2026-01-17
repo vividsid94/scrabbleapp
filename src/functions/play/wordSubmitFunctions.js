@@ -89,8 +89,34 @@ export const handleWordSubmit = async (playerMoveSound) => {
   // Set move status
   const { setMoveStatus, previewScore } = useGameStore.getState();
 
-  // Validate using client-side placement validation + Go service for words
-  const result = await validateMoveClient(boardCoords, tempBoardCoords, setMoveStatus);
+  // Validate using client-side placement validation + local dictionary (with API fallback)
+  let result;
+  try {
+    result = await validateMoveClient(boardCoords, tempBoardCoords, setMoveStatus);
+  } catch (error) {
+    console.error('Validation error:', error);
+    setMoveStatus(null);
+    setSnackbarMessage('Validation failed. Please try again.');
+    setSnackbarSeverity("error");
+    setSnackbarOpen(true);
+    
+    // Return tiles to the current player's rack
+    const rackToUpdate = currentPlayer === 1 ? player1Rack : player2Rack;
+    const tilesToReturn = selectedTiles.map(tile => tile.tile);
+    const updatedRack = [...rackToUpdate, ...tilesToReturn];
+    if (currentPlayer === 1) {
+      setPlayer1Rack(alphabetizeRack(updatedRack));
+    } else {
+      setPlayer2Rack(alphabetizeRack(updatedRack));
+    }
+    
+    // Reset the board state
+    setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+    setSelectedTiles([]);
+    setSelectedBoardPosition(null);
+    return;
+  }
+  
   if (!result.isValid) {
     setMoveStatus(null);
     console.log('Invalid word submission:', {

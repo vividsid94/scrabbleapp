@@ -29,6 +29,7 @@ import { initializeSounds, updateSoundType } from '../../functions/play/soundFun
 import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
 import Modal from '@mui/material/Modal';
+import { initializeDictionary } from '../../utils/localDictionary';
 import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -302,6 +303,12 @@ export default function Play() {
     setSounds(soundObjects);
   }, []);
 
+  // Initialize local dictionary in background (non-blocking)
+  useEffect(() => {
+    initializeDictionary().catch(err => {
+      console.warn('Dictionary initialization failed (will use API fallback):', err);
+    });
+  }, []);
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
