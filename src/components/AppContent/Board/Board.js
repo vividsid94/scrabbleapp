@@ -5,7 +5,7 @@ import { letterLookup } from '../References/staticData';
 import { Modal } from '@mui/material';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
-import { ArrowsOut, Hand } from '@phosphor-icons/react';
+import { ArrowsOut, Hand, ChatCircle } from '@phosphor-icons/react';
 
 export default function Board({
     boardMode = "STANDARD",
@@ -36,6 +36,7 @@ export default function Board({
 
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
+    const [commentaryOpen, setCommentaryOpen] = useState(false);
     const [circledLetters, setCircledLetters] = useState([]);
     const [boardScale, setBoardScale] = useState(1);
     const [isDragging, setIsDragging] = useState(false);
@@ -499,12 +500,50 @@ export default function Board({
             
             
 
+            <button 
+                className={`${styles.commentaryBubble} ${!commentary ? styles.commentaryBubbleDisabled : ''}`}
+                onClick={() => commentary && setCommentaryOpen(true)}
+                disabled={!commentary}
+                aria-label={commentary ? "View commentary" : "No commentary available"}
+            >
+                <ChatCircle size={20} weight={commentary ? "fill" : "regular"} />
+                <span className={styles.commentaryLabel}>
+                    {commentary ? "See commentary" : "No commentary on this turn"}
+                </span>
+            </button>
             {commentary && (
-                <Box className={styles.commentaryContainer}>
-                    <Box className={styles.commentaryBox}>
-                        "{commentary}"
+                <Modal 
+                    open={commentaryOpen} 
+                    onClose={() => setCommentaryOpen(false)}
+                    disableScrollLock={true}
+                    slotProps={{
+                        root: {
+                            style: { position: 'fixed' }
+                        }
+                    }}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        '& .MuiBackdrop-root': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }}
+                >
+                    <Box 
+                        className={styles.commentaryModal}
+                        style={{
+                            backgroundColor: lightMode === 'dark' 
+                                ? 'rgba(55, 65, 81, 0.95)' 
+                                : 'rgba(249, 250, 251, 0.95)',
+                            color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                        }}
+                    >
+                        <Box className={styles.commentaryBox}>
+                            "{commentary}"
+                        </Box>
                     </Box>
-                </Box>
+                </Modal>
             )}
 
             <Modal open={open} onClose={handleClose}>

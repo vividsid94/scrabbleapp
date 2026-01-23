@@ -187,6 +187,21 @@ form{
   padding: 24px;
 }
 
+@media screen and (max-width: 676px) {
+  .mainBox {
+    padding-top: 40px;
+    padding-bottom: 0px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-bottom: 0;
+  }
+  
+  .leftContainer {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
 .rightPanel{
 	grid-area: panel;
 	width: 380px;
@@ -274,6 +289,14 @@ form{
       "title"
       "board"
       "panel";
+    gap: 0;
+    row-gap: 0;
+  }
+  .rightPanel {
+    padding-top: 4px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 24px;
   }
   .title{
     margin: auto;
