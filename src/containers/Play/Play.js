@@ -28,6 +28,7 @@ import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
+import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
 import Modal from '@mui/material/Modal';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
@@ -761,113 +762,324 @@ export default function Play() {
                 }
               } : {}}
             >
-          <Board 
-            board={board}
-            boardMode={theme}
-            lightMode={lightMode}
-            onBoardChildClick={(row, col) => handleBoardPositionSelect({
-              row,
-              col,
-              boardCoords,
-              selectedBoardPosition,
-              setSelectedBoardPosition,
-              arrowDirection,
-              setArrowDirection
-            })}
-            onTileDrop={(tile, index, row, col) => handleTileDrop({
-              tile,
-              index,
-              row,
-              col,
-              player1Rack,
-              setPlayer1Rack,
-              player2Rack,
-              setPlayer2Rack,
-                  selectedTilesArray,
-              setSelectedTiles,
-              setSelectedBoardPosition,
-              tempBoardCoords,
-              setTempBoardCoords
-            })}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-                  selectedTilesArray,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange
-            })}
-            selectedPosition={selectedBoardPosition}
-            arrowDirection={arrowDirection}
-            onArrowDirectionChange={(newDirection) => {
-                console.log('Play component received direction change:', newDirection);
-                setArrowDirection(newDirection);
-            }}
-            animate={false}
-            showSlip={false}
-            showDictionary={false}
-            dictionary=""
-            previewScore={previewScore}
-            previewScorePosition={previewScorePosition}
-            lastMoveCoordinates={lastMoveCoordinates}
-          />
-          {/* Overlay Play Button */}
-          {!gameStarted && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 'calc(50% + 6px)',
-              left: 'calc(50% + 10px)',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: 0,
-              padding: 0
-            }}
-          >
-            <Tooltip title={isDictionaryLoading ? "Loading dictionary..." : (gameStarted ? "New Game" : "Start Game")}>
+          {gameStarted ? (
+            <Board 
+              board={board}
+              boardMode={theme}
+              lightMode={lightMode}
+              onBoardChildClick={(row, col) => handleBoardPositionSelect({
+                row,
+                col,
+                boardCoords,
+                selectedBoardPosition,
+                setSelectedBoardPosition,
+                arrowDirection,
+                setArrowDirection
+              })}
+              onTileDrop={(tile, index, row, col) => handleTileDrop({
+                tile,
+                index,
+                row,
+                col,
+                player1Rack,
+                setPlayer1Rack,
+                player2Rack,
+                setPlayer2Rack,
+                    selectedTilesArray,
+                setSelectedTiles,
+                setSelectedBoardPosition,
+                tempBoardCoords,
+                setTempBoardCoords
+              })}
+              onTileClick={(tile, index) => handleTileClick({
+                tile,
+                index,
+                currentPlayer,
+                player1Rack,
+                player2Rack,
+                    selectedTilesArray,
+                setSelectedTiles,
+                tilesToExchange,
+                setTilesToExchange
+              })}
+              selectedPosition={selectedBoardPosition}
+              arrowDirection={arrowDirection}
+              onArrowDirectionChange={(newDirection) => {
+                  console.log('Play component received direction change:', newDirection);
+                  setArrowDirection(newDirection);
+              }}
+              animate={false}
+              showSlip={false}
+              showDictionary={false}
+              dictionary=""
+              previewScore={previewScore}
+              previewScorePosition={previewScorePosition}
+              lastMoveCoordinates={lastMoveCoordinates}
+            />
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '400px',
+                gap: '24px',
+                padding: '40px 20px'
+              }}
+            >
+              {/* Scouting Report */}
               <Box
-                component="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
-                  handleBotModeToggleWithSounds();
-                }}
                 sx={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%',
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
+                  position: 'relative',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
-                  opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
-                  pointerEvents: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'none' : 'auto',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                  transition: 'all 0.2s ease',
-                  border: 'none',
-                  outline: 'none',
+                  gap: { xs: '16px', sm: '24px' },
+                  padding: { xs: '24px 20px', sm: '40px 32px' },
+                  maxWidth: '650px',
+                  width: '100%',
+                  backgroundColor: lightMode === 'dark' 
+                    ? '#243447' 
+                    : '#FEFEFE',
+                  backgroundImage: lightMode === 'dark'
+                    ? 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100, 100, 100, 0.2) 23px, rgba(100, 100, 100, 0.2) 24px), linear-gradient(to bottom, rgba(255,255,255,0.01) 0%, transparent 50%, rgba(0,0,0,0.03) 100%)'
+                    : 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(200, 200, 200, 0.3) 23px, rgba(200, 200, 200, 0.3) 24px), linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.02) 100%)',
+                  backgroundSize: '100% 24px, 100% 100%',
+                  backgroundPosition: '0 0, 0 0',
+                  border: lightMode === 'dark' 
+                    ? '1px solid rgba(139, 115, 85, 0.15)' 
+                    : '1px solid rgba(200, 180, 150, 0.3)',
+                  boxShadow: lightMode === 'dark'
+                    ? '0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 150px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                    : '0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 150px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+                  transform: 'rotate(-0.8deg)',
+                  transition: 'transform 0.3s ease',
                   '&:hover': {
-                    transform: 'scale(1.1)',
-                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
-                    backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 1)' : 'rgba(217, 119, 6, 1)'
+                    transform: 'rotate(0deg) scale(1.02)'
                   },
-                  '&:active': {
-                    transform: 'scale(0.95)'
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: '-2px',
+                    left: '-2px',
+                    right: '-2px',
+                    bottom: '-2px',
+                    background: lightMode === 'dark'
+                      ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.08), rgba(139, 92, 46, 0.08))'
+                      : 'linear-gradient(135deg, rgba(139, 115, 85, 0.08), rgba(101, 84, 61, 0.08))',
+                    borderRadius: '2px',
+                    zIndex: -1,
+                    filter: 'blur(4px)'
                   }
                 }}
               >
-                <PlayIcon size={28} color="#fff" weight="fill" />
+                {/* Thumb Tacks */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '8px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 30% 30%, #DC2626, #991B1B)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    zIndex: 1,
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.4)',
+                      boxShadow: '0 0 2px rgba(255, 255, 255, 0.6)'
+                    }
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 30% 30%, #DC2626, #991B1B)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    zIndex: 1,
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.4)',
+                      boxShadow: '0 0 2px rgba(255, 255, 255, 0.6)'
+                    }
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '8px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 30% 30%, #DC2626, #991B1B)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    zIndex: 1,
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.4)',
+                      boxShadow: '0 0 2px rgba(255, 255, 255, 0.6)'
+                    }
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    right: '8px',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 30% 30%, #DC2626, #991B1B)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    zIndex: 1,
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '4px',
+                      height: '4px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.4)',
+                      boxShadow: '0 0 2px rgba(255, 255, 255, 0.6)'
+                    }
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    fontSize: { xs: '16px', sm: '18px' },
+                    fontWeight: 600,
+                    color: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : '#8B7355',
+                    letterSpacing: '0.02em',
+                    marginBottom: '4px',
+                    fontFamily: 'serif',
+                    textShadow: lightMode === 'dark' 
+                      ? '1px 1px 2px rgba(0, 0, 0, 0.3)' 
+                      : '1px 1px 2px rgba(255, 255, 255, 0.5)',
+                    borderBottom: lightMode === 'dark'
+                      ? '2px solid rgba(217, 119, 6, 0.3)'
+                      : '2px solid rgba(139, 115, 85, 0.3)',
+                    paddingBottom: { xs: '6px', sm: '8px' },
+                    width: '100%',
+                    textAlign: 'center'
+                  }}
+                >
+                  Scouting Report
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: { xs: '20px', sm: '32px' },
+                    width: '100%',
+                    justifyContent: 'center',
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  {bots.map((bot, index) => (
+                    <Box
+                      key={bot.name}
+                      component="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
+                        handleBotSelect(bot);
+                        handleBotModeToggleWithSounds();
+                      }}
+                      disabled={isDictionaryLoading || isBotThinking || isPlayerThinking}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: { xs: '12px', sm: '16px' },
+                        transform: index === 0 ? 'rotate(-2deg)' : 'rotate(1.5deg)',
+                        transition: 'transform 0.3s ease',
+                        cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
+                        opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
+                        border: 'none',
+                        background: 'transparent',
+                        padding: 0,
+                        '&:hover:not(:disabled)': {
+                          transform: index === 0 ? 'rotate(-1deg) scale(1.05)' : 'rotate(0.5deg) scale(1.05)'
+                        },
+                        '&:active:not(:disabled)': {
+                          transform: index === 0 ? 'rotate(-2deg) scale(0.98)' : 'rotate(1.5deg) scale(0.98)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: { xs: '80px', sm: '120px' },
+                          height: { xs: '80px', sm: '120px' },
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <AnimatedMascot about={bot.name.toLowerCase()} />
+                      </Box>
+                      <Box
+                        sx={{
+                          fontSize: { xs: '16px', sm: '20px' },
+                          fontWeight: 700,
+                          color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                          marginTop: '4px',
+                          fontFamily: 'serif'
+                        }}
+                      >
+                        {bot.name}
+                      </Box>
+                      <Box
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px' },
+                          color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '#4B5563',
+                          textAlign: 'center',
+                          lineHeight: 1.6,
+                          fontStyle: 'italic',
+                          maxWidth: { xs: '150px', sm: '200px' }
+                        }}
+                      >
+                        {bot.desc}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
-            </Tooltip>
-          </Box>
+
+            </Box>
           )}
             </Box>
         </Box>
