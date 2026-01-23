@@ -216,9 +216,9 @@ export default function Home(){
             }}
             sx={{
               padding: { xs: '14px 16px', sm: '16px 20px' },
-              margin: { xs: '16px auto 8px', sm: '20px auto 12px' },
-              width: { xs: '90%', sm: '450px' },
-              maxWidth: '90%'
+              margin: { xs: '16px 16px 8px', sm: '20px auto 12px' },
+              width: { xs: 'calc(100% - 32px)', sm: '450px' },
+              maxWidth: { xs: 'calc(100% - 32px)', sm: '450px' }
             }}
           >
             <Box sx={{ 

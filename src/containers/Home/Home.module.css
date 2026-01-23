@@ -24,6 +24,9 @@
   margin-bottom: 12px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .title {
@@ -88,7 +91,8 @@
 
 @media (max-width: 600px) {
   .mascotWrapper {
-    width: 140px;
+    width: 100px;
+    max-width: 30vw;
   }
   .title {
     font-size: 1.75rem;
