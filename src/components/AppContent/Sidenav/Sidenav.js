@@ -412,10 +412,8 @@ export default function MiniDrawer() {
                   <House 
                     className={styles.homeLogo} 
                     style={{ 
-                      color: isCurrentPage('/') ? '#F59E0B' : getTextColor(),
-                      fontSize: isCurrentPage('/') ? '24px' : '20px',
-                      transition: 'all 0.2s ease',
-                      filter: isCurrentPage('/') ? 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.5))' : 'none'
+                      color: isCurrentPage('/') ? '#60A5FA' : getTextColor(),
+                      fontSize: isCurrentPage('/') ? '24px' : '20px'
                     }} 
                     weight={isCurrentPage('/') ? "fill" : (hoveredIcon === 'home' ? "fill" : "regular")}
                     onMouseEnter={() => setHoveredIcon('home')}
