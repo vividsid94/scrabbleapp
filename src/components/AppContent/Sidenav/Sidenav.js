@@ -21,13 +21,14 @@ import { Link as RouterLink } from 'react-router-dom';
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Tooltip, Select, FormControl } from "@mui/material";
+import ListItemButton from "@mui/material/ListItemButton";
+import Collapse from "@mui/material/Collapse";
+import { Tooltip, Select, FormControl, Divider } from "@mui/material";
 
 import { 
   House, 
   Binoculars, 
   Upload, 
-  Clock, 
   Palette, 
   Star,
   Sun,
@@ -36,7 +37,11 @@ import {
   PuzzlePiece,
   User,
   SignOut,
-  SpeakerHigh
+  SpeakerHigh,
+  CaretRight,
+  CaretDown,
+  GameController,
+  Gear
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -53,6 +58,11 @@ export default function MiniDrawer() {
   const [showDecorations, setShowDecorations] = React.useState(false);
   const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
   const [isSoundSectionExpanded, setIsSoundSectionExpanded] = React.useState(false);
+  const [isModesExpanded, setIsModesExpanded] = React.useState(false);
+  const [isSettingsExpanded, setIsSettingsExpanded] = React.useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
+  const [mobileModesExpanded, setMobileModesExpanded] = React.useState(false);
+  const [mobileSettingsExpanded, setMobileSettingsExpanded] = React.useState(false);
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('signin');
@@ -80,10 +90,10 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: (isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded) ? '200px' : '55px',
+    width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '180px' : '55px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
-    transition: '0.3s ease',
+    transition: 'width 0.3s ease',
     '@media (max-width: 992px)': {
       width: '100%',
       height: 'auto',
@@ -130,15 +140,18 @@ export default function MiniDrawer() {
   const toggleColorPicker = () => {
     setIsColorSectionExpanded(!isColorSectionExpanded);
     setShowColorPicker(!showColorPicker);
+    setSidebarExpanded(true);
   };
 
   const toggleDecorations = () => {
     setIsDecorationSectionExpanded(!isDecorationSectionExpanded);
     setShowDecorations(!showDecorations);
+    setSidebarExpanded(true);
   };
 
   const toggleSoundOptions = () => {
     setIsSoundSectionExpanded(!isSoundSectionExpanded);
+    setSidebarExpanded(true);
   };
 
   const handleColorChange = (event) => {
@@ -157,7 +170,6 @@ export default function MiniDrawer() {
     if (path === '/3dviewer') return '3D Viewer';
     if (path === '/playground' || path === '/play') return 'Play';
     if (path === '/puzzle') return 'Puzzle';
-    if (path === '/changelog') return 'Changelog';
     if (path === '/submit-game') return 'Submit Game';
     if (path === '/memory') return 'Memory';
     if (path === '/words') return 'Words';
@@ -174,7 +186,6 @@ export default function MiniDrawer() {
     if (pagePath === '/3dviewer' && path === '/3dviewer') return true;
     if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
     if (pagePath === '/puzzle' && path === '/puzzle') return true;
-    if (pagePath === '/changelog' && path === '/changelog') return true;
     if (pagePath === '/submit-game' && path === '/submit-game') return true;
     return false;
   };
@@ -335,276 +346,561 @@ export default function MiniDrawer() {
             keepMounted
             open={Boolean(anchorEl)}
             onClose={handleClose}
+            PaperProps={{
+              sx: {
+                backgroundColor: getBackgroundColor(),
+                color: getTextColor(),
+                minWidth: '240px',
+                maxWidth: '280px'
+              }
+            }}
           >
-            <MenuItem onClick={handleClose} component={Link} to="/" sx={{ 
-              backgroundColor: isCurrentPage('/') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/') ? '600' : '400'
-            }}>
+            {/* Home */}
+            <MenuItem 
+              onClick={handleClose} 
+              component={Link} 
+              to="/" 
+              sx={{ 
+                backgroundColor: isCurrentPage('/') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                fontWeight: isCurrentPage('/') ? '600' : '400',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              <House size={20} weight={isCurrentPage('/') ? "fill" : "regular"} />
               Home {isCurrentPage('/') && '✓'}
             </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/viewer" sx={{ 
-              backgroundColor: isCurrentPage('/viewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/viewer') ? '600' : '400'
-            }}>
-              Annotated Game Viewer {isCurrentPage('/viewer') && '✓'}
+            
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+            
+            {/* Modes Section */}
+            <ListItemButton
+              onClick={() => setMobileModesExpanded(!mobileModesExpanded)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 16px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                }
+              }}
+            >
+              <GameController size={20} weight={mobileModesExpanded ? "fill" : "regular"} />
+              <Box sx={{ flex: 1, fontWeight: mobileModesExpanded ? '600' : '400' }}>
+                Modes
+              </Box>
+              {mobileModesExpanded ? (
+                <CaretDown size={16} />
+              ) : (
+                <CaretRight size={16} />
+              )}
+            </ListItemButton>
+            
+            <Collapse in={mobileModesExpanded} timeout="auto" unmountOnExit>
+              <Box sx={{ paddingLeft: '32px', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
+                  to="/play" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/play') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/play') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <SmartToyIcon sx={{ fontSize: 18 }} />
+                  Play {isCurrentPage('/play') && '✓'}
+                </MenuItem>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
+                  to="/puzzle" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/puzzle') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/puzzle') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <PuzzlePiece size={18} weight={isCurrentPage('/puzzle') ? "fill" : "regular"} />
+                  Puzzle {isCurrentPage('/puzzle') && '✓'}
+                </MenuItem>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
+                  to="/viewer" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/viewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/viewer') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Binoculars size={18} weight={isCurrentPage('/viewer') ? "fill" : "regular"} />
+                  Viewer {isCurrentPage('/viewer') && '✓'}
+                </MenuItem>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
+                  to="/3dviewer" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/3dviewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/3dviewer') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Cube size={18} weight={isCurrentPage('/3dviewer') ? "fill" : "regular"} />
+                  3D Viewer {isCurrentPage('/3dviewer') && '✓'}
+                </MenuItem>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
+                  to="/submit-game" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/submit-game') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/submit-game') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Upload size={18} weight={isCurrentPage('/submit-game') ? "fill" : "regular"} />
+                  Submit Game {isCurrentPage('/submit-game') && '✓'}
+                </MenuItem>
+              </Box>
+            </Collapse>
+            
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+            
+            {/* Settings Section */}
+            <ListItemButton
+              onClick={() => setMobileSettingsExpanded(!mobileSettingsExpanded)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 16px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                }
+              }}
+            >
+              <Gear size={20} weight={mobileSettingsExpanded ? "fill" : "regular"} />
+              <Box sx={{ flex: 1, fontWeight: mobileSettingsExpanded ? '600' : '400' }}>
+                Settings
+              </Box>
+              {mobileSettingsExpanded ? (
+                <CaretDown size={16} />
+              ) : (
+                <CaretRight size={16} />
+              )}
+            </ListItemButton>
+            
+            <Collapse in={mobileSettingsExpanded} timeout="auto" unmountOnExit>
+              <Box sx={{ paddingLeft: '32px', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
+                <MenuItem 
+                  onClick={() => {
+                    handleClose();
+                    toggleColorPicker();
+                  }} 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Palette size={18} weight={isColorSectionExpanded ? "fill" : "regular"} />
+                  Colors
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => {
+                    handleClose();
+                    toggleDecorations();
+                  }} 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Star size={18} weight={isDecorationSectionExpanded ? "fill" : "regular"} />
+                  Decorations
+                </MenuItem>
+                <MenuItem 
+                  onClick={() => {
+                    handleClose();
+                    toggleSoundOptions();
+                  }} 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <SpeakerHigh size={18} weight={isSoundSectionExpanded ? "fill" : "regular"} />
+                  Sound
+                </MenuItem>
+              </Box>
+            </Collapse>
+            
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+            
+            {/* About */}
+            <MenuItem 
+              onClick={handleClose} 
+              component={Link} 
+              to="/about" 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              <CircleIcon sx={{ fontSize: 20 }} />
+              About
             </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/3dviewer" sx={{ 
-              backgroundColor: isCurrentPage('/3dviewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/3dviewer') ? '600' : '400'
-            }}>
-              3D Viewer (Beta) {isCurrentPage('/3dviewer') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/play" sx={{ 
-              backgroundColor: isCurrentPage('/play') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/play') ? '600' : '400'
-            }}>
-              Play (Beta) {isCurrentPage('/play') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/puzzle" sx={{ 
-              backgroundColor: isCurrentPage('/puzzle') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/puzzle') ? '600' : '400'
-            }}>
-              Puzzle (Beta) {isCurrentPage('/puzzle') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/camera-scan" sx={{ 
-              backgroundColor: isCurrentPage('/camera-scan') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/camera-scan') ? '600' : '400'
-            }}>
-              📷 Camera Scanner {isCurrentPage('/camera-scan') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/changelog" sx={{ 
-              backgroundColor: isCurrentPage('/changelog') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/changelog') ? '600' : '400'
-            }}>
-              Changelog {isCurrentPage('/changelog') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={handleClose} component={Link} to="/submit-game" sx={{ 
-              backgroundColor: isCurrentPage('/submit-game') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              fontWeight: isCurrentPage('/submit-game') ? '600' : '400'
-            }}>
-              Submit Game {isCurrentPage('/submit-game') && '✓'}
-            </MenuItem>
-            <MenuItem onClick={() => {
-              handleClose();
-              toggleColorPicker();
-            }} sx={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <Palette style={{ fontSize: 18 }} />
-              Color Scheme
+            
+            {/* Light/Dark Mode */}
+            <MenuItem 
+              onClick={() => {
+                handleClose();
+                toggleLightMode();
+              }} 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              {lightMode === 'dark' ? (
+                <Sun size={20} weight="fill" />
+              ) : (
+                <Moon size={20} weight="fill" />
+              )}
+              {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </MenuItem>
           </Menu>
           <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="58" height="58"/>
         </MyToolbar>
       </MyAppBar>
-      <Drawer className={styles.myDrawer} variant="permanent">
+      <Drawer 
+        className={styles.myDrawer} 
+        variant="permanent"
+        onMouseEnter={() => setSidebarExpanded(true)}
+        onMouseLeave={() => {
+          if (!isModesExpanded && !isSettingsExpanded && !isColorSectionExpanded && !isDecorationSectionExpanded && !isSoundSectionExpanded) {
+            setSidebarExpanded(false);
+          }
+        }}
+      >
         <DrawerHeader className={styles.cfLogoContainer}>
           <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="48" height="48"/>
         </DrawerHeader>
         
+        {/* Home - Always visible */}
         <List className={styles.btnContainer}>
           <a id="homeBtn" className={styles.link} href="/">
             <ListItem className={`${styles.listItem} ${isCurrentPage('/') ? styles.activePage : ''}`} sx={listItemStyle}>
               <ListItemIcon sx={iconStyle}>
                 <Tooltip title="Home" placement="right">
-                  <House 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/') ? '#60A5FA' : getTextColor(),
-                      fontSize: isCurrentPage('/') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/') ? "fill" : (hoveredIcon === 'home' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('home')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <House 
+                      className={styles.homeLogo} 
+                      style={{ 
+                        color: isCurrentPage('/') ? '#60A5FA' : getTextColor(),
+                        fontSize: isCurrentPage('/') ? '24px' : '20px'
+                      }} 
+                      weight={isCurrentPage('/') ? "fill" : (hoveredIcon === 'home' ? "fill" : "regular")}
+                      onMouseEnter={() => setHoveredIcon('home')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                    />
+                    {sidebarExpanded && (
+                      <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isCurrentPage('/') ? '600' : '400', whiteSpace: 'nowrap' }}>
+                        Home
+                      </Box>
+                    )}
+                  </Box>
                 </Tooltip>
               </ListItemIcon>
             </ListItem>
           </a>
         </List>
+
+        {/* Modes Section - Expandable (combines Games and Tools) */}
         <List className={styles.btnContainer}>
-          <a id="viewerBtn" className={styles.link} href="/viewer">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Game Viewer" placement="right">
-                  <Binoculars 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/viewer') ? '#34D399' : getTextColor(),
-                      fontSize: isCurrentPage('/viewer') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/viewer') ? "fill" : (hoveredIcon === 'viewer' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('viewer')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
-          <a id="3dViewerBtn" className={styles.link} href="/3dviewer">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/3dviewer') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="3D Viewer (Beta)" placement="right">
-                  <Cube 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/3dviewer') ? '#8B5CF6' : getTextColor(),
-                      fontSize: isCurrentPage('/3dviewer') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/3dviewer') ? "fill" : (hoveredIcon === '3d-viewer' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('3d-viewer')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
-          <a id="playBtn" className={styles.link} href="/play">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/play') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Play (Beta)" placement="right">
-                  <SmartToyIcon 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/play') ? '#EF4444' : (hoveredIcon === 'play' ? '#EF4444' : getTextColor()),
-                      fontSize: isCurrentPage('/play') ? '24px' : '20px'
-                    }} 
-                    onMouseEnter={() => setHoveredIcon('play')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
-          <a id="puzzleBtn" className={styles.link} href="/puzzle">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/puzzle') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Puzzle (Beta)" placement="right">
-                  <PuzzlePiece 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/puzzle') ? '#10B981' : getTextColor(),
-                      fontSize: isCurrentPage('/puzzle') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/puzzle') ? "fill" : (hoveredIcon === 'puzzle' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('puzzle')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
-          <a id="submitGameBtn" className={styles.link} href="/submit-game">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Submit Game" placement="right">
-                  <Upload 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
-                      fontSize: isCurrentPage('/submit-game') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/submit-game') ? "fill" : (hoveredIcon === 'submit-game' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('submit-game')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={`${styles.btnContainer} ${styles.changelogContainer}`}>
-          <a id="changelogBtn" className={styles.link} href="/changelog">
-            <ListItem className={`${styles.listItem} ${isCurrentPage('/changelog') ? styles.activePage : ''}`} sx={listItemStyle}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="Changelog" placement="right">
-                  <Clock 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isCurrentPage('/changelog') ? '#EC4899' : getTextColor(),
-                      fontSize: isCurrentPage('/changelog') ? '24px' : '20px'
-                    }} 
-                    weight={isCurrentPage('/changelog') ? "fill" : (hoveredIcon === 'changelog' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('changelog')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
-        </List>
-        <List className={styles.btnContainer}>
-          <ListItem className={styles.listItem} onClick={toggleColorPicker} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+          <ListItem 
+            className={styles.listItem} 
+            onClick={() => {
+              setIsModesExpanded(!isModesExpanded);
+              setSidebarExpanded(true);
+            }} 
+            sx={{ ...listItemStyle, cursor: 'pointer' }}
+          >
             <ListItemIcon sx={iconStyle}>
-              <Tooltip title="Color Scheme" placement="right">
-                                  <Palette 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isColorSectionExpanded ? '#8B5CF6' : getTextColor(),
-                      fontSize: isColorSectionExpanded ? '24px' : '20px'
-                    }} 
-                    weight={isColorSectionExpanded ? "fill" : (hoveredIcon === 'color-scheme' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('color-scheme')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-              </Tooltip>
-            </ListItemIcon>
-          </ListItem>
-        </List>
-        <List className={styles.btnContainer}>
-          <ListItem className={styles.listItem} onClick={toggleDecorations} sx={{ ...listItemStyle, cursor: 'pointer' }}>
-            <ListItemIcon sx={iconStyle}>
-                              <Tooltip title="Board Decorations" placement="right">
-                  <Star 
-                    className={styles.homeLogo} 
-                    style={{ 
-                      color: isDecorationSectionExpanded ? '#F97316' : 
-                             (showWoodenCircle.current || showApplePolygon.current) ? '#8B4513' : getTextColor(),
-                      fontSize: isDecorationSectionExpanded ? '24px' : '20px',
-                      opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
-                    }} 
-                    weight={isDecorationSectionExpanded ? "fill" : (hoveredIcon === 'decorations' ? "fill" : "regular")}
-                    onMouseEnter={() => setHoveredIcon('decorations')}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  />
-                </Tooltip>
-            </ListItemIcon>
-          </ListItem>
-        </List>
-        <List className={styles.btnContainer}>
-          <ListItem className={styles.listItem} onClick={toggleSoundOptions} sx={{ ...listItemStyle, cursor: 'pointer' }}>
-            <ListItemIcon sx={iconStyle}>
-              <Tooltip title="Sound Options" placement="right">
-                <SpeakerHigh 
-                  className={styles.homeLogo} 
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                <GameController 
                   style={{ 
-                    color: isSoundSectionExpanded ? '#10B981' : getTextColor(),
-                    fontSize: isSoundSectionExpanded ? '24px' : '20px'
+                    color: isModesExpanded ? '#8B5CF6' : getTextColor(),
+                    fontSize: isModesExpanded ? '24px' : '20px'
                   }} 
-                  weight={isSoundSectionExpanded ? "fill" : (hoveredIcon === 'sound' ? "fill" : "regular")}
-                  onMouseEnter={() => setHoveredIcon('sound')}
-                  onMouseLeave={() => setHoveredIcon(null)}
+                  weight={isModesExpanded ? "fill" : "regular"}
                 />
-              </Tooltip>
+                {sidebarExpanded && (
+                  <>
+                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isModesExpanded ? '600' : '400', flex: 1 }}>
+                      Modes
+                    </Box>
+                    {isModesExpanded ? (
+                      <CaretDown size={16} color={getTextColor()} />
+                    ) : (
+                      <CaretRight size={16} color={getTextColor()} />
+                    )}
+                  </>
+                )}
+              </Box>
             </ListItemIcon>
           </ListItem>
         </List>
+        
+        {/* Modes Submenu */}
+        {isModesExpanded && (
+          <Box sx={{ paddingLeft: sidebarExpanded ? '20px' : '0', borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none', marginLeft: sidebarExpanded ? '12px' : '0' }}>
+            <List className={styles.btnContainer}>
+              <a id="playBtn" className={styles.link} href="/play">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/play') ? styles.activePage : ''}`} sx={listItemStyle}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                      <SmartToyIcon 
+                        style={{ 
+                          color: isCurrentPage('/play') ? '#EF4444' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/play') ? '600' : '400' }}>
+                          Play
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+            </List>
+            <List className={styles.btnContainer}>
+              <a id="puzzleBtn" className={styles.link} href="/puzzle">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/puzzle') ? styles.activePage : ''}`} sx={listItemStyle}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                      <PuzzlePiece 
+                        style={{ 
+                          color: isCurrentPage('/puzzle') ? '#10B981' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                        weight={isCurrentPage('/puzzle') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/puzzle') ? '600' : '400' }}>
+                          Puzzle
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+            </List>
+            <List className={styles.btnContainer}>
+              <a id="viewerBtn" className={styles.link} href="/viewer">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={listItemStyle}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                      <Binoculars 
+                        style={{ 
+                          color: isCurrentPage('/viewer') ? '#34D399' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                        weight={isCurrentPage('/viewer') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/viewer') ? '600' : '400' }}>
+                          Viewer
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+            </List>
+            <List className={styles.btnContainer}>
+              <a id="3dViewerBtn" className={styles.link} href="/3dviewer">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/3dviewer') ? styles.activePage : ''}`} sx={listItemStyle}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                      <Cube 
+                        style={{ 
+                          color: isCurrentPage('/3dviewer') ? '#8B5CF6' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                        weight={isCurrentPage('/3dviewer') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/3dviewer') ? '600' : '400' }}>
+                          3D Viewer
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+            </List>
+            <List className={styles.btnContainer}>
+              <a id="submitGameBtn" className={styles.link} href="/submit-game">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                      <Upload 
+                        style={{ 
+                          color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                        weight={isCurrentPage('/submit-game') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/submit-game') ? '600' : '400' }}>
+                          Submit Game
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+            </List>
+          </Box>
+        )}
+        {/* Settings Section - Expandable */}
+        <List className={styles.btnContainer}>
+          <ListItem 
+            className={styles.listItem} 
+            onClick={() => {
+              setIsSettingsExpanded(!isSettingsExpanded);
+              setSidebarExpanded(true);
+            }} 
+            sx={{ ...listItemStyle, cursor: 'pointer' }}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                <Gear 
+                  style={{ 
+                    color: isSettingsExpanded ? '#10B981' : getTextColor(),
+                    fontSize: isSettingsExpanded ? '24px' : '20px'
+                  }} 
+                  weight={isSettingsExpanded ? "fill" : "regular"}
+                />
+                {sidebarExpanded && (
+                  <>
+                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isSettingsExpanded ? '600' : '400', flex: 1 }}>
+                      Settings
+                    </Box>
+                    {isSettingsExpanded ? (
+                      <CaretDown size={16} color={getTextColor()} />
+                    ) : (
+                      <CaretRight size={16} color={getTextColor()} />
+                    )}
+                  </>
+                )}
+              </Box>
+            </ListItemIcon>
+          </ListItem>
+        </List>
+        
+        {/* Settings Submenu */}
+        {isSettingsExpanded && (
+          <Box sx={{ paddingLeft: sidebarExpanded ? '20px' : '0', borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none', marginLeft: sidebarExpanded ? '12px' : '0' }}>
+            <List className={styles.btnContainer}>
+              <ListItem className={styles.listItem} onClick={toggleColorPicker} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+                <ListItemIcon sx={iconStyle}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Palette 
+                      style={{ 
+                        color: isColorSectionExpanded ? '#8B5CF6' : getTextColor(),
+                        fontSize: '18px'
+                      }} 
+                      weight={isColorSectionExpanded ? "fill" : "regular"}
+                    />
+                    {sidebarExpanded && (
+                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isColorSectionExpanded ? '600' : '400' }}>
+                        Colors
+                      </Box>
+                    )}
+                  </Box>
+                </ListItemIcon>
+              </ListItem>
+            </List>
+            <List className={styles.btnContainer}>
+              <ListItem className={styles.listItem} onClick={toggleDecorations} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+                <ListItemIcon sx={iconStyle}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Star 
+                      style={{ 
+                        color: isDecorationSectionExpanded ? '#F97316' : 
+                               (showWoodenCircle.current || showApplePolygon.current) ? '#8B4513' : getTextColor(),
+                        fontSize: '18px',
+                        opacity: (showWoodenCircle.current || showApplePolygon.current) ? 1 : 0.6
+                      }} 
+                      weight={isDecorationSectionExpanded ? "fill" : "regular"}
+                    />
+                    {sidebarExpanded && (
+                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isDecorationSectionExpanded ? '600' : '400' }}>
+                        Decorations
+                      </Box>
+                    )}
+                  </Box>
+                </ListItemIcon>
+              </ListItem>
+            </List>
+            <List className={styles.btnContainer}>
+              <ListItem className={styles.listItem} onClick={toggleSoundOptions} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+                <ListItemIcon sx={iconStyle}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <SpeakerHigh 
+                      style={{ 
+                        color: isSoundSectionExpanded ? '#10B981' : getTextColor(),
+                        fontSize: '18px'
+                      }} 
+                      weight={isSoundSectionExpanded ? "fill" : "regular"}
+                    />
+                    {sidebarExpanded && (
+                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isSoundSectionExpanded ? '600' : '400' }}>
+                        Sound
+                      </Box>
+                    )}
+                  </Box>
+                </ListItemIcon>
+              </ListItem>
+            </List>
+          </Box>
+        )}
         
         {/* Color Picker Section - Slides out when expanded */}
         {isColorSectionExpanded && (
           <Box
             sx={{
-              padding: '16px',
+              padding: sidebarExpanded ? '16px' : '12px',
               borderTop: '1px solid rgba(255,255,255,0.1)',
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               backgroundColor: 'rgba(0,0,0,0.1)',
@@ -612,7 +908,9 @@ export default function MiniDrawer() {
               flexDirection: 'column',
               gap: '12px',
               minHeight: '120px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginLeft: sidebarExpanded ? '20px' : '0',
+              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
             }}
           >
             <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
@@ -672,7 +970,7 @@ export default function MiniDrawer() {
         {isDecorationSectionExpanded && (
           <Box
             sx={{
-              padding: '16px',
+              padding: sidebarExpanded ? '16px' : '12px',
               borderTop: '1px solid rgba(255,255,255,0.1)',
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               backgroundColor: 'rgba(0,0,0,0.1)',
@@ -680,7 +978,9 @@ export default function MiniDrawer() {
               flexDirection: 'column',
               gap: '12px',
               minHeight: '120px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginLeft: sidebarExpanded ? '20px' : '0',
+              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
             }}
           >
             <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
@@ -791,7 +1091,7 @@ export default function MiniDrawer() {
         {isSoundSectionExpanded && (
           <Box
             sx={{
-              padding: '16px',
+              padding: sidebarExpanded ? '16px' : '12px',
               borderTop: '1px solid rgba(255,255,255,0.1)',
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               backgroundColor: 'rgba(0,0,0,0.1)',
@@ -799,7 +1099,9 @@ export default function MiniDrawer() {
               flexDirection: 'column',
               gap: '12px',
               minHeight: '120px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginLeft: sidebarExpanded ? '20px' : '0',
+              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
             }}
           >
             <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
@@ -881,43 +1183,54 @@ export default function MiniDrawer() {
           </Box>
         )}
         
+        {/* About - At bottom */}
+        <List className={`${styles.btnContainer} ${styles.changelogContainer}`}>
+          <a id="aboutBtn" className={styles.link} href="/about">
+            <ListItem className={styles.listItem}>
+              <ListItemIcon sx={iconStyle}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <CircleIcon style={{ color: '#f59e0b', fontSize: '20px' }} />
+                  {sidebarExpanded && (
+                    <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                      About
+                    </Box>
+                  )}
+                </Box>
+              </ListItemIcon>
+            </ListItem>
+          </a>
+        </List>
+
+        {/* Light/Dark Mode Toggle - At bottom, separate from Settings */}
         <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
-              <Tooltip title={lightMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} placement="right">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
                 {lightMode === 'dark' ? (
                   <Sun 
-                    className={styles.homeLogo} 
                     style={{ 
                       color: '#F59E0B', 
-                      fontSize: '22px'
+                      fontSize: '20px'
                     }} 
                     weight="fill" 
                   />
                 ) : (
                   <Moon 
-                    className={styles.homeLogo} 
                     style={{ 
                       color: '#6366F1', 
-                      fontSize: '22px'
+                      fontSize: '20px'
                     }} 
                     weight="fill" 
                   />
                 )}
-              </Tooltip>
+                {sidebarExpanded && (
+                  <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                    {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                  </Box>
+                )}
+              </Box>
             </ListItemIcon>
           </ListItem>
-        </List>
-        <List className={styles.btnContainer}>
-          <a id="aboutBtn" className={styles.link} href="/about">
-            <ListItem className={styles.listItem}>
-              <ListItemIcon sx={iconStyle}>
-                <Tooltip title="About" placement="right">
-                  <CircleIcon style={{ color: '#f59e0b', fontSize: '20px' }} />
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </a>
         </List>
         
       </Drawer>

@@ -25,10 +25,14 @@
     margin: 0 !important;
     display: flex !important;
     transition: all 0.2s ease;
-    justify-content: center !important;
     align-items: center !important;
     min-height: 48px !important;
     width: 100% !important;
+}
+
+.listItem:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px;
 }
 
 
@@ -50,7 +54,6 @@
 .link{
     text-decoration: none !important;
     display: flex !important;
-    justify-content: center !important;
     width: 100% !important;
 }
 .link:hover{
