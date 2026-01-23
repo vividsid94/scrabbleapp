@@ -209,259 +209,220 @@ export default function Home(){
             </Box>
           </Box>
           <Box 
+            className={styles.welcomeBox}
             style={{ 
-              backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-              color: lightMode === 'dark' ? '#ffffff' : '#1F2937',
-              border: lightMode === 'dark' ? 'none' : '1px solid #e5e7eb',
-              boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.08)',
-              borderRadius: '8px',
-              transition: 'all 0.3s ease-in-out'
+              backgroundColor: lightMode === 'dark' ? 'rgba(55, 65, 81, 0.6)' : 'rgba(249, 250, 251, 0.9)',
+              border: lightMode === 'dark' ? '1px solid rgba(217, 119, 6, 0.15)' : '1px solid rgba(217, 119, 6, 0.1)',
             }}
             sx={{
-              fontSize: { xs: '0.85em', sm: '0.95em' },
-              padding: { xs: '10px 12px', sm: '12px 15px' },
-              margin: { xs: '8px auto', sm: '12px auto' },
-              width: { xs: '90%', sm: '384px' },
-              display: 'flex',
+              padding: { xs: '14px 16px', sm: '16px 20px' },
+              margin: { xs: '16px auto 8px', sm: '20px auto 12px' },
+              width: { xs: '90%', sm: '450px' },
+              maxWidth: '90%'
+            }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
               flexDirection: { xs: 'column', sm: 'row' },
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: { xs: '12px', sm: '16px' }
-            }}
-          >
-            <Box sx={{ textAlign: { xs: 'center', sm: 'left' }, flex: 1 }}>
-              Welcome! Meet Theo, your word game fox. We're in beta!
-            </Box>
-            <button
-              onClick={() => setHowItWorksOpen(true)}
-              style={{
-                background: 'transparent',
-                color: '#D97706',
-                border: '1px solid #D97706',
-                borderRadius: 6,
-                padding: '4px 16px',
-                fontWeight: 'normal',
-                letterSpacing: 0.5,
-                fontSize: 13,
-                boxShadow: 'none',
-                outline: 'transparent',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                opacity: 0.9,
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.opacity = '1';
-                e.target.style.backgroundColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.1)' : 'rgba(217, 119, 6, 0.05)';
-                e.target.style.borderColor = '#B45309';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.opacity = '0.9';
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.borderColor = '#D97706';
-              }}
-            >
-              How It Works
-            </button>
-          </Box>
-          
-          <Box 
-            className={styles.homeButtonContainer}
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: '120px 120px 120px' },
-              gap: { xs: '8px', sm: '12px' },
-              width: { xs: '100%', sm: '384px' },
-              margin: '0 auto',
-              padding: { xs: '0 12px', sm: '0' },
-              justifyItems: { xs: 'center', sm: 'start' }
-            }}
-          >
-            <Box sx={{ gridColumn: { xs: '1', sm: '1' }, width: { xs: '100%', sm: '120px' } }}>
-              <Link to="/play" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                <button 
-                  style={{
-                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 8,
-                    padding: '7px 20px',
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 15,
-                    boxShadow: '6px 0px 0px #B45309',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    display: 'block',
-                    width: '100%',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
-                >
-                  Play
-                </button>
-              </Link>
-            </Box>
-            <Box sx={{ gridColumn: { xs: '2', sm: '2' }, width: { xs: '100%', sm: '120px' } }}>
-              <Link to="/puzzle" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                <button 
-                  style={{
-                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 8,
-                    padding: '7px 20px',
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 15,
-                    boxShadow: '6px 0px 0px #B45309',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    display: 'block',
-                    width: '100%',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
-                >
-                  Puzzles
-                </button>
-              </Link>
-            </Box>
-            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '3' }, width: { xs: '100%', sm: '120px' } }}>
-              <Link to="/viewer" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                <button 
-                  style={{
-                    background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 8,
-                    padding: '7px 20px',
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                    fontSize: 15,
-                    boxShadow: '6px 0px 0px #B45309',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    display: 'block',
-                    width: '100%',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
-                >
-                  Viewer
-                </button>
-              </Link>
-            </Box>
-            <Box sx={{ gridColumn: { xs: '1 / 3', sm: '2' }, width: { xs: '100%', sm: '126px' } }}>
+              gap: { xs: '12px', sm: '16px' },
+              width: '100%'
+            }}>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flex: 1,
+                width: '100%'
+              }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: { xs: '36px', sm: '40px' },
+                  height: { xs: '36px', sm: '40px' },
+                  borderRadius: '10px',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.18)' : 'rgba(217, 119, 6, 0.1)',
+                  flexShrink: 0,
+                  overflow: 'hidden'
+                }}>
+                  <img 
+                    src="/images/fox-icon.svg" 
+                    alt="Fox icon" 
+                    style={{ 
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      color: '#000000'
+                    }}
+                  />
+                </Box>
+                <Box sx={{
+                  fontSize: { xs: '14px', sm: '15px' },
+                  color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937',
+                  lineHeight: 1.5,
+                  textAlign: { xs: 'center', sm: 'left' },
+                  flex: 1
+                }}>
+                  Welcome! Meet Theo, your word game fox. We're in beta!
+                </Box>
+              </Box>
               <button
-                onClick={handleToolsMenuClick}
+                onClick={() => setHowItWorksOpen(true)}
                 style={{
                   background: 'transparent',
                   color: '#D97706',
-                  border: '2px solid #D97706',
-                  borderRadius: 8,
-                  padding: '5px 0px',
-                  fontWeight: 'normal',
-                  letterSpacing: 1,
-                  fontSize: 15,
+                  border: '1px solid #D97706',
+                  borderRadius: 6,
+                  padding: '6px 16px',
+                  fontWeight: 500,
+                  letterSpacing: 0.3,
+                  fontSize: 13,
                   boxShadow: 'none',
                   outline: 'transparent',
                   cursor: 'pointer',
                   userSelect: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  width: '100%',
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  opacity: 0.95
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
-                sx={{
-                  fontSize: { xs: 14, sm: 15 },
-                  padding: { xs: '6px 0px', sm: '5px 0px' }
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)';
+                  e.target.style.borderColor = '#B45309';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.borderColor = '#D97706';
                 }}
               >
-                More <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+                How It Works
               </button>
-              <Menu
-                anchorEl={toolsMenuAnchor}
-                open={toolsMenuOpen}
-                onClose={handleToolsMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'center',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'center',
-                }}
-                PaperProps={{
-                  sx: {
-                    backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
-                    border: '1px solid',
-                    borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    borderRadius: '8px',
-                    boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
-                    minWidth: '160px',
-                    mt: '4px'
-                  }
-                }}
-              >
-                <MenuItem 
-                  onClick={() => { handleToolsMenuClose(); navigate('/3dviewer'); }}
-                  sx={{
-                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                    fontSize: '14px',
-                    padding: '10px 16px',
-                    '&:hover': {
-                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
-                >
-                  3D Viewer
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
-                  sx={{
-                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                    fontSize: '14px',
-                    padding: '10px 16px',
-                    '&:hover': {
-                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
-                >
-                  Submit Game
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => { handleToolsMenuClose(); setSearchPanelOpen(true); }}
-                  sx={{
-                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                    fontSize: '14px',
-                    padding: '10px 16px',
-                    '&:hover': {
-                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
-                >
-                  Results
-                </MenuItem>
-              </Menu>
             </Box>
-            {/* <Link to="/snakes">
-              <button className={styles.homeButton} style={{ 
-                background: 'linear-gradient(45deg, transparent 5%, #7C3AED 5%)',
-                boxShadow: '6px 0px 0px #5B21B6'
-              }}>Snakes 🐍</button>
-            </Link> */}
-            {/* <Link to="/play">
-              <button className={styles.homeButton}>Play Scrabble</button>
-            </Link> */}
+          </Box>
+          
+          <Box 
+            className={styles.secondaryButtonsContainer}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: { xs: '8px', sm: '12px' },
+              width: { xs: '90%', sm: 'auto' },
+              margin: '24px auto 0',
+              padding: { xs: '0 12px', sm: '0' },
+              alignItems: 'center'
+            }}
+          >
+            <Box sx={{
+              display: 'flex',
+              gap: { xs: '8px', sm: '12px' },
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              width: '100%'
+            }}>
+              <Link to="/play" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  Play
+                </button>
+              </Link>
+              <Link to="/puzzle" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  Puzzles
+                </button>
+              </Link>
+              <Link to="/viewer" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  Viewer
+                </button>
+              </Link>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <Box sx={{ position: 'relative' }}>
+                <button
+                  onClick={handleToolsMenuClick}
+                  className={styles.secondaryButton}
+                  style={{
+                    background: 'transparent',
+                    border: '2px solid #D97706',
+                    padding: '8px 23px'
+                  }}
+                >
+                  More <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+                </button>
+                <Menu
+                  anchorEl={toolsMenuAnchor}
+                  open={toolsMenuOpen}
+                  onClose={handleToolsMenuClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center',
+                  }}
+                  disableScrollLock={true}
+                  slotProps={{
+                    root: {
+                      style: {
+                        position: 'fixed'
+                      }
+                    }
+                  }}
+                  PaperProps={{
+                    sx: {
+                      backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+                      border: '1px solid',
+                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      borderRadius: '8px',
+                      boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
+                      minWidth: '160px',
+                      mt: '4px'
+                    }
+                  }}
+                >
+                  <MenuItem 
+                    onClick={() => { handleToolsMenuClose(); navigate('/3dviewer'); }}
+                    sx={{
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      fontSize: '14px',
+                      padding: '10px 16px',
+                      '&:hover': {
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                      }
+                    }}
+                  >
+                    3D Viewer
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
+                    sx={{
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      fontSize: '14px',
+                      padding: '10px 16px',
+                      '&:hover': {
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                      }
+                    }}
+                  >
+                    Submit Game
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { handleToolsMenuClose(); setSearchPanelOpen(true); }}
+                    sx={{
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      fontSize: '14px',
+                      padding: '10px 16px',
+                      '&:hover': {
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                      }
+                    }}
+                  >
+                    Results
+                  </MenuItem>
+                </Menu>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>

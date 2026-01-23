@@ -5,6 +5,7 @@ import { ThemeContext } from '../../../App';
 import AuthModal from '../../Auth/AuthModal';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './Topbar.module.css';
+import homeStyles from '../../../containers/Home/Home.module.css';
 
 export default function Topbar() {
   const { lightMode } = useContext(ThemeContext);
@@ -24,21 +25,11 @@ export default function Topbar() {
                   setAuthMode('signin');
                   setShowAuthModal(true);
                 }}
+                className={homeStyles.secondaryButton}
                 style={{
                   background: 'transparent',
-                  color: '#D97706',
                   border: '2px solid #D97706',
-                  borderRadius: 8,
-                  padding: '5px 20px',
-                  fontWeight: 'normal',
-                  letterSpacing: 1,
-                  fontSize: 15,
-                  boxShadow: 'none',
-                  outline: 'transparent',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  opacity: 0.95
+                  padding: '8px 23px'
                 }}
               >
                 Log In
@@ -48,22 +39,7 @@ export default function Topbar() {
                   setAuthMode('signup');
                   setShowAuthModal(true);
                 }}
-                style={{
-                  background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
-                  color: '#fff',
-                  border: 0,
-                  borderRadius: 8,
-                  padding: '7px 20px',
-                  fontWeight: 'bold',
-                  letterSpacing: 1,
-                  fontSize: 15,
-                  boxShadow: '6px 0px 0px #B45309',
-                  outline: 'transparent',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  opacity: 0.95
-                }}
+                className={homeStyles.secondaryButton}
               >
                 Sign Up
               </button>

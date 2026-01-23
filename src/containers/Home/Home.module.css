@@ -14,6 +14,8 @@
   justify-content: center;
   margin-top: 32px;
   margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .mascotWrapper {
@@ -35,16 +37,86 @@
   margin-bottom: 0;
 }
 
+.welcomeBox {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.welcomeBox:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.secondaryButtonsContainer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.secondaryButton {
+  background: linear-gradient(45deg, transparent 5%, #D97706 5%);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 15px;
+  box-shadow: 6px 0px 0px #B45309;
+  outline: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.95;
+  min-width: 120px;
+}
+
+.secondaryButton:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 8px 2px 0px #B45309;
+}
+
+.secondaryButton:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 600px) {
   .mascotWrapper {
     width: 140px;
   }
   .title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+  }
+  .tagline {
+    font-size: 0.875rem;
+    margin-bottom: 24px;
   }
   .heroContainer {
     margin-top: 16px;
     margin-bottom: 12px;
+  }
+  .playNowButton {
+    padding: 14px 36px;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+  }
+  .howItWorksButton {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  .primaryButtonsContainer {
+    gap: 12px;
+  }
+  .secondaryButton {
+    padding: 8px 20px;
+    font-size: 14px;
+    min-width: 100px;
   }
 }
 
