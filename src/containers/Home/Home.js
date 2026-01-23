@@ -215,10 +215,13 @@ export default function Home(){
               border: lightMode === 'dark' ? '1px solid rgba(217, 119, 6, 0.15)' : '1px solid rgba(217, 119, 6, 0.1)',
             }}
             sx={{
-              padding: { xs: '14px 16px', sm: '16px 20px' },
-              margin: { xs: '16px 16px 8px', sm: '20px auto 12px' },
-              width: { xs: 'calc(100% - 32px)', sm: '450px' },
-              maxWidth: { xs: 'calc(100% - 32px)', sm: '450px' }
+              padding: { xs: '12px 14px', sm: '16px 20px' },
+              margin: { xs: '12px auto 8px', sm: '20px auto 12px' },
+              width: { xs: 'calc(100% - 40px)', sm: '450px' },
+              maxWidth: { xs: 'calc(100% - 40px)', sm: '450px' },
+              display: 'flex',
+              justifyContent: 'center',
+              boxSizing: 'border-box'
             }}
           >
             <Box sx={{ 
@@ -779,13 +782,11 @@ export default function Home(){
           </Box>
       </Box>
       
-      {/* Backdrop overlay when panel is open */}
-      {searchPanelOpen && (
-        <Box 
-          className={styles.searchPanelBackdrop}
-          onClick={closePanel}
-        />
-      )}
+       {/* Backdrop overlay when panel is open */}
+       <Box 
+         className={`${styles.searchPanelBackdrop} ${searchPanelOpen ? styles.searchPanelBackdropOpen : ''}`}
+         onClick={closePanel}
+       />
 
       {/* How It Works Modal */}
       <Modal

@@ -47,7 +47,7 @@ export default function AnimatedMascot({ about = 'theo' }) {
   const mascotClass = `${styles.mascot} ${stencilMode ? styles.stencilEffect : ''}`;
 
   return (
-    <div style={{ position: "relative", width: 220, height: 220 }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", aspectRatio: "1 / 1" }}>
       <img
         src={mascotImages[prev]}
         alt="Theo the mascot previous pose"
@@ -58,6 +58,9 @@ export default function AnimatedMascot({ about = 'theo' }) {
           position: "absolute",
           top: 0,
           left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
           transition: "opacity 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55)"
         }}
         draggable={false}
@@ -72,6 +75,9 @@ export default function AnimatedMascot({ about = 'theo' }) {
           position: "absolute",
           top: 0,
           left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
           transition: "opacity 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55)"
         }}
         draggable={false}
