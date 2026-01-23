@@ -266,9 +266,11 @@ export default function Play() {
   const [showSkillBots, setShowSkillBots] = useState(false);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const skillBots = [
-    { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={32} color="#60A5FA" /> },
-    { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={32} color="#8B7355" /> },
-    { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={32} color="#3D5A80" /> },
+    { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.', icon: <img src="/images/theomascot.png" alt="Theo" width={18} height={18} style={{ borderRadius: '3px' }} /> },
+    { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!', icon: <img src="/images/tessmascot.png" alt="Tess" width={18} height={18} style={{ borderRadius: '3px' }} /> },
+    { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={18} color="#60A5FA" /> },
+    { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={18} color="#8B7355" /> },
+    { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={18} color="#3D5A80" /> },
   ];
 
   // Bot icon mapping for the top panel
@@ -763,62 +765,62 @@ export default function Play() {
               } : {}}
             >
           {gameStarted ? (
-            <Board 
-              board={board}
-              boardMode={theme}
-              lightMode={lightMode}
-              onBoardChildClick={(row, col) => handleBoardPositionSelect({
-                row,
-                col,
-                boardCoords,
-                selectedBoardPosition,
-                setSelectedBoardPosition,
-                arrowDirection,
-                setArrowDirection
-              })}
-              onTileDrop={(tile, index, row, col) => handleTileDrop({
-                tile,
-                index,
-                row,
-                col,
-                player1Rack,
-                setPlayer1Rack,
-                player2Rack,
-                setPlayer2Rack,
-                    selectedTilesArray,
-                setSelectedTiles,
-                setSelectedBoardPosition,
-                tempBoardCoords,
-                setTempBoardCoords
-              })}
-              onTileClick={(tile, index) => handleTileClick({
-                tile,
-                index,
-                currentPlayer,
-                player1Rack,
-                player2Rack,
-                    selectedTilesArray,
-                setSelectedTiles,
-                tilesToExchange,
-                setTilesToExchange
-              })}
-              selectedPosition={selectedBoardPosition}
-              arrowDirection={arrowDirection}
-              onArrowDirectionChange={(newDirection) => {
-                  console.log('Play component received direction change:', newDirection);
-                  setArrowDirection(newDirection);
-              }}
-              animate={false}
-              showSlip={false}
-              showDictionary={false}
-              dictionary=""
-              previewScore={previewScore}
-              previewScorePosition={previewScorePosition}
-              lastMoveCoordinates={lastMoveCoordinates}
-            />
+          <Board 
+            board={board}
+            boardMode={theme}
+            lightMode={lightMode}
+            onBoardChildClick={(row, col) => handleBoardPositionSelect({
+              row,
+              col,
+              boardCoords,
+              selectedBoardPosition,
+              setSelectedBoardPosition,
+              arrowDirection,
+              setArrowDirection
+            })}
+            onTileDrop={(tile, index, row, col) => handleTileDrop({
+              tile,
+              index,
+              row,
+              col,
+              player1Rack,
+              setPlayer1Rack,
+              player2Rack,
+              setPlayer2Rack,
+                  selectedTilesArray,
+              setSelectedTiles,
+              setSelectedBoardPosition,
+              tempBoardCoords,
+              setTempBoardCoords
+            })}
+            onTileClick={(tile, index) => handleTileClick({
+              tile,
+              index,
+              currentPlayer,
+              player1Rack,
+              player2Rack,
+                  selectedTilesArray,
+              setSelectedTiles,
+              tilesToExchange,
+              setTilesToExchange
+            })}
+            selectedPosition={selectedBoardPosition}
+            arrowDirection={arrowDirection}
+            onArrowDirectionChange={(newDirection) => {
+                console.log('Play component received direction change:', newDirection);
+                setArrowDirection(newDirection);
+            }}
+            animate={false}
+            showSlip={false}
+            showDictionary={false}
+            dictionary=""
+            previewScore={previewScore}
+            previewScorePosition={previewScorePosition}
+            lastMoveCoordinates={lastMoveCoordinates}
+          />
           ) : (
-            <Box
-              sx={{
+          <Box
+            sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -828,52 +830,66 @@ export default function Play() {
                 padding: '40px 20px'
               }}
             >
-              {/* Scouting Report */}
+              {/* Container for Scouting Report and Slideouts */}
               <Box
                 sx={{
                   position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: { xs: '16px', sm: '24px' },
-                  padding: { xs: '24px 20px', sm: '40px 32px' },
-                  maxWidth: '650px',
                   width: '100%',
-                  backgroundColor: lightMode === 'dark' 
-                    ? '#243447' 
-                    : '#FEFEFE',
-                  backgroundImage: lightMode === 'dark'
-                    ? 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100, 100, 100, 0.2) 23px, rgba(100, 100, 100, 0.2) 24px), linear-gradient(to bottom, rgba(255,255,255,0.01) 0%, transparent 50%, rgba(0,0,0,0.03) 100%)'
-                    : 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(200, 200, 200, 0.3) 23px, rgba(200, 200, 200, 0.3) 24px), linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.02) 100%)',
-                  backgroundSize: '100% 24px, 100% 100%',
-                  backgroundPosition: '0 0, 0 0',
-                  border: lightMode === 'dark' 
-                    ? '1px solid rgba(139, 115, 85, 0.15)' 
-                    : '1px solid rgba(200, 180, 150, 0.3)',
-                  boxShadow: lightMode === 'dark'
-                    ? '0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 150px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
-                    : '0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 150px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
-                  transform: 'rotate(-0.8deg)',
-                  transition: 'transform 0.3s ease',
-                  '&:hover': {
-                    transform: 'rotate(0deg) scale(1.02)'
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: '-2px',
-                    left: '-2px',
-                    right: '-2px',
-                    bottom: '-2px',
-                    background: lightMode === 'dark'
-                      ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.08), rgba(139, 92, 46, 0.08))'
-                      : 'linear-gradient(135deg, rgba(139, 115, 85, 0.08), rgba(101, 84, 61, 0.08))',
-                    borderRadius: '2px',
-                    zIndex: -1,
-                    filter: 'blur(4px)'
-                  }
+                  maxWidth: { xs: '100%', sm: '650px' },
+                  minHeight: { xs: '400px', sm: '500px' },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
+                {/* Scouting Report */}
+                {!botSelectOpen && (
+                <Box
+                  sx={{
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: { xs: '16px', sm: '24px' },
+                    padding: { xs: '24px 20px', sm: '40px 32px' },
+                    maxWidth: '650px',
+                    width: '100%',
+                    flexShrink: 0,
+                    backgroundColor: lightMode === 'dark' 
+                      ? '#243447' 
+                      : '#FEFEFE',
+                    backgroundImage: lightMode === 'dark'
+                      ? 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100, 100, 100, 0.2) 23px, rgba(100, 100, 100, 0.2) 24px), linear-gradient(to bottom, rgba(255,255,255,0.01) 0%, transparent 50%, rgba(0,0,0,0.03) 100%)'
+                      : 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(200, 200, 200, 0.3) 23px, rgba(200, 200, 200, 0.3) 24px), linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.02) 100%)',
+                    backgroundSize: '100% 24px, 100% 100%',
+                    backgroundPosition: '0 0, 0 0',
+                    border: lightMode === 'dark' 
+                      ? '1px solid rgba(139, 115, 85, 0.15)' 
+                      : '1px solid rgba(200, 180, 150, 0.3)',
+                    boxShadow: lightMode === 'dark'
+                      ? '0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 150px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+                      : '0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 150px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+                    transform: 'rotate(-0.8deg)',
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'rotate(0deg) scale(1.02)'
+                    },
+                    '&::before': {
+                      content: '""',
+              position: 'absolute',
+                      top: '-2px',
+                      left: '-2px',
+                      right: '-2px',
+                      bottom: '-2px',
+                      background: lightMode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.08), rgba(139, 92, 46, 0.08))'
+                        : 'linear-gradient(135deg, rgba(139, 115, 85, 0.08), rgba(101, 84, 61, 0.08))',
+                      borderRadius: '2px',
+                      zIndex: -1,
+                      filter: 'blur(4px)'
+                    }
+                  }}
+                >
                 {/* Thumb Tacks */}
                 <Box
                   sx={{
@@ -891,7 +907,7 @@ export default function Play() {
                       position: 'absolute',
                       top: '50%',
                       left: '50%',
-                      transform: 'translate(-50%, -50%)',
+              transform: 'translate(-50%, -50%)',
                       width: '4px',
                       height: '4px',
                       borderRadius: '50%',
@@ -999,36 +1015,36 @@ export default function Play() {
                 </Box>
                 <Box
                   sx={{
-                    display: 'flex',
+              display: 'flex',
                     flexWrap: 'wrap',
                     gap: { xs: '20px', sm: '32px' },
                     width: '100%',
-                    justifyContent: 'center',
+              justifyContent: 'center',
                     alignItems: 'flex-start'
-                  }}
-                >
+            }}
+          >
                   {bots.map((bot, index) => (
-                    <Box
+              <Box
                       key={bot.name}
-                      component="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
+                component="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (isDictionaryLoading || isBotThinking || isPlayerThinking) return;
                         handleBotSelect(bot);
-                        handleBotModeToggleWithSounds();
-                      }}
+                        setBotSelectOpen(true);
+                }}
                       disabled={isDictionaryLoading || isBotThinking || isPlayerThinking}
-                      sx={{
-                        display: 'flex',
+                sx={{
+                  display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center',
+                  alignItems: 'center',
                         gap: { xs: '12px', sm: '16px' },
                         transform: index === 0 ? 'rotate(-2deg)' : 'rotate(1.5deg)',
                         transition: 'transform 0.3s ease',
-                        cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
-                        opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
-                        border: 'none',
+                  cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
+                  opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
+                  border: 'none',
                         background: 'transparent',
                         padding: 0,
                         '&:hover:not(:disabled)': {
@@ -1040,7 +1056,7 @@ export default function Play() {
                       }}
                     >
                       <Box
-                        sx={{
+                  sx={{
                           width: { xs: '80px', sm: '120px' },
                           height: { xs: '80px', sm: '120px' },
                           position: 'relative',
@@ -1050,7 +1066,7 @@ export default function Play() {
                         }}
                       >
                         <AnimatedMascot about={bot.name.toLowerCase()} />
-                      </Box>
+                </Box>
                       <Box
                         sx={{
                           fontSize: { xs: '16px', sm: '20px' },
@@ -1073,15 +1089,822 @@ export default function Play() {
                         }}
                       >
                         {bot.desc}
-                      </Box>
+              </Box>
                     </Box>
                   ))}
-                </Box>
               </Box>
-
             </Box>
           )}
+
+                {/* Bot Selection Slideout */}
+                {botSelectOpen && (
+                <>
+            <Box 
+              sx={{
+                    // Mobile: full-screen slideout. Desktop: in-flow panel that replaces scouting report.
+                    position: { xs: 'fixed', sm: 'relative' },
+                    top: { xs: 0, sm: 'auto' },
+                    left: { xs: 0, sm: 'auto' },
+                    right: { xs: 0, sm: 'auto' },
+                    bottom: { xs: 0, sm: 'auto' },
+                    width: '100%',
+                    maxWidth: { xs: '100%', sm: '420px' },
+                    height: { xs: '100vh', sm: '100%' },
+                    backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                    border: lightMode === 'dark' 
+                      ? '1px solid rgba(139, 115, 85, 0.15)' 
+                      : '1px solid rgba(200, 180, 150, 0.3)',
+                    boxShadow: lightMode === 'dark'
+                      ? '0 10px 30px rgba(0, 0, 0, 0.5)'
+                      : '0 10px 30px rgba(0, 0, 0, 0.2)',
+                    borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
+                    padding: 0,
+                    overflow: 'hidden',
+                    // Since this is conditionally rendered only when open, keep it visible (no off-canvas transform).
+                    transform: 'none',
+                    zIndex: { xs: 1300, sm: 2 },
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  {/* Back Button */}
+                  <Box
+                    component="button"
+                    onClick={() => { setBotSelectOpen(false); setShowTimeControls(false); }}
+                    sx={{
+                      position: 'absolute',
+                      top: { xs: '12px', sm: '12px' },
+                      left: { xs: '12px', sm: '12px' },
+                      background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: { xs: '6px 10px', sm: '6px 10px' },
+                      display: 'flex', 
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      zIndex: 10,
+                      borderRadius: 4,
+                      fontSize: { xs: '12px', sm: '12px' },
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+                        transform: 'translateX(-2px)'
+                      }
+                    }}
+                  >
+                    <CaretDown 
+                      size={16} 
+                      weight="bold" 
+                      style={{ 
+                        transform: 'rotate(90deg)'
+                      }} 
+                    />
+                    Back
+                  </Box>
+
+                  {/* Bot Selection Content */}
+          <Box
+            sx={{
+                      transform: { 
+                        xs: showTimeControls ? 'translateY(-100%)' : 'translateY(0)', 
+                        sm: showTimeControls ? 'translateX(-100%)' : 'translateX(0)' 
+                      },
+                      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      width: '100%',
+                      maxWidth: '100%',
+                      height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+                      padding: { xs: '14px 12px', sm: '12px 12px' },
+                      overflowY: 'auto',
+                      overflowX: 'hidden',
+                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      gap: '8px',
+                      flex: 1,
+                      minHeight: 0,
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <Box sx={{ fontSize: { xs: '14px', sm: '14px' }, fontWeight: 700, textAlign: 'center', letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0.5 }}>
+                      Who will you play against today?
+                    </Box>
+                    <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+                      <Box sx={{ marginTop: 1, width: '100%', maxWidth: '100%', maxHeight: { xs: '300px', sm: '240px' }, overflowY: 'auto', paddingRight: { xs: '12px', sm: '12px' }, boxSizing: 'border-box' }}>
+                        {skillBots.map(bot => (
+                          <Box
+                            key={bot.name}
+                            onClick={() => { setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
+                            sx={{
+                              width: '100%',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                              display: 'flex',
+              alignItems: 'center',
+                              gap: { xs: 6, sm: 6 },
+                              background: selectedBot.name === bot.name && !customBotSelected 
+                                ? 'rgba(96,165,250,0.08)' 
+                                : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                              border: selectedBot.name === bot.name && !customBotSelected 
+                                ? '2px solid #3D5A80' 
+                                : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                              borderRadius: 4,
+                              boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
+                              cursor: 'pointer',
+                              padding: { xs: '6px 8px', sm: '5px 8px' },
+                              marginBottom: { xs: 2, sm: 1.5 },
+                              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              '&:hover': {
+                                transform: 'translateX(2px)',
+                                boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 3px 12px rgba(61,90,128,0.15)' : '0 2px 6px rgba(0,0,0,0.08)'
+                              }
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: { xs: '18px', sm: '18px' }, height: { xs: '18px', sm: '18px' }, '& img': { width: '100%', height: '100%', objectFit: 'contain' } }}>{bot.icon}</Box>
+                            <Box sx={{ flex: 1, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
+                              <Box sx={{ fontWeight: 700, fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.name}</Box>
+                              <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.desc}</Box>
+                            </Box>
+                            <Box
+                              component="button"
+                              onClick={e => { e.stopPropagation(); setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
+                sx={{
+                                flexShrink: 0,
+                                whiteSpace: 'nowrap',
+                                background: selectedBot.name === bot.name && !customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                  color: '#fff',
+                                border: 0,
+                                borderRadius: 3,
+                                padding: { xs: '4px 8px', sm: '3px 8px' },
+                                fontWeight: 600,
+                                letterSpacing: 0.3,
+                                fontSize: { xs: '10px', sm: '9px' },
+                                boxShadow: selectedBot.name === bot.name && !customBotSelected ? '3px 0px 0px #60A5FA' : '3px 0px 0px #374151',
+                                outline: 'transparent',
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                opacity: selectedBot.name === bot.name && !customBotSelected ? 1 : 0.85
+                              }}
+                            >
+                              {selectedBot.name === bot.name && !customBotSelected ? 'Selected' : 'Choose'}
+              </Box>
+          </Box>
+                        ))}
+                        {/* Custom bot item */}
+                        <Box
+                          onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+                          sx={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 6, sm: 6 },
+                            background: customBotSelected 
+                              ? 'rgba(96,165,250,0.08)' 
+                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                            border: customBotSelected 
+                              ? '2px solid #3D5A80' 
+                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                            boxShadow: customBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
+                            cursor: 'pointer',
+                            padding: { xs: '6px 8px', sm: '5px 8px' },
+                            marginBottom: { xs: 2, sm: 1.5 },
+                            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                            position: 'relative',
+                            '&:hover': {
+                              transform: 'translateX(2px)',
+                              boxShadow: customBotSelected ? '0 3px 12px rgba(61,90,128,0.15)' : '0 2px 6px rgba(0,0,0,0.08)'
+                            }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: { xs: '18px', sm: '18px' }, height: { xs: '18px', sm: '18px' } }}><Robot size={18} color="#9CA3AF" /></Box>
+                          <Box sx={{ flex: 1, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Custom</Box>
+                            <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
+                              Play <input 
+                                type="text" 
+                                value={customRank} 
+                                onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }} 
+                                placeholder="X" 
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ 
+                                  width: 24, 
+                                  fontSize: '9px', 
+                                  textAlign: 'center', 
+                                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb', 
+                                  borderRadius: 2, 
+                                  margin: 0, 
+                                  padding: '1px 2px',
+                                  background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                                }} 
+                              />th by points + leave
             </Box>
+            </Box>
+                          <Box
+                            component="button"
+                            disabled={!/^\d+$/.test(customRank) || parseInt(customRank) <= 0}
+                            onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
+                            sx={{
+                              flexShrink: 0,
+                              whiteSpace: 'nowrap',
+                              background: customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                              color: '#fff',
+                              border: 0,
+                              borderRadius: 3,
+                              padding: { xs: '4px 8px', sm: '3px 8px' },
+                              fontWeight: 600,
+                              letterSpacing: 0.3,
+                              fontSize: { xs: '10px', sm: '9px' },
+                              boxShadow: customBotSelected ? '3px 0px 0px #60A5FA' : '3px 0px 0px #374151',
+                              outline: 'transparent',
+                              cursor: /^\d+$/.test(customRank) && parseInt(customRank) > 0 ? 'pointer' : 'not-allowed',
+                              userSelect: 'none',
+                              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                              opacity: customBotSelected ? 1 : 0.85
+                            }}
+                          >
+                            {customBotSelected ? 'Selected' : 'Choose'}
+            </Box>
+            </Box>
+            
+                        {/* Custom Defense Bot item */}
+                        <Box
+                          onClick={() => { setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
+                          sx={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 6, sm: 6 },
+                            background: customDefenseBotSelected 
+                              ? 'rgba(96,165,250,0.08)' 
+                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                            border: customDefenseBotSelected 
+                              ? '2px solid #3D5A80' 
+                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                            boxShadow: customDefenseBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
+                            cursor: 'pointer',
+                            padding: { xs: '6px 8px', sm: '5px 8px' },
+                            marginBottom: { xs: 2, sm: 1.5 },
+                            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                            position: 'relative',
+                            '&:hover': {
+                              transform: 'translateX(2px)',
+                              boxShadow: customDefenseBotSelected ? '0 3px 12px rgba(61,90,128,0.15)' : '0 2px 6px rgba(0,0,0,0.08)'
+                            }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: { xs: '18px', sm: '18px' }, height: { xs: '18px', sm: '18px' } }}><Robot size={18} color="#9CA3AF" /></Box>
+                          <Box sx={{ flex: 1, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Custom Defense</Box>
+                            <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', marginBottom: 0.5 }}>
+                              Defense Weight: {defenseWeight.toFixed(1)}x
+            </Box>
+                            <Slider
+                              value={defenseWeight}
+                              onChange={(e, value) => setDefenseWeight(value)}
+                              onClick={(e) => e.stopPropagation()}
+                              min={0.0}
+                              max={5.0}
+                              step={0.1}
+                              size="small"
+                              sx={{
+                                color: '#3D5A80',
+                                '& .MuiSlider-thumb': {
+                                  width: { xs: 12, sm: 10 },
+                                  height: { xs: 12, sm: 10 },
+                                },
+                                '& .MuiSlider-track': {
+                                  height: 2,
+                                },
+                                '& .MuiSlider-rail': {
+                                  height: 2,
+                                  opacity: 0.3,
+                                },
+                              }}
+                            />
+          </Box>
+                          <Box
+                            component="button"
+                            onClick={e => { e.stopPropagation(); setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
+                            sx={{
+                              flexShrink: 0,
+                              whiteSpace: 'nowrap',
+                              background: customDefenseBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
+                              color: '#fff',
+                              border: 0,
+                              borderRadius: 3,
+                              padding: { xs: '4px 8px', sm: '3px 8px' },
+                              fontWeight: 600,
+                              letterSpacing: 0.3,
+                              fontSize: { xs: '10px', sm: '9px' },
+                              boxShadow: customDefenseBotSelected ? '3px 0px 0px #60A5FA' : '3px 0px 0px #374151',
+                              outline: 'transparent',
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                              opacity: customDefenseBotSelected ? 1 : 0.85
+                            }}
+                          >
+                            {customDefenseBotSelected ? 'Selected' : 'Choose'}
+        </Box>
+      </Box>
+                      </Box>
+                    </Box>
+                    <Box
+                      component="button"
+                      onClick={() => { setShowTimeControls(true); }}
+                      sx={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        marginTop: 2,
+                        background: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
+                        color: '#fff',
+                        border: 'none', 
+                        borderRadius: 4,
+                        padding: { xs: '8px 12px', sm: '7px 12px' },
+                        fontWeight: 600,
+                        fontSize: { xs: '12px', sm: '11px' },
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 4px rgba(0, 0, 0, 0.15)',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          background: lightMode === 'dark' ? 'rgba(217, 119, 6, 1)' : 'rgba(217, 119, 6, 1)',
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)'
+                        },
+                        '&:active': {
+                          transform: 'scale(0.98)'
+                        }
+                      }}
+                    >
+                      Continue
+                    </Box>
+                  </Box>
+
+          {/* Time Controls Slideout */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+              transform: showTimeControls ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'flex',
+              flexDirection: 'column',
+                      padding: { xs: '14px 12px', sm: '12px 12px' },
+              zIndex: 10,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+                      justifyContent: 'space-between',
+                      borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
+              boxSizing: 'border-box'
+            }}
+          >
+                    <Box sx={{ fontSize: { xs: '14px', sm: '14px' }, fontWeight: 700, marginBottom: 0.5, textAlign: 'center', letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+              Options
+                    </Box>
+            
+            {/* Time Controls */}
+            <Box sx={{ width: '100%', marginBottom: 2 }}>
+                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Time
+                      </Box>
+                      <Box sx={{ fontSize: { xs: '13px', sm: '13px' }, fontWeight: 700, marginBottom: 1, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                {gameTime} {gameTime === 1 ? 'minute' : 'minutes'}
+                      </Box>
+              <Slider
+                value={gameTime}
+                onChange={(e, value) => setGameTime(value)}
+                min={1}
+                max={30}
+                step={1}
+                sx={{
+                  color: '#3D5A80',
+                  marginBottom: 0,
+                  '& .MuiSlider-thumb': {
+                            width: { xs: 14, sm: 12 },
+                            height: { xs: 14, sm: 12 },
+                  },
+                  '& .MuiSlider-track': {
+                    height: 2,
+                  },
+                  '& .MuiSlider-rail': {
+                    height: 2,
+                    opacity: 0.3,
+                  },
+                }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 0.5, marginTop: 0.5 }}>
+                {[5, 10, 15, 30].map((time) => (
+                          <Box
+                    key={time}
+                            component="button"
+                    onClick={() => setGameTime(time)}
+                            sx={{
+                              padding: { xs: '4px 6px', sm: '3px 6px' },
+                              fontSize: { xs: '10px', sm: '9px' },
+                      fontWeight: 600,
+                              color: gameTime === time ? '#fff' : (lightMode === 'dark' ? 'rgba(255,255,255,0.8)' : '#374151'),
+                              backgroundColor: gameTime === time ? '#3D5A80' : (lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0, 0, 0, 0.04)'),
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                      flex: 1,
+                      opacity: gameTime === time ? 1 : 0.85
+                    }}
+                  >
+                    {time}
+                          </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Dictionary Dropdown */}
+            <Box sx={{ width: '100%', marginBottom: 2 }}>
+                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Dictionary
+                      </Box>
+              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
+                <Select
+                  value={selectedDictionary}
+                  onChange={(e) => setSelectedDictionary(e.target.value)}
+                  sx={{
+                            fontSize: { xs: '12px', sm: '11px' },
+                    fontWeight: 600,
+                            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                            backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                      borderWidth: '1px'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '& .MuiSvgIcon-root': {
+                              color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
+                      fontSize: '16px'
+                    }
+                  }}
+                >
+                          <MenuItem value="NWL" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>NWL</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Game Mode Dropdown */}
+            <Box sx={{ width: '100%', marginBottom: 2 }}>
+                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Game Mode
+                      </Box>
+              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
+                <Select
+                  value={gameMode}
+                  onChange={(e) => setGameMode(e.target.value)}
+                  sx={{
+                            fontSize: { xs: '12px', sm: '11px' },
+                    fontWeight: 600,
+                            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                            backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                      borderWidth: '1px'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3D5A80'
+                    },
+                    '& .MuiSvgIcon-root': {
+                              color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
+                      fontSize: '16px'
+                    }
+                  }}
+                >
+                          <MenuItem value="Normal" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>Normal</MenuItem>
+                          <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: { xs: '12px', sm: '11px' }, opacity: 0.4 }}>Randomize bonus squares</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Move Coach & Theo Yell Toggles - Grouped, Mutually Exclusive */}
+            <Box sx={{ width: '100%', marginTop: 1, marginBottom: 'auto' }}>
+                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Analysis Mode
+                      </Box>
+              
+              {/* Theo Yell Option */}
+              <Box>
+                <Box 
+                  onClick={() => {
+                    if (!theoYellEnabled) {
+                      setTheoYellEnabled(true);
+                      setMoveCoachEnabled(false);
+                    } else {
+                      setTheoYellEnabled(false);
+                    }
+                  }}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                            padding: { xs: '6px 8px', sm: '5px 8px' },
+                            backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                            border: theoYellEnabled ? '2px solid #D97706' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: '#D97706',
+                      backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.05)'
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img 
+                      src="/images/theomascot.png" 
+                      alt="Theo" 
+                      width={14} 
+                      height={14} 
+                      style={{ 
+                        borderRadius: '3px',
+                        opacity: theoYellEnabled ? 1 : 0.6,
+                        filter: theoYellEnabled ? 'drop-shadow(0 0 3px rgba(217, 119, 6, 0.5))' : 'none',
+                        transition: 'all 0.2s ease'
+                      }} 
+                    />
+                            <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600, color: theoYellEnabled ? '#D97706' : (lightMode === 'dark' ? '#fff' : '#1F2937') }}>
+                      Have Theo Yell at You
+                            </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {theoYellEnabled && (
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTheoYellSettingsExpanded(!theoYellSettingsExpanded);
+                        }}
+                        sx={{ 
+                          cursor: 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: theoYellSettingsExpanded ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: 'rgba(217, 119, 6, 0.2)'
+                          }
+                        }}
+                      >
+                                <Box sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600, color: '#D97706' }}>
+                          {theoYellSettingsExpanded ? 'Hide' : 'Settings'}
+                                </Box>
+                        {theoYellSettingsExpanded ? (
+                          <CaretUp size={14} color="#D97706" weight="bold" />
+                        ) : (
+                          <CaretDown size={14} color="#D97706" weight="bold" />
+                        )}
+                      </Box>
+                    )}
+                    <Box
+                      sx={{
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        border: theoYellEnabled ? '5px solid #D97706' : '2px solid #9CA3AF',
+                        backgroundColor: theoYellEnabled ? '#D97706' : 'transparent',
+                        transition: 'all 0.2s ease'
+                      }}
+                    />
+                  </Box>
+                </Box>
+                
+                {/* Expandable Settings */}
+                <Collapse in={theoYellEnabled && theoYellSettingsExpanded}>
+                  <Box sx={{ marginTop: 1, padding: '6px', backgroundColor: 'rgba(217, 119, 6, 0.05)', borderRadius: '6px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
+                            <Box sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600, marginBottom: 4, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Trigger When
+                            </Box>
+                    
+                    {/* Bingo Miss Option */}
+                    <Box 
+                      onClick={() => setTheoYellCriteria('bingo')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 8px',
+                        marginBottom: '4px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: theoYellCriteria === 'bingo' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                        '&:hover': {
+                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          border: theoYellCriteria === 'bingo' ? '3px solid #D97706' : '2px solid #9CA3AF',
+                          backgroundColor: theoYellCriteria === 'bingo' ? '#D97706' : 'transparent',
+                          transition: 'all 0.2s ease'
+                        }}
+                      />
+                              <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 500, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                        When I miss a bingo
+                              </Box>
+                    </Box>
+                    
+                    {/* Score Threshold Option */}
+                    <Box 
+                      onClick={() => setTheoYellCriteria('score')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: theoYellCriteria === 'score' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                        '&:hover': {
+                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          border: theoYellCriteria === 'score' ? '3px solid #D97706' : '2px solid #9CA3AF',
+                          backgroundColor: theoYellCriteria === 'score' ? '#D97706' : 'transparent',
+                          transition: 'all 0.2s ease'
+                        }}
+                      />
+                              <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 500, color: lightMode === 'dark' ? '#fff' : '#1F2937', flex: 1 }}>
+                        Move scores under
+                              </Box>
+                      {theoYellCriteria === 'score' && (
+                        <input
+                          type="number"
+                          value={theoYellScoreThreshold}
+                          onChange={(e) => setTheoYellScoreThreshold(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            width: '40px',
+                            padding: '2px 4px',
+                            fontSize: '11px',
+                                    border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #d1d5db',
+                            borderRadius: '4px',
+                                    textAlign: 'center',
+                                    background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                          }}
+                        />
+                      )}
+                      {theoYellCriteria === 'score' && (
+                                <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', marginLeft: '4px' }}>points</Box>
+                      )}
+                    </Box>
+                  </Box>
+                </Collapse>
+              </Box>
+
+              {/* Move Coach Option - Disabled/Greyed Out */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                          padding: { xs: '6px 8px', sm: '5px 8px' },
+                          backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
+                          border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #d1d5db',
+                  borderRadius: 4,
+                  marginTop: '4px',
+                  cursor: 'not-allowed',
+                  opacity: 0.5
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Brain size={14} color="#9CA3AF" weight="regular" />
+                          <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600, color: '#9CA3AF' }}>
+                    Move Coach
+                          </Box>
+                </Box>
+                <Box
+                  sx={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    border: '2px solid #9CA3AF',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: { xs: 6, sm: 6 }, width: '100%', maxWidth: '100%', marginTop: 2, paddingTop: 0, boxSizing: 'border-box' }}>
+                      <Box
+                        component="button"
+                onClick={() => setShowTimeControls(false)}
+                        sx={{
+                  flex: 1,
+                  marginTop: 0,
+                          background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f0f0f0',
+                          color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                  border: 'none',
+                  borderRadius: 4,
+                          padding: { xs: '8px 12px', sm: '7px 12px' },
+                  fontWeight: 600,
+                          fontSize: { xs: '12px', sm: '11px' },
+                  cursor: 'pointer',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            background: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e0e0e0'
+                          }
+                }}
+              >
+                Back
+                      </Box>
+                      <Box
+                        component="button"
+                onClick={handleStartGame}
+                        sx={{
+                  flex: 1,
+                  marginTop: 0,
+                          background: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
+                          color: '#fff',
+                  border: 'none',
+                  borderRadius: 4,
+                          padding: { xs: '8px 12px', sm: '7px 12px' },
+                  fontWeight: 600,
+                          fontSize: { xs: '12px', sm: '11px' },
+                  cursor: 'pointer',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            background: lightMode === 'dark' ? 'rgba(217, 119, 6, 1)' : 'rgba(217, 119, 6, 1)',
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)'
+                          },
+                          '&:active': {
+                            transform: 'scale(0.98)'
+                          }
+                }}
+              >
+                Start Game
+                      </Box>
+                    </Box>
+            </Box>
+          </Box>
+
+                {/* Backdrop for mobile */}
+                {botSelectOpen && (
+          <Box
+                    onClick={() => { setBotSelectOpen(false); setShowTimeControls(false); }}
+            sx={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      zIndex: 1200,
+                      display: { xs: 'block', sm: 'none' }
+                    }}
+                  />
+                )}
+                </>
+                )}
+              </Box>
+            </Box>
+          )}
+          </Box>
         </Box>
 
         <Box className={styles.rightPanel} sx={{ display: gameStarted ? 'flex' : 'none' }}>
@@ -1180,7 +2003,7 @@ export default function Play() {
                     <Box
                       key={value}
                       className={styles.timeSliderMark}
-                      style={{ 
+                  style={{
                         left: `${((value - 5) / 25) * 100}%`,
                         backgroundColor: lightMode === 'dark' ? '#bfbfbf' : '#9ca3af'
                       }}
@@ -1188,7 +2011,7 @@ export default function Play() {
                   ))}
                   <Box
                     className={styles.timeSliderThumb}
-                    style={{ 
+                    style={{
                       left: `${((gameTime - 5) / 25) * 100}%`,
                       backgroundColor: lightMode === 'dark' ? '#4CAF50' : '#059669'
                     }}
@@ -1208,7 +2031,7 @@ export default function Play() {
                   ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
                 padding: '10px',
-                cursor: 'pointer',
+                      cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 borderRadius: '8px',
                 boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -1221,8 +2044,8 @@ export default function Play() {
             >
               {/* Pool Header */}
               <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+                  display: 'flex',
+                  alignItems: 'center',
                 justifyContent: 'space-between',
                 marginBottom: poolExpanded ? '8px' : '0'
               }}>
@@ -1266,7 +2089,7 @@ export default function Play() {
             </Box>
           </Box>
         </Box>
-      </Box>
+        </Box>
 
         <GameModal />
 
@@ -1309,7 +2132,7 @@ export default function Play() {
         {/* Theo Yell Mascot - appears in center when yelling */}
         {isTheoYelling && (
           <Box
-            sx={{
+                    sx={{
               position: 'fixed',
               top: '50%',
               left: '50%',
@@ -1366,7 +2189,7 @@ export default function Play() {
                 className={styles.theoYellPhrase}
                 sx={{
                   backgroundColor: 'rgba(239, 68, 68, 0.95)',
-                  color: '#fff',
+                    color: '#fff',
                   padding: '8px 16px',
                   borderRadius: '8px',
                   fontSize: '16px',
@@ -1473,696 +2296,11 @@ export default function Play() {
                 className={styles.rematchButton}
             >
               Rematch
-            </Box>
           </Box>
+        </Box>
         </Box>
       )}
       </Box>
-
-      <Modal
-        open={botSelectOpen}
-        onClose={() => { setBotSelectOpen(false); setShowTimeControls(false); }}
-        aria-labelledby="bot-select-modal-title"
-        aria-describedby="bot-select-modal-description"
-      >
-        <Box 
-          className={styles.modalContainer} 
-          style={{ 
-            minWidth: 280, 
-            maxWidth: 380, 
-            alignItems: 'center', 
-            animation: 'none', 
-            border: 'none', 
-            boxShadow: 'none',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          {/* Time Controls Slideout */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: '#ffffff',
-              transform: showTimeControls ? 'translateX(0)' : 'translateX(100%)',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '12px',
-              zIndex: 10,
-              overflowY: 'auto',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6, textAlign: 'center', letterSpacing: '0.04em', color: '#1F2937' }}>
-              Options
-            </div>
-            
-            {/* Time Controls */}
-            <Box sx={{ width: '100%', marginBottom: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 1, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Time
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2, color: '#1F2937' }}>
-                {gameTime} {gameTime === 1 ? 'minute' : 'minutes'}
-              </div>
-              <Slider
-                value={gameTime}
-                onChange={(e, value) => setGameTime(value)}
-                min={1}
-                max={30}
-                step={1}
-                sx={{
-                  color: '#3D5A80',
-                  marginBottom: 0,
-                  '& .MuiSlider-thumb': {
-                    width: 16,
-                    height: 16,
-                  },
-                  '& .MuiSlider-track': {
-                    height: 3,
-                  },
-                  '& .MuiSlider-rail': {
-                    height: 3,
-                    opacity: 0.3,
-                  },
-                }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 0.5, marginTop: 0.5 }}>
-                {[5, 10, 15, 30].map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setGameTime(time)}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: gameTime === time ? '#fff' : '#374151',
-                      backgroundColor: gameTime === time ? '#3D5A80' : 'rgba(0, 0, 0, 0.04)',
-                      border: 'none',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      flex: 1,
-                      opacity: gameTime === time ? 1 : 0.85
-                    }}
-                  >
-                    {time}
-                  </button>
-                ))}
-              </Box>
-            </Box>
-
-            {/* Dictionary Dropdown */}
-            <Box sx={{ width: '100%', marginBottom: 4 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Dictionary
-              </div>
-              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
-                <Select
-                  value={selectedDictionary}
-                  onChange={(e) => setSelectedDictionary(e.target.value)}
-                  sx={{
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: '#1F2937',
-                    backgroundColor: '#fff',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#e5e7eb',
-                      borderWidth: '1px'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: '#6B7280',
-                      fontSize: '16px'
-                    }
-                  }}
-                >
-                  <MenuItem value="NWL" sx={{ fontSize: '11px', fontWeight: 600 }}>NWL</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* Game Mode Dropdown */}
-            <Box sx={{ width: '100%', marginBottom: 4 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Game Mode
-              </div>
-              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
-                <Select
-                  value={gameMode}
-                  onChange={(e) => setGameMode(e.target.value)}
-                  sx={{
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: '#1F2937',
-                    backgroundColor: '#fff',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#e5e7eb',
-                      borderWidth: '1px'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: '#6B7280',
-                      fontSize: '16px'
-                    }
-                  }}
-                >
-                  <MenuItem value="Normal" sx={{ fontSize: '11px', fontWeight: 600 }}>Normal</MenuItem>
-                  <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: '11px', opacity: 0.4 }}>Randomize bonus squares</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* Move Coach & Theo Yell Toggles - Grouped, Mutually Exclusive */}
-            <Box sx={{ width: '100%', marginTop: 3, marginBottom: 'auto' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 3, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Analysis Mode
-              </div>
-              
-              {/* Theo Yell Option */}
-              <Box>
-                <Box 
-                  onClick={() => {
-                    if (!theoYellEnabled) {
-                      setTheoYellEnabled(true);
-                      setMoveCoachEnabled(false);
-                    } else {
-                      setTheoYellEnabled(false);
-                    }
-                  }}
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    padding: '6px 10px',
-                    backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.1)' : '#fff',
-                    border: theoYellEnabled ? '2px solid #D97706' : '1px solid #e5e7eb',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      borderColor: '#D97706',
-                      backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.05)'
-                    }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <img 
-                      src="/images/theomascot.png" 
-                      alt="Theo" 
-                      width={14} 
-                      height={14} 
-                      style={{ 
-                        borderRadius: '3px',
-                        opacity: theoYellEnabled ? 1 : 0.6,
-                        filter: theoYellEnabled ? 'drop-shadow(0 0 3px rgba(217, 119, 6, 0.5))' : 'none',
-                        transition: 'all 0.2s ease'
-                      }} 
-                    />
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: theoYellEnabled ? '#D97706' : '#1F2937' }}>
-                      Have Theo Yell at You
-                    </span>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {theoYellEnabled && (
-                      <Box
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTheoYellSettingsExpanded(!theoYellSettingsExpanded);
-                        }}
-                        sx={{ 
-                          cursor: 'pointer', 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          backgroundColor: theoYellSettingsExpanded ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: 'rgba(217, 119, 6, 0.2)'
-                          }
-                        }}
-                      >
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
-                          {theoYellSettingsExpanded ? 'Hide' : 'Settings'}
-                        </span>
-                        {theoYellSettingsExpanded ? (
-                          <CaretUp size={14} color="#D97706" weight="bold" />
-                        ) : (
-                          <CaretDown size={14} color="#D97706" weight="bold" />
-                        )}
-                      </Box>
-                    )}
-                    <Box
-                      sx={{
-                        width: '14px',
-                        height: '14px',
-                        borderRadius: '50%',
-                        border: theoYellEnabled ? '5px solid #D97706' : '2px solid #9CA3AF',
-                        backgroundColor: theoYellEnabled ? '#D97706' : 'transparent',
-                        transition: 'all 0.2s ease'
-                      }}
-                    />
-                  </Box>
-                </Box>
-                
-                {/* Expandable Settings */}
-                <Collapse in={theoYellEnabled && theoYellSettingsExpanded}>
-                  <Box sx={{ marginTop: 1, padding: '6px', backgroundColor: 'rgba(217, 119, 6, 0.05)', borderRadius: '6px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 4, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Trigger When
-                    </div>
-                    
-                    {/* Bingo Miss Option */}
-                    <Box 
-                      onClick={() => setTheoYellCriteria('bingo')}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '5px 8px',
-                        marginBottom: '4px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        backgroundColor: theoYellCriteria === 'bingo' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
-                        '&:hover': {
-                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
-                        }
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          border: theoYellCriteria === 'bingo' ? '3px solid #D97706' : '2px solid #9CA3AF',
-                          backgroundColor: theoYellCriteria === 'bingo' ? '#D97706' : 'transparent',
-                          transition: 'all 0.2s ease'
-                        }}
-                      />
-                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#1F2937' }}>
-                        When I miss a bingo
-                      </span>
-                    </Box>
-                    
-                    {/* Score Threshold Option */}
-                    <Box 
-                      onClick={() => setTheoYellCriteria('score')}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '5px 8px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        backgroundColor: theoYellCriteria === 'score' ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
-                        '&:hover': {
-                          backgroundColor: 'rgba(217, 119, 6, 0.08)'
-                        }
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          border: theoYellCriteria === 'score' ? '3px solid #D97706' : '2px solid #9CA3AF',
-                          backgroundColor: theoYellCriteria === 'score' ? '#D97706' : 'transparent',
-                          transition: 'all 0.2s ease'
-                        }}
-                      />
-                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#1F2937', flex: 1 }}>
-                        Move scores under
-                      </span>
-                      {theoYellCriteria === 'score' && (
-                        <input
-                          type="number"
-                          value={theoYellScoreThreshold}
-                          onChange={(e) => setTheoYellScoreThreshold(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            width: '40px',
-                            padding: '2px 4px',
-                            fontSize: '11px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
-                            textAlign: 'center'
-                          }}
-                        />
-                      )}
-                      {theoYellCriteria === 'score' && (
-                        <span style={{ fontSize: '11px', color: '#6B7280', marginLeft: '4px' }}>points</span>
-                      )}
-                    </Box>
-                  </Box>
-                </Collapse>
-              </Box>
-
-              {/* Move Coach Option - Disabled/Greyed Out */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  padding: '6px 10px',
-                  backgroundColor: '#f5f5f5',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  marginTop: '4px',
-                  cursor: 'not-allowed',
-                  opacity: 0.5
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Brain size={14} color="#9CA3AF" weight="regular" />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}>
-                    Move Coach
-                  </span>
-                </Box>
-                <Box
-                  sx={{
-                    width: '14px',
-                    height: '14px',
-                    borderRadius: '50%',
-                    border: '2px solid #9CA3AF',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-              </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 8, width: '100%', marginTop: 'auto', paddingTop: 2 }}>
-              <button
-                onClick={() => setShowTimeControls(false)}
-                style={{
-                  flex: 1,
-                  marginTop: 0,
-                  background: '#f0f0f0',
-                  color: '#1F2937',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontWeight: 'bold',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                }}
-              >
-                Back
-              </button>
-              <button
-                onClick={handleStartGame}
-                style={{
-                  flex: 1,
-                  marginTop: 0,
-                  background: '#f0f0f0',
-                  color: '#1F2937',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontWeight: 'bold',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                }}
-              >
-                Start Game
-              </button>
-            </Box>
-          </Box>
-
-          {/* Bot Selection Content */}
-          <Box
-            sx={{
-              transform: showTimeControls ? 'translateX(-100%)' : 'translateX(0)',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              width: '100%'
-            }}
-          >
-          <div className={styles.modalTitle} id="bot-select-modal-title" style={{ fontSize: 18, fontWeight: 800, marginBottom: 6, textAlign: 'center', letterSpacing: '0.04em' }}>
-            Who will you play against today?
-          </div>
-          <div style={{ fontSize: 12, color: '#374151', marginBottom: 16, textAlign: 'center', fontWeight: 500, opacity: 0.85 }}>
-            Each fox has a unique style. Pick your challenger!
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 16, justifyContent: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-            {bots.map(bot => (
-              <div
-                key={bot.name}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                  border: selectedBot.name === bot.name ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                  borderRadius: 12,
-                  padding: '12px 12px 8px 12px',
-                  background: selectedBot.name === bot.name ? 'rgba(96,165,250,0.08)' : '#fff',
-                  boxShadow: selectedBot.name === bot.name ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  cursor: 'pointer',
-                  minWidth: 100,
-                  maxWidth: 130,
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  position: 'relative',
-                }}
-                onClick={() => handleBotSelect(bot)}
-              >
-                <img src={bot.img} alt={bot.name} style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', background: '#eee', marginBottom: 3, boxShadow: selectedBot.name === bot.name ? '0 0 0 2px #60A5FA' : 'none', transition: 'box-shadow 0.2s' }} />
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#1F2937', marginBottom: 2 }}>{bot.name}</div>
-                <div style={{ fontSize: 11, color: '#374151', opacity: 0.8, textAlign: 'center', minHeight: 32, maxHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{bot.desc}</div>
-                <button
-                  style={{
-                    marginTop: 6,
-                    background: selectedBot.name === bot.name ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 6,
-                    padding: '5px 14px',
-                    fontWeight: 'bold',
-                    letterSpacing: 0.5,
-                    fontSize: 12,
-                    boxShadow: selectedBot.name === bot.name ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: selectedBot.name === bot.name ? 1 : 0.85
-                  }}
-                  onClick={e => { e.stopPropagation(); handleBotSelect(bot); }}
-                >
-                  {selectedBot.name === bot.name ? 'Selected' : 'Choose'}
-                </button>
-              </div>
-            ))}
-          </div>
-          <div style={{ width: '100%', marginBottom: 6 }}>
-            <div className={styles.moveHistoryList} style={{ marginTop: 6, width: '100%', maxHeight: 180, overflowY: 'auto' }}>
-              {skillBots.map(bot => (
-                <div
-                  key={bot.name}
-                  className={styles.moveHistoryItem}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    background: selectedBot.name === bot.name && !customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
-                    border: selectedBot.name === bot.name && !customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                    borderRadius: 10,
-                    boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    marginBottom: 6,
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    position: 'relative',
-                  }}
-                  onClick={() => { setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
-                >
-                  <div style={{ marginRight: 6 }}>{bot.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>{bot.name}</div>
-                    <div style={{ fontSize: 10, color: '#374151', opacity: 0.8 }}>{bot.desc}</div>
-                  </div>
-                  <button
-                    style={{
-                      background: selectedBot.name === bot.name && !customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
-                      color: '#fff',
-                      border: 0,
-                      borderRadius: 6,
-                      padding: '4px 12px',
-                      fontWeight: 'bold',
-                      letterSpacing: 0.5,
-                      fontSize: 11,
-                      boxShadow: selectedBot.name === bot.name && !customBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
-                      outline: 'transparent',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      opacity: selectedBot.name === bot.name && !customBotSelected ? 1 : 0.85
-                    }}
-                    onClick={e => { e.stopPropagation(); setCustomBotSelected(false); setCustomDefenseBotSelected(false); handleBotSelect(bot); }}
-                  >
-                    {selectedBot.name === bot.name && !customBotSelected ? 'Selected' : 'Choose'}
-                  </button>
-                </div>
-              ))}
-              {/* Custom bot item */}
-              <div
-                className={styles.moveHistoryItem}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  background: customBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
-                  border: customBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                  borderRadius: 10,
-                  boxShadow: customBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  cursor: 'pointer',
-                  padding: '8px 12px',
-                  marginBottom: 6,
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  position: 'relative',
-                }}
-                onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
-              >
-                <div style={{ marginRight: 6 }}><Robot size={24} color="#9CA3AF" /></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>Custom</div>
-                  <div style={{ fontSize: 10, color: '#374151', opacity: 0.8 }}>Play <input type="text" value={customRank} onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }} placeholder="X" style={{ width: 24, fontSize: 10, textAlign: 'center', border: '1px solid #e5e7eb', borderRadius: 3, margin: '0 3px', padding: '2px' }} />th by points + leave</div>
-                </div>
-                <button
-                  style={{
-                    background: customBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 6,
-                    padding: '4px 12px',
-                    fontWeight: 'bold',
-                    letterSpacing: 0.5,
-                    fontSize: 11,
-                    boxShadow: customBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
-                    outline: 'transparent',
-                    cursor: /^\d+$/.test(customRank) && parseInt(customRank) > 0 ? 'pointer' : 'not-allowed',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: customBotSelected ? 1 : 0.85
-                  }}
-                  disabled={!/^\d+$/.test(customRank) || parseInt(customRank) <= 0}
-                  onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank) > 0) { setCustomBotSelected(true); setCustomDefenseBotSelected(false); handleBotSelect({ name: `Custom`, desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank) }); } }}
-                >
-                  {customBotSelected ? 'Selected' : 'Choose'}
-                </button>
-              </div>
-              
-              {/* Custom Defense Bot item */}
-              <div
-                className={styles.moveHistoryItem}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  background: customDefenseBotSelected ? 'rgba(96,165,250,0.08)' : '#fff',
-                  border: customDefenseBotSelected ? '2px solid #3D5A80' : '1px solid #e5e7eb',
-                  borderRadius: 10,
-                  boxShadow: customDefenseBotSelected ? '0 4px 16px rgba(61,90,128,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  cursor: 'pointer',
-                  padding: '8px 12px',
-                  marginBottom: 6,
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  position: 'relative',
-                }}
-                onClick={() => { setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
-              >
-                <div style={{ marginRight: 6 }}><Robot size={24} color="#9CA3AF" /></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1F2937', marginBottom: 1 }}>Custom Defense</div>
-                  <div style={{ fontSize: 9, color: '#374151', opacity: 0.8, marginBottom: 3 }}>
-                    Defense Weight: {defenseWeight.toFixed(1)}x
-                  </div>
-                  <Slider
-                    value={defenseWeight}
-                    onChange={(e, value) => setDefenseWeight(value)}
-                    onClick={(e) => e.stopPropagation()}
-                    min={0.0}
-                    max={5.0}
-                    step={0.1}
-                    size="small"
-                    sx={{
-                      color: '#3D5A80',
-                      '& .MuiSlider-thumb': {
-                        width: 12,
-                        height: 12,
-                      },
-                      '& .MuiSlider-track': {
-                        height: 3,
-                      },
-                      '& .MuiSlider-rail': {
-                        height: 3,
-                        opacity: 0.3,
-                      },
-                    }}
-                  />
-                </div>
-                <button
-                  style={{
-                    background: customDefenseBotSelected ? 'linear-gradient(45deg, transparent 5%, #3D5A80 5%)' : 'linear-gradient(45deg, transparent 5%, #1F2937 5%)',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 6,
-                    padding: '4px 12px',
-                    fontWeight: 'bold',
-                    letterSpacing: 0.5,
-                    fontSize: 11,
-                    boxShadow: customDefenseBotSelected ? '4px 0px 0px #60A5FA' : '4px 0px 0px #374151',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: customDefenseBotSelected ? 1 : 0.85
-                  }}
-                  disabled={false}
-                  onClick={e => { e.stopPropagation(); setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
-                >
-                  {customDefenseBotSelected ? 'Selected' : 'Choose'}
-                </button>
-              </div>
-            </div>
-          </div>
-          <button
-            style={{
-              marginTop: 6,
-              background: '#f0f0f0',
-              color: '#1F2937',
-              border: 'none',
-              borderRadius: 6,
-              padding: '4px 12px',
-              fontWeight: 'bold',
-              fontSize: 12,
-              cursor: 'pointer',
-              alignSelf: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-            }}
-            onClick={() => setBotSelectOpen(false)}
-          >
-            Cancel
-          </button>
-          </Box>
-        </Box>
-      </Modal>
     </Box>
   );
 } 
