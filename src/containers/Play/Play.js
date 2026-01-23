@@ -1087,8 +1087,8 @@ export default function Play() {
                           lineHeight: 1.6,
                           fontStyle: 'italic',
                           maxWidth: { xs: '150px', sm: '200px' }
-                        }}
-                      >
+                  }}
+                >
                         {bot.desc}
               </Box>
                     </Box>
@@ -1138,7 +1138,7 @@ export default function Play() {
                       left: { xs: '12px', sm: '12px' },
                       background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                       border: 'none',
-                      cursor: 'pointer',
+                cursor: 'pointer',
                       padding: { xs: '6px 10px', sm: '6px 10px' },
                       display: 'flex', 
                       alignItems: 'center',
@@ -1148,8 +1148,8 @@ export default function Play() {
                       borderRadius: 4,
                       fontSize: { xs: '12px', sm: '12px' },
                       fontWeight: 600,
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
+                transition: 'all 0.2s ease',
+                '&:hover': {
                         background: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
                         transform: 'translateX(-2px)'
                       }
@@ -1163,7 +1163,7 @@ export default function Play() {
                       }} 
                     />
                     Back
-                  </Box>
+      </Box>
 
                   {/* Bot Selection Content */}
           <Box
@@ -1250,8 +1250,8 @@ export default function Play() {
                                 userSelect: 'none',
                                 transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                                 opacity: selectedBot.name === bot.name && !customBotSelected ? 1 : 0.85
-                              }}
-                            >
+                }}
+              >
                               {selectedBot.name === bot.name && !customBotSelected ? 'Selected' : 'Choose'}
               </Box>
           </Box>
@@ -1338,7 +1338,7 @@ export default function Play() {
             </Box>
             
                         {/* Custom Defense Bot item */}
-                        <Box
+            <Box
                           onClick={() => { setCustomDefenseBotSelected(true); setCustomBotSelected(false); handleBotSelect({ name: `Defense Bot`, desc: `Uses defense analysis with ${defenseWeight.toFixed(1)}x defense weight.`, defenseWeight: defenseWeight }); }}
                           sx={{
                             width: '100%',
@@ -1366,7 +1366,7 @@ export default function Play() {
                               boxShadow: customDefenseBotSelected ? '0 3px 12px rgba(61,90,128,0.15)' : '0 2px 6px rgba(0,0,0,0.08)'
                             }
                           }}
-                        >
+            >
                           <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: { xs: '18px', sm: '18px' }, height: { xs: '18px', sm: '18px' } }}><Robot size={18} color="#9CA3AF" /></Box>
                           <Box sx={{ flex: 1, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
                             <Box sx={{ fontWeight: 700, fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Custom Defense</Box>
@@ -1434,7 +1434,7 @@ export default function Play() {
                         marginTop: 2,
                         background: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
                         color: '#fff',
-                        border: 'none', 
+            border: 'none', 
                         borderRadius: 4,
                         padding: { xs: '8px 12px', sm: '7px 12px' },
                         fontWeight: 600,
@@ -1449,8 +1449,8 @@ export default function Play() {
                         '&:active': {
                           transform: 'scale(0.98)'
                         }
-                      }}
-                    >
+          }}
+        >
                       Continue
                     </Box>
                   </Box>
@@ -2040,9 +2040,9 @@ export default function Play() {
                   boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
                 },
                 marginBottom: poolExpanded ? '8px' : '0'
-              }}
+                    }}
               onClick={() => setPoolExpanded(!poolExpanded)}
-            >
+                  >
               {/* Pool Header */}
               <Box sx={{ 
                   display: 'flex',
@@ -2150,7 +2150,7 @@ export default function Play() {
                   transform: 'translate(-50%, -50%) scale(0.3)',
                   opacity: 0,
                   filter: 'brightness(1.5) drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))'
-                },
+                      },
                 '10%': { 
                   transform: 'translate(-50%, -50%) scale(1.2)',
                   opacity: 1,

@@ -38,6 +38,7 @@ export default function Board({
     const [open, setOpen] = useState(false);
     const [modalContent, setModalContent] = useState("slip");
     const [commentaryOpen, setCommentaryOpen] = useState(false);
+    const [commentaryHovered, setCommentaryHovered] = useState(false);
     const [circledLetters, setCircledLetters] = useState([]);
     const [boardScale, setBoardScale] = useState(1);
     const [isDragging, setIsDragging] = useState(false);
@@ -75,6 +76,12 @@ export default function Board({
             };
         }
     }, [boardScale]);
+
+    useEffect(() => {
+        // Reset hover state when commentary changes (move changes)
+        setCommentaryHovered(false);
+        setCommentaryOpen(false);
+    }, [commentary]);
     
     const handleMouseDown = (e) => {
         e.preventDefault();
@@ -502,19 +509,41 @@ export default function Board({
             
 
             {(commentary || showNoCommentaryLabel) && (
-                <button 
-                    className={`${styles.commentaryBubble} ${!commentary ? styles.commentaryBubbleDisabled : ''}`}
-                    onClick={() => commentary && setCommentaryOpen(true)}
-                    disabled={!commentary}
-                    aria-label={commentary ? "View commentary" : "No commentary available"}
+                <Box 
+                    sx={{ 
+                        position: 'relative', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center',
+                        width: '100%'
+                    }}
+                    onMouseEnter={() => commentary && !isMobile && setCommentaryHovered(true)}
                 >
-                    <ChatCircle size={20} weight={commentary ? "fill" : "regular"} />
-                    <span className={styles.commentaryLabel}>
-                        {commentary ? "See commentary" : "No commentary on this turn"}
-                    </span>
-                </button>
+                    <button 
+                        className={`${styles.commentaryBubble} ${!commentary ? styles.commentaryBubbleDisabled : ''}`}
+                        onClick={() => {
+                            if (commentary && isMobile) {
+                                setCommentaryOpen(true);
+                            }
+                        }}
+                        disabled={!commentary}
+                        aria-label={commentary ? "View commentary" : "No commentary available"}
+                    >
+                        <ChatCircle size={20} weight={commentary ? "fill" : "regular"} />
+                        <span className={styles.commentaryLabel}>
+                            {commentary ? "See commentary" : "No commentary on this turn"}
+                        </span>
+                    </button>
+                    {/* Desktop: Inline commentary on hover */}
+                    {commentary && !isMobile && commentaryHovered && (
+                        <Box className={styles.commentaryInline}>
+                            "{commentary}"
+                        </Box>
+                    )}
+                </Box>
             )}
-            {commentary && (
+            {/* Mobile: Modal commentary */}
+            {commentary && isMobile && (
                 <Modal 
                     open={commentaryOpen} 
                     onClose={() => setCommentaryOpen(false)}
