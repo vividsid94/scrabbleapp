@@ -25,7 +25,8 @@ export default function Board({
     previewScore,
     previewScorePosition,
     lastMoveCoordinates = [],
-    commentary = null
+    commentary = null,
+    showNoCommentaryLabel = true
 }) {
     const { lightMode } = useContext(ThemeContext);
     const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
@@ -500,17 +501,19 @@ export default function Board({
             
             
 
-            <button 
-                className={`${styles.commentaryBubble} ${!commentary ? styles.commentaryBubbleDisabled : ''}`}
-                onClick={() => commentary && setCommentaryOpen(true)}
-                disabled={!commentary}
-                aria-label={commentary ? "View commentary" : "No commentary available"}
-            >
-                <ChatCircle size={20} weight={commentary ? "fill" : "regular"} />
-                <span className={styles.commentaryLabel}>
-                    {commentary ? "See commentary" : "No commentary on this turn"}
-                </span>
-            </button>
+            {(commentary || showNoCommentaryLabel) && (
+                <button 
+                    className={`${styles.commentaryBubble} ${!commentary ? styles.commentaryBubbleDisabled : ''}`}
+                    onClick={() => commentary && setCommentaryOpen(true)}
+                    disabled={!commentary}
+                    aria-label={commentary ? "View commentary" : "No commentary available"}
+                >
+                    <ChatCircle size={20} weight={commentary ? "fill" : "regular"} />
+                    <span className={styles.commentaryLabel}>
+                        {commentary ? "See commentary" : "No commentary on this turn"}
+                    </span>
+                </button>
+            )}
             {commentary && (
                 <Modal 
                     open={commentaryOpen} 

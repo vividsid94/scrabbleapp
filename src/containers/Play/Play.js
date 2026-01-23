@@ -769,6 +769,7 @@ export default function Play() {
             board={board}
             boardMode={theme}
             lightMode={lightMode}
+            showNoCommentaryLabel={false}
             onBoardChildClick={(row, col) => handleBoardPositionSelect({
               row,
               col,
