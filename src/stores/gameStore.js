@@ -1464,7 +1464,6 @@ export const useGameStore = create((set, get) => {
           handlePass: handlePassClick,
           handleExchangeClick,
           handlePlayTopMove: handlePlayTopMoveClick,
-          toggleAutoPlayBest: () => setAutoPlayBest(!autoPlayBest),
           isPlayerThinking,
           isBotThinking
         });
@@ -1493,7 +1492,6 @@ export const useGameStore = create((set, get) => {
           handlePass: handlePassClick,
           handleExchangeClick,
           handlePlayTopMove: handlePlayTopMoveClick,
-          toggleAutoPlayBest: () => setAutoPlayBest(!autoPlayBest),
           isPlayerThinking,
           isBotThinking
         });

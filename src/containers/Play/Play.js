@@ -119,11 +119,6 @@ export default function Play() {
     // Dictionary loading
     isDictionaryLoading,
     
-    // Auto-play
-    autoPlayBest,
-    isAutoPlaying,
-    setAutoPlayBest,
-    setIsAutoPlaying,
     
     // Victory state
     winner,
@@ -533,15 +528,6 @@ export default function Play() {
     setPlayer2Time(gameTime * 60);
   }, [gameTime]);
 
-  // Update the useEffect for auto-play to use isPlayerThinking
-  useEffect(() => {
-    if (autoPlayBest && gameStarted && currentPlayer === 1 && !isLoadingTopMoves && !isDictionaryLoading && !isAutoPlaying && !isPlayerThinking && !gameEnded) {
-      setIsAutoPlaying(true);
-      handlePlayTopMoveClick().finally(() => {
-        setIsAutoPlaying(false);
-      });
-    }
-  }, [autoPlayBest, gameStarted, currentPlayer, isLoadingTopMoves, isDictionaryLoading, handlePlayTopMoveClick, isAutoPlaying, isPlayerThinking, gameEnded]);
 
   // Add cleanup effect for all temporary states
   useEffect(() => {
@@ -2068,8 +2054,6 @@ export default function Play() {
             onPlayTopMove={handlePlayTopMoveClick}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
-            autoPlayBest={autoPlayBest}
-            setAutoPlayBest={setAutoPlayBest}
             isBotThinking={isBotThinking}
             isPlayerThinking={isPlayerThinking}
             latestMove={latestMove}

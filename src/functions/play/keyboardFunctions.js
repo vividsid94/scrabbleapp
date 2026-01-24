@@ -38,7 +38,6 @@ export const handleKeyDown = ({
   handlePass,
   handleExchangeClick,
   handlePlayTopMove,
-  toggleAutoPlayBest,
   isPlayerThinking,
   isBotThinking
 }) => {
@@ -66,10 +65,6 @@ export const handleKeyDown = ({
     } else if (key === '3') {
       e.preventDefault();
       handlePlayTopMove();
-      return;
-    } else if (key === '4') {
-      e.preventDefault();
-      toggleAutoPlayBest();
       return;
     }
   }
@@ -317,7 +312,6 @@ export const handleKeyDown = ({
  * @param {Function} params.handlePass - Function to handle pass action
  * @param {Function} params.handleExchangeClick - Function to handle exchange action
  * @param {Function} params.handlePlayTopMove - Function to handle playing top move
- * @param {Function} params.toggleAutoPlayBest - Function to toggle auto-play for whole game
  * @param {boolean} params.isPlayerThinking - Whether the player is thinking
  * @param {boolean} params.isBotThinking - Whether the bot is thinking
  * @returns {void}
@@ -329,7 +323,6 @@ export const handleKeyPress = ({
   handlePass,
   handleExchangeClick,
   handlePlayTopMove,
-  toggleAutoPlayBest,
   isPlayerThinking,
   isBotThinking
 }) => {
@@ -344,7 +337,5 @@ export const handleKeyPress = ({
     handleExchangeClick();
   } else if (key === '3') {
     handlePlayTopMove();
-  } else if (key === '4') {
-    toggleAutoPlayBest();
   }
 }; 

@@ -185,8 +185,6 @@ export default function PlayerInfo({
   onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
-  autoPlayBest,
-  setAutoPlayBest,
   isBotThinking,
   isPlayerThinking,
   latestMove,
@@ -332,41 +330,6 @@ export default function PlayerInfo({
                   boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}>
                   3
-                </Box>
-              </Box>
-            </Tooltip>
-            <Tooltip title="Auto-Play Whole Game">
-              <Box
-                className={styles.bestMoveButton}
-                onClick={() => setAutoPlayBest(!autoPlayBest)}
-                sx={{ 
-                  opacity: !gameStarted ? 0.3 : 1,
-                  cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                  pointerEvents: !gameStarted ? 'none' : 'auto',
-                  position: 'relative',
-                  backgroundColor: autoPlayBest ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
-                  border: autoPlayBest ? '1px solid #4CAF50' : 'none',
-                  borderRadius: '4px'
-                }}
-              >
-                <PlayArrowIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
-                <Box sx={{
-                  position: 'absolute',
-                  top: -8,
-                  right: -8,
-                  backgroundColor: '#FF9800',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '16px',
-                  height: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}>
-                  4
                 </Box>
               </Box>
             </Tooltip>
