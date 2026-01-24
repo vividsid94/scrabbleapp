@@ -3,16 +3,20 @@
 // Simple sound player that doesn't fail
 class SimpleSoundPlayer {
   constructor(soundPath) {
-    this.audio = null;
     this.path = soundPath;
+    // Preload the audio immediately
+    this.audio = new Audio(soundPath);
+    this.audio.volume = 0.3; // Lower volume
+    this.audio.preload = 'auto';
+    // Start loading the audio file
+    this.audio.load();
   }
 
   play() {
     console.log('🔊 SimpleSoundPlayer.play() called for:', this.path);
     try {
-      // Create a new audio instance each time to avoid conflicts
-      this.audio = new Audio(this.path);
-      this.audio.volume = 0.3; // Lower volume
+      // Reset to beginning and play
+      this.audio.currentTime = 0;
       this.audio.play().catch(() => {
         // Silently fail - most browsers block autoplay anyway
       });
