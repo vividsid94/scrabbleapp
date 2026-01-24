@@ -899,37 +899,90 @@ export default function Play() {
                     width: '100%',
                     flexShrink: 0,
                     backgroundColor: lightMode === 'dark' 
-                      ? '#243447' 
-                      : '#FEFEFE',
+                      ? '#2A3A4A' 
+                      : '#FDF9F3',
+                    // Enhanced paper texture with multiple layers
                     backgroundImage: lightMode === 'dark'
-                      ? 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100, 100, 100, 0.2) 23px, rgba(100, 100, 100, 0.2) 24px), linear-gradient(to bottom, rgba(255,255,255,0.01) 0%, transparent 50%, rgba(0,0,0,0.03) 100%)'
-                      : 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(200, 200, 200, 0.3) 23px, rgba(200, 200, 200, 0.3) 24px), linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.02) 100%)',
-                    backgroundSize: '100% 24px, 100% 100%',
-                    backgroundPosition: '0 0, 0 0',
+                      ? `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(120, 120, 120, 0.15) 22px, rgba(120, 120, 120, 0.15) 23px),
+                         repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(80, 80, 80, 0.08) 1px, rgba(80, 80, 80, 0.08) 2px),
+                         radial-gradient(circle at 20% 30%, rgba(150, 150, 150, 0.05) 0%, transparent 50%),
+                         radial-gradient(circle at 80% 70%, rgba(100, 100, 100, 0.05) 0%, transparent 50%),
+                         linear-gradient(to bottom, rgba(255,255,255,0.02) 0%, transparent 30%, rgba(0,0,0,0.04) 70%, rgba(0,0,0,0.02) 100%)`
+                      : `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(220, 210, 195, 0.4) 22px, rgba(220, 210, 195, 0.4) 23px),
+                         repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(200, 190, 175, 0.15) 1px, rgba(200, 190, 175, 0.15) 2px),
+                         radial-gradient(circle at 20% 30%, rgba(240, 235, 225, 0.3) 0%, transparent 50%),
+                         radial-gradient(circle at 80% 70%, rgba(230, 220, 210, 0.2) 0%, transparent 50%),
+                         linear-gradient(to bottom, rgba(255,255,250,0.6) 0%, transparent 30%, rgba(240, 235, 220, 0.3) 70%, rgba(250, 245, 235, 0.2) 100%)`,
+                    backgroundSize: '100% 23px, 2px 100%, 200px 200px, 150px 150px, 100% 100%',
+                    backgroundPosition: '0 0, 0 0, 0 0, 100% 100%, 0 0',
+                    // Paper-like border with subtle aging
                     border: lightMode === 'dark' 
-                      ? '1px solid rgba(139, 115, 85, 0.15)' 
-                      : '1px solid rgba(200, 180, 150, 0.3)',
+                      ? '1px solid rgba(139, 115, 85, 0.2)' 
+                      : '1px solid rgba(200, 185, 165, 0.4)',
+                    borderRadius: '2px',
+                    // Enhanced realistic paper shadows
                     boxShadow: lightMode === 'dark'
-                      ? '0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 150px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
-                      : '0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 150px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
-                    transform: 'rotate(-0.8deg)',
-                    transition: 'transform 0.3s ease',
+                      ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                         0 8px 16px rgba(0, 0, 0, 0.4),
+                         0 16px 32px rgba(0, 0, 0, 0.5),
+                         inset 0 0 200px rgba(0, 0, 0, 0.2),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                         inset 0 -1px 0 rgba(0, 0, 0, 0.1)`
+                      : `0 1px 3px rgba(0, 0, 0, 0.12),
+                         0 4px 8px rgba(0, 0, 0, 0.15),
+                         0 12px 24px rgba(0, 0, 0, 0.2),
+                         0 20px 40px rgba(0, 0, 0, 0.25),
+                         inset 0 0 200px rgba(250, 245, 235, 0.4),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                         inset 0 -1px 0 rgba(200, 190, 175, 0.2)`,
+                    transition: 'box-shadow 0.3s ease, transform 0.3s ease',
+                    // Remove tilt - keep it flat
+                    transform: 'none',
                     '&:hover': {
-                      transform: 'rotate(0deg) scale(1.02)'
+                      boxShadow: lightMode === 'dark'
+                        ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                           0 8px 16px rgba(0, 0, 0, 0.4),
+                           0 20px 40px rgba(0, 0, 0, 0.6),
+                           inset 0 0 200px rgba(0, 0, 0, 0.2),
+                           inset 0 1px 0 rgba(255, 255, 255, 0.04)`
+                        : `0 1px 3px rgba(0, 0, 0, 0.12),
+                           0 4px 8px rgba(0, 0, 0, 0.15),
+                           0 16px 32px rgba(0, 0, 0, 0.25),
+                           0 24px 48px rgba(0, 0, 0, 0.3),
+                           inset 0 0 200px rgba(250, 245, 235, 0.4),
+                           inset 0 1px 0 rgba(255, 255, 255, 0.8)`,
+                      transform: 'translateY(-2px)'
                     },
+                    // Paper aging effect overlay
                     '&::before': {
                       content: '""',
-              position: 'absolute',
-                      top: '-2px',
-                      left: '-2px',
-                      right: '-2px',
-                      bottom: '-2px',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       background: lightMode === 'dark'
-                        ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.08), rgba(139, 92, 46, 0.08))'
-                        : 'linear-gradient(135deg, rgba(139, 115, 85, 0.08), rgba(101, 84, 61, 0.08))',
-                      borderRadius: '2px',
-                      zIndex: -1,
-                      filter: 'blur(4px)'
+                        ? 'radial-gradient(ellipse at top left, rgba(217, 119, 6, 0.06) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(139, 92, 46, 0.04) 0%, transparent 50%)'
+                        : 'radial-gradient(ellipse at top left, rgba(250, 240, 220, 0.4) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(240, 230, 210, 0.3) 0%, transparent 50%)',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                      borderRadius: '2px'
+                    },
+                    // Paper grain/noise texture
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundImage: lightMode === 'dark'
+                        ? 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' opacity=\'0.15\'/%3E%3C/svg%3E")'
+                        : 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                      opacity: 0.6,
+                      mixBlendMode: lightMode === 'dark' ? 'multiply' : 'overlay'
                     }
                   }}
                 >
@@ -1083,18 +1136,20 @@ export default function Play() {
                         flexDirection: 'column',
                   alignItems: 'center',
                         gap: { xs: '12px', sm: '16px' },
-                        transform: index === 0 ? 'rotate(-2deg)' : 'rotate(1.5deg)',
-                        transition: 'transform 0.3s ease',
+                        // Keep slight rotation on individual bot cards for character, but less pronounced
+                        transform: index === 0 ? 'rotate(-1deg)' : 'rotate(0.8deg)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
                   opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
                   border: 'none',
                         background: 'transparent',
                         padding: 0,
                         '&:hover:not(:disabled)': {
-                          transform: index === 0 ? 'rotate(-1deg) scale(1.05)' : 'rotate(0.5deg) scale(1.05)'
+                          transform: index === 0 ? 'rotate(-0.5deg) scale(1.05)' : 'rotate(0.4deg) scale(1.05)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
                         },
                         '&:active:not(:disabled)': {
-                          transform: index === 0 ? 'rotate(-2deg) scale(0.98)' : 'rotate(1.5deg) scale(0.98)'
+                          transform: index === 0 ? 'rotate(-1deg) scale(0.98)' : 'rotate(0.8deg) scale(0.98)'
                         }
                       }}
                     >
@@ -1154,13 +1209,14 @@ export default function Play() {
                     maxWidth: { xs: '100%', sm: '420px' },
                     height: { xs: '100vh', sm: '100%' },
                     backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                    // Subtle border, no shadow for slideout feel
                     border: lightMode === 'dark' 
-                      ? '1px solid rgba(139, 115, 85, 0.15)' 
-                      : '1px solid rgba(200, 180, 150, 0.3)',
-                    boxShadow: lightMode === 'dark'
-                      ? '0 10px 30px rgba(0, 0, 0, 0.5)'
-                      : '0 10px 30px rgba(0, 0, 0, 0.2)',
-                    borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
+                      ? 'none' 
+                      : 'none',
+                    borderLeft: { xs: 'none', sm: lightMode === 'dark' ? '1px solid rgba(139, 115, 85, 0.1)' : '1px solid rgba(200, 180, 150, 0.2)' },
+                    // Minimal shadow - just enough for depth, not modal-like
+                    boxShadow: { xs: 'none', sm: 'none' },
+                    borderRadius: { xs: '16px 16px 0 0', sm: 0 },
                     padding: 0,
                     overflow: 'hidden',
                     // Since this is conditionally rendered only when open, keep it visible (no off-canvas transform).
@@ -1220,7 +1276,7 @@ export default function Play() {
                       height: '100%',
               display: 'flex',
               flexDirection: 'column',
-                      padding: { xs: '14px 12px', sm: '12px 12px' },
+                      padding: { xs: '14px 12px', sm: '16px 20px' },
                       overflowY: 'auto',
                       overflowX: 'hidden',
                       backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
