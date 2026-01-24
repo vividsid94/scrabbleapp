@@ -132,6 +132,7 @@ export const useGameStore = create((set, get) => {
     
     // Game mode features (can be combined)
     randomizeBonusSquares: false, // Enable randomized bonus squares
+    customBonusSquareDistribution: null, // Custom bonus square distribution {TWS: 8, DWS: 16, TLS: 12, DLS: 24}, null means use default
     twoTurnsPerPlayer: false, // Enable 2 turns per player mode
     variablePool: false, // Enable variable pool
     customPool: null, // Custom tile distribution (string like origPool), null means use standard
@@ -155,6 +156,7 @@ export const useGameStore = create((set, get) => {
     setOrigBoardCoords: (coords) => set({ origBoardCoords: coords }),
     setPremiumSquares: (squares) => set({ premiumSquares: squares }),
     setRandomizeBonusSquares: (enabled) => set({ randomizeBonusSquares: enabled }),
+    setCustomBonusSquareDistribution: (distribution) => set({ customBonusSquareDistribution: distribution }),
     setTwoTurnsPerPlayer: (enabled) => set({ twoTurnsPerPlayer: enabled }),
     setVariablePool: (enabled) => set({ variablePool: enabled }),
     setCustomPool: (pool) => set({ customPool: pool }),
@@ -1835,16 +1837,13 @@ export const useGameStore = create((set, get) => {
     
     // Generate random bonus squares
     generateRandomPremiumSquares: () => {
-      const premiumSquares = [];
+      const { customBonusSquareDistribution } = get();
       
-      // New distribution:
-      // 24 DLS (Double Letter Score) - light blue
-      // 12 TLS (Triple Letter Score) - dark blue
-      // 16 DWS (Double Word Score) - pink
-      // 8 TWS (Triple Word Score) - red
-      // All other squares are REGULAR
-      // Total: 60 premium squares + 165 regular squares = 225 total
-      // Center (7,7) can be any type (randomly assigned)
+      // Default distribution if custom is not set
+      const defaultDistribution = { TWS: 8, DWS: 16, TLS: 12, DLS: 24 };
+      const distribution = customBonusSquareDistribution || defaultDistribution;
+      
+      const premiumSquares = [];
       
       // Create a map to track which positions have premium squares
       const premiumMap = new Map();
@@ -1860,9 +1859,12 @@ export const useGameStore = create((set, get) => {
       // Shuffle positions
       const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
       
-      // Assign TWS (8 positions)
-      for (let i = 0; i < 8; i++) {
-        const pos = shuffled[i];
+      let currentIndex = 0;
+      
+      // Assign TWS
+      for (let i = 0; i < Math.min(distribution.TWS || 0, 225); i++) {
+        if (currentIndex >= shuffled.length) break;
+        const pos = shuffled[currentIndex++];
         premiumMap.set(`${pos.row},${pos.col}`, 'TWS');
         premiumSquares.push({
           row: pos.row,
@@ -1871,9 +1873,10 @@ export const useGameStore = create((set, get) => {
         });
       }
       
-      // Assign DWS (16 positions)
-      for (let i = 8; i < 24; i++) {
-        const pos = shuffled[i];
+      // Assign DWS
+      for (let i = 0; i < Math.min(distribution.DWS || 0, 225); i++) {
+        if (currentIndex >= shuffled.length) break;
+        const pos = shuffled[currentIndex++];
         premiumMap.set(`${pos.row},${pos.col}`, 'DWS');
         premiumSquares.push({
           row: pos.row,
@@ -1882,9 +1885,10 @@ export const useGameStore = create((set, get) => {
         });
       }
       
-      // Assign TLS (12 positions)
-      for (let i = 24; i < 36; i++) {
-        const pos = shuffled[i];
+      // Assign TLS
+      for (let i = 0; i < Math.min(distribution.TLS || 0, 225); i++) {
+        if (currentIndex >= shuffled.length) break;
+        const pos = shuffled[currentIndex++];
         premiumMap.set(`${pos.row},${pos.col}`, 'TLS');
         premiumSquares.push({
           row: pos.row,
@@ -1893,9 +1897,10 @@ export const useGameStore = create((set, get) => {
         });
       }
       
-      // Assign DLS (24 positions)
-      for (let i = 36; i < 60; i++) {
-        const pos = shuffled[i];
+      // Assign DLS
+      for (let i = 0; i < Math.min(distribution.DLS || 0, 225); i++) {
+        if (currentIndex >= shuffled.length) break;
+        const pos = shuffled[currentIndex++];
         premiumMap.set(`${pos.row},${pos.col}`, 'DLS');
         premiumSquares.push({
           row: pos.row,

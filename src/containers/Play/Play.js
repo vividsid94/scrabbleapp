@@ -74,6 +74,104 @@ const parsePoolToDistribution = (pool) => {
   return distribution;
 };
 
+// Bonus Square Editor Component
+const BonusSquareEditor = ({ distribution, onDistributionChange, lightMode }) => {
+  const updateCount = (type, newCount) => {
+    const updated = { ...distribution };
+    updated[type] = Math.max(0, Math.min(newCount, 225)); // Cap at 225 (total squares)
+    onDistributionChange(updated);
+  };
+  
+  const types = [
+    { key: 'TWS', label: 'TWS', color: '#dc2626' },
+    { key: 'DWS', label: 'DWS', color: '#ec4899' },
+    { key: 'TLS', label: 'TLS', color: '#1e40af' },
+    { key: 'DLS', label: 'DLS', color: '#3b82f6' }
+  ];
+  
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {types.map(type => (
+        <Box key={type.key} sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Box sx={{ 
+            fontSize: { xs: '9px', sm: '8px' }, 
+            fontWeight: 600, 
+            color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
+            minWidth: '32px'
+          }}>
+            {type.label}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+            <Box
+              onClick={() => updateCount(type.key, (distribution[type.key] || 0) - 1)}
+              sx={{
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                userSelect: 'none',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                }
+              }}
+            >
+              −
+            </Box>
+            <Box sx={{
+              minWidth: '40px',
+              textAlign: 'center',
+              fontSize: { xs: '10px', sm: '9px' },
+              fontWeight: 600,
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              padding: '2px 4px'
+            }}>
+              {distribution[type.key] || 0}
+            </Box>
+            <Box
+              onClick={() => updateCount(type.key, (distribution[type.key] || 0) + 1)}
+              sx={{
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                userSelect: 'none',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                }
+              }}
+            >
+              +
+            </Box>
+            <Box sx={{ 
+              width: '12px', 
+              height: '12px', 
+              borderRadius: '2px', 
+              backgroundColor: type.color,
+              marginLeft: 'auto'
+            }} />
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
 // Variable Pool Editor Component
 const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
   const getPoolString = () => {
@@ -401,6 +499,8 @@ export default function Play() {
     // Game mode features
     randomizeBonusSquares,
     setRandomizeBonusSquares,
+    customBonusSquareDistribution,
+    setCustomBonusSquareDistribution,
     twoTurnsPerPlayer,
     setTwoTurnsPerPlayer,
     variablePool,
@@ -465,6 +565,7 @@ export default function Play() {
   const [customDefenseBotSelected, setCustomDefenseBotSelected] = useState(false);
   const [defenseWeight, setDefenseWeight] = useState(1.0);
   const [poolPreset, setPoolPreset] = useState('standard');
+  const [bonusSquarePreset, setBonusSquarePreset] = useState('default');
 
   // Initialize sounds (simplified) - only once
   const [sounds, setSounds] = useState(null);
@@ -519,7 +620,33 @@ export default function Play() {
       // Clear premiumSquares when disabled
       setPremiumSquares(null);
     }
-  }, [randomizeBonusSquares, generateRandomPremiumSquares, setPremiumSquares]);
+  }, [randomizeBonusSquares, customBonusSquareDistribution, generateRandomPremiumSquares, setPremiumSquares]);
+  
+  // Reset customBonusSquareDistribution when randomizeBonusSquares is disabled
+  useEffect(() => {
+    if (!randomizeBonusSquares) {
+      setCustomBonusSquareDistribution(null);
+      setBonusSquarePreset('default');
+    }
+  }, [randomizeBonusSquares, setCustomBonusSquareDistribution]);
+  
+  // Sync bonusSquarePreset with customBonusSquareDistribution
+  useEffect(() => {
+    if (!customBonusSquareDistribution) {
+      setBonusSquarePreset('default');
+    } else {
+      const dist = customBonusSquareDistribution;
+      if (dist.TWS === 12 && dist.DWS === 20 && dist.TLS === 8 && dist.DLS === 20) {
+        setBonusSquarePreset('word-heavy');
+      } else if (dist.TWS === 4 && dist.DWS === 8 && dist.TLS === 20 && dist.DLS === 28) {
+        setBonusSquarePreset('letter-heavy');
+      } else if (dist.TWS === 20 && dist.DWS === 0 && dist.TLS === 0 && dist.DLS === 0) {
+        setBonusSquarePreset('extreme');
+      } else {
+        setBonusSquarePreset('advanced');
+      }
+    }
+  }, [customBonusSquareDistribution]);
   
   // Reset turn count when twoTurnsPerPlayer changes
   useEffect(() => {
@@ -1884,6 +2011,71 @@ export default function Play() {
                     }}
                   />
                 </Box>
+                
+                {/* Bonus Square Customization */}
+                <Collapse in={randomizeBonusSquares}>
+                  <Box sx={{ marginTop: 1, padding: '8px', backgroundColor: lightMode === 'dark' ? 'rgba(61, 90, 128, 0.05)' : 'rgba(61, 90, 128, 0.03)', borderRadius: '6px', border: '1px solid rgba(61, 90, 128, 0.2)' }}>
+                    <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Distribution
+                    </Box>
+                    <Select
+                      value={bonusSquarePreset}
+                      onChange={(e) => {
+                        const preset = e.target.value;
+                        setBonusSquarePreset(preset);
+                        if (preset === 'default') {
+                          setCustomBonusSquareDistribution(null);
+                        } else if (preset === 'word-heavy') {
+                          setCustomBonusSquareDistribution({ TWS: 12, DWS: 20, TLS: 8, DLS: 20 });
+                        } else if (preset === 'letter-heavy') {
+                          setCustomBonusSquareDistribution({ TWS: 4, DWS: 8, TLS: 20, DLS: 28 });
+                        } else if (preset === 'extreme') {
+                          setCustomBonusSquareDistribution({ TWS: 20, DWS: 0, TLS: 0, DLS: 0 });
+                        } else if (preset === 'advanced') {
+                          setCustomBonusSquareDistribution({ TWS: 8, DWS: 16, TLS: 12, DLS: 24 });
+                        }
+                      }}
+                      size="small"
+                      fullWidth
+                      sx={{
+                        fontSize: { xs: '11px', sm: '10px' },
+                        fontWeight: 600,
+                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                        marginBottom: 1,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#3D5A80',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#3D5A80',
+                        }
+                      }}
+                    >
+                      <MenuItem value="default" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Default (8 TWS, 16 DWS, 12 TLS, 24 DLS)</MenuItem>
+                      <MenuItem value="word-heavy" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Word-Heavy</MenuItem>
+                      <MenuItem value="letter-heavy" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Letter-Heavy</MenuItem>
+                      <MenuItem value="extreme" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Extreme (All TWS)</MenuItem>
+                      <MenuItem value="advanced" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Advanced (Custom)</MenuItem>
+                    </Select>
+                    
+                    {/* Advanced Custom Editor */}
+                    {bonusSquarePreset === 'advanced' ? (
+                      <Box sx={{ marginTop: 1 }}>
+                        <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Square Counts
+                        </Box>
+                        <BonusSquareEditor 
+                          distribution={customBonusSquareDistribution} 
+                          onDistributionChange={setCustomBonusSquareDistribution}
+                          lightMode={lightMode}
+                        />
+                      </Box>
+                    ) : null}
+                  </Box>
+                </Collapse>
               </Box>
               
               {/* 2 Turns Per Player */}
