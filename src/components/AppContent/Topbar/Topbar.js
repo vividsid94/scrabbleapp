@@ -29,7 +29,8 @@ export default function Topbar() {
                 style={{
                   background: 'transparent',
                   border: '2px solid #D97706',
-                  padding: '8px 23px'
+                  padding: '8px 23px',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
                 }}
               >
                 Log In

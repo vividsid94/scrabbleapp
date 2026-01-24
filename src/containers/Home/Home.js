@@ -347,7 +347,8 @@ export default function Home(){
                   style={{
                     background: 'transparent',
                     border: '2px solid #D97706',
-                    padding: '8px 23px'
+                    padding: '8px 23px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
                   }}
                 >
                   More <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
