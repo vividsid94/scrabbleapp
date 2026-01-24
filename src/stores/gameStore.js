@@ -126,6 +126,9 @@ export const useGameStore = create((set, get) => {
     shouldTheoYell: false, // Signal to trigger Theo yell
     theoYellIsBingoMiss: false, // Whether the yell is for missing a bingo
     theoYellPhrase: '', // The phrase Theo said
+    
+    // Premium squares for randomized bonus squares mode
+    premiumSquares: null, // Array of {row, col, type} objects, null means use standard board
   };
 
   return {
@@ -141,6 +144,7 @@ export const useGameStore = create((set, get) => {
     setBoardCoords: (coords) => set({ boardCoords: coords }),
     setTempBoardCoords: (coords) => set({ tempBoardCoords: coords }),
     setOrigBoardCoords: (coords) => set({ origBoardCoords: coords }),
+    setPremiumSquares: (squares) => set({ premiumSquares: squares }),
     
     // Actions - Players
     setPlayer1points: (points) => set({ player1points: points }),
@@ -345,10 +349,19 @@ export const useGameStore = create((set, get) => {
     
     // Game initialization actions
     initializeGame: (origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound) => {
-      const { setBoardCoords, setTempBoardCoords, setOrigBoardCoords, setIsDictionaryLoading } = get();
+      const { setBoardCoords, setTempBoardCoords, setOrigBoardCoords, setIsDictionaryLoading, premiumSquares } = get();
       
-      // Initialize board
-      let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+      // Initialize board - if premiumSquares are set, use empty board (all zeros)
+      // Otherwise use the standard board layout
+      let parsedOrigBoardCoords;
+      if (premiumSquares && premiumSquares.length > 0) {
+        // Start with empty board (all zeros) when using randomized premium squares
+        // The premiumSquares array will define where bonus squares are for rendering/scoring
+        parsedOrigBoardCoords = Array(15).fill(null).map(() => Array(15).fill(0));
+      } else {
+        // Use standard board layout
+        parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+      }
       setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
       setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
       setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
@@ -696,15 +709,25 @@ export const useGameStore = create((set, get) => {
           // Convert any '?' in the rack to '*' for the API
           const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
           
+          // Get premiumSquares from store if available
+          const { premiumSquares } = get();
+          
+          const requestBody = {
+            board: boardCoords,
+            letters: apiRack
+          };
+          
+          // Add premiumSquares if available
+          if (premiumSquares && premiumSquares.length > 0) {
+            requestBody.premiumSquares = premiumSquares;
+          }
+          
           const response = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              board: boardCoords,
-              letters: apiRack
-            })
+            body: JSON.stringify(requestBody)
           });
 
           if (!response.ok) {
@@ -876,19 +899,28 @@ export const useGameStore = create((set, get) => {
       }
 
       // Import calculateScore function dynamically
-      import('../functions/scoreFunctions').then(({ calculateScore }) => {
-        // Get board multipliers from the static data
-        import('../components/AppContent/References/staticData').then(({ origBoard }) => {
-          const boardMultipliers = JSON.parse(origBoard);
-          const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
-          setPreviewScore(score);
-          
-          // Calculate position for score preview
-          if (selectedBoardPosition) {
-            const { row, col } = selectedBoardPosition;
-            setPreviewScorePosition({ row, col });
-          }
-        });
+      Promise.all([
+        import('../functions/scoreFunctions'),
+        import('../components/AppContent/References/staticData')
+      ]).then(([{ calculateScore, premiumSquaresToBoardMultipliers }, { origBoard }]) => {
+        const { premiumSquares } = get();
+        let boardMultipliers;
+        
+        // Use premiumSquares if available, otherwise use standard board
+        if (premiumSquares && premiumSquares.length > 0) {
+          boardMultipliers = premiumSquaresToBoardMultipliers(premiumSquares);
+        } else {
+          boardMultipliers = JSON.parse(origBoard);
+        }
+        
+        const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
+        setPreviewScore(score);
+        
+        // Calculate position for score preview
+        if (selectedBoardPosition) {
+          const { row, col } = selectedBoardPosition;
+          setPreviewScorePosition({ row, col });
+        }
       });
     },
     
@@ -1245,19 +1277,28 @@ export const useGameStore = create((set, get) => {
       
       if (selectedTiles.length > 0) {
         // Import calculateScore function dynamically
-        import('../functions/scoreFunctions').then(({ calculateScore }) => {
-          // Get board multipliers from the static data
-          import('../components/AppContent/References/staticData').then(({ origBoard }) => {
-            const boardMultipliers = JSON.parse(origBoard);
-            const score = calculateScore(get().boardCoords, tempBoardCoords, boardMultipliers);
-            setPreviewScore(score);
-            
-            // Calculate position for score preview
-            if (get().selectedBoardPosition) {
-              const { row, col } = get().selectedBoardPosition;
-              setPreviewScorePosition({ row, col });
-            }
-          });
+        Promise.all([
+          import('../functions/scoreFunctions'),
+          import('../components/AppContent/References/staticData')
+        ]).then(([{ calculateScore, premiumSquaresToBoardMultipliers }, { origBoard }]) => {
+          const { premiumSquares } = get();
+          let boardMultipliers;
+          
+          // Use premiumSquares if available, otherwise use standard board
+          if (premiumSquares && premiumSquares.length > 0) {
+            boardMultipliers = premiumSquaresToBoardMultipliers(premiumSquares);
+          } else {
+            boardMultipliers = JSON.parse(origBoard);
+          }
+          
+          const score = calculateScore(get().boardCoords, tempBoardCoords, boardMultipliers);
+          setPreviewScore(score);
+          
+          // Calculate position for score preview
+          if (get().selectedBoardPosition) {
+            const { row, col } = get().selectedBoardPosition;
+            setPreviewScorePosition({ row, col });
+          }
         });
       } else {
         setPreviewScore(null);
@@ -1740,6 +1781,94 @@ export const useGameStore = create((set, get) => {
       } finally {
         setTessIsRunningSims(false);
       }
+    },
+    
+    // Generate random bonus squares
+    generateRandomPremiumSquares: () => {
+      const premiumSquares = [];
+      
+      // New distribution:
+      // 24 DLS (Double Letter Score) - light blue
+      // 12 TLS (Triple Letter Score) - dark blue
+      // 16 DWS (Double Word Score) - pink
+      // 8 TWS (Triple Word Score) - red
+      // All other squares are REGULAR
+      // Total: 60 premium squares + 165 regular squares = 225 total
+      // Center (7,7) can be any type (randomly assigned)
+      
+      // Create a map to track which positions have premium squares
+      const premiumMap = new Map();
+      
+      // All possible positions (including center)
+      const allPositions = [];
+      for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+          allPositions.push({ row, col });
+        }
+      }
+      
+      // Shuffle positions
+      const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
+      
+      // Assign TWS (8 positions)
+      for (let i = 0; i < 8; i++) {
+        const pos = shuffled[i];
+        premiumMap.set(`${pos.row},${pos.col}`, 'TWS');
+        premiumSquares.push({
+          row: pos.row,
+          col: pos.col,
+          type: 'TWS'
+        });
+      }
+      
+      // Assign DWS (16 positions)
+      for (let i = 8; i < 24; i++) {
+        const pos = shuffled[i];
+        premiumMap.set(`${pos.row},${pos.col}`, 'DWS');
+        premiumSquares.push({
+          row: pos.row,
+          col: pos.col,
+          type: 'DWS'
+        });
+      }
+      
+      // Assign TLS (12 positions)
+      for (let i = 24; i < 36; i++) {
+        const pos = shuffled[i];
+        premiumMap.set(`${pos.row},${pos.col}`, 'TLS');
+        premiumSquares.push({
+          row: pos.row,
+          col: pos.col,
+          type: 'TLS'
+        });
+      }
+      
+      // Assign DLS (24 positions)
+      for (let i = 36; i < 60; i++) {
+        const pos = shuffled[i];
+        premiumMap.set(`${pos.row},${pos.col}`, 'DLS');
+        premiumSquares.push({
+          row: pos.row,
+          col: pos.col,
+          type: 'DLS'
+        });
+      }
+      
+      // Add all remaining squares as REGULAR
+      for (let row = 0; row < 15; row++) {
+        for (let col = 0; col < 15; col++) {
+          const key = `${row},${col}`;
+          if (!premiumMap.has(key)) {
+            premiumSquares.push({
+              row: row,
+              col: col,
+              type: 'REGULAR'
+            });
+          }
+        }
+      }
+      
+      return premiumSquares;
     },
   };
 }); 

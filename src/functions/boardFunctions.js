@@ -110,7 +110,28 @@ export const highlightPreviousMove = (location, play, boardCoords) => {
     return curMoveCoords;
 } 
 
-export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = [], lightMode = 'dark', invalidWordCoords = []) => {
+export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = [], theme = "STANDARD", color, complementaryColor, blankTiles = [], lastMoveCoordinates = [], lightMode = 'dark', invalidWordCoords = [], premiumSquares = null) => {
+  // Create a mapping from (row, col) to premium square type if premiumSquares is provided
+  const premiumSquareMap = {};
+  if (premiumSquares && Array.isArray(premiumSquares)) {
+    premiumSquares.forEach(square => {
+      const key = `${square.row},${square.col}`;
+      // Map backend types to board number system:
+      // "DLS" -> 1, "TLS" -> 2, "DWS" -> 3, "TWS" -> 4, "CENTER" -> 0 (or could be 3)
+      if (square.type === 'DLS') {
+        premiumSquareMap[key] = 1;
+      } else if (square.type === 'TLS') {
+        premiumSquareMap[key] = 2;
+      } else if (square.type === 'DWS') {
+        premiumSquareMap[key] = 3;
+      } else if (square.type === 'TWS') {
+        premiumSquareMap[key] = 4;
+      } else if (square.type === 'CENTER') {
+        premiumSquareMap[key] = 0; // Center is just a regular cell visually
+      }
+    });
+  }
+  
   return (
       boardCoords.map((row, rowIndex) => (
           row.map((col, colIndex) => {
@@ -129,10 +150,21 @@ export const createBoard = (boardCoords = [], currentMoveCoords = [], tiles = []
             displayLetter = col.toLowerCase();
           }
           
+          // Determine the premium square type for this cell (if available)
+          const premiumSquareType = premiumSquareMap[`${rowIndex},${colIndex}`];
+          
+          // If premiumSquares is provided and there's no tile, use the premium square type
+          // If there's a tile, pass the tile letter but also pass the premium square type for background
+          let cellTypeValue = displayLetter;
+          if (premiumSquareType !== undefined && typeof col !== 'string') {
+            // No tile, use the premium square type for both value and background
+            cellTypeValue = premiumSquareType;
+          }
+          
           return Cell({
             rowIndex,
             colIndex,
-            bonus: cellType(displayLetter, lightenedCell, lightMode),
+            bonus: cellType(cellTypeValue, lightenedCell, lightMode, premiumSquareType),
             type: "board",
             theme,
             tiles,

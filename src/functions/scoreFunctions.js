@@ -5,6 +5,38 @@ export const letterScores = {
   'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '?': 0
 };
 
+/**
+ * Convert premiumSquares array to boardMultipliers format (15x15 array)
+ * @param {Array} premiumSquares - Array of {row, col, type} objects
+ * @returns {Array} 15x15 array where values are: 0=normal, 1=DLS, 2=TLS, 3=DWS, 4=TWS
+ */
+export function premiumSquaresToBoardMultipliers(premiumSquares) {
+  // Initialize 15x15 array with zeros
+  const boardMultipliers = Array(15).fill(null).map(() => Array(15).fill(0));
+  
+  if (premiumSquares && Array.isArray(premiumSquares)) {
+    premiumSquares.forEach(square => {
+      const { row, col, type } = square;
+      if (row >= 0 && row < 15 && col >= 0 && col < 15) {
+        // Map backend types to board multiplier values:
+        // DLS -> 1, TLS -> 2, DWS -> 3, TWS -> 4, CENTER -> 0
+        if (type === 'DLS') {
+          boardMultipliers[row][col] = 1;
+        } else if (type === 'TLS') {
+          boardMultipliers[row][col] = 2;
+        } else if (type === 'DWS') {
+          boardMultipliers[row][col] = 3;
+        } else if (type === 'TWS') {
+          boardMultipliers[row][col] = 4;
+        }
+        // CENTER and others remain 0
+      }
+    });
+  }
+  
+  return boardMultipliers;
+}
+
 // Helper function to get word score
 function getWordScore(wordTiles, placedTiles, boardMultipliers) {
   let wordScore = 0;

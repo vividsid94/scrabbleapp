@@ -166,21 +166,41 @@ export const handleGetTopMoves = async ({
     // Convert any '?' in the rack to '*' for the API
     const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
     
+    // Get premiumSquares from store if available
+    const { premiumSquares } = useGameStore.getState();
+    
     // Add timeout to the fetch request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
     
     let response;
     try {
+      const requestBody = {
+        board: boardCoords,
+        letters: apiRack
+      };
+      
+      // Add premiumSquares if available
+      if (premiumSquares && premiumSquares.length > 0) {
+        requestBody.premiumSquares = premiumSquares;
+        console.log('📊 [handleGetTopMoves] Sending premiumSquares to backend:', {
+          count: premiumSquares.length,
+          sample: premiumSquares.slice(0, 3),
+          types: premiumSquares.reduce((acc, sq) => {
+            acc[sq.type] = (acc[sq.type] || 0) + 1;
+            return acc;
+          }, {})
+        });
+      } else {
+        console.log('📊 [handleGetTopMoves] No premiumSquares to send (using standard board)');
+      }
+      
       response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          board: boardCoords,
-          letters: apiRack
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -439,21 +459,31 @@ export const handlePlayTopMove = async () => {
     // Convert any '?' in the rack to '*' for the API
     const apiRack = newRack.map(tile => tile === '?' ? '*' : tile);
     
+    // Get premiumSquares from store if available
+    const { premiumSquares } = useGameStore.getState();
+    
     // Add timeout to the fetch request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
     
     let response;
     try {
+      const requestBody = {
+        board: boardCoords,
+        letters: apiRack
+      };
+      
+      // Add premiumSquares if available
+      if (premiumSquares && premiumSquares.length > 0) {
+        requestBody.premiumSquares = premiumSquares;
+      }
+      
       response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          board: boardCoords,
-          letters: apiRack
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       clearTimeout(timeoutId);

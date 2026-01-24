@@ -235,13 +235,46 @@ async function isValidScrabblePlacement(beforeBoard, afterBoard) {
 }
 
 /**
+ * Converts premiumSquares array to boardMultipliers format (15x15 array)
+ * @param {Array} premiumSquares - Array of {row, col, type} objects
+ * @returns {Array} 15x15 array where values are: 0=normal, 1=DLS, 2=TLS, 3=DWS, 4=TWS
+ */
+function premiumSquaresToBoardMultipliers(premiumSquares) {
+    // Initialize 15x15 array with zeros
+    const multipliers = Array(15).fill(null).map(() => Array(15).fill(0));
+    
+    if (premiumSquares && Array.isArray(premiumSquares)) {
+        premiumSquares.forEach(square => {
+            const { row, col, type } = square;
+            if (row >= 0 && row < 15 && col >= 0 && col < 15) {
+                // Map backend types to board multiplier values:
+                // DLS -> 1, TLS -> 2, DWS -> 3, TWS -> 4, CENTER -> 0
+                if (type === 'DLS') {
+                    multipliers[row][col] = 1;
+                } else if (type === 'TLS') {
+                    multipliers[row][col] = 2;
+                } else if (type === 'DWS') {
+                    multipliers[row][col] = 3;
+                } else if (type === 'TWS') {
+                    multipliers[row][col] = 4;
+                }
+                // CENTER and others remain 0
+            }
+        });
+    }
+    
+    return multipliers;
+}
+
+/**
  * Calculates the score for a play.
  * 
  * @param {Array<Array<string|null>>} beforeBoard - Board state before the move
  * @param {Array<Array<string|null>>} afterBoard - Board state after the move
+ * @param {Array} premiumSquares - Optional array of {row, col, type} premium squares
  * @returns {Promise<number>} The total score for the play
  */
-async function scorePlay(beforeBoard, afterBoard) {
+async function scorePlay(beforeBoard, afterBoard, premiumSquares = null) {
     let totalScore = 0;
     const formedWords = new Set();
     const placedTiles = [];
@@ -258,6 +291,11 @@ async function scorePlay(beforeBoard, afterBoard) {
 
     if (placedTiles.length === 0) return 0;
 
+    // Use premiumSquares if provided, otherwise use default boardMultipliers
+    const multipliersToUse = premiumSquares && premiumSquares.length > 0 
+        ? premiumSquaresToBoardMultipliers(premiumSquares)
+        : boardMultipliers;
+
     // Helper function to get word score
     function getWordScore(wordTiles) {
         let wordScore = 0;
@@ -273,7 +311,7 @@ async function scorePlay(beforeBoard, afterBoard) {
 
             const isNewTile = placedTiles.some(pt => pt.row === row && pt.col === col);
             if (isNewTile) {
-                const premiumType = boardMultipliers[row][col];
+                const premiumType = multipliersToUse[row][col];
                 if (premiumType === 3) { // Double word
                     if (!usedPremiumSquares.has(`DW-${row}-${col}`)) {
                         wordMultiplier *= 2;
@@ -428,20 +466,20 @@ exports.handler = async function(event) {
     }
 
     try {
-        const { action, beforeBoard, afterBoard } = JSON.parse(event.body);
+        const { action, beforeBoard, afterBoard, premiumSquares } = JSON.parse(event.body);
         
         let result;
         if (action === 'validate') {
             result = await isValidScrabblePlacement(beforeBoard, afterBoard);
         } else if (action === 'score') {
-            result = await scorePlay(beforeBoard, afterBoard);
+            result = await scorePlay(beforeBoard, afterBoard, premiumSquares);
         } else if (action === 'validateAndScore') {
             // Combined validation and scoring to avoid duplicate word validation
             const validationResult = await isValidScrabblePlacement(beforeBoard, afterBoard);
             if (!validationResult.isValid) {
                 result = validationResult;
             } else {
-                const score = await scorePlay(beforeBoard, afterBoard);
+                const score = await scorePlay(beforeBoard, afterBoard, premiumSquares);
                 result = {
                     isValid: true,
                     score: score,

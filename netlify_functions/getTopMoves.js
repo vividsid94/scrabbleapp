@@ -45,7 +45,7 @@ const getLeaveValue = (leave) => {
 /**
  * Call the Go generateMoves function via HTTP
  */
-async function callGoGenerateMoves(board, letters) {
+async function callGoGenerateMoves(board, letters, premiumSquares = null) {
   try {
     // Call the Go service
     const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves'; // Go service running on Railway
@@ -68,13 +68,23 @@ async function callGoGenerateMoves(board, letters) {
     
     console.log('🔍 DEBUG: Rack being sent to Go service:', rackData);
     console.log('🔍 DEBUG: Original letters array:', letters);
+    if (premiumSquares) {
+      console.log('🔍 DEBUG: Premium squares being sent to Go service:', premiumSquares);
+    }
     
     // Make HTTP request to Go service
-    const requestData = JSON.stringify({
+    const requestBody = {
       board: boardData, // Already in correct format with empty strings
       rack: rackData, // Convert * to ? for Macondo
       topN: 100 // Get top 100 moves
-    });
+    };
+    
+    // Add premiumSquares if provided
+    if (premiumSquares && Array.isArray(premiumSquares) && premiumSquares.length > 0) {
+      requestBody.premiumSquares = premiumSquares;
+    }
+    
+    const requestData = JSON.stringify(requestBody);
     
     const url = new URL(railwayUrl);
     const options = {
@@ -331,7 +341,7 @@ exports.handler = async function (event) {
       throw new Error('Invalid JSON in request body');
     }
 
-    const { board: rawBoard, letters } = parsedBody;
+    const { board: rawBoard, letters, premiumSquares } = parsedBody;
     
     if (!rawBoard || !letters) {
       throw new Error('Missing required fields: board and letters');
@@ -347,9 +357,23 @@ exports.handler = async function (event) {
 
     const board = normalizeBoard(rawBoard);
     
+    // Log premiumSquares for debugging
+    if (premiumSquares) {
+      console.log('📊 Premium squares received:', {
+        count: premiumSquares.length,
+        sample: premiumSquares.slice(0, 3),
+        types: premiumSquares.reduce((acc, sq) => {
+          acc[sq.type] = (acc[sq.type] || 0) + 1;
+          return acc;
+        }, {})
+      });
+    } else {
+      console.log('📊 No premium squares provided, using standard board');
+    }
+    
     // Get all possible moves from Go function
     console.log('Generating moves with Go...');
-    const allMoves = await callGoGenerateMoves(board, letters);
+    const allMoves = await callGoGenerateMoves(board, letters, premiumSquares);
     console.log(`Generated ${allMoves.length} possible moves`);
 
     // Calculate leave for regular moves

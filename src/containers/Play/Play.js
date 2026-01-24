@@ -244,6 +244,11 @@ export default function Play() {
     theoYellIsBingoMiss,
     theoYellPhrase,
     setTheoYellPhrase,
+    
+    // Premium squares
+    premiumSquares,
+    setPremiumSquares,
+    generateRandomPremiumSquares,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
@@ -324,14 +329,35 @@ export default function Play() {
   }, [sounds]);
 
   useEffect(() => {
-    let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    // Initialize board - if premiumSquares are set, use empty board (all zeros)
+    // Otherwise use the standard board layout
+    let parsedOrigBoardCoords;
+    if (premiumSquares && premiumSquares.length > 0) {
+      // Start with empty board (all zeros) when using randomized premium squares
+      // The premiumSquares array will define where bonus squares are for rendering/scoring
+      parsedOrigBoardCoords = Array(15).fill(null).map(() => Array(15).fill(0));
+    } else {
+      // Use standard board layout
+      parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    }
     setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
     
     // Check dictionary loading state on mount
     checkDictionary();
-  }, []);
+  }, [premiumSquares]);
+
+  // Handle gameMode changes - generate premiumSquares when randomizing
+  useEffect(() => {
+    if (gameMode === 'Randomize bonus squares') {
+      const randomSquares = generateRandomPremiumSquares();
+      setPremiumSquares(randomSquares);
+    } else {
+      // Clear premiumSquares when switching back to Normal mode
+      setPremiumSquares(null);
+    }
+  }, [gameMode, generateRandomPremiumSquares, setPremiumSquares]);
 
   // Update useEffect to handle keyboard events
   useEffect(() => {
@@ -481,9 +507,10 @@ export default function Play() {
       blankTiles,
       lastMoveCoordinates,
       lightMode,
-      invalidWordCoords
+      invalidWordCoords,
+      premiumSquares
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords]);
+  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords, premiumSquares]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -1603,7 +1630,7 @@ export default function Play() {
                   }}
                 >
                           <MenuItem value="Normal" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>Normal</MenuItem>
-                          <MenuItem value="Randomize bonus squares" disabled sx={{ fontSize: { xs: '12px', sm: '11px' }, opacity: 0.4 }}>Randomize bonus squares</MenuItem>
+                          <MenuItem value="Randomize bonus squares" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>Randomize bonus squares</MenuItem>
                 </Select>
               </FormControl>
             </Box>

@@ -62,6 +62,9 @@ export const makeBotMove = async (botMoveSound) => {
   // Convert any '?' in the rack to '*' for the API
   const apiRack = rackCopy.map(tile => tile === '?' ? '*' : tile);
 
+  // Get premiumSquares from store if available
+  const { premiumSquares } = useGameStore.getState();
+  
   // Helper function to attempt bot move with retry logic
   const attemptBotMove = async (isRetry = false) => {
     if (isRetry) {
@@ -75,16 +78,23 @@ export const makeBotMove = async (botMoveSound) => {
     const timeoutId = setTimeout(() => controller.abort(), 29000); // 29 second timeout
     
     try {
+      const requestBody = {
+        board: boardCopy,
+        letters: apiRack,
+        pool: pool
+      };
+      
+      // Add premiumSquares if available
+      if (premiumSquares && premiumSquares.length > 0) {
+        requestBody.premiumSquares = premiumSquares;
+      }
+      
       const response = await fetch('/.netlify/functions/botLogic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          board: boardCopy,
-          letters: apiRack,
-          pool: pool
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -771,8 +781,17 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   // Clear move history first
   setMoveHistory([]);
 
-  // Reset game state
-  let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+  // Reset game state - check if premiumSquares are set
+  const { premiumSquares } = useGameStore.getState();
+  let parsedOrigBoardCoords;
+  if (premiumSquares && premiumSquares.length > 0) {
+    // Start with empty board (all zeros) when using randomized premium squares
+    // The premiumSquares array will define where bonus squares are for rendering/scoring
+    parsedOrigBoardCoords = Array(15).fill(null).map(() => Array(15).fill(0));
+  } else {
+    // Use standard board layout
+    parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+  }
   setOrigBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
   setBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
   setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));

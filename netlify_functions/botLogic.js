@@ -45,7 +45,7 @@ const getLeaveValue = (leave) => {
 /**
  * Call the Go generateMoves function via HTTP
  */
-async function callGoGenerateMoves(board, letters) {
+async function callGoGenerateMoves(board, letters, premiumSquares = null) {
   try {
     // Call the Go service
     const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves'; // Go service running on Railway
@@ -68,13 +68,23 @@ async function callGoGenerateMoves(board, letters) {
     
     console.log('🔍 DEBUG: Rack being sent to Go service:', rackData);
     console.log('🔍 DEBUG: Original letters array:', letters);
+    if (premiumSquares) {
+      console.log('🔍 DEBUG: Premium squares being sent to Go service:', premiumSquares);
+    }
     
     // Make HTTP request to Go service
-    const requestData = JSON.stringify({
+    const requestBody = {
       board: boardData, // Already in correct format with empty strings
       rack: rackData, // Convert * to ? for Macondo
       topN: 100 // Get top 100 moves
-    });
+    };
+    
+    // Add premiumSquares if provided
+    if (premiumSquares && Array.isArray(premiumSquares) && premiumSquares.length > 0) {
+      requestBody.premiumSquares = premiumSquares;
+    }
+    
+    const requestData = JSON.stringify(requestBody);
     
     const url = new URL(railwayUrl);
     const options = {
@@ -317,7 +327,7 @@ exports.handler = async function (event) {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { board: rawBoard, letters, pool = [] } = JSON.parse(event.body || '{}');
+    const { board: rawBoard, letters, pool = [], premiumSquares } = JSON.parse(event.body || '{}');
     
     if (!Array.isArray(rawBoard) || rawBoard.length !== 15 || !Array.isArray(letters) || letters.length > 7) {
       throw new Error('Invalid input: board must be 15x15 array and letters must be array of up to 7 letters');
@@ -337,7 +347,7 @@ exports.handler = async function (event) {
 
     // Get all possible moves from Go function
     console.log('Generating moves with Go...');
-    const allMoves = await callGoGenerateMoves(board, letters);
+    const allMoves = await callGoGenerateMoves(board, letters, premiumSquares);
     console.log(`Generated ${allMoves.length} possible moves`);
 
     // Calculate leave for regular moves
