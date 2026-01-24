@@ -79,10 +79,9 @@ export const handlePass = () => {
     };
     setMoveHistory([...currentHistory, newMove]);
 
-    // Switch to next player
-    const currentPlayerNum = useGameStore.getState().currentPlayer || 1;
-    const newPlayer = currentPlayerNum === 1 ? 2 : 1;
-    setCurrentPlayer(newPlayer);
+    // Switch to next player (handles 2 turns mode)
+    const { switchToNextPlayer } = useGameStore.getState();
+    switchToNextPlayer();
     
     setSnackbarMessage(currentPlayer === 1 ? "You passed your turn" : `${player2Name} passed their turn`);
     setSnackbarSeverity('info');

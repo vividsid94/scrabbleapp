@@ -161,7 +161,9 @@ export const makeBotMove = async (botMoveSound) => {
       setSnackbarMessage('Bot could not find a valid move');
       setSnackbarSeverity('info');
       setSnackbarOpen(true);
-      setCurrentPlayer(1); // Switch back to player 1 if bot can't move
+      // Switch to next player (handles 2 turns mode)
+      const { switchToNextPlayer } = useGameStore.getState();
+      switchToNextPlayer();
       return;
     }
 
@@ -481,8 +483,9 @@ export const makeBotMove = async (botMoveSound) => {
     // Reset consecutive passes since bot made a move
     setConsecutivePasses(0);
     
-    // Switch back to player 1
-    setCurrentPlayer(1);
+    // Switch to next player (handles 2 turns mode)
+    const { switchToNextPlayer } = useGameStore.getState();
+    switchToNextPlayer();
     setSelectedBoardPosition(null);
     setSelectedTiles([]);
     setArrowDirection('right');
@@ -642,7 +645,9 @@ export const makeBotMove = async (botMoveSound) => {
         setPool(newPool);
         
         setConsecutivePasses(0);
-        setCurrentPlayer(1);
+        // Switch to next player (handles 2 turns mode)
+        const { switchToNextPlayer: switchToNextPlayerRetry } = useGameStore.getState();
+        switchToNextPlayerRetry();
         setSelectedBoardPosition(null);
         setSelectedTiles([]);
         setArrowDirection('right');
@@ -729,7 +734,9 @@ export const makeBotMove = async (botMoveSound) => {
       setSnackbarMessage('Bot error: ' + error.message);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
-      setCurrentPlayer(1); // Switch back to player 1 on error
+      // Switch to next player (handles 2 turns mode)
+      const { switchToNextPlayer: switchToNextPlayerError } = useGameStore.getState();
+      switchToNextPlayerError();
     }
   } finally {
     // Only clear thinking state if auto-play is not enabled
@@ -803,6 +810,10 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   const botGoesFirst = Math.random() < 0.5;
   setCurrentPlayer(botGoesFirst ? 2 : 1);
   setConsecutivePasses(0);
+  
+  // Reset turn count when starting new game
+  const { setPlayerTurnCount } = useGameStore.getState();
+  setPlayerTurnCount(1);
   
   // Initialize player racks
   const newPool = [...origPool];

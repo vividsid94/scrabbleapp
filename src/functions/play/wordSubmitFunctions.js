@@ -245,8 +245,9 @@ export const handleWordSubmit = async (playerMoveSound) => {
   }
   setPool(newPool);
   
-  // Switch to next player
-  setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+  // Switch to next player (handles 2 turns mode)
+  const { switchToNextPlayer } = useGameStore.getState();
+  switchToNextPlayer();
   setSelectedBoardPosition(null);
   setSelectedTiles([]);
   setArrowDirection('right');

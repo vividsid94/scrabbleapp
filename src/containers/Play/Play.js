@@ -8,7 +8,7 @@ import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel, Checkbox } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
@@ -249,6 +249,16 @@ export default function Play() {
     premiumSquares,
     setPremiumSquares,
     generateRandomPremiumSquares,
+    
+    // Game mode features
+    randomizeBonusSquares,
+    setRandomizeBonusSquares,
+    twoTurnsPerPlayer,
+    setTwoTurnsPerPlayer,
+    
+    // Turn tracking
+    playerTurnCount,
+    switchToNextPlayer,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
@@ -267,7 +277,6 @@ export default function Play() {
   const [pendingBot, setPendingBot] = useState(null);
   const [selectedDictionary, setSelectedDictionary] = useState('NWL');
   const [theoYellSettingsExpanded, setTheoYellSettingsExpanded] = useState(false);
-  const [gameMode, setGameMode] = useState('Normal');
   const [showSkillBots, setShowSkillBots] = useState(false);
   const [poolExpanded, setPoolExpanded] = useState(false);
   const skillBots = [
@@ -348,16 +357,22 @@ export default function Play() {
     checkDictionary();
   }, [premiumSquares]);
 
-  // Handle gameMode changes - generate premiumSquares when randomizing
+  // Handle randomizeBonusSquares changes - generate premiumSquares when enabled
   useEffect(() => {
-    if (gameMode === 'Randomize bonus squares') {
+    if (randomizeBonusSquares) {
       const randomSquares = generateRandomPremiumSquares();
       setPremiumSquares(randomSquares);
     } else {
-      // Clear premiumSquares when switching back to Normal mode
+      // Clear premiumSquares when disabled
       setPremiumSquares(null);
     }
-  }, [gameMode, generateRandomPremiumSquares, setPremiumSquares]);
+  }, [randomizeBonusSquares, generateRandomPremiumSquares, setPremiumSquares]);
+  
+  // Reset turn count when twoTurnsPerPlayer changes
+  useEffect(() => {
+    const { setPlayerTurnCount } = useGameStore.getState();
+    setPlayerTurnCount(1);
+  }, [twoTurnsPerPlayer]);
 
   // Update useEffect to handle keyboard events
   useEffect(() => {
@@ -1599,40 +1614,65 @@ export default function Play() {
               </FormControl>
             </Box>
 
-            {/* Game Mode Dropdown */}
+            {/* Game Mode Features */}
             <Box sx={{ width: '100%', marginBottom: 2 }}>
                       <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Game Mode
+                Game Mode Features
                       </Box>
-              <FormControl fullWidth size="small" variant="outlined" sx={{ marginBottom: 0 }}>
-                <Select
-                  value={gameMode}
-                  onChange={(e) => setGameMode(e.target.value)}
-                  sx={{
-                            fontSize: { xs: '12px', sm: '11px' },
-                    fontWeight: 600,
-                            color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                            backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
-                      borderWidth: '1px'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#3D5A80'
-                    },
-                    '& .MuiSvgIcon-root': {
-                              color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
-                      fontSize: '16px'
-                    }
-                  }}
-                >
-                          <MenuItem value="Normal" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>Normal</MenuItem>
-                          <MenuItem value="Randomize bonus squares" sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600 }}>Randomize bonus squares</MenuItem>
-                </Select>
-              </FormControl>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Checkbox
+                    checked={randomizeBonusSquares}
+                    onChange={(e) => setRandomizeBonusSquares(e.target.checked)}
+                    size="small"
+                    sx={{
+                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
+                      '&.Mui-checked': {
+                        color: '#3D5A80',
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <Box 
+                    sx={{ 
+                      fontSize: { xs: '12px', sm: '11px' }, 
+                      fontWeight: 600,
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                    onClick={() => setRandomizeBonusSquares(!randomizeBonusSquares)}
+                  >
+                    Randomize bonus squares
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Checkbox
+                    checked={twoTurnsPerPlayer}
+                    onChange={(e) => setTwoTurnsPerPlayer(e.target.checked)}
+                    size="small"
+                    sx={{
+                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
+                      '&.Mui-checked': {
+                        color: '#3D5A80',
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <Box 
+                    sx={{ 
+                      fontSize: { xs: '12px', sm: '11px' }, 
+                      fontWeight: 600,
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                    onClick={() => setTwoTurnsPerPlayer(!twoTurnsPerPlayer)}
+                  >
+                    2 turns per player
+                  </Box>
+                </Box>
+              </Box>
             </Box>
 
             {/* Move Coach & Theo Yell Toggles - Grouped, Mutually Exclusive */}

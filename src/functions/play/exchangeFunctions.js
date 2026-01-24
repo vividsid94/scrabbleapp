@@ -117,10 +117,9 @@ export const handleExchange = () => {
   setPool(newPool);
   setTilesToExchange([]);
 
-  // Switch to next player
-  const currentPlayerNum = useGameStore.getState().currentPlayer || 1;
-  const newPlayer = currentPlayerNum === 1 ? 2 : 1;
-  setCurrentPlayer(newPlayer);
+  // Switch to next player (handles 2 turns mode)
+  const { switchToNextPlayer } = useGameStore.getState();
+  switchToNextPlayer();
 
   // Add exchange move to history
   const currentHistory = useGameStore.getState().moveHistory || [];

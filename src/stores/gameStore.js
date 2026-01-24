@@ -129,6 +129,13 @@ export const useGameStore = create((set, get) => {
     
     // Premium squares for randomized bonus squares mode
     premiumSquares: null, // Array of {row, col, type} objects, null means use standard board
+    
+    // Game mode features (can be combined)
+    randomizeBonusSquares: false, // Enable randomized bonus squares
+    twoTurnsPerPlayer: false, // Enable 2 turns per player mode
+    
+    // Turn tracking for "2 turns per player" mode
+    playerTurnCount: 1, // Current turn number (1 or 2) for the current player
   };
 
   return {
@@ -145,6 +152,30 @@ export const useGameStore = create((set, get) => {
     setTempBoardCoords: (coords) => set({ tempBoardCoords: coords }),
     setOrigBoardCoords: (coords) => set({ origBoardCoords: coords }),
     setPremiumSquares: (squares) => set({ premiumSquares: squares }),
+    setRandomizeBonusSquares: (enabled) => set({ randomizeBonusSquares: enabled }),
+    setTwoTurnsPerPlayer: (enabled) => set({ twoTurnsPerPlayer: enabled }),
+    setPlayerTurnCount: (count) => set({ playerTurnCount: count }),
+    
+    // Helper function to switch players (handles 2 turns mode)
+    switchToNextPlayer: () => {
+      const { currentPlayer, playerTurnCount, twoTurnsPerPlayer, setCurrentPlayer, setPlayerTurnCount } = get();
+      
+      if (twoTurnsPerPlayer) {
+        // If it's turn 1, increment to turn 2 and keep same player
+        if (playerTurnCount === 1) {
+          setPlayerTurnCount(2);
+          // Don't switch players, just increment turn count
+        } else {
+          // It's turn 2, switch to next player and reset to turn 1
+          setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+          setPlayerTurnCount(1);
+        }
+      } else {
+        // Normal mode - just switch players
+        setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+        setPlayerTurnCount(1);
+      }
+    },
     
     // Actions - Players
     setPlayer1points: (points) => set({ player1points: points }),
@@ -420,6 +451,7 @@ export const useGameStore = create((set, get) => {
         setPlayer1Rack,
         setPlayer2Rack,
         setAutoPlayBest,
+        setPlayerTurnCount,
         currentPlayer,
         player1Rack,
         player2Rack,
@@ -480,6 +512,9 @@ export const useGameStore = create((set, get) => {
       // Randomly determine who goes first
       const randomFirst = Math.random() < 0.5;
       setBotGoesFirst(randomFirst);
+      
+      // Reset turn count when starting new game
+      setPlayerTurnCount(1);
       
       // Set game started state
       setGameStarted(true);
