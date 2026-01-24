@@ -133,6 +133,8 @@ export const useGameStore = create((set, get) => {
     // Game mode features (can be combined)
     randomizeBonusSquares: false, // Enable randomized bonus squares
     twoTurnsPerPlayer: false, // Enable 2 turns per player mode
+    variablePool: false, // Enable variable pool
+    customPool: null, // Custom tile distribution (string like origPool), null means use standard
     
     // Turn tracking for "2 turns per player" mode
     playerTurnCount: 1, // Current turn number (1 or 2) for the current player
@@ -154,6 +156,8 @@ export const useGameStore = create((set, get) => {
     setPremiumSquares: (squares) => set({ premiumSquares: squares }),
     setRandomizeBonusSquares: (enabled) => set({ randomizeBonusSquares: enabled }),
     setTwoTurnsPerPlayer: (enabled) => set({ twoTurnsPerPlayer: enabled }),
+    setVariablePool: (enabled) => set({ variablePool: enabled }),
+    setCustomPool: (pool) => set({ customPool: pool }),
     setPlayerTurnCount: (count) => set({ playerTurnCount: count }),
     
     // Helper function to switch players (handles 2 turns mode)
@@ -295,16 +299,19 @@ export const useGameStore = create((set, get) => {
     setTessIsRunningSims: (running) => set({ tessIsRunningSims: running }),
     
     // Complex actions
-    resetGame: () => set({
-      player1points: 0,
-      player2points: 0,
-      player1Rack: [],
-      player2Rack: [],
-      currentPlayer: 1,
-      pool: origPool,
-      gameStarted: false,
-      gameEnded: false,
-      consecutivePasses: 0,
+    resetGame: () => {
+      const { variablePool, customPool } = get();
+      const poolToUse = (variablePool && customPool) ? (customPool.startsWith('ADVANCED:') ? customPool.substring(9) : customPool) : origPool;
+      set({
+        player1points: 0,
+        player2points: 0,
+        player1Rack: [],
+        player2Rack: [],
+        currentPlayer: 1,
+        pool: poolToUse,
+        gameStarted: false,
+        gameEnded: false,
+        consecutivePasses: 0,
       selectedTiles: [],
       selectedBoardPosition: null,
       arrowDirection: 'right',
@@ -339,7 +346,8 @@ export const useGameStore = create((set, get) => {
       isSimulatingAllMoves: false,
       previewScore: null,
       previewScorePosition: null,
-    }),
+      });
+    },
     
     // Computed values
     getCurrentRack: () => {
@@ -516,13 +524,17 @@ export const useGameStore = create((set, get) => {
       // Reset turn count when starting new game
       setPlayerTurnCount(1);
       
+      // Get pool to use - customPool if variablePool is enabled, otherwise origPool
+      const { variablePool, customPool } = get();
+      const poolToUse = (variablePool && customPool) ? (customPool.startsWith('ADVANCED:') ? customPool.substring(9) : customPool) : params.origPool;
+      
       // Set game started state
       setGameStarted(true);
       setTimerActive(true);
       
-      // Import and call the startBotGame function
+      // Import and call the startBotGame function with updated pool
       import('../functions/play/botFunctions').then(({ startBotGame: startBotGameFunction }) => {
-        startBotGameFunction(params);
+        startBotGameFunction({ ...params, origPool: poolToUse });
       });
     },
     
@@ -608,7 +620,10 @@ export const useGameStore = create((set, get) => {
       // Reset game state by calling startBotGame again with imported constants
       import('../components/AppContent/References/staticData').then(({ origBoard, origPool }) => {
         import('../components/AppContent/References/testRacks').then(({ TEST_RACKS }) => {
-          get().startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound: null, botMoveSound: null });
+          // Get pool to use - customPool if variablePool is enabled, otherwise origPool
+          const { variablePool, customPool } = get();
+          const poolToUse = (variablePool && customPool) ? (customPool.startsWith('ADVANCED:') ? customPool.substring(9) : customPool) : origPool;
+          get().startBotGame({ origBoard, origPool: poolToUse, TEST_RACKS, gameStartSound: null, botMoveSound: null });
         });
       });
     },
@@ -1072,13 +1087,15 @@ export const useGameStore = create((set, get) => {
     },
 
     handleBotModeToggle: (gameStartSound = null, botMoveSound = null) => {
-      const { isDictionaryLoading, startBotGame } = get();
+      const { isDictionaryLoading, startBotGame, variablePool, customPool } = get();
       if (isDictionaryLoading) return;
       
       // Import required constants and call startBotGame
       import('../components/AppContent/References/staticData').then(({ origBoard, origPool }) => {
         import('../components/AppContent/References/testRacks').then(({ TEST_RACKS }) => {
-          startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound });
+          // Get pool to use - customPool if variablePool is enabled, otherwise origPool
+          const poolToUse = (variablePool && customPool) ? (customPool.startsWith('ADVANCED:') ? customPool.substring(9) : customPool) : origPool;
+          startBotGame({ origBoard, origPool: poolToUse, TEST_RACKS, gameStartSound, botMoveSound });
         });
       });
     },

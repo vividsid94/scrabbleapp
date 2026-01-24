@@ -804,7 +804,11 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setTempBoardCoords(JSON.parse(JSON.stringify(parsedOrigBoardCoords)));
   setPlayer1points(0);
   setPlayer2points(0);
-  setPool(origPool);
+  
+  // Use custom pool if variable pool is enabled
+  const { variablePool, customPool } = useGameStore.getState();
+  const poolToUse = (variablePool && customPool) ? (customPool.startsWith('ADVANCED:') ? customPool.substring(9) : customPool) : origPool;
+  setPool(poolToUse);
   
   // Set current player based on who goes first
   const botGoesFirst = Math.random() < 0.5;
@@ -816,7 +820,7 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setPlayerTurnCount(1);
   
   // Initialize player racks
-  const newPool = [...origPool];
+  const newPool = [...poolToUse];
   let rack1 = [];
   let rack2 = [];
   

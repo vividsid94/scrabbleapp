@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useMemo, useState, useContext } from "react";
+import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel, Checkbox, Box, Modal } from "@mui/material";
+import TuneIcon from '@mui/icons-material/Tune';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import TimerIcon from '@mui/icons-material/Timer';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
-import Box from '@mui/material/Box';
-import styles from './Play.module.css';
-import { ThemeContext } from '../../App';
 import Board from "../../components/AppContent/Board/Board.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
-import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
-import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
-import { createBoard } from "../../functions/boardFunctions.js";
-import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel, Checkbox } from "@mui/material";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
@@ -16,24 +17,176 @@ import Metrics2Modal from '../../components/Modals/Metrics2Modal';
 import MoveCoach from './components/MoveCoach';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
-import TuneIcon from '@mui/icons-material/Tune';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import TimerIcon from '@mui/icons-material/Timer';
+import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
+import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
+import { ThemeContext } from '../../App';
+import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
+import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
+import { createBoard } from "../../functions/boardFunctions.js";
 import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { formatTime } from '../../functions/play/timeUtils';
-import { useGameStore } from '../../stores/gameStore';
-import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
 import { makeTheoYell } from '../../functions/play/theoYellFunctions';
-import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
-import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
-import Modal from '@mui/material/Modal';
 import { initializeDictionary } from '../../utils/localDictionary';
-import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { useGameStore } from '../../stores/gameStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
+import styles from './Play.module.css';
+
+// Helper function to generate pool from distribution object
+const generatePoolFromDistribution = (distribution) => {
+  let pool = '';
+  for (const [letter, count] of Object.entries(distribution)) {
+    pool += letter.repeat(count);
+  }
+  return pool;
+};
+
+// Helper function to generate pool from preset name
+const generatePoolFromPreset = (preset) => {
+  const standard = { A: 9, B: 2, C: 2, D: 4, E: 12, F: 2, G: 3, H: 2, I: 9, J: 1, K: 1, L: 4, M: 2, N: 6, O: 8, P: 2, Q: 1, R: 6, S: 4, T: 6, U: 4, V: 2, W: 2, X: 1, Y: 2, Z: 1, '?': 2 };
+  
+  switch (preset) {
+    case 'standard':
+      return null; // Use origPool
+    case 'vowel-heavy':
+      return generatePoolFromDistribution({
+        A: 12, B: 2, C: 2, D: 4, E: 16, F: 2, G: 3, H: 2, I: 12, J: 1, K: 1, L: 4, M: 2, N: 6, O: 12, P: 2, Q: 1, R: 6, S: 4, T: 6, U: 6, V: 2, W: 2, X: 1, Y: 2, Z: 1, '?': 2
+      });
+    case 'consonant-heavy':
+      return generatePoolFromDistribution({
+        A: 6, B: 4, C: 4, D: 6, E: 8, F: 4, G: 5, H: 4, I: 6, J: 2, K: 2, L: 6, M: 4, N: 8, O: 6, P: 4, Q: 2, R: 8, S: 6, T: 8, U: 2, V: 4, W: 4, X: 2, Y: 4, Z: 2, '?': 2
+      });
+    case 'advanced':
+      // Return a marker that we're in advanced mode - will be handled by editor
+      return 'ADVANCED:' + generatePoolFromDistribution(standard);
+    default:
+      return null;
+  }
+};
+
+// Helper function to parse pool string into distribution object
+const parsePoolToDistribution = (pool) => {
+  const distribution = {};
+  for (const letter of pool) {
+    distribution[letter] = (distribution[letter] || 0) + 1;
+  }
+  return distribution;
+};
+
+// Variable Pool Editor Component
+const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
+  const getPoolString = () => {
+    if (!currentPool) return origPool;
+    if (currentPool.startsWith('ADVANCED:')) return currentPool.substring(9);
+    return currentPool;
+  };
+  
+  const [distribution, setDistribution] = useState(() => {
+    return parsePoolToDistribution(getPoolString());
+  });
+  
+  // Update distribution when currentPool changes externally
+  useEffect(() => {
+    const pool = getPoolString();
+    setDistribution(parsePoolToDistribution(pool));
+  }, [currentPool]);
+  
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '?'];
+  
+  const updateCount = (letter, newCount) => {
+    const updated = { ...distribution };
+    if (newCount <= 0) {
+      delete updated[letter];
+    } else {
+      updated[letter] = Math.min(newCount, 20); // Cap at 20
+    }
+    setDistribution(updated);
+    const newPool = generatePoolFromDistribution(updated);
+    onPoolChange('ADVANCED:' + newPool);
+  };
+  
+  return (
+    <Box sx={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(9, 1fr)', 
+      gap: '4px',
+      maxHeight: '120px',
+      overflowY: 'auto',
+      padding: '4px'
+    }}>
+      {letters.map(letter => (
+        <Box key={letter} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <Box sx={{ 
+            fontSize: { xs: '9px', sm: '8px' }, 
+            fontWeight: 600, 
+            color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280' 
+          }}>
+            {letter === '?' ? 'BL' : letter}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <Box
+              onClick={() => updateCount(letter, (distribution[letter] || 0) - 1)}
+              sx={{
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '10px',
+                fontWeight: 600,
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                userSelect: 'none',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                }
+              }}
+            >
+              −
+            </Box>
+            <Box sx={{
+              minWidth: '24px',
+              textAlign: 'center',
+              fontSize: { xs: '10px', sm: '9px' },
+              fontWeight: 600,
+              color: lightMode === 'dark' ? '#fff' : '#1F2937',
+              padding: '2px 4px'
+            }}>
+              {distribution[letter] || 0}
+            </Box>
+            <Box
+              onClick={() => updateCount(letter, (distribution[letter] || 0) + 1)}
+              sx={{
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '10px',
+                fontWeight: 600,
+                color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                userSelect: 'none',
+                '&:hover': {
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                }
+              }}
+            >
+              +
+            </Box>
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
+};
 
 const bots = [
   {
@@ -250,6 +403,10 @@ export default function Play() {
     setRandomizeBonusSquares,
     twoTurnsPerPlayer,
     setTwoTurnsPerPlayer,
+    variablePool,
+    setVariablePool,
+    customPool,
+    setCustomPool,
     
     // Turn tracking
     playerTurnCount,
@@ -307,6 +464,7 @@ export default function Play() {
   const [customBotSelected, setCustomBotSelected] = useState(false);
   const [customDefenseBotSelected, setCustomDefenseBotSelected] = useState(false);
   const [defenseWeight, setDefenseWeight] = useState(1.0);
+  const [poolPreset, setPoolPreset] = useState('standard');
 
   // Initialize sounds (simplified) - only once
   const [sounds, setSounds] = useState(null);
@@ -368,6 +526,23 @@ export default function Play() {
     const { setPlayerTurnCount } = useGameStore.getState();
     setPlayerTurnCount(1);
   }, [twoTurnsPerPlayer]);
+  
+  // Reset customPool when variablePool is disabled
+  useEffect(() => {
+    if (!variablePool) {
+      setCustomPool(null);
+      setPoolPreset('standard');
+    }
+  }, [variablePool, setCustomPool]);
+  
+  // Sync poolPreset with customPool when it changes externally
+  useEffect(() => {
+    if (!customPool) {
+      setPoolPreset('standard');
+    } else if (customPool.startsWith('ADVANCED:')) {
+      setPoolPreset('advanced');
+    }
+  }, [customPool]);
 
   // Update useEffect to handle keyboard events
   useEffect(() => {
@@ -1656,64 +1831,218 @@ export default function Play() {
               </FormControl>
             </Box>
 
-            {/* Game Mode Features */}
+            {/* Variants */}
             <Box sx={{ width: '100%', marginBottom: 2 }}>
-                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Game Mode Features
+                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Variants
                       </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Checkbox
-                    checked={randomizeBonusSquares}
-                    onChange={(e) => setRandomizeBonusSquares(e.target.checked)}
-                    size="small"
-                    sx={{
-                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
-                      '&.Mui-checked': {
-                        color: '#3D5A80',
-                      },
-                      padding: '4px'
-                    }}
-                  />
-                  <Box 
-                    sx={{ 
-                      fontSize: { xs: '12px', sm: '11px' }, 
-                      fontWeight: 600,
-                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                    onClick={() => setRandomizeBonusSquares(!randomizeBonusSquares)}
-                  >
+              
+              {/* Randomize Bonus Squares */}
+              <Box sx={{ marginBottom: 1 }}>
+                <Box 
+                  onClick={() => setRandomizeBonusSquares(!randomizeBonusSquares)}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: { xs: '6px 8px', sm: '5px 8px' },
+                    backgroundColor: randomizeBonusSquares ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                    border: randomizeBonusSquares ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: '#3D5A80',
+                      backgroundColor: randomizeBonusSquares ? 'rgba(61, 90, 128, 0.15)' : 'rgba(61, 90, 128, 0.05)'
+                    }
+                  }}
+                >
+                  <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600, color: randomizeBonusSquares ? '#3D5A80' : (lightMode === 'dark' ? '#fff' : '#1F2937') }}>
                     Randomize bonus squares
                   </Box>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Checkbox
-                    checked={twoTurnsPerPlayer}
-                    onChange={(e) => setTwoTurnsPerPlayer(e.target.checked)}
-                    size="small"
+                  <Box
                     sx={{
-                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280',
-                      '&.Mui-checked': {
-                        color: '#3D5A80',
-                      },
-                      padding: '4px'
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '3px',
+                      border: randomizeBonusSquares ? '4px solid #3D5A80' : '2px solid #9CA3AF',
+                      backgroundColor: randomizeBonusSquares ? '#3D5A80' : 'transparent',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      '&::after': randomizeBonusSquares ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '4px',
+                        height: '8px',
+                        border: 'solid white',
+                        borderWidth: '0 2px 2px 0',
+                        transform: 'translate(-50%, -60%) rotate(45deg)'
+                      } : {}
                     }}
                   />
-                  <Box 
-                    sx={{ 
-                      fontSize: { xs: '12px', sm: '11px' }, 
-                      fontWeight: 600,
-                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                    onClick={() => setTwoTurnsPerPlayer(!twoTurnsPerPlayer)}
-                  >
+                </Box>
+              </Box>
+              
+              {/* 2 Turns Per Player */}
+              <Box>
+                <Box 
+                  onClick={() => setTwoTurnsPerPlayer(!twoTurnsPerPlayer)}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: { xs: '6px 8px', sm: '5px 8px' },
+                    backgroundColor: twoTurnsPerPlayer ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                    border: twoTurnsPerPlayer ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: '#3D5A80',
+                      backgroundColor: twoTurnsPerPlayer ? 'rgba(61, 90, 128, 0.15)' : 'rgba(61, 90, 128, 0.05)'
+                    }
+                  }}
+                >
+                  <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600, color: twoTurnsPerPlayer ? '#3D5A80' : (lightMode === 'dark' ? '#fff' : '#1F2937') }}>
                     2 turns per player
                   </Box>
+                  <Box
+                    sx={{
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '3px',
+                      border: twoTurnsPerPlayer ? '4px solid #3D5A80' : '2px solid #9CA3AF',
+                      backgroundColor: twoTurnsPerPlayer ? '#3D5A80' : 'transparent',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      '&::after': twoTurnsPerPlayer ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '4px',
+                        height: '8px',
+                        border: 'solid white',
+                        borderWidth: '0 2px 2px 0',
+                        transform: 'translate(-50%, -60%) rotate(45deg)'
+                      } : {}
+                    }}
+                  />
                 </Box>
+              </Box>
+              
+              {/* Variable Pool */}
+              <Box sx={{ marginTop: 1 }}>
+                <Box 
+                  onClick={() => setVariablePool(!variablePool)}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: { xs: '6px 8px', sm: '5px 8px' },
+                    backgroundColor: variablePool ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                    border: variablePool ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: '#3D5A80',
+                      backgroundColor: variablePool ? 'rgba(61, 90, 128, 0.15)' : 'rgba(61, 90, 128, 0.05)'
+                    }
+                  }}
+                >
+                  <Box sx={{ fontSize: { xs: '12px', sm: '11px' }, fontWeight: 600, color: variablePool ? '#3D5A80' : (lightMode === 'dark' ? '#fff' : '#1F2937') }}>
+                    Variable pool
+                  </Box>
+                  <Box
+                    sx={{
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '3px',
+                      border: variablePool ? '4px solid #3D5A80' : '2px solid #9CA3AF',
+                      backgroundColor: variablePool ? '#3D5A80' : 'transparent',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      '&::after': variablePool ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '4px',
+                        height: '8px',
+                        border: 'solid white',
+                        borderWidth: '0 2px 2px 0',
+                        transform: 'translate(-50%, -60%) rotate(45deg)'
+                      } : {}
+                    }}
+                  />
+                </Box>
+                
+                {/* Variable Pool Settings */}
+                <Collapse in={variablePool}>
+                  <Box sx={{ marginTop: 1, padding: '8px', backgroundColor: lightMode === 'dark' ? 'rgba(61, 90, 128, 0.05)' : 'rgba(61, 90, 128, 0.03)', borderRadius: '6px', border: '1px solid rgba(61, 90, 128, 0.2)' }}>
+                    <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Preset
+                    </Box>
+                    <Select
+                      value={poolPreset}
+                      onChange={(e) => {
+                        const preset = e.target.value;
+                        setPoolPreset(preset);
+                        if (preset === 'standard') {
+                          setCustomPool(null);
+                        } else if (preset === 'advanced') {
+                          // Initialize with standard distribution for editing
+                          setCustomPool('ADVANCED:' + origPool);
+                        } else {
+                          setCustomPool(generatePoolFromPreset(preset));
+                        }
+                      }}
+                      size="small"
+                      fullWidth
+                      sx={{
+                        fontSize: { xs: '11px', sm: '10px' },
+                        fontWeight: 600,
+                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                        marginBottom: 1,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#3D5A80',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#3D5A80',
+                        }
+                      }}
+                    >
+                      <MenuItem value="standard" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Standard</MenuItem>
+                      <MenuItem value="vowel-heavy" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Vowel-Heavy</MenuItem>
+                      <MenuItem value="consonant-heavy" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Consonant-Heavy</MenuItem>
+                      <MenuItem value="advanced" sx={{ fontSize: { xs: '11px', sm: '10px' }, fontWeight: 600 }}>Advanced (Custom)</MenuItem>
+                    </Select>
+                    
+                    {/* Advanced Custom Editor */}
+                    {poolPreset === 'advanced' ? (
+                      <Box sx={{ marginTop: 1 }}>
+                        <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Letter Counts
+                        </Box>
+                        <VariablePoolEditor 
+                          currentPool={customPool} 
+                          onPoolChange={setCustomPool}
+                          lightMode={lightMode}
+                        />
+                      </Box>
+                    ) : null}
+                  </Box>
+                </Collapse>
               </Box>
             </Box>
 
