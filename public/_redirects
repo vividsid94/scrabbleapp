@@ -1,2 +1,12 @@
-/* /index.html 200
+# Static assets - serve directly, no redirect
+/static/* /static/:splat 200
+/manifest.json /manifest.json 200
+/favicon.ico /favicon.ico 200
+/favicon.png /favicon.png 200
+/logo192.png /logo192.png 200
+/logo512.png /logo512.png 200
+/robots.txt /robots.txt 200
 /service-worker.js /service-worker.js 200
+
+# SPA fallback - must be last
+/* /index.html 200
