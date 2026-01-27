@@ -61,6 +61,10 @@
     timeout = 15
     memory = 1024
 
+[functions.multiplayerGame]
+    timeout = 15
+    memory = 1024
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

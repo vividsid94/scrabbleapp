@@ -26,6 +26,20 @@ export const useGameStore = create((set, get) => {
     gameEnded: false,
     isBotMode: false,
     consecutivePasses: 0,
+
+    // Multiplayer state
+    isMultiplayerMode: false,
+    multiplayerGameCode: null,
+    localPlayerNumber: null, // 1 or 2
+    opponentRackCount: 0,
+    poolCount: 0,
+    isWaitingForOpponent: false,
+    multiplayerConnectionStatus: 'disconnected', // 'disconnected' | 'connecting' | 'connected'
+    
+    // Multiplayer handlers (set by MultiplayerGame wrapper)
+    handleWordSubmitMultiplayer: null,
+    handlePassMultiplayer: null,
+    handleExchangeMultiplayer: null,
     
     // Tile and selection state
     selectedTiles: [],
@@ -198,6 +212,36 @@ export const useGameStore = create((set, get) => {
     setGameEnded: (ended) => set({ gameEnded: ended }),
     setIsBotMode: (isBot) => set({ isBotMode: isBot }),
     setConsecutivePasses: (passes) => set({ consecutivePasses: passes }),
+
+    // Actions - Multiplayer
+    setMultiplayerMode: (isMultiplayer, gameCode = null, playerNumber = null) => set({
+      isMultiplayerMode: isMultiplayer,
+      multiplayerGameCode: gameCode,
+      localPlayerNumber: playerNumber,
+      isBotMode: false // Disable bot mode in multiplayer
+    }),
+    setOpponentRackCount: (count) => set({ opponentRackCount: count }),
+    setPoolCount: (count) => set({ poolCount: count }),
+    setIsWaitingForOpponent: (waiting) => set({ isWaitingForOpponent: waiting }),
+    setMultiplayerConnectionStatus: (status) => set({ multiplayerConnectionStatus: status }),
+
+    // Check if it's the local player's turn in multiplayer
+    isMyTurn: () => {
+      const { isMultiplayerMode, localPlayerNumber, currentPlayer } = get();
+      if (!isMultiplayerMode) return true; // In single player, always your turn when it's your turn
+      return localPlayerNumber === currentPlayer;
+    },
+
+    // Reset multiplayer state
+    resetMultiplayerState: () => set({
+      isMultiplayerMode: false,
+      multiplayerGameCode: null,
+      localPlayerNumber: null,
+      opponentRackCount: 0,
+      poolCount: 0,
+      isWaitingForOpponent: false,
+      multiplayerConnectionStatus: 'disconnected'
+    }),
     
     // Actions - Tile and selection
     setSelectedTiles: (tiles) => set({ selectedTiles: tiles }),
@@ -314,40 +358,48 @@ export const useGameStore = create((set, get) => {
         gameStarted: false,
         gameEnded: false,
         consecutivePasses: 0,
-      selectedTiles: [],
-      selectedBoardPosition: null,
-      arrowDirection: 'right',
-      tilesToExchange: [],
-      blankTiles: [],
-      isBotThinking: false,
-      isPlayerThinking: false,
-      player1Time: 20 * 60,
-      player2Time: 20 * 60,
-      timerActive: false,
-      moveHistory: [],
-      topMoves: [],
-      isLoadingTopMoves: false,
-      isDictionaryLoading: false,
-      autoPlayBest: false,
-      isAutoPlaying: false,
-      winner: null,
-      finalPlayer1Score: 0,
-      finalPlayer2Score: 0,
-      simulatingMove: null,
-      simulationResult: null,
-      simulationProgress: 0,
-      previewBoard: null,
-      previewMove: null,
-      previewTileOwnership: null,
-      moveWithResults: null,
-      simulationBoard: null,
-      leaveValues: {},
-      showSimulationModal: false,
-      shouldStopSimulation: false,
-      allMoveResults: {},
-      isSimulatingAllMoves: false,
-      previewScore: null,
-      previewScorePosition: null,
+        selectedTiles: [],
+        selectedBoardPosition: null,
+        arrowDirection: 'right',
+        tilesToExchange: [],
+        blankTiles: [],
+        isBotThinking: false,
+        isPlayerThinking: false,
+        player1Time: 20 * 60,
+        player2Time: 20 * 60,
+        timerActive: false,
+        moveHistory: [],
+        topMoves: [],
+        isLoadingTopMoves: false,
+        isDictionaryLoading: false,
+        autoPlayBest: false,
+        isAutoPlaying: false,
+        winner: null,
+        finalPlayer1Score: 0,
+        finalPlayer2Score: 0,
+        simulatingMove: null,
+        simulationResult: null,
+        simulationProgress: 0,
+        previewBoard: null,
+        previewMove: null,
+        previewTileOwnership: null,
+        moveWithResults: null,
+        simulationBoard: null,
+        leaveValues: {},
+        showSimulationModal: false,
+        shouldStopSimulation: false,
+        allMoveResults: {},
+        isSimulatingAllMoves: false,
+        previewScore: null,
+        previewScorePosition: null,
+        // Reset multiplayer state
+        isMultiplayerMode: false,
+        multiplayerGameCode: null,
+        localPlayerNumber: null,
+        opponentRackCount: 0,
+        poolCount: 0,
+        isWaitingForOpponent: false,
+        multiplayerConnectionStatus: 'disconnected',
       });
     },
     
@@ -1439,8 +1491,16 @@ export const useGameStore = create((set, get) => {
         autoPlayBest,
         isPlayerThinking,
         isBotThinking,
-        setAutoPlayBest
+        setAutoPlayBest,
+        // Multiplayer state
+        isMultiplayerMode,
+        handleWordSubmitMultiplayer
       } = get();
+      
+      // Use multiplayer handler if in multiplayer mode and handler is available
+      const wordSubmitHandler = (isMultiplayerMode && handleWordSubmitMultiplayer) 
+        ? handleWordSubmitMultiplayer 
+        : handleWordSubmit;
 
       // Get selectedTiles directly from the store to ensure we get the correct value
       const store = get();
@@ -1473,7 +1533,7 @@ export const useGameStore = create((set, get) => {
           setBlankTiles,
           setPreviewScore,
           setPreviewScorePosition,
-          handleWordSubmit,
+          handleWordSubmit: wordSubmitHandler,
           playerMoveSound,
           arrowDirection,
           origBoard,

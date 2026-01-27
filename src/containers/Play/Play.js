@@ -299,13 +299,14 @@ const bots = [
   }
 ];
 
-export default function Play() {
+export default function Play({ isMultiplayer = false }) {
   const { lightMode } = useContext(ThemeContext);
   // Use Zustand Game Store
   const {
     // Board state
     boardCoords,
     tempBoardCoords,
+    origBoardCoords,
     setBoardCoords,
     setTempBoardCoords,
     setOrigBoardCoords,
@@ -511,6 +512,21 @@ export default function Play() {
     // Turn tracking
     playerTurnCount,
     switchToNextPlayer,
+
+    // Multiplayer state
+    isMultiplayerMode,
+    multiplayerGameCode,
+    localPlayerNumber,
+    opponentRackCount,
+    poolCount,
+    isWaitingForOpponent,
+    multiplayerConnectionStatus,
+    isMyTurn,
+
+    // Multiplayer handlers (set by MultiplayerGame wrapper)
+    handleWordSubmitMultiplayer,
+    handlePassMultiplayer,
+    handleExchangeMultiplayer,
   } = useGameStore();
 
   // Get global color scheme - subscribe to the current value
@@ -592,6 +608,11 @@ export default function Play() {
   }, [sounds]);
 
   useEffect(() => {
+    // Don't reset board in multiplayer mode - it's managed by syncGameState
+    if (isMultiplayerMode) {
+      return;
+    }
+    
     // Initialize board - if premiumSquares are set, use empty board (all zeros)
     // Otherwise use the standard board layout
     let parsedOrigBoardCoords;
@@ -609,7 +630,7 @@ export default function Play() {
     
     // Check dictionary loading state on mount
     checkDictionary();
-  }, [premiumSquares]);
+  }, [premiumSquares, isMultiplayerMode]);
 
   // Handle randomizeBonusSquares changes - generate premiumSquares when enabled
   useEffect(() => {
@@ -726,6 +747,49 @@ export default function Play() {
     }
   };
 
+  // Multiplayer-aware action handlers
+  const handleWordSubmitWithMultiplayer = (sound) => {
+    // Get the handler dynamically from the store each time (in case it was set after render)
+    const currentState = useGameStore.getState();
+    const multiplayerHandler = currentState.handleWordSubmitMultiplayer;
+    
+    console.log('🎮 handleWordSubmitWithMultiplayer called:', {
+      isMultiplayerMode,
+      hasHandleWordSubmitMultiplayer: !!multiplayerHandler,
+      willUseMultiplayer: isMultiplayerMode && multiplayerHandler
+    });
+    
+    if (isMultiplayerMode && multiplayerHandler) {
+      console.log('✅ Using multiplayer handler');
+      multiplayerHandler(sound);
+    } else {
+      console.log('⚠️ Using regular handler (not multiplayer)');
+      handleWordSubmitClick(sound);
+    }
+  };
+
+  const handlePassWithMultiplayer = () => {
+    const currentState = useGameStore.getState();
+    const multiplayerHandler = currentState.handlePassMultiplayer;
+    
+    if (isMultiplayerMode && multiplayerHandler) {
+      multiplayerHandler();
+    } else {
+      handlePassClick();
+    }
+  };
+
+  const handleExchangeWithMultiplayer = () => {
+    const currentState = useGameStore.getState();
+    const multiplayerHandler = currentState.handleExchangeMultiplayer;
+    
+    if (isMultiplayerMode && multiplayerHandler) {
+      multiplayerHandler();
+    } else {
+      handleExchangeClick();
+    }
+  };
+
   // When a bot is selected, show time controls slideout
   const handleBotSelect = (bot) => {
     setSelectedBot(bot);
@@ -807,8 +871,16 @@ export default function Play() {
           if (typeof col === 'string') {
             return col;
           }
-          // Otherwise use the committed board state
-          return boardCoords[rowIndex][colIndex];
+          // If there's a tile on the committed board, use that
+          if (typeof boardCoords[rowIndex][colIndex] === 'string') {
+            return boardCoords[rowIndex][colIndex];
+          }
+          // Otherwise, use origBoardCoords to show premium squares (for empty cells)
+          if (origBoardCoords && origBoardCoords[rowIndex] && origBoardCoords[rowIndex][colIndex] !== undefined) {
+            return origBoardCoords[rowIndex][colIndex];
+          }
+          // Fallback to 0
+          return 0;
         })
       ),
       [], 
@@ -822,7 +894,7 @@ export default function Play() {
       invalidWordCoords,
       premiumSquares
     );
-  }, [tempBoardCoords, boardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords, premiumSquares]);
+  }, [tempBoardCoords, boardCoords, origBoardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords, premiumSquares]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -2563,15 +2635,18 @@ export default function Play() {
             })}
             selectedTiles={tilesToExchange}
             isBotMode={isBotMode}
+            isMultiplayerMode={isMultiplayerMode}
+            localPlayerNumber={localPlayerNumber}
+            opponentRackCount={opponentRackCount}
             gameStarted={gameStarted}
             isDictionaryLoading={isDictionaryLoading}
             isLoadingTopMoves={isLoadingTopMoves}
             onSettingsOpen={handleSettingsOpen}
-            onBotModeToggle={handleBotModeToggleWithSounds}
+            onBotModeToggle={isMultiplayerMode ? null : handleBotModeToggleWithSounds}
             onGetTopMoves={handleGetTopMovesForExpandable}
-            onWordSubmit={handleWordSubmitClick}
-            onPass={handlePassClick}
-            onExchange={handleExchangeClick}
+            onWordSubmit={handleWordSubmitWithMultiplayer}
+            onPass={handlePassWithMultiplayer}
+            onExchange={handleExchangeWithMultiplayer}
             onPlayTopMove={handlePlayTopMoveClick}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
