@@ -150,27 +150,10 @@ export const getGame = async (gameCode) => {
       return { success: false, error: data.error || 'Failed to get game' };
     }
 
-    // Log what we're getting from the server
+    // Log what we're getting from the server (reduced for production)
     const boardState = data.game?.boardState || data.game?.board_state;
     const hasTiles = boardState?.some(row => row?.some(cell => typeof cell === 'string'));
-    
-    // Only log if board has tiles or if it's the first fetch (to reduce spam)
-    if (hasTiles || !localStorage.getItem('lastLoggedGetGame')) {
-      console.log('📥 Get game response (from server):', {
-        hasGame: !!data.game,
-        boardStateLength: boardState?.length,
-        boardStateHasTiles: hasTiles,
-        currentPlayer: data.game?.currentPlayer,
-        playerNumber: data.playerNumber,
-        boardStatePreview: JSON.stringify(boardState).substring(0, 300),
-        // Show first few rows to see structure
-        firstRow: boardState?.[0],
-        secondRow: boardState?.[1]
-      });
-      if (hasTiles) {
-        localStorage.setItem('lastLoggedGetGame', 'true');
-      }
-    }
+
 
     return {
       success: true,

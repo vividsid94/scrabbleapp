@@ -824,11 +824,13 @@ export default function Play({ isMultiplayer = false }) {
     }
   }, [botMoveSoundType]);
 
-  // Update player2Name when isBotMode changes
+  // Update player names when bot mode changes (single-player only)
+  // In multiplayer, names come from the server and should NOT be overridden
   useEffect(() => {
+    if (isMultiplayerMode) return;
     setPlayer1Name(isBotMode ? 'You' : 'Player 1');
-          setPlayer2Name(isBotMode ? 'Theo' : 'Player 2');
-  }, [isBotMode]);
+    setPlayer2Name(isBotMode ? 'Theo' : 'Player 2');
+  }, [isBotMode, isMultiplayerMode]);
 
   // Start timer when game starts or player changes
   useEffect(() => {

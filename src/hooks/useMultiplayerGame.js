@@ -156,17 +156,17 @@ export const useMultiplayerGame = (gameCode) => {
     setPlayer1points(serverGame.player1Points ?? serverGame.player1_points ?? 0);
     setPlayer2points(serverGame.player2Points ?? serverGame.player2_points ?? 0);
 
-    // Set names
-    setPlayer1Name(serverGame.player1Name || serverGame.player1_name || 'Player 1');
-    setPlayer2Name(serverGame.player2Name || serverGame.player2_name || 'Player 2');
+    // Set names - always use the actual names from the database
+    // Use camelCase first, then snake_case, then empty string (not default "Player 1/2")
+    const player1Name = serverGame.player1Name || serverGame.player1_name || '';
+    const player2Name = serverGame.player2Name || serverGame.player2_name || '';
+
+    // Always set names from server (even if empty, to clear any stale data)
+    setPlayer1Name(player1Name);
+    setPlayer2Name(player2Name);
 
     // Set current player
     const newCurrentPlayer = serverGame.currentPlayer ?? serverGame.current_player ?? 1;
-    console.log('✅ Setting current player:', {
-      newCurrentPlayer,
-      myPlayerNumber: pNum,
-      isMyTurn: newCurrentPlayer === pNum
-    });
     setCurrentPlayer(newCurrentPlayer);
 
     // Set consecutive passes
