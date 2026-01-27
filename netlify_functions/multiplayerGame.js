@@ -12,10 +12,18 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Check if we have the required environment variables
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('Supabase environment variables not fully configured');
+  console.error('❌ CRITICAL: Supabase environment variables not configured!');
+  console.error('Missing:', {
+    supabaseUrl: !supabaseUrl,
+    supabaseServiceKey: !supabaseServiceKey
+  });
+  console.error('Required env vars: SUPABASE_URL (or REACT_APP_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY');
 }
 
-const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseServiceKey || 'placeholder-key');
+// Create Supabase client - will fail at runtime if env vars are missing
+const supabase = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 // Standard Scrabble tile pool
 const STANDARD_POOL = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ??";
@@ -731,6 +739,30 @@ exports.handler = async function (event) {
     };
   }
 
+  // Check if Supabase is configured
+  if (!supabase || !supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ Supabase not configured - missing environment variables');
+    console.error('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseServiceKey: !!supabaseServiceKey,
+      supabaseUrlLength: supabaseUrl?.length || 0,
+      supabaseServiceKeyLength: supabaseServiceKey?.length || 0,
+      supabaseUrlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing',
+      supabaseServiceKeyPreview: supabaseServiceKey ? `${supabaseServiceKey.substring(0, 10)}...` : 'missing'
+    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Server configuration error: Supabase credentials not configured. Please set SUPABASE_URL (or REACT_APP_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in Netlify environment variables.',
+        debug: {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseServiceKey
+        }
+      })
+    };
+  }
+
   try {
     const { action, gameCode, playerId, playerName, moveData, tiles } = JSON.parse(event.body);
 
@@ -798,10 +830,33 @@ exports.handler = async function (event) {
   } catch (error) {
     console.error('❌ Error in multiplayerGame function:', error);
     console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      status: error.status,
+      statusCode: error.statusCode
+    });
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message || 'Internal server error';
+    
+    // Check for common Supabase errors
+    if (error.message && error.message.includes('Supabase environment variables')) {
+      errorMessage = 'Server configuration error: Supabase credentials not set. Please contact support.';
+    } else if (error.message && error.message.includes('Failed to create game')) {
+      errorMessage = 'Failed to create game. Please try again.';
+    } else if (error.message && error.message.includes('Game not found')) {
+      errorMessage = 'Game not found. Please check the game code.';
+    }
+    
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message || 'Internal server error' })
+      body: JSON.stringify({ 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      })
     };
   }
 };
