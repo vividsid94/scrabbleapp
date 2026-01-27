@@ -288,7 +288,9 @@ export const useMultiplayerGame = (gameCode) => {
             event: payload.eventType,
             new: payload.new,
             old: payload.old,
-            table: payload.table
+            table: payload.table,
+            newCurrentPlayer: payload.new?.current_player,
+            oldCurrentPlayer: payload.old?.current_player
           });
 
           // Small delay to ensure database update is complete
@@ -298,16 +300,23 @@ export const useMultiplayerGame = (gameCode) => {
           try {
             const result = await getGame(gameCode);
             if (result.success) {
+              const oldCurrentPlayer = useGameStore.getState().currentPlayer;
               console.log('✅ Syncing game state after Realtime update:', {
                 boardStateLength: result.game.boardState?.length,
                 boardStateType: typeof result.game.boardState,
                 boardStateFirstRow: result.game.boardState?.[0],
                 myRackLength: result.game.myRack?.length,
                 currentPlayer: result.game.currentPlayer,
+                oldCurrentPlayer,
                 playerNumber: result.playerNumber,
-                status: result.game.status
+                status: result.game.status,
+                currentPlayerChanged: result.game.currentPlayer !== oldCurrentPlayer
               });
               await syncGameState(result.game, result.playerNumber);
+              
+              // Verify the update took effect
+              const newCurrentPlayer = useGameStore.getState().currentPlayer;
+              console.log('✅ After sync, currentPlayer is now:', newCurrentPlayer);
             } else {
               console.error('❌ Failed to get game after Realtime update:', result.error);
             }

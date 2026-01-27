@@ -476,35 +476,6 @@ const MultiplayerGame = () => {
 
   return (
     <div style={styles.container}>
-      {/* Turn indicator */}
-      {gameStarted && !gameEnded && (
-        <div style={{
-          ...styles.turnIndicator,
-          backgroundColor: isMyTurnNow ? colors.myTurn : colors.opponentTurn,
-          color: '#fff'
-        }}>
-          {isMyTurnNow ? "Your Turn" : `${currentPlayerName}'s Turn`}
-        </div>
-      )}
-
-      {/* Connection status */}
-      <div style={{
-        ...styles.connectionStatus,
-        backgroundColor: colors.cardBg,
-        color: colors.text,
-        border: `1px solid ${colors.border}`
-      }}>
-        <div style={{
-          ...styles.statusDot,
-          backgroundColor: multiplayerConnectionStatus === 'connected' ? colors.connected :
-            multiplayerConnectionStatus === 'connecting' ? colors.connecting :
-              colors.disconnected
-        }}></div>
-        {multiplayerConnectionStatus === 'connected' ? 'Live' :
-          multiplayerConnectionStatus === 'connecting' ? 'Connecting...' :
-            'Disconnected'}
-      </div>
-
       {/* Main game - Play component */}
       <Play isMultiplayer={true} />
     </div>

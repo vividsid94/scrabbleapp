@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import styles from '../Play.module.css';
 import Rack from '../../../components/AppContent/Board/Rack.js';
@@ -62,8 +62,9 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           color: lightMode === 'dark' ? '#fff' : '#1F2937'
         }}
       >
-        {isActive && (
+        {isActive ? (
           <Box
+            key={`active-indicator-${playerNumber}-${currentPlayer}`}
             sx={{
               width: '8px',
               height: '8px',
@@ -83,7 +84,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
               }
             }}
           />
-        )}
+        ) : null}
         {name}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -201,7 +202,10 @@ export default function PlayerInfo({
   mascotRef,
   botImage,
   lightMode = 'dark',
-  moveStatus = null
+  moveStatus = null,
+  isMultiplayerMode,
+  localPlayerNumber,
+  opponentRackCount
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -408,7 +412,8 @@ export default function PlayerInfo({
           points: player1Points,
           rack: player1Rack,
           isBot: false,
-          isThinking: currentPlayer === 1 && isPlayerThinking
+          isThinking: currentPlayer === 1 && isPlayerThinking,
+          playerNumber: 1 // Explicitly set player number
         },
         {
           name: player2Name,
@@ -417,16 +422,18 @@ export default function PlayerInfo({
           rack: isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack,
           isBot: isBotMode,
           isThinking: isBotMode && isBotThinking,
-          botImage: botImage // Pass botImage to PlayerInfoSection
+          botImage: botImage, // Pass botImage to PlayerInfoSection
+          playerNumber: 2 // Explicitly set player number
         }
       ].sort((a, b) => {
         // If currentPlayer is 2, bot should be first
         return currentPlayer === 2 ? (a.isBot ? -1 : 1) : (a.isBot ? 1 : -1);
       }).map((player, index) => {
-        const playerNumber = player.isBot ? 2 : 1;
+        // Use the explicitly set playerNumber from the player object
+        const playerNumber = player.playerNumber;
         return (
         <PlayerInfoSection
-          key={index}
+          key={`player-${playerNumber}-${currentPlayer}`}
           playerNumber={playerNumber}
           name={player.isThinking ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
