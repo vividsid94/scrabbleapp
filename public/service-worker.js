@@ -2,8 +2,8 @@
 // This file prevents the MIME type error in production
 
 // Increment this version to force cache clearing on all users
-const CACHE_NAME = 'tileturnover-v2';
-const OLD_CACHES = ['tileturnover-v1']; // Add old cache names here when updating
+const CACHE_NAME = 'tileturnover-v3';
+const OLD_CACHES = ['tileturnover-v1', 'tileturnover-v2']; // Add old cache names here when updating
 
 // Install: Skip waiting to activate immediately
 self.addEventListener('install', (event) => {
