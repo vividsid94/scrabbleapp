@@ -32,6 +32,7 @@ import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
+import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
 
 // Helper function to generate pool from distribution object
 const generatePoolFromDistribution = (distribution) => {
@@ -2999,39 +3000,11 @@ export default function Play({ isMultiplayer = false }) {
         </Box>
 
         {/* Mobile on-screen keyboard overlay for board input */}
-        {isMobile && gameStarted && selectedBoardPosition && !gameEnded && (
-          <Box className={styles.mobileKeyboardOverlay}>
-            {['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row, rowIndex) => (
-              <Box key={rowIndex} className={styles.mobileKeyboardRow}>
-                {row.split('').map((letter) => (
-                  <Box
-                    key={letter}
-                    className={styles.mobileKey}
-                    onClick={() => triggerKeyFromOverlay(letter)}
-                  >
-                    {letter}
-                  </Box>
-                ))}
-                {rowIndex === 2 && (
-                  <>
-                    <Box
-                      className={`${styles.mobileKey} ${styles.mobileKeyWide}`}
-                      onClick={() => triggerKeyFromOverlay('Backspace')}
-                    >
-                      ⌫
-                    </Box>
-                    <Box
-                      className={`${styles.mobileKey} ${styles.mobileKeyWide}`}
-                      onClick={() => triggerKeyFromOverlay('Enter')}
-                    >
-                      ↵
-                    </Box>
-                  </>
-                )}
-              </Box>
-            ))}
-          </Box>
-        )}
+        <MobileKeyboardOverlay
+          visible={isMobile && gameStarted && !!selectedBoardPosition && !gameEnded}
+          onKeyPress={triggerKeyFromOverlay}
+          label="Type your move"
+        />
 
         <GameModal />
 

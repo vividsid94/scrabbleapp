@@ -9,6 +9,7 @@ import { formatTime } from '../../functions/play/timeUtils';
 import { usePuzzleStore } from '../../stores/puzzleStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import Confetti from '../../components/Confetti/Confetti';
+import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
@@ -157,6 +158,7 @@ export default function Puzzle() {
   // Add state for dynamic hourglass
   const [hourglassIndex, setHourglassIndex] = useState(0);
   const [telestratorEnabled, setTelestratorEnabled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Helper: check if a move is a bingo
   const isBingo = (move) => move && move.tiles && move.tiles.length === 7;
@@ -343,6 +345,17 @@ export default function Puzzle() {
     }
   };
 
+  // Detect mobile viewport for showing the on-screen keyboard
+  useEffect(() => {
+    const checkMobile = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Keyboard event handling for puzzle mode
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -409,6 +422,21 @@ export default function Puzzle() {
             </Box> */}
           </Box>
         </Box>
+
+        {/* Mobile keyboard overlay for puzzle entry when paused for a bingo */}
+        <MobileKeyboardOverlay
+          visible={isMobile && isPausedForBingo && !!selectedBoardPosition && !gameEnded}
+          onKeyPress={(key) => handlePuzzleKeyDown({ 
+            key, 
+            altKey: false, 
+            shiftKey: false, 
+            ctrlKey: false, 
+            metaKey: false, 
+            preventDefault: () => {} 
+          })}
+          label="Type your puzzle guess"
+        />
+
         {/* Confetti and victory overlays */}
         <Confetti
           winner={winner}
