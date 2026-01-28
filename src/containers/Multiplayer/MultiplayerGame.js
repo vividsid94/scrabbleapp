@@ -5,12 +5,14 @@
 
 import React, { useEffect, useContext, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import { ThemeContext } from '../../App';
 import { useGameStore } from '../../stores/gameStore';
 import { useMultiplayerGame } from '../../hooks/useMultiplayerGame';
 import { getPlayerId } from '../../utils/multiplayerApi';
 import Play from '../Play/Play';
 import { validateMoveClient } from '../../functions/play/validateMoveClient';
+import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 
 const styles = {
   container: {
@@ -427,46 +429,152 @@ const MultiplayerGame = () => {
     const shareLink = `${window.location.origin}/multiplayer/${gameCode}`;
 
     return (
-      <div style={{ ...styles.overlay, backgroundColor: colors.bg }}>
-        <div style={{ ...styles.card, backgroundColor: colors.cardBg }}>
-          <h2 style={{ ...styles.title, color: colors.text }}>Waiting for Opponent</h2>
-          <p style={{ ...styles.subtitle, color: colors.textSecondary }}>
-            Share this code with a friend to start playing
-          </p>
-
-          <div style={{ ...styles.gameCode, backgroundColor: colors.codeBg, color: colors.text }}>
-            {gameCode}
-          </div>
-
-          <p style={{ ...styles.shareLink, color: colors.textSecondary }}>
-            {shareLink}
-          </p>
-
-          <button
-            onClick={copyShareLink}
-            style={{
-              ...styles.copyButton,
-              background: copied ? colors.myTurn : colors.primaryButton,
-              color: '#fff'
+      <>
+        <Sidenav />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 'calc(100vh - 150px)',
+            padding: { xs: '20px', sm: '40px 20px' },
+            gap: '24px'
+          }}
+        >
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: { xs: '12px', sm: '16px' },
+              padding: { xs: '20px 16px', sm: '28px 24px' },
+              maxWidth: '650px',
+              width: '100%',
+              backgroundColor: isDark ? '#2A3A4A' : '#FDF9F3',
+              backgroundImage: isDark
+                ? `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(120, 120, 120, 0.15) 22px, rgba(120, 120, 120, 0.15) 23px),
+                   repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(80, 80, 80, 0.08) 1px, rgba(80, 80, 80, 0.08) 2px)`
+                : `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(220, 210, 195, 0.4) 22px, rgba(220, 210, 195, 0.4) 23px),
+                   repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(200, 190, 175, 0.15) 1px, rgba(200, 190, 175, 0.15) 2px)`,
+              backgroundSize: '100% 23px, 2px 100%',
+              border: isDark 
+                ? '1px solid rgba(139, 115, 85, 0.2)' 
+                : '1px solid rgba(200, 185, 165, 0.4)',
+              borderRadius: '2px',
+              boxShadow: isDark
+                ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                   0 8px 16px rgba(0, 0, 0, 0.4),
+                   inset 0 0 200px rgba(0, 0, 0, 0.2)`
+                : `0 1px 3px rgba(0, 0, 0, 0.12),
+                   0 4px 8px rgba(0, 0, 0, 0.15),
+                   inset 0 0 200px rgba(250, 245, 235, 0.4)`,
+              transition: 'box-shadow 0.3s ease'
             }}
           >
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
+            <Box
+              sx={{
+                fontSize: { xs: '18px', sm: '20px' },
+                fontWeight: 600,
+                color: isDark ? 'rgba(217, 119, 6, 0.9)' : '#8B7355',
+                letterSpacing: '0.02em',
+                marginBottom: '4px',
+                fontFamily: 'serif',
+                textAlign: 'center',
+                borderBottom: isDark
+                  ? '2px solid rgba(217, 119, 6, 0.3)'
+                  : '2px solid rgba(139, 115, 85, 0.3)',
+                paddingBottom: { xs: '6px', sm: '8px' },
+                width: '100%'
+              }}
+            >
+              Waiting for Opponent
+            </Box>
+            <Box
+              sx={{
+                fontSize: { xs: '12px', sm: '13px' },
+                color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                marginBottom: '12px',
+                textAlign: 'center'
+              }}
+            >
+              Share this code with a friend to start playing
+            </Box>
 
-          <div style={{ marginTop: '24px' }}>
+            <Box
+              sx={{
+                fontSize: { xs: '28px', sm: '32px' },
+                fontWeight: '700',
+                letterSpacing: '6px',
+                padding: { xs: '12px 20px', sm: '14px 24px' },
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+                marginBottom: '12px',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                color: isDark ? '#fff' : '#1f2937',
+                border: isDark 
+                  ? '1px solid rgba(139, 115, 85, 0.2)' 
+                  : '1px solid rgba(200, 185, 165, 0.4)',
+                width: '100%',
+                textAlign: 'center'
+              }}
+            >
+              {gameCode}
+            </Box>
+
+            <Box
+              sx={{
+                fontSize: { xs: '11px', sm: '12px' },
+                color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
+                marginBottom: '12px',
+                wordBreak: 'break-all',
+                textAlign: 'center',
+                width: '100%'
+              }}
+            >
+              {shareLink}
+            </Box>
+
+            <button
+              onClick={copyShareLink}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: copied ? colors.myTurn : colors.primaryButton,
+                color: '#fff'
+              }}
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+
             <button
               onClick={() => navigate('/multiplayer')}
               style={{
-                ...styles.backButton,
-                color: colors.textSecondary,
-                border: `1px solid ${colors.border}`
+                width: '100%',
+                padding: '14px',
+                borderRadius: '4px',
+                border: `1px solid ${colors.border}`,
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                marginTop: '8px',
+                background: 'transparent',
+                color: colors.textSecondary
               }}
             >
               Cancel Game
             </button>
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </>
     );
   }
 
@@ -475,10 +583,13 @@ const MultiplayerGame = () => {
   const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
 
   return (
-    <div style={styles.container}>
-      {/* Main game - Play component */}
-      <Play isMultiplayer={true} />
-    </div>
+    <>
+      <Sidenav />
+      <div style={styles.container}>
+        {/* Main game - Play component */}
+        <Play isMultiplayer={true} />
+      </div>
+    </>
   );
 };
 

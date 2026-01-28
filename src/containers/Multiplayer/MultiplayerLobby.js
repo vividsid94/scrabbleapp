@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import { ThemeContext } from '../../App';
 import { useAuth } from '../../contexts/AuthContext';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
@@ -22,54 +23,60 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 'calc(100vh - 150px)',
-    padding: '20px',
-    gap: '30px'
+    padding: { xs: '20px', sm: '40px 20px' },
+    gap: '24px'
   },
   card: {
-    borderRadius: '16px',
-    padding: '32px',
-    maxWidth: '450px',
-    width: '100%',
-    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)'
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: { xs: '12px', sm: '16px' },
+    padding: { xs: '20px 16px', sm: '28px 24px' },
+    maxWidth: '650px',
+    width: '100%'
   },
   title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    marginBottom: '8px',
-    textAlign: 'center'
+    fontSize: { xs: '18px', sm: '20px' },
+    fontWeight: 600,
+    marginBottom: '4px',
+    textAlign: 'center',
+    fontFamily: 'serif',
+    letterSpacing: '0.02em'
   },
   subtitle: {
-    fontSize: '14px',
+    fontSize: { xs: '12px', sm: '13px' },
     opacity: 0.7,
-    marginBottom: '24px',
+    marginBottom: '16px',
     textAlign: 'center'
   },
   section: {
-    marginBottom: '24px'
+    marginBottom: '16px',
+    width: '100%'
   },
   sectionTitle: {
-    fontSize: '16px',
+    fontSize: { xs: '13px', sm: '14px' },
     fontWeight: '600',
-    marginBottom: '12px'
+    marginBottom: '8px'
   },
   input: {
     width: '100%',
-    padding: '14px 16px',
-    borderRadius: '10px',
-    border: '2px solid',
-    fontSize: '16px',
+    padding: { xs: '10px 12px', sm: '12px 14px' },
+    borderRadius: '4px',
+    border: '1px solid',
+    fontSize: { xs: '14px', sm: '15px' },
     outline: 'none',
     transition: 'border-color 0.2s',
     boxSizing: 'border-box'
   },
   gameCodeInput: {
     width: '100%',
-    padding: '16px',
-    borderRadius: '10px',
-    border: '2px solid',
-    fontSize: '24px',
+    padding: { xs: '12px', sm: '14px' },
+    borderRadius: '4px',
+    border: '1px solid',
+    fontSize: { xs: '20px', sm: '22px' },
     fontWeight: '700',
-    letterSpacing: '6px',
+    letterSpacing: '4px',
     textAlign: 'center',
     textTransform: 'uppercase',
     outline: 'none',
@@ -78,14 +85,14 @@ const styles = {
   },
   button: {
     width: '100%',
-    padding: '16px',
-    borderRadius: '10px',
+    padding: { xs: '12px', sm: '14px' },
+    borderRadius: '4px',
     border: 'none',
-    fontSize: '16px',
+    fontSize: { xs: '14px', sm: '15px' },
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    marginTop: '12px'
+    marginTop: '8px'
   },
   primaryButton: {
     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -93,19 +100,20 @@ const styles = {
   },
   secondaryButton: {
     background: 'transparent',
-    border: '2px solid'
+    border: '1px solid'
   },
   error: {
     color: '#ef4444',
-    fontSize: '14px',
+    fontSize: { xs: '12px', sm: '13px' },
     marginTop: '8px',
     textAlign: 'center'
   },
   divider: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    margin: '24px 0'
+    gap: '12px',
+    margin: '16px 0',
+    width: '100%'
   },
   dividerLine: {
     flex: 1,
@@ -113,14 +121,14 @@ const styles = {
     opacity: 0.2
   },
   dividerText: {
-    fontSize: '14px',
+    fontSize: { xs: '11px', sm: '12px' },
     opacity: 0.5,
     textTransform: 'uppercase',
     fontWeight: '500'
   },
   loadingSpinner: {
-    width: '20px',
-    height: '20px',
+    width: '16px',
+    height: '16px',
     border: '2px solid transparent',
     borderTopColor: '#fff',
     borderRadius: '50%',
@@ -131,20 +139,22 @@ const styles = {
   userInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    borderRadius: '10px',
-    marginBottom: '16px'
+    gap: '10px',
+    padding: { xs: '10px 12px', sm: '12px 14px' },
+    borderRadius: '4px',
+    marginBottom: '12px',
+    width: '100%'
   },
   avatar: {
-    width: '40px',
-    height: '40px',
+    width: { xs: '32px', sm: '36px' },
+    height: { xs: '32px', sm: '36px' },
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '600',
-    fontSize: '16px'
+    fontSize: { xs: '14px', sm: '16px' },
+    flexShrink: 0
   }
 };
 
@@ -268,7 +278,17 @@ const MultiplayerLobby = () => {
   return (
     <>
       <Sidenav />
-      <div style={styles.container}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 150px)',
+          padding: { xs: '20px', sm: '40px 20px' },
+          gap: '24px'
+        }}
+      >
       <style>
         {`
           @keyframes spin {
@@ -293,17 +313,105 @@ const MultiplayerLobby = () => {
         `}
       </style>
 
-      <div style={{ ...styles.card, backgroundColor: colors.cardBg }}>
-        <h1 style={{ ...styles.title, color: colors.text }}>Multiplayer</h1>
-        <p style={{ ...styles.subtitle, color: colors.textSecondary }}>
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: { xs: '12px', sm: '16px' },
+          padding: { xs: '20px 16px', sm: '28px 24px' },
+          maxWidth: '650px',
+          width: '100%',
+          backgroundColor: isDark ? '#2A3A4A' : '#FDF9F3',
+          backgroundImage: isDark
+            ? `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(120, 120, 120, 0.15) 22px, rgba(120, 120, 120, 0.15) 23px),
+               repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(80, 80, 80, 0.08) 1px, rgba(80, 80, 80, 0.08) 2px)`
+            : `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(220, 210, 195, 0.4) 22px, rgba(220, 210, 195, 0.4) 23px),
+               repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(200, 190, 175, 0.15) 1px, rgba(200, 190, 175, 0.15) 2px)`,
+          backgroundSize: '100% 23px, 2px 100%',
+          border: isDark 
+            ? '1px solid rgba(139, 115, 85, 0.2)' 
+            : '1px solid rgba(200, 185, 165, 0.4)',
+          borderRadius: '2px',
+          boxShadow: isDark
+            ? `0 2px 4px rgba(0, 0, 0, 0.3),
+               0 8px 16px rgba(0, 0, 0, 0.4),
+               inset 0 0 200px rgba(0, 0, 0, 0.2)`
+            : `0 1px 3px rgba(0, 0, 0, 0.12),
+               0 4px 8px rgba(0, 0, 0, 0.15),
+               inset 0 0 200px rgba(250, 245, 235, 0.4)`,
+          transition: 'box-shadow 0.3s ease',
+          '&:hover': {
+            boxShadow: isDark
+              ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                 0 8px 16px rgba(0, 0, 0, 0.4),
+                 0 20px 40px rgba(0, 0, 0, 0.6)`
+              : `0 1px 3px rgba(0, 0, 0, 0.12),
+                 0 4px 8px rgba(0, 0, 0, 0.15),
+                 0 16px 32px rgba(0, 0, 0, 0.25)`
+          }
+        }}
+      >
+        <Box
+          sx={{
+            fontSize: { xs: '18px', sm: '20px' },
+            fontWeight: 600,
+            color: isDark ? 'rgba(217, 119, 6, 0.9)' : '#8B7355',
+            letterSpacing: '0.02em',
+            marginBottom: '4px',
+            fontFamily: 'serif',
+            textAlign: 'center',
+            borderBottom: isDark
+              ? '2px solid rgba(217, 119, 6, 0.3)'
+              : '2px solid rgba(139, 115, 85, 0.3)',
+            paddingBottom: { xs: '6px', sm: '8px' },
+            width: '100%'
+          }}
+        >
+          Multiplayer
+        </Box>
+        <Box
+          sx={{
+            fontSize: { xs: '12px', sm: '13px' },
+            color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+            marginBottom: '12px',
+            textAlign: 'center'
+          }}
+        >
           Play Scrabble with friends in real-time
-        </p>
+        </Box>
 
         {/* User Info */}
-        <div style={{ ...styles.userInfo, backgroundColor: isDark ? '#1f2937' : '#f3f4f6' }}>
-          <div style={{ ...styles.avatar, backgroundColor: colors.avatarBg, color: '#fff' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: { xs: '10px 12px', sm: '12px 14px' },
+            borderRadius: '4px',
+            marginBottom: '12px',
+            width: '100%',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+          }}
+        >
+          <Box
+            sx={{
+              width: { xs: '32px', sm: '36px' },
+              height: { xs: '32px', sm: '36px' },
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '600',
+              fontSize: { xs: '14px', sm: '16px' },
+              flexShrink: 0,
+              backgroundColor: colors.avatarBg,
+              color: '#fff'
+            }}
+          >
             {playerName ? playerName[0].toUpperCase() : '?'}
-          </div>
+          </Box>
           <input
             type="text"
             value={playerName}
@@ -311,25 +419,49 @@ const MultiplayerLobby = () => {
             placeholder="Enter your name"
             className="multiplayer-input"
             style={{
-              ...styles.input,
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: '4px',
+              border: `1px solid ${colors.border}`,
+              fontSize: '15px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box',
               backgroundColor: colors.inputBg,
               color: colors.text,
-              borderColor: colors.border,
               flex: 1
             }}
           />
-        </div>
+        </Box>
 
         {/* Create Game Section */}
-        <div style={styles.section}>
-          <h3 style={{ ...styles.sectionTitle, color: colors.text }}>Create a New Game</h3>
+        <Box sx={{ marginBottom: '16px', width: '100%' }}>
+          <Box
+            sx={{
+              fontSize: { xs: '13px', sm: '14px' },
+              fontWeight: '600',
+              marginBottom: '8px',
+              color: colors.text
+            }}
+          >
+            Create a New Game
+          </Box>
           <button
             onClick={handleCreateGame}
             disabled={isCreating || isJoining}
             className="multiplayer-button"
             style={{
-              ...styles.button,
-              ...styles.primaryButton
+              width: '100%',
+              padding: { xs: '12px', sm: '14px' },
+              borderRadius: '4px',
+              border: 'none',
+              fontSize: { xs: '14px', sm: '15px' },
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginTop: '8px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              color: '#fff'
             }}
           >
             {isCreating ? (
@@ -341,18 +473,59 @@ const MultiplayerLobby = () => {
               'Create Game'
             )}
           </button>
-        </div>
+        </Box>
 
         {/* Divider */}
-        <div style={styles.divider}>
-          <div style={{ ...styles.dividerLine, backgroundColor: colors.dividerLine }}></div>
-          <span style={{ ...styles.dividerText, color: colors.textSecondary }}>or</span>
-          <div style={{ ...styles.dividerLine, backgroundColor: colors.dividerLine }}></div>
-        </div>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            margin: '16px 0',
+            width: '100%'
+          }}
+        >
+          <Box
+            sx={{
+              flex: 1,
+              height: '1px',
+              backgroundColor: colors.dividerLine,
+              opacity: 0.2
+            }}
+          />
+          <Box
+            sx={{
+              fontSize: { xs: '11px', sm: '12px' },
+              opacity: 0.5,
+              textTransform: 'uppercase',
+              fontWeight: '500',
+              color: colors.textSecondary
+            }}
+          >
+            or
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              height: '1px',
+              backgroundColor: colors.dividerLine,
+              opacity: 0.2
+            }}
+          />
+        </Box>
 
         {/* Join Game Section */}
-        <div style={styles.section}>
-          <h3 style={{ ...styles.sectionTitle, color: colors.text }}>Join Existing Game</h3>
+        <Box sx={{ marginBottom: '16px', width: '100%' }}>
+          <Box
+            sx={{
+              fontSize: { xs: '13px', sm: '14px' },
+              fontWeight: '600',
+              marginBottom: '8px',
+              color: colors.text
+            }}
+          >
+            Join Existing Game
+          </Box>
           <input
             type="text"
             value={gameCode}
@@ -361,10 +534,20 @@ const MultiplayerLobby = () => {
             placeholder="ENTER CODE"
             className="multiplayer-input"
             style={{
-              ...styles.gameCodeInput,
+              width: '100%',
+              padding: '14px',
+              borderRadius: '4px',
+              border: `1px solid ${colors.border}`,
+              fontSize: '22px',
+              fontWeight: '700',
+              letterSpacing: '4px',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box',
               backgroundColor: colors.inputBg,
-              color: colors.text,
-              borderColor: colors.border
+              color: colors.text
             }}
           />
           <button
@@ -372,9 +555,16 @@ const MultiplayerLobby = () => {
             disabled={isJoining || isCreating || gameCode.length !== 6}
             className="multiplayer-button"
             style={{
-              ...styles.button,
-              ...styles.secondaryButton,
-              borderColor: colors.border,
+              width: '100%',
+              padding: '14px',
+              borderRadius: '4px',
+              border: `1px solid ${colors.border}`,
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginTop: '8px',
+              background: 'transparent',
               color: colors.text
             }}
           >
@@ -387,27 +577,24 @@ const MultiplayerLobby = () => {
               'Join Game'
             )}
           </button>
-        </div>
+        </Box>
 
         {/* Error Message */}
-        {error && <p style={styles.error}>{error}</p>}
-      </div>
-
-      {/* Back Link */}
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: colors.textSecondary,
-          fontSize: '14px',
-          cursor: 'pointer',
-          textDecoration: 'underline'
-        }}
-      >
-        Back to Home
-      </button>
-    </div>
+        {error && (
+          <Box
+            sx={{
+              color: '#ef4444',
+              fontSize: { xs: '12px', sm: '13px' },
+              marginTop: '8px',
+              textAlign: 'center',
+              width: '100%'
+            }}
+          >
+            {error}
+          </Box>
+        )}
+      </Box>
+      </Box>
     </>
   );
 };
