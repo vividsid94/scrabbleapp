@@ -165,35 +165,6 @@ export const useSandboxStore = create((set, get) => {
     setFastPlayMoves: (moves) => set({ fastPlayMoves: moves }),
     setIsExecutingFastPlay: (executing) => set({ isExecutingFastPlay: executing }),
     setShowAllBingos: (show) => set({ showAllBingos: show }),
-    // Puzzle tile placement actions
-    handleTileDrop: (tile, index, row, col) => {
-      const {
-        selectedRackTiles,
-        selectedTiles,
-        setSelectedTiles,
-        setSelectedRackTiles,
-        setSelectedBoardPosition,
-        tempBoardCoords,
-        setTempBoardCoords
-      } = get();
-      
-      // Find the tile in selectedRackTiles
-      const rackTile = selectedRackTiles.find(t => t.tile === tile && t.index === index);
-      if (rackTile) {
-        // Add to board tiles
-        setSelectedTiles([...selectedTiles, { tile, row, col }]);
-        // Remove from rack tiles
-        const newRackTiles = selectedRackTiles.filter(t => !(t.tile === tile && t.index === index));
-        setSelectedRackTiles(newRackTiles);
-      }
-      
-      setSelectedBoardPosition({ row, col });
-
-      const newTempBoard = [...tempBoardCoords];
-      newTempBoard[row][col] = tile;
-      setTempBoardCoords(newTempBoard);
-    },
-
     handlePuzzleTileClick: (tile, index) => {
       const {
         selectedRackTiles,

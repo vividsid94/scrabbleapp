@@ -134,7 +134,6 @@ export default function Puzzle() {
     setPuzzleMode,
     setIsFastPlayMode,
     makeFastBotMove,
-    handleTileDrop,
     handlePuzzleTileClick,
     handleBoardPositionSelect,
     submitPuzzleGuess,

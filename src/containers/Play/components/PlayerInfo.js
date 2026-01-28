@@ -152,7 +152,6 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           color={color.current} 
           onTileClick={onTileClick}
           selectedTiles={selectedTiles}
-          enableDrag={false}
         />
       </Box>
     )}

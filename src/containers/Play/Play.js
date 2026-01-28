@@ -23,7 +23,7 @@ import { ThemeContext } from '../../App';
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
-import { handleTileDrop, handleTileClick } from '../../functions/play/tileFunctions';
+import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { formatTime } from '../../functions/play/timeUtils';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';

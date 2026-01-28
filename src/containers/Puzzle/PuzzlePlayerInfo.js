@@ -346,7 +346,6 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
                       onTileClick={handleTileClick}
                       // During puzzles, selection is represented on the board, so we don't need rack highlighting
                       selectedTiles={[]}
-                      enableDrag={false}
                     />
                   </Box>
                 ) : null;
@@ -378,7 +377,6 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
                     color={color.current} 
                     onTileClick={handleTileClick}
                     selectedTiles={[]}
-                    enableDrag={false}
                   />
                 </Box>
               );

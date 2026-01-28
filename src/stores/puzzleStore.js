@@ -165,34 +165,6 @@ export const usePuzzleStore = create((set, get) => {
     setFastPlayMoves: (moves) => set({ fastPlayMoves: moves }),
     setIsExecutingFastPlay: (executing) => set({ isExecutingFastPlay: executing }),
     setShowAllBingos: (show) => set({ showAllBingos: show }),
-    // Puzzle tile placement actions
-    // Allow drag-and-drop from the rack onto the board (like Play),
-    // without mutating the underlying rack; we only track placed tiles
-    // in selectedTiles and in the temporary board. We mark these as
-    // fromRack: false so backspace knows not to add them back.
-    handleTileDrop: (tile, index, row, col) => {
-      const {
-        selectedTiles,
-        setSelectedTiles,
-        setSelectedBoardPosition,
-        tempBoardCoords,
-        setTempBoardCoords
-      } = get();
-
-      const safeSelected = Array.isArray(selectedTiles) ? selectedTiles : [];
-
-      // Track the placed tile for puzzle validation
-      setSelectedTiles([...safeSelected, { tile, row, col, fromRack: false }]);
-      
-      // Update the "cursor" position
-      setSelectedBoardPosition({ row, col });
-
-      // Write the tile into the temporary board
-      const newTempBoard = [...tempBoardCoords];
-      newTempBoard[row][col] = tile;
-      setTempBoardCoords(newTempBoard);
-    },
-
     handlePuzzleTileClick: (tile, index) => {
       const {
         selectedRackTiles,

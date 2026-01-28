@@ -16,7 +16,6 @@ export default function Board({
     board = [],
     moveDirection,
     onBoardChildClick,
-    onTileDrop,
     selectedPosition,
     arrowDirection,
     animate = true,
@@ -247,23 +246,6 @@ export default function Board({
         </Box>
     );
     
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    };
-
-    const handleDrop = (e, row, col) => {
-        e.preventDefault();
-        const tile = e.dataTransfer.getData('tile');
-        const index = e.dataTransfer.getData('index');
-        if (onBoardChildClick) {
-            onBoardChildClick(row, col);
-        }
-        if (onTileDrop) {
-            onTileDrop(tile, index, row, col);
-        }
-    };
-
     const getHeaderStyle = () => ({
         backgroundColor: lightMode === 'dark' ? 'rgb(12, 12, 59)' : '#b8b6a9',
         color: lightMode === 'dark' ? '#fff' : '#1F2937'
@@ -535,8 +517,6 @@ export default function Board({
                                     {row.map((col, colIndex) => (
                                         <td 
                                             key={colIndex}
-                                            onDrop={(e) => handleDrop(e, rowIndex, colIndex)}
-                                            onDragOver={handleDragOver}
                                             onClick={() => onBoardChildClick && onBoardChildClick(rowIndex, colIndex)}
                                         >
                                             {col}

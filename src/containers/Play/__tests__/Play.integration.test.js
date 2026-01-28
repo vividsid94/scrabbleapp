@@ -18,7 +18,7 @@ jest.mock('../../../components/AppContent/Sidenav/Sidenav.js', () => {
 });
 
 jest.mock('../../../components/AppContent/Board/Board.js', () => {
-  return function MockBoard({ onBoardChildClick, onTileDrop, onTileClick }) {
+  return function MockBoard({ onBoardChildClick, onTileClick }) {
     return (
       <div data-testid="board">
         <button 
@@ -26,12 +26,6 @@ jest.mock('../../../components/AppContent/Board/Board.js', () => {
           onClick={() => onBoardChildClick(0, 0)}
         >
           Click Board
-        </button>
-        <button 
-          data-testid="tile-drop" 
-          onClick={() => onTileDrop('A', 0, 0, 0)}
-        >
-          Drop Tile
         </button>
         <button 
           data-testid="tile-click" 
@@ -128,9 +122,8 @@ jest.mock('../../../components/AppContent/References/testRacks.js', () => ({
   TEST_RACKS: [['A', 'B', 'C'], ['D', 'E', 'F']]
 }));
 
-// Mock tile functions
+// Mock tile click function
 jest.mock('../../../functions/play/tileFunctions', () => ({
-  handleTileDrop: jest.fn(),
   handleTileClick: jest.fn()
 }));
 
