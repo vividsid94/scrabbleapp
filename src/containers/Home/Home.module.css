@@ -29,8 +29,8 @@
 }
 
 .mascotWrapper {
-  width: 220px;
-  max-width: 80vw;
+  width: 180px;
+  max-width: 60vw;
   margin-bottom: 12px;
   display: flex;
   justify-content: center;
@@ -67,14 +67,75 @@
 }
 
 
+.lobbySection {
+  width: 100%;
+  max-width: 520px;
+  margin: 8px auto 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.continueSlot {
+  border-radius: 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.continueLabel {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.continueEmpty {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.continueButton {
+  border-radius: 999px;
+  border: 1px solid #D97706;
+  background: linear-gradient(45deg, transparent 5%, #D97706 5%);
+  color: #fff;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 4px 0 0 #B45309;
+  outline: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.continueButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 6px 2px 0 #B45309;
+  opacity: 0.98;
+}
+
+.continueButton:active {
+  transform: translateY(0);
+  box-shadow: 4px 0 0 #B45309;
+}
+
 
 .secondaryButtonsContainer {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: center;
-  margin-top: 24px;
-  flex-wrap: wrap;
+  max-width: 520px;
+  margin: 24px auto 0;
+  width: 100%;
+}
+
+.modeButtonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
 }
 
 .secondaryButton {
@@ -88,11 +149,11 @@
   font-size: 15px;
   box-shadow: 6px 0px 0px #B45309;
   outline: transparent;
+  width: 100%;
   cursor: pointer;
   user-select: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 0.95;
-  min-width: 120px;
 }
 
 .secondaryButton:hover {
@@ -101,14 +162,45 @@
   box-shadow: 8px 2px 0px #B45309;
 }
 
+.secondaryButtonSmall {
+  /* deprecated: use .secondaryButton for consistent sizing */
+}
+
+.secondaryButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.moreLinkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6B7280;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moreLinkButton:hover {
+  color: #374151;
+}
+
 .secondaryButton:active {
   transform: translateY(0);
 }
 
 @media (max-width: 600px) {
   .mascotWrapper {
-    width: 140px;
-    max-width: 40vw;
+    width: 120px;
+    max-width: 32vw;
     margin-bottom: 10px;
   }
   .title {
@@ -134,10 +226,21 @@
   .primaryButtonsContainer {
     gap: 12px;
   }
+  .modeButtonGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .secondaryButton {
-    padding: 8px 20px;
+    padding: 9px 18px;
     font-size: 14px;
-    min-width: 100px;
+  }
+
+  .lobbySection {
+    margin-top: 4px;
+    padding: 0 16px;
+  }
+
+  .continueSlot {
+    padding: 9px 10px;
   }
 }
 

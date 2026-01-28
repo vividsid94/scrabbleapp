@@ -17,6 +17,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
 import { searchPlayers, getUpcomingTournaments, getRecentTournaments, getTopPlayers } from '../../axios/crossTablesApi';
+import { useGameStore } from '../../stores/gameStore';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
@@ -40,6 +41,9 @@ export default function Home(){
   const touchStartY = useRef(null);
   const touchCurrentY = useRef(null);
   const bodyOverflowRef = useRef('');
+
+  // Lightweight "continue" signal: any started, not-ended game
+  const hasActiveGame = useGameStore(state => state.gameStarted && !state.gameEnded);
 
   const handleToolsMenuClick = (event) => {
     setToolsMenuAnchor(event.currentTarget);
@@ -207,6 +211,17 @@ export default function Home(){
             >
               Tile Turnover™
             </Box>
+            <Box
+              sx={{
+                marginTop: '4px',
+                fontSize: 13,
+                letterSpacing: 1.4,
+                textTransform: 'uppercase',
+                color: lightMode === 'dark' ? 'rgba(209, 213, 219, 0.9)' : '#6B7280'
+              }}
+            >
+              Lobby
+            </Box>
           </Box>
           <Box 
             className={styles.welcomeBox}
@@ -268,7 +283,7 @@ export default function Home(){
                   textAlign: { xs: 'center', sm: 'left' },
                   flex: 1
                 }}>
-                  Welcome! Meet Theo, your word game fox. We're in beta!
+                  Welcome to the Tile Turnover lobby. Pick a mode and Theo will handle the rest. (We&apos;re still in beta!)
                 </Box>
               </Box>
               <button
@@ -304,132 +319,161 @@ export default function Home(){
             </Box>
           </Box>
           
+          {/* Simple lobby layout: Continue slot + main actions */}
+          <Box className={styles.lobbySection}>
+            <Box className={styles.continueSlot}>
+              <div className={styles.continueLabel}>Continue</div>
+              {hasActiveGame ? (
+                <button
+                  type="button"
+                  className={styles.continueButton}
+                  onClick={() => navigate('/play')}
+                >
+                  <span className={styles.secondaryButtonContent}>
+                    <GameController size={16} weight="fill" />
+                    <span>Resume last game</span>
+                  </span>
+                </button>
+              ) : (
+                <div className={styles.continueEmpty}>No active game yet</div>
+              )}
+            </Box>
+          </Box>
+
           <Box 
             className={styles.secondaryButtonsContainer}
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: { xs: '8px', sm: '12px' },
-              width: { xs: '90%', sm: 'auto' },
-              margin: '24px auto 0',
-              padding: { xs: '0 12px', sm: '0' },
-              alignItems: 'center'
+              width: '100%',
+              margin: '18px auto 0',
+              padding: { xs: '0 16px', sm: '0 20px' },
+              boxSizing: 'border-box'
             }}
           >
-            <Box sx={{
-              display: 'flex',
-              gap: { xs: '8px', sm: '12px' },
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-              width: '100%'
-            }}>
+            <Box className={styles.modeButtonGrid}>
               <Link to="/play" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
-                  Play
+                  <span className={styles.secondaryButtonContent}>
+                    <GameController size={18} weight="fill" />
+                    <span>Play vs bot</span>
+                  </span>
                 </button>
               </Link>
               <Link to="/puzzle" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
-                  Puzzles
+                  <span className={styles.secondaryButtonContent}>
+                    <PuzzlePiece size={18} weight="fill" />
+                    <span>Puzzles</span>
+                  </span>
                 </button>
               </Link>
               <Link to="/viewer" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
-                  Viewer
+                  <span className={styles.secondaryButtonContent}>
+                    <Eye size={18} weight="fill" />
+                    <span>Viewer</span>
+                  </span>
+                </button>
+              </Link>
+              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  <span className={styles.secondaryButtonContent}>
+                    <Trophy size={16} weight="fill" />
+                    <span>Results & rankings</span>
+                  </span>
                 </button>
               </Link>
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-              <Box sx={{ position: 'relative' }}>
-                <button
-                  onClick={handleToolsMenuClick}
-                  className={styles.secondaryButton}
-                  style={{
-                    background: 'transparent',
-                    border: '2px solid #D97706',
-                    padding: '8px 23px',
-                    color: lightMode === 'dark' ? '#fff' : '#1F2937'
-                  }}
-                >
-                  More <CaretDown size={14} weight="bold" style={{ transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
-                </button>
-                <Menu
-                  anchorEl={toolsMenuAnchor}
-                  open={toolsMenuOpen}
-                  onClose={handleToolsMenuClose}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                  }}
-                  disableScrollLock={true}
-                  slotProps={{
-                    root: {
-                      style: {
-                        position: 'fixed'
-                      }
-                    }
-                  }}
-                  PaperProps={{
-                    sx: {
-                      backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
-                      border: '1px solid',
-                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                      borderRadius: '8px',
-                      boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
-                      minWidth: '160px',
-                      mt: '4px'
-                    }
-                  }}
-                >
-                  <MenuItem 
-                    onClick={() => { handleToolsMenuClose(); navigate('/3dviewer'); }}
-                    sx={{
-                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      fontSize: '14px',
-                      padding: '10px 16px',
-                      '&:hover': {
-                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                      }
-                    }}
-                  >
-                    3D Viewer
-                  </MenuItem>
-                  <MenuItem 
-                    onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
-                    sx={{
-                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      fontSize: '14px',
-                      padding: '10px 16px',
-                      '&:hover': {
-                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                      }
-                    }}
-                  >
-                    Submit Game
-                  </MenuItem>
-                  <MenuItem 
-                    onClick={() => { handleToolsMenuClose(); setSearchPanelOpen(true); }}
-                    sx={{
-                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      fontSize: '14px',
-                      padding: '10px 16px',
-                      '&:hover': {
-                        backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                      }
-                    }}
-                  >
-                    Results
-                  </MenuItem>
-                </Menu>
-              </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={handleToolsMenuClick}
+                className={styles.moreLinkButton}
+              >
+                More modes
+                <CaretDown
+                  size={12}
+                  weight="bold"
+                  style={{ marginLeft: 6, transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                />
+              </button>
             </Box>
           </Box>
         </Box>
       </Box>
+
+      {/* Compact tools menu for extra modes */}
+      <Menu
+        anchorEl={toolsMenuAnchor}
+        open={toolsMenuOpen}
+        onClose={handleToolsMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        disableScrollLock={true}
+        slotProps={{
+          root: {
+            style: {
+              position: 'fixed'
+            }
+          }
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+            border: '1px solid',
+            borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            borderRadius: '8px',
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
+            minWidth: '160px',
+            mt: '4px'
+          }
+        }}
+      >
+        <MenuItem 
+          onClick={() => { handleToolsMenuClose(); navigate('/3dviewer'); }}
+          sx={{
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontSize: '14px',
+            padding: '10px 16px',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+            }
+          }}
+        >
+          3D Viewer
+        </MenuItem>
+        <MenuItem 
+          onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
+          sx={{
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontSize: '14px',
+            padding: '10px 16px',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+            }
+          }}
+        >
+          Submit Game
+        </MenuItem>
+        <MenuItem 
+          onClick={() => { handleToolsMenuClose(); setSearchPanelOpen(true); }}
+          sx={{
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontSize: '14px',
+            padding: '10px 16px',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+            }
+          }}
+        >
+          Results panel
+        </MenuItem>
+      </Menu>
       
       {/* Right Side Search Panel */}
       <Box 
