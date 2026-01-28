@@ -540,6 +540,9 @@ export default function Play({ isMultiplayer = false }) {
   const botMoveMadeRef = useRef(false);
   const mascotRef = useRef();
   const theoYellMascotRef = useRef(); // Separate ref for Theo Yell mascot
+  // Hidden input to trigger the mobile keyboard when a board square is tapped
+  const mobileInputRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [botSelectOpen, setBotSelectOpen] = useState(false);
   const [showTimeControls, setShowTimeControls] = useState(false);
   const [pendingBot, setPendingBot] = useState(null);
@@ -549,6 +552,17 @@ export default function Play({ isMultiplayer = false }) {
   const [poolExpanded, setPoolExpanded] = useState(false);
   const [playNotes, setPlayNotes] = useState('');
   const [telestratorEnabled, setTelestratorEnabled] = useState(false);
+
+  // Detect mobile viewport so we can reliably trigger the soft keyboard
+  useEffect(() => {
+    const checkMobile = () => {
+      if (typeof window === 'undefined') return;
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const skillBots = [
     { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.', icon: <img src="/images/theomascot.png" alt="Theo" width={18} height={18} style={{ borderRadius: '3px' }} /> },
     { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!', icon: <img src="/images/tessmascot.png" alt="Tess" width={18} height={18} style={{ borderRadius: '3px' }} /> },
@@ -1107,6 +1121,28 @@ export default function Play({ isMultiplayer = false }) {
       )}
       
       <Sidenav/>
+      {/* Hidden input to summon the mobile soft keyboard when a valid square is tapped */}
+      <input
+        ref={mobileInputRef}
+        type="text"
+        inputMode="text"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="characters"
+        // Visually hidden but still focusable
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: 1,
+          height: 1,
+          opacity: 0,
+          border: 'none',
+          padding: 0,
+          margin: 0,
+          zIndex: -1
+        }}
+      />
       <Box 
         className={styles.page}
         sx={isTheoYelling ? {
@@ -1176,15 +1212,23 @@ export default function Play({ isMultiplayer = false }) {
             boardMode={theme}
             lightMode={lightMode}
             showNoCommentaryLabel={false}
-            onBoardChildClick={(row, col) => handleBoardPositionSelect({
-              row,
-              col,
-              boardCoords,
-              selectedBoardPosition,
-              setSelectedBoardPosition,
-              arrowDirection,
-              setArrowDirection
-            })}
+            onBoardChildClick={(row, col) => {
+              // First, run the existing selection logic (only works on non-occupied cells)
+              handleBoardPositionSelect({
+                row,
+                col,
+                boardCoords,
+                selectedBoardPosition,
+                setSelectedBoardPosition,
+                arrowDirection,
+                setArrowDirection
+              });
+
+              // On mobile, focus a hidden input to bring up the soft keyboard
+              if (isMobile && mobileInputRef.current) {
+                mobileInputRef.current.focus();
+              }
+            }}
             onTileDrop={(tile, index, row, col) => handleTileDrop({
               tile,
               index,
