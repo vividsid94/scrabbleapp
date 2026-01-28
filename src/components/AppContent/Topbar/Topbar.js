@@ -29,8 +29,10 @@ export default function Topbar() {
                 style={{
                   background: 'transparent',
                   border: '2px solid #D97706',
-                  padding: '8px 23px',
-                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
+                  padding: '8px 20px',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                  width: 'auto',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Log In
@@ -41,6 +43,10 @@ export default function Topbar() {
                   setShowAuthModal(true);
                 }}
                 className={homeStyles.secondaryButton}
+                style={{
+                  width: 'auto',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Sign Up
               </button>
