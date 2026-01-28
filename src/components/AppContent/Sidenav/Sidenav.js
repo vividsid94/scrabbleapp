@@ -66,6 +66,7 @@ export default function MiniDrawer() {
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('signin');
+  const drawerRef = React.useRef(null);
   const location = useLocation();
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
@@ -90,7 +91,7 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '180px' : '55px',
+    width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '160px' : '52px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
     transition: 'width 0.3s ease',
@@ -211,6 +212,25 @@ export default function MiniDrawer() {
     width: '100%'
   };
 
+  React.useEffect(() => {
+    const handleHoverOutside = (event) => {
+      if (window.innerWidth <= 992) return; // ignore on mobile
+      if (drawerRef.current && !drawerRef.current.contains(event.target)) {
+        setSidebarExpanded(false);
+        setIsModesExpanded(false);
+        setIsSettingsExpanded(false);
+        setIsColorSectionExpanded(false);
+        setIsDecorationSectionExpanded(false);
+        setIsSoundSectionExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousemove', handleHoverOutside);
+    return () => {
+      document.removeEventListener('mousemove', handleHoverOutside);
+    };
+  }, []);
+
   return (
     <Box>
       {/* Force override Material-UI styles */}
@@ -235,7 +255,7 @@ export default function MiniDrawer() {
       
       <MyAppBar className={styles.myAppBar}>
         <MyToolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             <IconButton color="inherit" onClick={handleClick}>
               <MenuIcon sx={{ color: getTextColor() }}/>
             </IconButton>
@@ -596,21 +616,16 @@ export default function MiniDrawer() {
               {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </MenuItem>
           </Menu>
-          <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="58" height="58"/>
+          <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="50" height="50"/>
         </MyToolbar>
       </MyAppBar>
       <Drawer 
         className={styles.myDrawer} 
         variant="permanent"
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => {
-          if (!isModesExpanded && !isSettingsExpanded && !isColorSectionExpanded && !isDecorationSectionExpanded && !isSoundSectionExpanded) {
-            setSidebarExpanded(false);
-          }
-        }}
+        ref={drawerRef}
       >
         <DrawerHeader className={styles.cfLogoContainer}>
-          <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="48" height="48"/>
+          <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="44" height="44"/>
         </DrawerHeader>
         
         {/* Home - Always visible */}
@@ -653,27 +668,29 @@ export default function MiniDrawer() {
             sx={{ ...listItemStyle, cursor: 'pointer' }}
           >
             <ListItemIcon sx={iconStyle}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
-                <GameController 
-                  style={{ 
-                    color: isModesExpanded ? '#8B5CF6' : getTextColor(),
-                    fontSize: isModesExpanded ? '24px' : '20px'
-                  }} 
-                  weight={isModesExpanded ? "fill" : "regular"}
-                />
-                {sidebarExpanded && (
-                  <>
-                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isModesExpanded ? '600' : '400', flex: 1 }}>
-                      Modes
-                    </Box>
-                    {isModesExpanded ? (
-                      <CaretDown size={16} color={getTextColor()} />
-                    ) : (
-                      <CaretRight size={16} color={getTextColor()} />
-                    )}
-                  </>
-                )}
-              </Box>
+              <Tooltip title="Modes" placement="right">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <GameController 
+                    style={{ 
+                      color: isModesExpanded ? '#8B5CF6' : getTextColor(),
+                      fontSize: isModesExpanded ? '24px' : '20px'
+                    }} 
+                    weight={isModesExpanded ? "fill" : "regular"}
+                  />
+                  {sidebarExpanded && (
+                    <>
+                      <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isModesExpanded ? '600' : '400', flex: 1 }}>
+                        Modes
+                      </Box>
+                      {isModesExpanded ? (
+                        <CaretDown size={16} color={getTextColor()} />
+                      ) : (
+                        <CaretRight size={16} color={getTextColor()} />
+                      )}
+                    </>
+                  )}
+                </Box>
+              </Tooltip>
             </ListItemIcon>
           </ListItem>
         </List>
@@ -803,27 +820,29 @@ export default function MiniDrawer() {
             sx={{ ...listItemStyle, cursor: 'pointer' }}
           >
             <ListItemIcon sx={iconStyle}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
-                <Gear 
-                  style={{ 
-                    color: isSettingsExpanded ? '#10B981' : getTextColor(),
-                    fontSize: isSettingsExpanded ? '24px' : '20px'
-                  }} 
-                  weight={isSettingsExpanded ? "fill" : "regular"}
-                />
-                {sidebarExpanded && (
-                  <>
-                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isSettingsExpanded ? '600' : '400', flex: 1 }}>
-                      Settings
-                    </Box>
-                    {isSettingsExpanded ? (
-                      <CaretDown size={16} color={getTextColor()} />
-                    ) : (
-                      <CaretRight size={16} color={getTextColor()} />
-                    )}
-                  </>
-                )}
-              </Box>
+              <Tooltip title="Settings" placement="right">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Gear 
+                    style={{ 
+                      color: isSettingsExpanded ? '#10B981' : getTextColor(),
+                      fontSize: isSettingsExpanded ? '24px' : '20px'
+                    }} 
+                    weight={isSettingsExpanded ? "fill" : "regular"}
+                  />
+                  {sidebarExpanded && (
+                    <>
+                      <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isSettingsExpanded ? '600' : '400', flex: 1 }}>
+                        Settings
+                      </Box>
+                      {isSettingsExpanded ? (
+                        <CaretDown size={16} color={getTextColor()} />
+                      ) : (
+                        <CaretRight size={16} color={getTextColor()} />
+                      )}
+                    </>
+                  )}
+                </Box>
+              </Tooltip>
             </ListItemIcon>
           </ListItem>
         </List>
@@ -1188,14 +1207,16 @@ export default function MiniDrawer() {
           <a id="aboutBtn" className={styles.link} href="/about">
             <ListItem className={styles.listItem}>
               <ListItemIcon sx={iconStyle}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
-                  <CircleIcon style={{ color: '#f59e0b', fontSize: '20px' }} />
-                  {sidebarExpanded && (
-                    <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
-                      About
-                    </Box>
-                  )}
-                </Box>
+                <Tooltip title="About" placement="right">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <CircleIcon style={{ color: '#f59e0b', fontSize: '20px' }} />
+                    {sidebarExpanded && (
+                      <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                        About
+                      </Box>
+                    )}
+                  </Box>
+                </Tooltip>
               </ListItemIcon>
             </ListItem>
           </a>
@@ -1205,30 +1226,32 @@ export default function MiniDrawer() {
         <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleLightMode} sx={{ ...listItemStyle, cursor: 'pointer' }}>
             <ListItemIcon sx={iconStyle}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
-                {lightMode === 'dark' ? (
-                  <Sun 
-                    style={{ 
-                      color: '#F59E0B', 
-                      fontSize: '20px'
-                    }} 
-                    weight="fill" 
-                  />
-                ) : (
-                  <Moon 
-                    style={{ 
-                      color: '#6366F1', 
-                      fontSize: '20px'
-                    }} 
-                    weight="fill" 
-                  />
-                )}
-                {sidebarExpanded && (
-                  <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
-                    {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                  </Box>
-                )}
-              </Box>
+              <Tooltip title={lightMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} placement="right">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  {lightMode === 'dark' ? (
+                    <Sun 
+                      style={{ 
+                        color: '#F59E0B', 
+                        fontSize: '20px'
+                      }} 
+                      weight="fill" 
+                    />
+                  ) : (
+                    <Moon 
+                      style={{ 
+                        color: '#6366F1', 
+                        fontSize: '20px'
+                      }} 
+                      weight="fill" 
+                    />
+                  )}
+                  {sidebarExpanded && (
+                    <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                      {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </Box>
+                  )}
+                </Box>
+              </Tooltip>
             </ListItemIcon>
           </ListItem>
         </List>
