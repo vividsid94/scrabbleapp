@@ -208,7 +208,7 @@ export default function MiniDrawer() {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '48px',
+    minHeight: '40px',
     width: '100%'
   };
 
@@ -678,16 +678,9 @@ export default function MiniDrawer() {
                     weight={isModesExpanded ? "fill" : "regular"}
                   />
                   {sidebarExpanded && (
-                    <>
-                      <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isModesExpanded ? '600' : '400', flex: 1 }}>
-                        Modes
-                      </Box>
-                      {isModesExpanded ? (
-                        <CaretDown size={16} color={getTextColor()} />
-                      ) : (
-                        <CaretRight size={16} color={getTextColor()} />
-                      )}
-                    </>
+                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isModesExpanded ? '600' : '400', flex: 1 }}>
+                      Modes
+                    </Box>
                   )}
                 </Box>
               </Tooltip>
@@ -697,12 +690,12 @@ export default function MiniDrawer() {
         
         {/* Modes Submenu */}
         {isModesExpanded && (
-          <Box sx={{ paddingLeft: sidebarExpanded ? '20px' : '0', borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none', marginLeft: sidebarExpanded ? '12px' : '0' }}>
+          <Box sx={{ paddingLeft: sidebarExpanded ? '6px' : '0', borderLeft: sidebarExpanded ? '1px solid rgba(255,255,255,0.12)' : 'none', marginLeft: sidebarExpanded ? '4px' : '0' }}>
             <List className={styles.btnContainer}>
               <a id="playBtn" className={styles.link} href="/play">
-                <ListItem className={`${styles.listItem} ${isCurrentPage('/play') ? styles.activePage : ''}`} sx={listItemStyle}>
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/play') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                       <SmartToyIcon 
                         style={{ 
                           color: isCurrentPage('/play') ? '#EF4444' : getTextColor(),
@@ -710,7 +703,7 @@ export default function MiniDrawer() {
                         }} 
                       />
                       {sidebarExpanded && (
-                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/play') ? '600' : '400' }}>
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/play') ? '600' : '400' }}>
                           Play
                         </Box>
                       )}
@@ -721,9 +714,9 @@ export default function MiniDrawer() {
             </List>
             <List className={styles.btnContainer}>
               <a id="puzzleBtn" className={styles.link} href="/puzzle">
-                <ListItem className={`${styles.listItem} ${isCurrentPage('/puzzle') ? styles.activePage : ''}`} sx={listItemStyle}>
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/puzzle') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                       <PuzzlePiece 
                         style={{ 
                           color: isCurrentPage('/puzzle') ? '#10B981' : getTextColor(),
@@ -732,7 +725,7 @@ export default function MiniDrawer() {
                         weight={isCurrentPage('/puzzle') ? "fill" : "regular"}
                       />
                       {sidebarExpanded && (
-                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/puzzle') ? '600' : '400' }}>
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/puzzle') ? '600' : '400' }}>
                           Puzzle
                         </Box>
                       )}
@@ -743,9 +736,9 @@ export default function MiniDrawer() {
             </List>
             <List className={styles.btnContainer}>
               <a id="viewerBtn" className={styles.link} href="/viewer">
-                <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={listItemStyle}>
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/viewer') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                       <Binoculars 
                         style={{ 
                           color: isCurrentPage('/viewer') ? '#34D399' : getTextColor(),
@@ -754,7 +747,7 @@ export default function MiniDrawer() {
                         weight={isCurrentPage('/viewer') ? "fill" : "regular"}
                       />
                       {sidebarExpanded && (
-                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/viewer') ? '600' : '400' }}>
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/viewer') ? '600' : '400' }}>
                           Viewer
                         </Box>
                       )}
@@ -765,9 +758,9 @@ export default function MiniDrawer() {
             </List>
             <List className={styles.btnContainer}>
               <a id="3dViewerBtn" className={styles.link} href="/3dviewer">
-                <ListItem className={`${styles.listItem} ${isCurrentPage('/3dviewer') ? styles.activePage : ''}`} sx={listItemStyle}>
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/3dviewer') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                       <Cube 
                         style={{ 
                           color: isCurrentPage('/3dviewer') ? '#8B5CF6' : getTextColor(),
@@ -776,7 +769,7 @@ export default function MiniDrawer() {
                         weight={isCurrentPage('/3dviewer') ? "fill" : "regular"}
                       />
                       {sidebarExpanded && (
-                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/3dviewer') ? '600' : '400' }}>
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/3dviewer') ? '600' : '400' }}>
                           3D Viewer
                         </Box>
                       )}
@@ -787,9 +780,9 @@ export default function MiniDrawer() {
             </List>
             <List className={styles.btnContainer}>
               <a id="submitGameBtn" className={styles.link} href="/submit-game">
-                <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={listItemStyle}>
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                       <Upload 
                         style={{ 
                           color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
@@ -798,7 +791,7 @@ export default function MiniDrawer() {
                         weight={isCurrentPage('/submit-game') ? "fill" : "regular"}
                       />
                       {sidebarExpanded && (
-                        <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isCurrentPage('/submit-game') ? '600' : '400' }}>
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/submit-game') ? '600' : '400' }}>
                           Submit Game
                         </Box>
                       )}
@@ -830,16 +823,9 @@ export default function MiniDrawer() {
                     weight={isSettingsExpanded ? "fill" : "regular"}
                   />
                   {sidebarExpanded && (
-                    <>
-                      <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isSettingsExpanded ? '600' : '400', flex: 1 }}>
-                        Settings
-                      </Box>
-                      {isSettingsExpanded ? (
-                        <CaretDown size={16} color={getTextColor()} />
-                      ) : (
-                        <CaretRight size={16} color={getTextColor()} />
-                      )}
-                    </>
+                    <Box sx={{ color: getTextColor(), fontSize: '14px', fontWeight: isSettingsExpanded ? '600' : '400', flex: 1 }}>
+                      Settings
+                    </Box>
                   )}
                 </Box>
               </Tooltip>
@@ -849,11 +835,11 @@ export default function MiniDrawer() {
         
         {/* Settings Submenu */}
         {isSettingsExpanded && (
-          <Box sx={{ paddingLeft: sidebarExpanded ? '20px' : '0', borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none', marginLeft: sidebarExpanded ? '12px' : '0' }}>
+          <Box sx={{ paddingLeft: sidebarExpanded ? '6px' : '0', borderLeft: sidebarExpanded ? '1px solid rgba(255,255,255,0.12)' : 'none', marginLeft: sidebarExpanded ? '4px' : '0' }}>
             <List className={styles.btnContainer}>
               <ListItem className={styles.listItem} onClick={toggleColorPicker} sx={{ ...listItemStyle, cursor: 'pointer' }}>
                 <ListItemIcon sx={iconStyle}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                     <Palette 
                       style={{ 
                         color: isColorSectionExpanded ? '#8B5CF6' : getTextColor(),
@@ -862,7 +848,7 @@ export default function MiniDrawer() {
                       weight={isColorSectionExpanded ? "fill" : "regular"}
                     />
                     {sidebarExpanded && (
-                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isColorSectionExpanded ? '600' : '400' }}>
+                      <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isColorSectionExpanded ? '600' : '400' }}>
                         Colors
                       </Box>
                     )}
@@ -873,7 +859,7 @@ export default function MiniDrawer() {
             <List className={styles.btnContainer}>
               <ListItem className={styles.listItem} onClick={toggleDecorations} sx={{ ...listItemStyle, cursor: 'pointer' }}>
                 <ListItemIcon sx={iconStyle}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                     <Star 
                       style={{ 
                         color: isDecorationSectionExpanded ? '#F97316' : 
@@ -884,7 +870,7 @@ export default function MiniDrawer() {
                       weight={isDecorationSectionExpanded ? "fill" : "regular"}
                     />
                     {sidebarExpanded && (
-                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isDecorationSectionExpanded ? '600' : '400' }}>
+                      <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isDecorationSectionExpanded ? '600' : '400' }}>
                         Decorations
                       </Box>
                     )}
@@ -895,7 +881,7 @@ export default function MiniDrawer() {
             <List className={styles.btnContainer}>
               <ListItem className={styles.listItem} onClick={toggleSoundOptions} sx={{ ...listItemStyle, cursor: 'pointer' }}>
                 <ListItemIcon sx={iconStyle}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
                     <SpeakerHigh 
                       style={{ 
                         color: isSoundSectionExpanded ? '#10B981' : getTextColor(),
@@ -904,7 +890,7 @@ export default function MiniDrawer() {
                       weight={isSoundSectionExpanded ? "fill" : "regular"}
                     />
                     {sidebarExpanded && (
-                      <Box sx={{ color: getTextColor(), fontSize: '13px', fontWeight: isSoundSectionExpanded ? '600' : '400' }}>
+                      <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isSoundSectionExpanded ? '600' : '400' }}>
                         Sound
                       </Box>
                     )}
