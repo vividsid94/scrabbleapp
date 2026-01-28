@@ -127,14 +127,14 @@ const styles = {
     fontWeight: '500'
   },
   loadingSpinner: {
-    width: '16px',
-    height: '16px',
+    width: '14px',
+    height: '14px',
     border: '2px solid transparent',
     borderTopColor: '#fff',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
     display: 'inline-block',
-    marginRight: '8px'
+    marginRight: '6px'
   },
   userInfo: {
     display: 'flex',
@@ -207,7 +207,7 @@ const MultiplayerLobby = () => {
   };
 
   const handleGameCodeChange = (e) => {
-    const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
     setGameCode(code);
     setError(null);
   };
@@ -244,8 +244,8 @@ const MultiplayerLobby = () => {
       return;
     }
 
-    if (gameCode.length !== 6) {
-      setError('Please enter a valid 6-character game code');
+    if (gameCode.length !== 4) {
+      setError('Please enter a valid 4-character game code');
       return;
     }
 
@@ -270,7 +270,7 @@ const MultiplayerLobby = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && gameCode.length === 6) {
+    if (e.key === 'Enter' && gameCode.length === 4) {
       handleJoinGame();
     }
   };
@@ -319,8 +319,8 @@ const MultiplayerLobby = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: { xs: '12px', sm: '16px' },
-          padding: { xs: '20px 16px', sm: '28px 24px' },
+          gap: { xs: '8px', sm: '10px' },
+          padding: { xs: '16px 14px', sm: '20px 18px' },
           maxWidth: '650px',
           width: '100%',
           backgroundColor: isDark ? '#2A3A4A' : '#FDF9F3',
@@ -355,17 +355,17 @@ const MultiplayerLobby = () => {
       >
         <Box
           sx={{
-            fontSize: { xs: '18px', sm: '20px' },
+            fontSize: { xs: '16px', sm: '18px' },
             fontWeight: 600,
             color: isDark ? 'rgba(217, 119, 6, 0.9)' : '#8B7355',
             letterSpacing: '0.02em',
-            marginBottom: '4px',
+            marginBottom: '2px',
             fontFamily: 'serif',
             textAlign: 'center',
             borderBottom: isDark
               ? '2px solid rgba(217, 119, 6, 0.3)'
               : '2px solid rgba(139, 115, 85, 0.3)',
-            paddingBottom: { xs: '6px', sm: '8px' },
+            paddingBottom: { xs: '4px', sm: '6px' },
             width: '100%'
           }}
         >
@@ -373,115 +373,72 @@ const MultiplayerLobby = () => {
         </Box>
         <Box
           sx={{
-            fontSize: { xs: '12px', sm: '13px' },
+            fontSize: { xs: '11px', sm: '12px' },
             color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
-            marginBottom: '12px',
+            marginBottom: '8px',
             textAlign: 'center'
           }}
         >
           Play Scrabble with friends in real-time
         </Box>
 
-        {/* User Info */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: { xs: '10px 12px', sm: '12px 14px' },
-            borderRadius: '4px',
-            marginBottom: '12px',
+        {/* Name Input */}
+        <input
+          type="text"
+          value={playerName}
+          onChange={handleNameChange}
+          placeholder="Enter your name"
+          className="multiplayer-input"
+          style={{
             width: '100%',
-            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+            padding: '10px 12px',
+            borderRadius: '4px',
+            border: `1px solid ${colors.border}`,
+            fontSize: '14px',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+            boxSizing: 'border-box',
+            backgroundColor: colors.inputBg,
+            color: colors.text,
+            marginBottom: '8px'
+          }}
+        />
+
+        {/* Create Game Button */}
+        <button
+          onClick={handleCreateGame}
+          disabled={isCreating || isJoining}
+          className="multiplayer-button"
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            borderRadius: '4px',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: '#fff'
           }}
         >
-          <Box
-            sx={{
-              width: { xs: '32px', sm: '36px' },
-              height: { xs: '32px', sm: '36px' },
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '600',
-              fontSize: { xs: '14px', sm: '16px' },
-              flexShrink: 0,
-              backgroundColor: colors.avatarBg,
-              color: '#fff'
-            }}
-          >
-            {playerName ? playerName[0].toUpperCase() : '?'}
-          </Box>
-          <input
-            type="text"
-            value={playerName}
-            onChange={handleNameChange}
-            placeholder="Enter your name"
-            className="multiplayer-input"
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: '4px',
-              border: `1px solid ${colors.border}`,
-              fontSize: '15px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              boxSizing: 'border-box',
-              backgroundColor: colors.inputBg,
-              color: colors.text,
-              flex: 1
-            }}
-          />
-        </Box>
-
-        {/* Create Game Section */}
-        <Box sx={{ marginBottom: '16px', width: '100%' }}>
-          <Box
-            sx={{
-              fontSize: { xs: '13px', sm: '14px' },
-              fontWeight: '600',
-              marginBottom: '8px',
-              color: colors.text
-            }}
-          >
-            Create a New Game
-          </Box>
-          <button
-            onClick={handleCreateGame}
-            disabled={isCreating || isJoining}
-            className="multiplayer-button"
-            style={{
-              width: '100%',
-              padding: { xs: '12px', sm: '14px' },
-              borderRadius: '4px',
-              border: 'none',
-              fontSize: { xs: '14px', sm: '15px' },
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              marginTop: '8px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              color: '#fff'
-            }}
-          >
-            {isCreating ? (
-              <>
-                <span style={styles.loadingSpinner}></span>
-                Creating Game...
-              </>
-            ) : (
-              'Create Game'
-            )}
-          </button>
-        </Box>
+          {isCreating ? (
+            <>
+              <span style={styles.loadingSpinner}></span>
+              Creating Game...
+            </>
+          ) : (
+            'Create Game'
+          )}
+        </button>
 
         {/* Divider */}
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            margin: '16px 0',
+            gap: '10px',
+            margin: '10px 0',
             width: '100%'
           }}
         >
@@ -495,7 +452,7 @@ const MultiplayerLobby = () => {
           />
           <Box
             sx={{
-              fontSize: { xs: '11px', sm: '12px' },
+              fontSize: { xs: '10px', sm: '11px' },
               opacity: 0.5,
               textTransform: 'uppercase',
               fontWeight: '500',
@@ -515,12 +472,12 @@ const MultiplayerLobby = () => {
         </Box>
 
         {/* Join Game Section */}
-        <Box sx={{ marginBottom: '16px', width: '100%' }}>
+        <Box sx={{ marginBottom: '8px', width: '100%' }}>
           <Box
             sx={{
-              fontSize: { xs: '13px', sm: '14px' },
+              fontSize: { xs: '12px', sm: '13px' },
               fontWeight: '600',
-              marginBottom: '8px',
+              marginBottom: '6px',
               color: colors.text
             }}
           >
@@ -535,35 +492,35 @@ const MultiplayerLobby = () => {
             className="multiplayer-input"
             style={{
               width: '100%',
-              padding: '14px',
+              padding: '10px 12px',
               borderRadius: '4px',
               border: `1px solid ${colors.border}`,
-              fontSize: '22px',
+              fontSize: '18px',
               fontWeight: '700',
-              letterSpacing: '4px',
+              letterSpacing: '3px',
               textAlign: 'center',
               textTransform: 'uppercase',
               outline: 'none',
               transition: 'border-color 0.2s',
               boxSizing: 'border-box',
               backgroundColor: colors.inputBg,
-              color: colors.text
+              color: colors.text,
+              marginBottom: '6px'
             }}
           />
           <button
             onClick={handleJoinGame}
-            disabled={isJoining || isCreating || gameCode.length !== 6}
+            disabled={isJoining || isCreating || gameCode.length !== 4}
             className="multiplayer-button"
             style={{
               width: '100%',
-              padding: '14px',
+              padding: '10px 12px',
               borderRadius: '4px',
               border: `1px solid ${colors.border}`,
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.2s',
-              marginTop: '8px',
               background: 'transparent',
               color: colors.text
             }}
@@ -584,8 +541,8 @@ const MultiplayerLobby = () => {
           <Box
             sx={{
               color: '#ef4444',
-              fontSize: { xs: '12px', sm: '13px' },
-              marginTop: '8px',
+              fontSize: { xs: '11px', sm: '12px' },
+              marginTop: '6px',
               textAlign: 'center',
               width: '100%'
             }}

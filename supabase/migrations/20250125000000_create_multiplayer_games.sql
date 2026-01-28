@@ -56,7 +56,7 @@ DECLARE
 BEGIN
     LOOP
         result := '';
-        FOR i IN 1..6 LOOP
+        FOR i IN 1..4 LOOP
             result := result || substr(chars, floor(random() * length(chars) + 1)::int, 1);
         END LOOP;
         

@@ -89,7 +89,7 @@ export const createGame = async (playerName) => {
 
 /**
  * Joins an existing multiplayer game
- * @param {string} gameCode - The 6-character game code
+ * @param {string} gameCode - The 4-character game code
  * @param {string} playerName - Display name for the joining player
  * @returns {Promise<{success: boolean, game?: object, error?: string}>}
  */

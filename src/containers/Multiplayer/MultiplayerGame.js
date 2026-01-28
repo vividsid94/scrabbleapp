@@ -174,10 +174,9 @@ const MultiplayerGame = () => {
     disconnected: '#ef4444'
   };
 
-  // Copy share link to clipboard
-  const copyShareLink = useCallback(() => {
-    const link = `${window.location.origin}/multiplayer/${gameCode}`;
-    navigator.clipboard.writeText(link);
+  // Copy game code to clipboard
+  const copyGameCode = useCallback(() => {
+    navigator.clipboard.writeText(gameCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [gameCode]);
@@ -426,8 +425,6 @@ const MultiplayerGame = () => {
 
   // Waiting for opponent overlay
   if (isWaitingForOpponent) {
-    const shareLink = `${window.location.origin}/multiplayer/${gameCode}`;
-
     return (
       <>
         <Sidenav />
@@ -448,8 +445,8 @@ const MultiplayerGame = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: { xs: '12px', sm: '16px' },
-              padding: { xs: '20px 16px', sm: '28px 24px' },
+              gap: { xs: '8px', sm: '10px' },
+              padding: { xs: '16px 14px', sm: '20px 18px' },
               maxWidth: '650px',
               width: '100%',
               backgroundColor: isDark ? '#2A3A4A' : '#FDF9F3',
@@ -475,17 +472,17 @@ const MultiplayerGame = () => {
           >
             <Box
               sx={{
-                fontSize: { xs: '18px', sm: '20px' },
+                fontSize: { xs: '16px', sm: '18px' },
                 fontWeight: 600,
                 color: isDark ? 'rgba(217, 119, 6, 0.9)' : '#8B7355',
                 letterSpacing: '0.02em',
-                marginBottom: '4px',
+                marginBottom: '2px',
                 fontFamily: 'serif',
                 textAlign: 'center',
                 borderBottom: isDark
                   ? '2px solid rgba(217, 119, 6, 0.3)'
                   : '2px solid rgba(139, 115, 85, 0.3)',
-                paddingBottom: { xs: '6px', sm: '8px' },
+                paddingBottom: { xs: '4px', sm: '6px' },
                 width: '100%'
               }}
             >
@@ -493,9 +490,9 @@ const MultiplayerGame = () => {
             </Box>
             <Box
               sx={{
-                fontSize: { xs: '12px', sm: '13px' },
+                fontSize: { xs: '11px', sm: '12px' },
                 color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
-                marginBottom: '12px',
+                marginBottom: '8px',
                 textAlign: 'center'
               }}
             >
@@ -504,13 +501,13 @@ const MultiplayerGame = () => {
 
             <Box
               sx={{
-                fontSize: { xs: '28px', sm: '32px' },
+                fontSize: { xs: '24px', sm: '28px' },
                 fontWeight: '700',
-                letterSpacing: '6px',
-                padding: { xs: '12px 20px', sm: '14px 24px' },
+                letterSpacing: '4px',
+                padding: { xs: '10px 16px', sm: '12px 20px' },
                 borderRadius: '4px',
                 fontFamily: 'monospace',
-                marginBottom: '12px',
+                marginBottom: '8px',
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                 color: isDark ? '#fff' : '#1f2937',
                 border: isDark 
@@ -523,27 +520,14 @@ const MultiplayerGame = () => {
               {gameCode}
             </Box>
 
-            <Box
-              sx={{
-                fontSize: { xs: '11px', sm: '12px' },
-                color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
-                marginBottom: '12px',
-                wordBreak: 'break-all',
-                textAlign: 'center',
-                width: '100%'
-              }}
-            >
-              {shareLink}
-            </Box>
-
             <button
-              onClick={copyShareLink}
+              onClick={copyGameCode}
               style={{
                 width: '100%',
-                padding: '14px',
+                padding: '10px 12px',
                 borderRadius: '4px',
                 border: 'none',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -551,21 +535,21 @@ const MultiplayerGame = () => {
                 color: '#fff'
               }}
             >
-              {copied ? 'Copied!' : 'Copy Link'}
+              {copied ? 'Copied!' : 'Copy Code'}
             </button>
 
             <button
               onClick={() => navigate('/multiplayer')}
               style={{
                 width: '100%',
-                padding: '14px',
+                padding: '10px 12px',
                 borderRadius: '4px',
                 border: `1px solid ${colors.border}`,
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                marginTop: '8px',
+                marginTop: '6px',
                 background: 'transparent',
                 color: colors.textSecondary
               }}
