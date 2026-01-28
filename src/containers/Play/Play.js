@@ -1243,6 +1243,7 @@ export default function Play({ isMultiplayer = false }) {
                   maxWidth: { xs: '100%', sm: '650px' },
                   minHeight: { xs: '400px', sm: '500px' },
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
@@ -1255,8 +1256,8 @@ export default function Play({ isMultiplayer = false }) {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: { xs: '16px', sm: '24px' },
-                    padding: { xs: '24px 20px', sm: '40px 32px' },
+                    gap: { xs: '12px', sm: '16px' },
+                    padding: { xs: '20px 16px', sm: '28px 24px' },
                     maxWidth: '650px',
                     width: '100%',
                     flexShrink: 0,
@@ -1497,9 +1498,7 @@ export default function Play({ isMultiplayer = false }) {
                   display: 'flex',
                         flexDirection: 'column',
                   alignItems: 'center',
-                        gap: { xs: '12px', sm: '16px' },
-                        // Keep slight rotation on individual bot cards for character, but less pronounced
-                        transform: index === 0 ? 'rotate(-1deg)' : 'rotate(0.8deg)',
+                        gap: { xs: '10px', sm: '12px' },
                         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
                   opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
@@ -1507,18 +1506,18 @@ export default function Play({ isMultiplayer = false }) {
                         background: 'transparent',
                         padding: 0,
                         '&:hover:not(:disabled)': {
-                          transform: index === 0 ? 'rotate(-0.5deg) scale(1.05)' : 'rotate(0.4deg) scale(1.05)',
+                          transform: 'scale(1.05)',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
                         },
                         '&:active:not(:disabled)': {
-                          transform: index === 0 ? 'rotate(-1deg) scale(0.98)' : 'rotate(0.8deg) scale(0.98)'
+                          transform: 'scale(0.98)'
                         }
                       }}
                     >
                       <Box
                   sx={{
-                          width: { xs: '80px', sm: '120px' },
-                          height: { xs: '80px', sm: '120px' },
+                          width: { xs: '70px', sm: '100px' },
+                          height: { xs: '70px', sm: '100px' },
                           position: 'relative',
                           display: 'flex',
                           alignItems: 'center',
@@ -1529,10 +1528,10 @@ export default function Play({ isMultiplayer = false }) {
                 </Box>
                       <Box
                         sx={{
-                          fontSize: { xs: '16px', sm: '20px' },
+                          fontSize: { xs: '14px', sm: '18px' },
                           fontWeight: 700,
                           color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                          marginTop: '4px',
+                          marginTop: '2px',
                           fontFamily: 'serif'
                         }}
                       >
@@ -1540,11 +1539,10 @@ export default function Play({ isMultiplayer = false }) {
                       </Box>
                       <Box
                         sx={{
-                          fontSize: { xs: '12px', sm: '14px' },
+                          fontSize: { xs: '11px', sm: '13px' },
                           color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '#4B5563',
                           textAlign: 'center',
-                          lineHeight: 1.6,
-                          fontStyle: 'italic',
+                          lineHeight: 1.4,
                           maxWidth: { xs: '150px', sm: '200px' }
                   }}
                 >
@@ -1555,6 +1553,136 @@ export default function Play({ isMultiplayer = false }) {
               </Box>
             </Box>
           )}
+
+                {/* Multiplayer Card - Separate */}
+                {!botSelectOpen && (
+                <Box
+                  sx={{
+                        position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: { xs: '12px', sm: '16px' },
+                    padding: { xs: '20px 16px', sm: '24px 20px' },
+                    maxWidth: '650px',
+                    width: '100%',
+                    marginTop: { xs: '16px', sm: '20px' },
+                backgroundColor: lightMode === 'dark' 
+                  ? '#2A3A4A' 
+                  : '#FDF9F3',
+                backgroundImage: lightMode === 'dark'
+                  ? `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(120, 120, 120, 0.15) 22px, rgba(120, 120, 120, 0.15) 23px),
+                     repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(80, 80, 80, 0.08) 1px, rgba(80, 80, 80, 0.08) 2px)`
+                  : `repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(220, 210, 195, 0.4) 22px, rgba(220, 210, 195, 0.4) 23px),
+                     repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(200, 190, 175, 0.15) 1px, rgba(200, 190, 175, 0.15) 2px)`,
+                backgroundSize: '100% 23px, 2px 100%',
+                border: lightMode === 'dark' 
+                  ? '1px solid rgba(139, 115, 85, 0.2)' 
+                  : '1px solid rgba(200, 185, 165, 0.4)',
+                borderRadius: '2px',
+                boxShadow: lightMode === 'dark'
+                  ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                     0 8px 16px rgba(0, 0, 0, 0.4),
+                     inset 0 0 200px rgba(0, 0, 0, 0.2)`
+                  : `0 1px 3px rgba(0, 0, 0, 0.12),
+                     0 4px 8px rgba(0, 0, 0, 0.15),
+                     inset 0 0 200px rgba(250, 245, 235, 0.4)`,
+                transition: 'box-shadow 0.3s ease',
+                '&:hover': {
+                  boxShadow: lightMode === 'dark'
+                    ? `0 2px 4px rgba(0, 0, 0, 0.3),
+                       0 8px 16px rgba(0, 0, 0, 0.4),
+                       0 20px 40px rgba(0, 0, 0, 0.6)`
+                    : `0 1px 3px rgba(0, 0, 0, 0.12),
+                       0 4px 8px rgba(0, 0, 0, 0.15),
+                       0 16px 32px rgba(0, 0, 0, 0.25)`
+                }
+              }}
+            >
+              <Box
+                component="button"
+                  onClick={() => {
+                    window.location.href = '/multiplayer';
+                  }}
+                  disabled={isDictionaryLoading || isBotThinking || isPlayerThinking}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 'not-allowed' : 'pointer',
+                    opacity: (isDictionaryLoading || isBotThinking || isPlayerThinking) ? 0.5 : 1,
+                    border: 'none',
+                    background: 'transparent',
+                    padding: '12px',
+                    transition: 'transform 0.2s ease',
+                    '&:hover:not(:disabled)': {
+                      transform: 'translateY(-2px)'
+                    },
+                    '&:active:not(:disabled)': {
+                      transform: 'translateY(0)'
+                    }
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: { xs: '80px', sm: '100px' },
+                      height: { xs: '80px', sm: '100px' },
+                      borderRadius: '50%',
+                      background: lightMode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)'
+                        : 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)',
+                      border: lightMode === 'dark'
+                        ? '2px solid rgba(99, 102, 241, 0.5)'
+                        : '2px solid rgba(99, 102, 241, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: { xs: '32px', sm: '40px' },
+                      color: lightMode === 'dark' ? '#818CF8' : '#6366F1',
+                      boxShadow: lightMode === 'dark'
+                        ? '0 4px 16px rgba(99, 102, 241, 0.3)'
+                        : '0 4px 16px rgba(99, 102, 241, 0.2)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    👥
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: { xs: '16px', sm: '18px' },
+                      fontWeight: 600,
+                      color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                      fontFamily: 'serif',
+                      letterSpacing: '0.02em'
+                    }}
+                  >
+                    Multiplayer (Beta)
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: { xs: '11px', sm: '12px' },
+                      color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6B7280',
+                      textAlign: 'center',
+                      maxWidth: '200px',
+                      lineHeight: 1.3
+                    }}
+                  >
+                    Play with friends in real-time
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: { xs: '10px', sm: '11px' },
+                      color: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.7)' : '#A78B5B',
+                      textAlign: 'center',
+                      marginTop: '-4px'
+                    }}
+                  >
+                    No sign-up required
+                  </Box>
+                </Box>
+              </Box>
+                )}
 
                 {/* Bot Selection Slideout */}
                 {botSelectOpen && (
