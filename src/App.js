@@ -58,14 +58,8 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
         #1F2937
       `;
     } else {
-      return `
-        radial-gradient(circle at 20% 30%, rgba(243, 244, 246, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(229, 231, 235, 0.4) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(249, 250, 251, 0.2) 0%, transparent 60%),
-        radial-gradient(circle at 70% 20%, rgba(243, 244, 246, 0.25) 0%, transparent 45%),
-        radial-gradient(circle at 30% 80%, rgba(229, 231, 235, 0.3) 0%, transparent 50%),
-        #ffffff
-      `;
+      // Light mode: transparent so main page background shows through
+      return 'transparent';
     }
   };
 
@@ -131,9 +125,9 @@ function App() {
   const tileColor = useColorSchemeStore(state => state.color);
   const updateColor = useColorSchemeStore(state => state.updateColor);
   
-  // Update protiles color - same for both light and dark mode
+  // Update protiles color - slightly lighter in light mode, richer in dark mode
   useEffect(() => {
-    const protilesColor = '#92400E'; // Same color for both light and dark mode
+    const protilesColor = lightMode === 'dark' ? '#92400E' : '#C47F36';
     updateColor(protilesColor);
   }, [lightMode, updateColor]);
   

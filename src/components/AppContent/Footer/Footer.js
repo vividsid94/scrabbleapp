@@ -25,14 +25,8 @@ const Footer = () => {
         #1F2937
       `;
     } else {
-      return `
-        radial-gradient(circle at 20% 30%, rgba(243, 244, 246, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(229, 231, 235, 0.4) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(249, 250, 251, 0.2) 0%, transparent 60%),
-        radial-gradient(circle at 70% 20%, rgba(243, 244, 246, 0.25) 0%, transparent 45%),
-        radial-gradient(circle at 30% 80%, rgba(229, 231, 235, 0.3) 0%, transparent 50%),
-        #ffffff
-      `;
+      // Light mode: transparent so main page background shows through
+      return 'transparent';
     }
   };
 

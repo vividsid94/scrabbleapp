@@ -82,8 +82,8 @@ export default function MiniDrawer() {
   const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
 
   const getBackgroundColor = () => {
-    // Use deep navy for light mode instead of pure charcoal
-    return lightMode === 'dark' ? '#1F2937' : '#1e3a5f';
+    // Dark mode: deep gray; Light mode: slightly lighter gray
+    return lightMode === 'dark' ? '#1F2937' : '#9CA3AF';
   };
 
   const getTextColor = () => {
