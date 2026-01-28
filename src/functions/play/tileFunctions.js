@@ -32,19 +32,37 @@ export function handleTileDrop({
   setSelectedTiles,
   setSelectedBoardPosition,
   tempBoardCoords,
-  setTempBoardCoords
+  setTempBoardCoords,
+  currentPlayer
 }) {
-  // Don't remove tiles from rack immediately - just track them in selectedTiles
-  // Tiles will be removed during word submission
-  
-  setSelectedTiles([...selectedTiles, { tile, row, col }]);
+  // Track dropped tile for submission and previews
+  setSelectedTiles([...(selectedTiles || []), { tile, row, col }]);
   console.log('🔍 DEBUG - Tile dropped:', {
     tile: tile,
     row: row,
     col: col,
-    selectedTilesAfter: [...selectedTiles, { tile, row, col }]
+    selectedTilesAfter: [...(selectedTiles || []), { tile, row, col }]
   });
   setSelectedBoardPosition({ row, col });
+
+  // Visually remove the tile from the correct rack immediately,
+  // so the rack mirrors keyboard entry behaviour.
+  const numericIndex = Number(index);
+  if (!Number.isNaN(numericIndex)) {
+    if (currentPlayer === 1 && Array.isArray(player1Rack) && setPlayer1Rack) {
+      const newRack = [...player1Rack];
+      if (newRack[numericIndex] === tile) {
+        newRack.splice(numericIndex, 1);
+        setPlayer1Rack(newRack);
+      }
+    } else if (currentPlayer === 2 && Array.isArray(player2Rack) && setPlayer2Rack) {
+      const newRack = [...player2Rack];
+      if (newRack[numericIndex] === tile) {
+        newRack.splice(numericIndex, 1);
+        setPlayer2Rack(newRack);
+      }
+    }
+  }
 
   const newTempBoard = [...tempBoardCoords];
   newTempBoard[row][col] = tile;

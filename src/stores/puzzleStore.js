@@ -166,29 +166,28 @@ export const usePuzzleStore = create((set, get) => {
     setIsExecutingFastPlay: (executing) => set({ isExecutingFastPlay: executing }),
     setShowAllBingos: (show) => set({ showAllBingos: show }),
     // Puzzle tile placement actions
+    // Allow drag-and-drop from the rack onto the board (like Play),
+    // without mutating the underlying rack; we only track placed tiles
+    // in selectedTiles and in the temporary board. We mark these as
+    // fromRack: false so backspace knows not to add them back.
     handleTileDrop: (tile, index, row, col) => {
       const {
-        selectedRackTiles,
         selectedTiles,
         setSelectedTiles,
-        setSelectedRackTiles,
         setSelectedBoardPosition,
         tempBoardCoords,
         setTempBoardCoords
       } = get();
+
+      const safeSelected = Array.isArray(selectedTiles) ? selectedTiles : [];
+
+      // Track the placed tile for puzzle validation
+      setSelectedTiles([...safeSelected, { tile, row, col, fromRack: false }]);
       
-      // Find the tile in selectedRackTiles
-      const rackTile = selectedRackTiles.find(t => t.tile === tile && t.index === index);
-      if (rackTile) {
-        // Add to board tiles
-        setSelectedTiles([...selectedTiles, { tile, row, col }]);
-        // Remove from rack tiles
-        const newRackTiles = selectedRackTiles.filter(t => !(t.tile === tile && t.index === index));
-        setSelectedRackTiles(newRackTiles);
-      }
-      
+      // Update the "cursor" position
       setSelectedBoardPosition({ row, col });
 
+      // Write the tile into the temporary board
       const newTempBoard = [...tempBoardCoords];
       newTempBoard[row][col] = tile;
       setTempBoardCoords(newTempBoard);
@@ -512,28 +511,33 @@ export const usePuzzleStore = create((set, get) => {
           const lastCol = lastPlacedTile.col;
           
           if (lastRow >= 0 && lastCol >= 0 && Number.isInteger(boardCoords[lastRow][lastCol])) {
-            const tileToRemove = newTempBoard[lastRow][lastCol];
+            const tileOnTempBoard = newTempBoard[lastRow][lastCol];
             
-            if (typeof tileToRemove === 'string' && tileToRemove.length === 1) {
+            if (typeof tileOnTempBoard === 'string' && tileOnTempBoard.length === 1) {
               // Restore original board value
               newTempBoard[lastRow][lastCol] = boardCoords[lastRow][lastCol];
               setTempBoardCoords(newTempBoard);
               
-              const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
               // Find the tile that was placed at this position
               const placedTile = selectedTiles && selectedTiles.find(tile => tile.row === lastRow && tile.col === lastCol);
               if (placedTile) {
-                const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
-                const newRack = [...currentRack, tileToAdd];
-                if (currentPlayer === 1) {
-                  setPlayer1Rack(alphabetizeRack(newRack));
-                } else {
-                  setPlayer2Rack(alphabetizeRack(newRack));
-                }
+                // Only add back to the rack if this tile originally came from the rack
+                // (keyboard placement). Drag-and-drop tiles are fromRack: false and
+                // should not change the underlying rack.
+                if (placedTile.fromRack) {
+                  const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
+                  const tileToAdd = placedTile.tile === '*' ? '?' : placedTile.tile;
+                  const newRack = [...currentRack, tileToAdd];
+                  if (currentPlayer === 1) {
+                    setPlayer1Rack(alphabetizeRack(newRack));
+                  } else {
+                    setPlayer2Rack(alphabetizeRack(newRack));
+                  }
 
-                // Remove from blankTiles if it was a blank
-                if (placedTile.tile === '*') {
-                  setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+                  // Remove from blankTiles if it was a blank
+                  if (placedTile.tile === '*') {
+                    setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
+                  }
                 }
 
                 // Update selectedTiles to match what's actually on the board
@@ -592,7 +596,9 @@ export const usePuzzleStore = create((set, get) => {
         newRack.splice(tileIndex, 1);
         newTempBoard[row][col] = key;
         const currentSelectedTiles = selectedTiles || [];
-        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
+        // Mark this tile as originating from the rack so backspace can
+        // correctly restore it.
+        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col, fromRack: true }]);
       } 
       // Only use the blank tile if we don't have the letter
       else if (blankIndex !== -1) {
@@ -603,7 +609,8 @@ export const usePuzzleStore = create((set, get) => {
         newBlankTiles.push({ row, col });
         setBlankTiles(newBlankTiles);
         const currentSelectedTiles = selectedTiles || [];
-        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col }]);
+        // Mark blank placements as from the rack as well
+        setSelectedTiles([...currentSelectedTiles, { tile: tileToPlace, row, col, fromRack: true }]);
       }
 
       // Update the rack immediately when typing

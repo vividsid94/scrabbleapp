@@ -331,17 +331,56 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
               </Box>
             </Box>
           </Box>
+          {/* Derive a display rack that hides tiles already placed on the board during a puzzle,
+              similar to how Play removes tiles from the rack on drag. */}
           <Box style={{ marginTop: '12px' }}>
-            {currentRack && currentRack.length > 0 && (
-              <Box className={styles.Rack}>
-                <Rack 
-                  rack={currentRack} 
-                  color={color.current} 
-                  onTileClick={handleTileClick}
-                  selectedTiles={isPausedForBingo ? selectedRackTiles : tilesToExchange}
-                />
-              </Box>
-            )}
+            {(() => {
+              const rack = currentRack || [];
+              // Only hide tiles while we are in puzzle pause mode and have placed tiles
+              if (!isPausedForBingo || !selectedTiles || selectedTiles.length === 0) {
+                return rack.length > 0 ? (
+                  <Box className={styles.Rack}>
+                    <Rack 
+                      rack={rack} 
+                      color={color.current} 
+                      onTileClick={handleTileClick}
+                      // During puzzles, selection is represented on the board, so we don't need rack highlighting
+                      selectedTiles={[]}
+                    />
+                  </Box>
+                ) : null;
+              }
+
+              // Build a multiset of tiles that are already on the board for this guess
+              const toRemove = {};
+              selectedTiles.forEach(t => {
+                const letter = t.tile;
+                toRemove[letter] = (toRemove[letter] || 0) + 1;
+              });
+
+              const remaining = { ...toRemove };
+              const displayRack = [];
+              rack.forEach(letter => {
+                if (remaining[letter] > 0) {
+                  remaining[letter] -= 1; // consume one copy
+                } else {
+                  displayRack.push(letter);
+                }
+              });
+
+              if (displayRack.length === 0) return null;
+
+              return (
+                <Box className={styles.Rack}>
+                  <Rack 
+                    rack={displayRack} 
+                    color={color.current} 
+                    onTileClick={handleTileClick}
+                    selectedTiles={[]}
+                  />
+                </Box>
+              );
+            })()}
           </Box>
         </Box>
       )}

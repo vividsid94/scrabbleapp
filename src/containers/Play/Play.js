@@ -1194,11 +1194,12 @@ export default function Play({ isMultiplayer = false }) {
               setPlayer1Rack,
               player2Rack,
               setPlayer2Rack,
-                  selectedTilesArray,
+              selectedTiles: selectedTilesArray,
               setSelectedTiles,
               setSelectedBoardPosition,
               tempBoardCoords,
-              setTempBoardCoords
+              setTempBoardCoords,
+              currentPlayer
             })}
             onTileClick={(tile, index) => handleTileClick({
               tile,
