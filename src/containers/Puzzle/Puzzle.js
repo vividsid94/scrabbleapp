@@ -383,7 +383,6 @@ export default function Puzzle() {
                 previewScorePosition={null}
                 lastMoveCoordinates={lastMoveCoordinates}
                 onBoardChildClick={isPausedForBingo ? handleBoardPositionSelect : undefined}
-                onTileDrop={isPausedForBingo ? handleTileDrop : undefined}
                 selectedPosition={isPausedForBingo ? selectedBoardPosition : null}
                 arrowDirection={isPausedForBingo ? arrowDirection : 'right'}
                 lightMode={lightMode}

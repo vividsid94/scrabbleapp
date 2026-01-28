@@ -540,8 +540,6 @@ export default function Play({ isMultiplayer = false }) {
   const botMoveMadeRef = useRef(false);
   const mascotRef = useRef();
   const theoYellMascotRef = useRef(); // Separate ref for Theo Yell mascot
-  // Hidden input to trigger the mobile keyboard when a board square is tapped
-  const mobileInputRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const [botSelectOpen, setBotSelectOpen] = useState(false);
   const [showTimeControls, setShowTimeControls] = useState(false);
@@ -563,6 +561,19 @@ export default function Play({ isMultiplayer = false }) {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Helper to simulate keyboard input from a mobile on-screen keyboard
+  const triggerKeyFromOverlay = (key) => {
+    const event = {
+      key,
+      altKey: false,
+      shiftKey: false,
+      ctrlKey: false,
+      metaKey: false,
+      preventDefault: () => {}
+    };
+    handleKeyDownWrapper(event, playerMoveSound, origBoard);
+  };
   const skillBots = [
     { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.', icon: <img src="/images/theomascot.png" alt="Theo" width={18} height={18} style={{ borderRadius: '3px' }} /> },
     { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!', icon: <img src="/images/tessmascot.png" alt="Tess" width={18} height={18} style={{ borderRadius: '3px' }} /> },
@@ -1121,28 +1132,6 @@ export default function Play({ isMultiplayer = false }) {
       )}
       
       <Sidenav/>
-      {/* Hidden input to summon the mobile soft keyboard when a valid square is tapped */}
-      <input
-        ref={mobileInputRef}
-        type="text"
-        inputMode="text"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="characters"
-        // Visually hidden but still focusable
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: 1,
-          height: 1,
-          opacity: 0,
-          border: 'none',
-          padding: 0,
-          margin: 0,
-          zIndex: -1
-        }}
-      />
       <Box 
         className={styles.page}
         sx={isTheoYelling ? {
@@ -1213,7 +1202,7 @@ export default function Play({ isMultiplayer = false }) {
             lightMode={lightMode}
             showNoCommentaryLabel={false}
             onBoardChildClick={(row, col) => {
-              // First, run the existing selection logic (only works on non-occupied cells)
+              // Run the existing selection logic (only works on non-occupied cells)
               handleBoardPositionSelect({
                 row,
                 col,
@@ -1223,28 +1212,7 @@ export default function Play({ isMultiplayer = false }) {
                 arrowDirection,
                 setArrowDirection
               });
-
-              // On mobile, focus a hidden input to bring up the soft keyboard
-              if (isMobile && mobileInputRef.current) {
-                mobileInputRef.current.focus();
-              }
             }}
-            onTileDrop={(tile, index, row, col) => handleTileDrop({
-              tile,
-              index,
-              row,
-              col,
-              player1Rack,
-              setPlayer1Rack,
-              player2Rack,
-              setPlayer2Rack,
-              selectedTiles: selectedTilesArray,
-              setSelectedTiles,
-              setSelectedBoardPosition,
-              tempBoardCoords,
-              setTempBoardCoords,
-              currentPlayer
-            })}
             onTileClick={(tile, index) => handleTileClick({
               tile,
               index,
@@ -3029,6 +2997,41 @@ export default function Play({ isMultiplayer = false }) {
           </Box>
         </Box>
         </Box>
+
+        {/* Mobile on-screen keyboard overlay for board input */}
+        {isMobile && gameStarted && selectedBoardPosition && !gameEnded && (
+          <Box className={styles.mobileKeyboardOverlay}>
+            {['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row, rowIndex) => (
+              <Box key={rowIndex} className={styles.mobileKeyboardRow}>
+                {row.split('').map((letter) => (
+                  <Box
+                    key={letter}
+                    className={styles.mobileKey}
+                    onClick={() => triggerKeyFromOverlay(letter)}
+                  >
+                    {letter}
+                  </Box>
+                ))}
+                {rowIndex === 2 && (
+                  <>
+                    <Box
+                      className={`${styles.mobileKey} ${styles.mobileKeyWide}`}
+                      onClick={() => triggerKeyFromOverlay('Backspace')}
+                    >
+                      ⌫
+                    </Box>
+                    <Box
+                      className={`${styles.mobileKey} ${styles.mobileKeyWide}`}
+                      onClick={() => triggerKeyFromOverlay('Enter')}
+                    >
+                      ↵
+                    </Box>
+                  </>
+                )}
+              </Box>
+            ))}
+          </Box>
+        )}
 
         <GameModal />
 

@@ -23,6 +23,7 @@ export default (function() {
         }
 
         const handleDragStart = (e, tile, index) => {
+            if (props.enableDrag === false) return;
             e.dataTransfer.setData('tile', tile);
             e.dataTransfer.setData('index', index);
             e.dataTransfer.effectAllowed = 'move';
@@ -35,7 +36,7 @@ export default (function() {
                     <Box 
                         key={index}
                         className={`${styles.Protile} ${props.selectedTiles?.some(t => t.tile === letter && t.index === index) ? styles.selected : ''}`}
-                        draggable={true}
+                        draggable={props.enableDrag !== false}
                         onDragStart={(e) => handleDragStart(e, letter, index)}
                         onClick={() => props.onTileClick && props.onTileClick(letter, index)}
                     >
