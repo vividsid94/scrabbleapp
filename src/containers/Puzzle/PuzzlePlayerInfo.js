@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from "@mui/material";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { Pause, Play, GridFour, Lightning, ArrowClockwise } from '@phosphor-icons/react';
+import { Pause, Play, GridFour, Lightning, ArrowClockwise, ScribbleLoop } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
@@ -38,7 +38,7 @@ const MemoizedLatestMove = React.memo(() => {
   );
 });
 
-const PuzzlePlayerInfo = React.memo(() => {
+const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }) => {
   const { lightMode } = useContext(ThemeContext);
   // Get global color scheme
   const color = useColorSchemeStore(state => state.color);
@@ -215,6 +215,22 @@ const PuzzlePlayerInfo = React.memo(() => {
             )}
           </div>
         </Tooltip>
+        {gameStarted && (
+          <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
+            <ScribbleLoop
+              className={`${styles.keyBtn} ${telestratorEnabled ? styles.active : ''}`}
+              style={{
+                fontSize: 20,
+                cursor: 'pointer',
+                marginRight: '4px',
+                color: telestratorEnabled
+                  ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                  : (lightMode === 'dark' ? '#fff' : '#1F2937')
+              }}
+              onClick={() => onToggleTelestrator && onToggleTelestrator(!telestratorEnabled)}
+            />
+          </Tooltip>
+        )}
         {gameStarted && (
           <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
               {isManuallyPaused ? (

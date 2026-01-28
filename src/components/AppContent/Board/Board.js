@@ -26,7 +26,8 @@ export default function Board({
     previewScorePosition,
     lastMoveCoordinates = [],
     commentary = null,
-    showNoCommentaryLabel = true
+    showNoCommentaryLabel = true,
+    enableTelestrator = false
 }) {
     const { lightMode } = useContext(ThemeContext);
     const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
@@ -49,6 +50,9 @@ export default function Board({
     const [isMobile, setIsMobile] = useState(false);
     const [boardHeight, setBoardHeight] = useState(0);
     const boardRef = useRef(null);
+    const telestratorRef = useRef(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [telestratorStrokes, setTelestratorStrokes] = useState([]);
     const handleClose = () => setOpen(false);
 
     useEffect(() => {
@@ -279,6 +283,46 @@ export default function Board({
         border: lightMode === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : 'none'
     });
 
+    const handleTelestratorMouseDown = (e) => {
+        if (!enableTelestrator || !telestratorRef.current) return;
+        e.preventDefault();
+        const rect = telestratorRef.current.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 1000;
+        const y = ((e.clientY - rect.top) / rect.height) * 1000;
+        setIsDrawing(true);
+        setTelestratorStrokes(prev => [
+            ...prev,
+            { id: Date.now(), points: [{ x, y }] }
+        ]);
+    };
+
+    const handleTelestratorMouseMove = (e) => {
+        if (!enableTelestrator || !isDrawing || !telestratorRef.current) return;
+        e.preventDefault();
+        const rect = telestratorRef.current.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 1000;
+        const y = ((e.clientY - rect.top) / rect.height) * 1000;
+        setTelestratorStrokes(prev => {
+            if (!prev.length) return prev;
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            updated[updated.length - 1] = {
+                ...last,
+                points: [...last.points, { x, y }]
+            };
+            return updated;
+        });
+    };
+
+    const handleTelestratorEnd = () => {
+        if (!isDrawing) return;
+        setIsDrawing(false);
+    };
+
+    const handleClearTelestrator = () => {
+        setTelestratorStrokes([]);
+    };
+
     return (
         <Box className={styles.boardWrapper}>
             <Box 
@@ -325,6 +369,22 @@ export default function Board({
                             <Hand size={16} weight="bold" />
                         </Box>
                     </Tooltip>
+                    {enableTelestrator && (
+                        <Tooltip title="Clear telestrator drawings" placement="right">
+                            <Box
+                                className={styles.telestratorClearButton}
+                                onClick={handleClearTelestrator}
+                                style={{
+                                    backgroundColor: lightMode === 'dark' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(220, 38, 38, 0.9)',
+                                    color: '#fff',
+                                    transform: `scale(${boardScale})`,
+                                    transformOrigin: 'left center'
+                                }}
+                            >
+                                Clear
+                            </Box>
+                        </Tooltip>
+                    )}
                 </Box>
             )}
 
@@ -501,6 +561,29 @@ export default function Board({
                             )}
                         </tbody>
                     </table>
+                    {enableTelestrator && (
+                        <svg
+                            ref={telestratorRef}
+                            className={styles.telestratorOverlay}
+                            viewBox="0 0 1000 1000"
+                            onMouseDown={handleTelestratorMouseDown}
+                            onMouseMove={handleTelestratorMouseMove}
+                            onMouseUp={handleTelestratorEnd}
+                            onMouseLeave={handleTelestratorEnd}
+                        >
+                            {telestratorStrokes.map(stroke => (
+                                <polyline
+                                    key={stroke.id}
+                                    points={stroke.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                    fill="none"
+                                    stroke="rgba(239, 68, 68, 0.95)"
+                                    strokeWidth="8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            ))}
+                        </svg>
+                    )}
                 </Box>
                 <Box className={styles.Right}>
                 </Box>

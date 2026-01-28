@@ -547,6 +547,8 @@ export default function Play({ isMultiplayer = false }) {
   const [theoYellSettingsExpanded, setTheoYellSettingsExpanded] = useState(false);
   const [showSkillBots, setShowSkillBots] = useState(false);
   const [poolExpanded, setPoolExpanded] = useState(false);
+  const [playNotes, setPlayNotes] = useState('');
+  const [telestratorEnabled, setTelestratorEnabled] = useState(false);
   const skillBots = [
     { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.', icon: <img src="/images/theomascot.png" alt="Theo" width={18} height={18} style={{ borderRadius: '3px' }} /> },
     { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!', icon: <img src="/images/tessmascot.png" alt="Tess" width={18} height={18} style={{ borderRadius: '3px' }} /> },
@@ -1216,6 +1218,7 @@ export default function Play({ isMultiplayer = false }) {
                 setArrowDirection(newDirection);
             }}
             animate={false}
+            enableTelestrator={telestratorEnabled}
             showSlip={false}
             showDictionary={false}
             dictionary=""
@@ -2814,6 +2817,8 @@ export default function Play({ isMultiplayer = false }) {
             mascotRef={mascotRef}
             botImage={isBotMode ? getBotIcon(selectedBot.name) : undefined}
             moveStatus={moveStatus}
+            telestratorEnabled={telestratorEnabled}
+            onToggleTelestrator={setTelestratorEnabled}
           />
 
           {showTimeSlider && !gameStarted && (
@@ -2921,6 +2926,61 @@ export default function Play({ isMultiplayer = false }) {
                 </Collapse>
               )}
             </Box>
+
+            {/* Notes area - separate from pool */}
+            <Box 
+              sx={{
+                mt: 1.5,
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: lightMode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%)'
+                  : 'linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(243, 244, 246, 0.98) 100%)',
+                boxShadow: lightMode === 'dark' 
+                  ? '0 2px 8px rgba(0, 0, 0, 0.4)'
+                  : '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}
+            >
+              <Box
+                component="textarea"
+                value={playNotes}
+                onChange={(e) => {
+                  setPlayNotes(e.target.value);
+                  if (e.target) {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }
+                }}
+                placeholder="Thoughts?"
+                sx={{
+                  width: '100%',
+                  minHeight: 0,
+                  height: 'auto',
+                  resize: 'none',
+                  overflow: 'hidden',
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  borderRadius: 1,
+                  padding: '6px 8px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  border: lightMode === 'dark'
+                    ? '1px solid rgba(156, 163, 175, 0.7)'
+                    : '1px solid rgba(209, 213, 219, 1)',
+                  backgroundColor: lightMode === 'dark'
+                    ? 'rgba(17, 24, 39, 0.9)'
+                    : '#F9FAFB',
+                  color: lightMode === 'dark' ? '#F9FAFB' : '#111827',
+                  '&:focus': {
+                    borderColor: lightMode === 'dark' ? '#60A5FA' : '#3B82F6',
+                    boxShadow: lightMode === 'dark'
+                      ? '0 0 0 1px rgba(96, 165, 250, 0.6)'
+                      : '0 0 0 1px rgba(59, 130, 246, 0.4)'
+                  }
+                }}
+              />
+            </Box>
+
           </Box>
         </Box>
         </Box>

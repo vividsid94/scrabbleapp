@@ -15,7 +15,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
-import { UserCircle, DotsThree } from '@phosphor-icons/react';
+import { UserCircle, DotsThree, ScribbleLoop } from '@phosphor-icons/react';
 
 const actionButtonStyle = {
   width: '24px',
@@ -205,7 +205,9 @@ export default function PlayerInfo({
   moveStatus = null,
   isMultiplayerMode,
   localPlayerNumber,
-  opponentRackCount
+  opponentRackCount,
+  telestratorEnabled,
+  onToggleTelestrator
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
@@ -267,6 +269,27 @@ export default function PlayerInfo({
             {icons.botMode}
           </Box>
         </Tooltip>
+        <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '16px',
+              cursor: 'pointer'
+            }}
+            onClick={() => onToggleTelestrator && onToggleTelestrator(!telestratorEnabled)}
+          >
+            <ScribbleLoop
+              size={20}
+              color={telestratorEnabled
+                ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                : (lightMode === 'dark' ? '#ffffff' : '#1F2937')
+              }
+              weight={telestratorEnabled ? 'fill' : 'regular'}
+            />
+          </Box>
+        </Tooltip>
         <Tooltip title={showBestMove ? "Hide Options" : "Show Options"}>
           <Box
             onClick={() => setShowBestMove(!showBestMove)}
@@ -284,14 +307,6 @@ export default function PlayerInfo({
             <DotsThree size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
           </Box>
         </Tooltip>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginLeft: '30px'
-        }}>
-          {icons.vs}
-        </Box>
       </Box>
 
       <Collapse in={showBestMove}>

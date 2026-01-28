@@ -456,6 +456,8 @@ export default function Viewer({ onChange }){
                 showDictionary={false}
                 commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
                 lightMode={lightMode}
+                animate={false}
+                enableTelestrator={true}
               />
             </Box>
           </Box>

@@ -23,7 +23,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import TuneIcon from '@mui/icons-material/Tune';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
-import { Snackbar, Alert } from "@mui/material";
+import { Snackbar, Alert, FormControlLabel, Switch } from "@mui/material";
 import PuzzlePlayerInfo from './PuzzlePlayerInfo.js';
 import { ThemeContext } from '../../App';
 
@@ -156,6 +156,7 @@ export default function Puzzle() {
   
   // Add state for dynamic hourglass
   const [hourglassIndex, setHourglassIndex] = useState(0);
+  const [telestratorEnabled, setTelestratorEnabled] = useState(false);
 
   // Helper: check if a move is a bingo
   const isBingo = (move) => move && move.tiles && move.tiles.length === 7;
@@ -365,13 +366,18 @@ export default function Puzzle() {
 
           
           <Box className={styles.leftContainer}>
-            <Box className={`${styles.mainBox} ${styles.mainBoxContent}`} component="main">
+            <Box 
+              className={`${styles.mainBox} ${styles.mainBoxContent}`} 
+              component="main"
+            >
               <Board 
                 board={board}
                 boardMode={theme}
                 animate={false}
+                enableTelestrator={telestratorEnabled}
                 showSlip={false}
                 showDictionary={false}
+                showNoCommentaryLabel={false}
                 dictionary=""
                 previewScore={null}
                 previewScorePosition={null}
@@ -386,7 +392,10 @@ export default function Puzzle() {
           </Box>
           <Box className={styles.rightPanel}>
             {/* Player Info Panel */}
-            <PuzzlePlayerInfo />
+            <PuzzlePlayerInfo 
+              telestratorEnabled={telestratorEnabled}
+              onToggleTelestrator={setTelestratorEnabled}
+            />
             
             {/* Player info and pool */}
             {/* <Box className={styles.playerPanel}>
