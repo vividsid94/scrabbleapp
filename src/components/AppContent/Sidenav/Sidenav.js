@@ -262,10 +262,7 @@ export default function MiniDrawer() {
             {!user ? (
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
-                  onClick={() => {
-                    setAuthMode('signin');
-                    setShowAuthModal(true);
-                  }}
+                  disabled
                   style={{
                     background: 'transparent',
                     color: '#D97706',
@@ -277,19 +274,16 @@ export default function MiniDrawer() {
                     fontSize: 14,
                     boxShadow: 'none',
                     outline: 'transparent',
-                    cursor: 'pointer',
+                    cursor: 'not-allowed',
                     userSelect: 'none',
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
+                    opacity: 0.5
                   }}
                 >
                   Log In
                 </button>
                 <button
-                  onClick={() => {
-                    setAuthMode('signup');
-                    setShowAuthModal(true);
-                  }}
+                  disabled
                   style={{
                     background: 'linear-gradient(45deg, transparent 5%, #D97706 5%)',
                     color: '#fff',
@@ -301,10 +295,10 @@ export default function MiniDrawer() {
                     fontSize: 14,
                     boxShadow: '6px 0px 0px #B45309',
                     outline: 'transparent',
-                    cursor: 'pointer',
+                    cursor: 'not-allowed',
                     userSelect: 'none',
                     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
+                    opacity: 0.5
                   }}
                 >
                   Sign Up

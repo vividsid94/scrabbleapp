@@ -21,10 +21,7 @@ export default function Topbar() {
           {!user ? (
             <>
               <button
-                onClick={() => {
-                  setAuthMode('signin');
-                  setShowAuthModal(true);
-                }}
+                disabled
                 className={homeStyles.secondaryButton}
                 style={{
                   background: 'transparent',
@@ -32,20 +29,21 @@ export default function Topbar() {
                   padding: '8px 20px',
                   color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   width: 'auto',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  cursor: 'not-allowed',
+                  opacity: 0.5
                 }}
               >
                 Log In
               </button>
               <button
-                onClick={() => {
-                  setAuthMode('signup');
-                  setShowAuthModal(true);
-                }}
+                disabled
                 className={homeStyles.secondaryButton}
                 style={{
                   width: 'auto',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  cursor: 'not-allowed',
+                  opacity: 0.5
                 }}
               >
                 Sign Up

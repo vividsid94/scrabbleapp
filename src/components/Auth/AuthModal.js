@@ -202,7 +202,12 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading}
+            disabled={
+              loading ||
+              !email.trim() ||
+              !password ||
+              (mode === 'signup' && !username.trim())
+            }
             sx={{
               mt: 1,
               bgcolor: '#D97706',

@@ -35,6 +35,7 @@ import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
 import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
 import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
 import WordStorm from "./containers/WordStorm/WordStorm";
+import ScrabbleDash from "./containers/ScrabbleDash/ScrabbleDash";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Topbar from "./components/AppContent/Topbar/Topbar";
@@ -106,6 +107,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/multiplayer/:gameCode" element={<MultiplayerGame />} />
             <Route path="/escape-room" element={<EscapeRoom />} />
             <Route path="/word-storm" element={<WordStorm />} />
+            <Route path="/scrabble-dash" element={<ScrabbleDash />} />
           </Routes>
         </header>
       ) : (
