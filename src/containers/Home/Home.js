@@ -374,11 +374,11 @@ export default function Home(){
                   </span>
                 </button>
               </Link>
-              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
+              <Link to="/3dviewer" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
                   <span className={styles.secondaryButtonContent}>
-                    <Trophy size={16} weight="fill" />
-                    <span>Results & rankings</span>
+                    <Cube size={18} weight="fill" />
+                    <span>3D Viewer</span>
                   </span>
                 </button>
               </Link>
@@ -446,6 +446,19 @@ export default function Home(){
           }}
         >
           3D Viewer
+        </MenuItem>
+        <MenuItem 
+          onClick={() => { handleToolsMenuClose(); navigate('/tournaments'); }}
+          sx={{
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontSize: '14px',
+            padding: '10px 16px',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+            }
+          }}
+        >
+          Results & rankings
         </MenuItem>
         <MenuItem 
           onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}
