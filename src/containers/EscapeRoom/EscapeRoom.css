@@ -1,0 +1,199 @@
+.escape-room-root {
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+}
+
+.escape-room-outer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.escape-room-container {
+  min-height: 100vh;
+  background: #0a0514;
+  color: #e8d5b7;
+  font-family: 'Georgia', serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.escape-room-stage {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Room shared styles */
+.room {
+  position: relative;
+  min-height: 70vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+}
+
+.room-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 750px;
+  animation: room-enter 0.6s ease-out;
+}
+
+.room-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.room-title {
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+
+.room-subtitle {
+  font-size: 14px;
+  color: #8a7a6a;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Defeat screen */
+.escape-room-defeat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  padding: 32px;
+}
+
+.defeat-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.defeat-title {
+  font-size: 42px;
+  color: #f87171;
+  text-shadow: 0 0 30px rgba(248, 113, 113, 0.4);
+  margin-bottom: 16px;
+}
+
+.defeat-text {
+  font-size: 16px;
+  color: #b8a88a;
+  max-width: 400px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.defeat-score {
+  font-size: 24px;
+  color: #c9a84c;
+  margin-bottom: 32px;
+}
+
+.defeat-button {
+  background: linear-gradient(135deg, #9b2335, #7a1c2a);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 40px;
+  font-size: 18px;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 4px 20px rgba(155, 35, 53, 0.4);
+  transition: all 0.3s ease;
+}
+
+.defeat-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(155, 35, 53, 0.6);
+}
+
+/* Animations */
+@keyframes room-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-out {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes torch-flicker {
+  0% { opacity: 0.7; }
+  25% { opacity: 0.85; }
+  50% { opacity: 0.75; }
+  75% { opacity: 0.9; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes victory-glow {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Puzzle frame solved animation */
+.puzzle-frame-solved {
+  animation: solve-burst 0.6s ease-out;
+}
+
+@keyframes solve-burst {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .room-title {
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+
+  .room-subtitle {
+    font-size: 12px;
+  }
+
+  .escape-room-stage {
+    padding: 12px;
+  }
+
+  .defeat-title {
+    font-size: 32px;
+  }
+}

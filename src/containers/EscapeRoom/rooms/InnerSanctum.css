@@ -1,0 +1,8 @@
+.room-purple {
+  background: radial-gradient(ellipse at center, #1a0a2e 0%, #0f0520 70%);
+}
+
+.purple-text {
+  color: #c4b5fd;
+  text-shadow: 0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(201, 168, 76, 0.2);
+}

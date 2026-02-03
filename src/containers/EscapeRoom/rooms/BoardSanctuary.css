@@ -1,0 +1,8 @@
+.room-azure {
+  background: radial-gradient(ellipse at center, #0a1a2e 0%, #1a0a2e 70%);
+}
+
+.azure-text {
+  color: #60a5fa;
+  text-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+}

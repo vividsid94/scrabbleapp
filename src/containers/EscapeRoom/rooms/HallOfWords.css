@@ -1,0 +1,8 @@
+.room-emerald {
+  background: radial-gradient(ellipse at center, #0a2a1a 0%, #1a0a2e 70%);
+}
+
+.emerald-text {
+  color: #52b788;
+  text-shadow: 0 0 30px rgba(45, 106, 79, 0.4);
+}

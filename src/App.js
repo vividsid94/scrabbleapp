@@ -26,7 +26,6 @@ import TestMindBlow from "./containers/Home/TestMindBlow";
 import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
 import Snakes from "./containers/Snakes/Snakes";
-import RealEscapeRoom from "./containers/EscapeRoom3D/RealEscapeRoom";
 import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
 import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
@@ -34,6 +33,8 @@ import Profile from "./containers/Profile/Profile";
 import CameraScan from "./containers/CameraScan/CameraScan";
 import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
 import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
+import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
+import WordStorm from "./containers/WordStorm/WordStorm";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Topbar from "./components/AppContent/Topbar/Topbar";
@@ -92,7 +93,6 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
             <Route path="/about" element={<About/>} />
             <Route path="/test-theo-shake" element={<TestTheoShake/>} />
-            <Route path="/escape-room-3d" element={<RealEscapeRoom/>} />
             <Route path="/test-mind-blow" element={<TestMindBlow />} />
             <Route path="/jigsaw" element={<Jigsaw />} />
             <Route path="/test-jigsaw" element={<Jigsaw />} />
@@ -104,6 +104,8 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/camera-scan" element={<CameraScan />} />
             <Route path="/multiplayer" element={<MultiplayerLobby />} />
             <Route path="/multiplayer/:gameCode" element={<MultiplayerGame />} />
+            <Route path="/escape-room" element={<EscapeRoom />} />
+            <Route path="/word-storm" element={<WordStorm />} />
           </Routes>
         </header>
       ) : (

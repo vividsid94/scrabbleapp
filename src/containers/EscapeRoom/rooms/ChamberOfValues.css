@@ -1,0 +1,8 @@
+.room-gold {
+  background: radial-gradient(ellipse at center, #2a1a0a 0%, #1a0a2e 70%);
+}
+
+.gold-text {
+  color: #c9a84c;
+  text-shadow: 0 0 30px rgba(201, 168, 76, 0.4);
+}

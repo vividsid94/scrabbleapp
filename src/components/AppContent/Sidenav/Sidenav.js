@@ -783,11 +783,11 @@ export default function MiniDrawer() {
                 <ListItem className={`${styles.listItem} ${isCurrentPage('/submit-game') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
                   <ListItemIcon sx={iconStyle}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
-                      <Upload 
-                        style={{ 
+                      <Upload
+                        style={{
                           color: isCurrentPage('/submit-game') ? '#F59E0B' : getTextColor(),
                           fontSize: '18px'
-                        }} 
+                        }}
                         weight={isCurrentPage('/submit-game') ? "fill" : "regular"}
                       />
                       {sidebarExpanded && (
