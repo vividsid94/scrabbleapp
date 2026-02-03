@@ -121,6 +121,9 @@ const Scrabble3DPlay = () => {
     player2: RACK.POSITIONS.PLAYER1
   });
   const rack2MeshesRef = useRef([]); // Bot's rack furniture - hide when isBotMode
+  const boardGroupRef = useRef(null); // Board + grid + tiles; rotated when bot is thinking
+  const botThinkingRef = useRef(false);
+  const boardTurnSpeed = 0.06; // Lerp factor for board rotation
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
@@ -294,8 +297,12 @@ const Scrabble3DPlay = () => {
     // Create environment
     createMagicalEnvironment(scene);
     createTableAndChairs(scene);
-    createBoard(scene);
+    const boardGroup = new THREE.Group();
+    scene.add(boardGroup);
+    boardGroupRef.current = boardGroup;
+    createBoard(scene, boardGroup);
     createArrowIndicator(scene);
+    createTheoMascot(scene);
     createScoresheet(scene);
     createScoreboard(scene);
 
@@ -310,6 +317,16 @@ const Scrabble3DPlay = () => {
       lastTime = currentTime;
 
       controls.update();
+
+      // Turn board toward Theo when bot is thinking
+      if (boardGroupRef.current) {
+        const targetY = botThinkingRef.current ? Math.PI : 0;
+        const dy = targetY - boardGroupRef.current.rotation.y;
+        if (Math.abs(dy) > 0.001) {
+          boardGroupRef.current.rotation.y += dy * boardTurnSpeed;
+          setNeedsRender(true);
+        }
+      }
 
       // Animate lamps
       if (sceneRef.current.lamps) {
@@ -422,6 +439,11 @@ const Scrabble3DPlay = () => {
     setNeedsRender(true);
   }, [isBotMode]);
 
+  // Keep ref in sync for animation loop (board turn when bot thinking)
+  useEffect(() => {
+    botThinkingRef.current = isBotThinking;
+  }, [isBotThinking]);
+
   // Update physical scoresheet and scoreboard when game state changes
   useEffect(() => {
     if (!sceneRef.current?.scoresheet || !sceneRef.current?.scoreboard) return;
@@ -430,13 +452,13 @@ const Scrabble3DPlay = () => {
     setNeedsRender(true);
   }, [player1points, player2points, moveHistory, player1Name, player2Name]);
 
-  // Update arrow indicator when selection changes
+  // Update arrow indicator when selection or bot thinking changes
   useEffect(() => {
     if (arrowIndicatorRef.current && sceneRef.current) {
       updateArrowIndicator();
       setNeedsRender(true);
     }
-  }, [selectedBoardPosition, arrowDirection]);
+  }, [selectedBoardPosition, arrowDirection, isBotThinking]);
 
   // Keyboard handling
   useEffect(() => {
@@ -779,7 +801,7 @@ const Scrabble3DPlay = () => {
     rack2MeshesRef.current.push(rack2Back);
   };
 
-  const createBoard = (scene) => {
+  const createBoard = (scene, boardGroup) => {
     // Circular board base
     const boardGeometry = new THREE.CylinderGeometry(BOARD.RADIUS, BOARD.RADIUS, BOARD.HEIGHT, BOARD.SEGMENTS);
     const boardMaterial = new THREE.MeshPhongMaterial({
@@ -792,7 +814,7 @@ const Scrabble3DPlay = () => {
     const board = new THREE.Mesh(boardGeometry, boardMaterial);
     board.receiveShadow = true;
     board.position.y = BOARD.Y_POSITION;
-    scene.add(board);
+    boardGroup.add(board);
     resourcesRef.current.geometries.push(boardGeometry);
     resourcesRef.current.materials.push(boardMaterial);
     resourcesRef.current.meshes.push(board);
@@ -846,7 +868,7 @@ const Scrabble3DPlay = () => {
           col
         };
 
-        scene.add(square);
+        boardGroup.add(square);
         boardSquaresRef.current.push(square);
         resourcesRef.current.geometries.push(squareGeometry);
         resourcesRef.current.materials.push(squareMaterial);
@@ -874,7 +896,7 @@ const Scrabble3DPlay = () => {
         BOARD.GRID.GRID_LINE.Y_POSITION,
         startZ + row * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2
       );
-      scene.add(gridLine);
+      boardGroup.add(gridLine);
       resourcesRef.current.geometries.push(gridLineGeometry);
       resourcesRef.current.meshes.push(gridLine);
     }
@@ -892,7 +914,7 @@ const Scrabble3DPlay = () => {
           BOARD.GRID.GRID_LINE.Y_POSITION,
           startZ + row * BOARD.GRID.SQUARE_SIZE
         );
-        scene.add(gridLine);
+        boardGroup.add(gridLine);
         resourcesRef.current.geometries.push(gridLineGeometry);
         resourcesRef.current.meshes.push(gridLine);
       }
@@ -933,11 +955,35 @@ const Scrabble3DPlay = () => {
     resourcesRef.current.meshes.push(arrow);
   };
 
+  const createTheoMascot = (scene) => {
+    const loader = new THREE.TextureLoader();
+    loader.load('/images/theomascot.png', (texture) => {
+      const w = 5;
+      const h = 6;
+      const geometry = new THREE.PlaneGeometry(w, h);
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: 0.1,
+        side: THREE.DoubleSide
+      });
+      const theo = new THREE.Mesh(geometry, material);
+      theo.position.set(0, 2.5, -14);
+      scene.add(theo);
+      resourcesRef.current.geometries.push(geometry);
+      resourcesRef.current.materials.push(material);
+      resourcesRef.current.textures.push(texture);
+      resourcesRef.current.meshes.push(theo);
+      sceneRef.current.theoMascot = theo;
+      setNeedsRender(true);
+    });
+  };
+
   const updateArrowIndicator = () => {
     const arrow = arrowIndicatorRef.current;
     if (!arrow) return;
 
-    if (selectedBoardPosition) {
+    if (selectedBoardPosition && !botThinkingRef.current) {
       const { row, col } = selectedBoardPosition;
       const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
       const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
@@ -1314,11 +1360,12 @@ const Scrabble3DPlay = () => {
   };
 
   const update3DBoard = () => {
-    if (!sceneRef.current || !tempBoardCoords) return;
+    if (!sceneRef.current || !boardGroupRef.current || !tempBoardCoords) return;
 
-    // Clear existing board tiles
+    // Clear existing board tiles (they live in the board group)
+    const group = boardGroupRef.current;
     boardTilesRef.current.forEach(tile => {
-      sceneRef.current.remove(tile);
+      group.remove(tile);
       if (tile.geometry) tile.geometry.dispose();
       if (tile.material) {
         if (tile.material.map) tile.material.map.dispose();
@@ -1341,7 +1388,7 @@ const Scrabble3DPlay = () => {
         if (typeof cellValue === 'string' && cellValue.length === 1) {
           const isCommitted = typeof boardCoords[row]?.[col] === 'string';
           const tile = createTile(cellValue, row, col, !isCommitted);
-          sceneRef.current.add(tile);
+          group.add(tile);
           boardTilesRef.current.push(tile);
         }
       }
