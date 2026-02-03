@@ -16,6 +16,7 @@ import Boggle from "./containers/Boggle/Boggle";
 import Puzzle from "./containers/Puzzle/Puzzle";
 import Sandbox from "./containers/Sandbox/Sandbox";
 import Scrabble3D from "./containers/Scrabble3D/Scrabble3D";
+import Scrabble3DPlay from "./containers/Scrabble3D/Scrabble3DPlay";
 import WidgetPage from "./containers/Widget/WidgetPage";
 import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
 import SubmitGame from "./containers/SubmitGame/SubmitGame";
@@ -46,7 +47,7 @@ export const ThemeContext = React.createContext();
 const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
-  const is3DViewerRoute = location.pathname === '/3dviewer';
+  const is3DViewerRoute = location.pathname === '/3dviewer' || location.pathname === '/3dplay';
   const { user } = useAuth();
 
   const getHeaderBackground = () => {
@@ -113,6 +114,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
       ) : (
         <Routes>
           <Route path="/3dviewer" element={<Scrabble3D/>}/>
+          <Route path="/3dplay" element={<Scrabble3DPlay/>}/>
         </Routes>
       )}
       {!isWidgetRoute && <Footer></Footer>}

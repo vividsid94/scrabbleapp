@@ -169,6 +169,7 @@ export default function MiniDrawer() {
     if (path === '/') return 'Home';
     if (path === '/viewer') return 'Viewer';
     if (path === '/3dviewer') return '3D Viewer';
+    if (path === '/3dplay') return '3D Play';
     if (path === '/playground' || path === '/play') return 'Play';
     if (path === '/puzzle') return 'Puzzle';
     if (path === '/submit-game') return 'Submit Game';
@@ -185,6 +186,7 @@ export default function MiniDrawer() {
     if (pagePath === '/' && path === '/') return true;
     if (pagePath === '/viewer' && path === '/viewer') return true;
     if (pagePath === '/3dviewer' && path === '/3dviewer') return true;
+    if (pagePath === '/3dplay' && path === '/3dplay') return true;
     if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
     if (pagePath === '/puzzle' && path === '/puzzle') return true;
     if (pagePath === '/submit-game' && path === '/submit-game') return true;
@@ -481,6 +483,22 @@ export default function MiniDrawer() {
                 <MenuItem 
                   onClick={handleClose} 
                   component={Link} 
+                  to="/3dplay" 
+                  sx={{ 
+                    backgroundColor: isCurrentPage('/3dplay') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/3dplay') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <GameController size={18} weight={isCurrentPage('/3dplay') ? "fill" : "regular"} />
+                  3D Play {isCurrentPage('/3dplay') && '✓'}
+                </MenuItem>
+                <MenuItem 
+                  onClick={handleClose} 
+                  component={Link} 
                   to="/submit-game" 
                   sx={{ 
                     backgroundColor: isCurrentPage('/submit-game') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
@@ -765,6 +783,26 @@ export default function MiniDrawer() {
                       {sidebarExpanded && (
                         <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/3dviewer') ? '600' : '400' }}>
                           3D Viewer
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+              <a id="3dPlayBtn" className={styles.link} href="/3dplay">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/3dplay') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
+                      <GameController 
+                        style={{ 
+                          color: isCurrentPage('/3dplay') ? '#8B5CF6' : getTextColor(),
+                          fontSize: '18px'
+                        }} 
+                        weight={isCurrentPage('/3dplay') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/3dplay') ? '600' : '400' }}>
+                          3D Play
                         </Box>
                       )}
                     </Box>
