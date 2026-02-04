@@ -190,6 +190,7 @@ const Scrabble3DPlay = () => {
     handleExchange,
     makeBotMove,
     handleKeyDownWrapper,
+    updatePreviewScore,
   } = useGameStore();
 
   // Sounds
@@ -302,7 +303,7 @@ const Scrabble3DPlay = () => {
     boardGroupRef.current = boardGroup;
     createBoard(scene, boardGroup);
     createArrowIndicator(scene);
-    createTheoMascot(scene);
+    createMascot(scene, selectedBot?.img || '/images/theomascot.png');
     createScoresheet(scene);
     createScoreboard(scene);
 
@@ -459,6 +460,18 @@ const Scrabble3DPlay = () => {
       setNeedsRender(true);
     }
   }, [selectedBoardPosition, arrowDirection, isBotThinking]);
+
+  // Calculate preview score when tiles are placed (same as 2D Play component)
+  useEffect(() => {
+    updatePreviewScore();
+  }, [selectedTiles, tempBoardCoords]);
+
+  // Update mascot when selected bot changes
+  useEffect(() => {
+    if (sceneRef.current && selectedBot?.img) {
+      updateMascot(selectedBot.img);
+    }
+  }, [selectedBot]);
 
   // Keyboard handling
   useEffect(() => {
@@ -955,9 +968,9 @@ const Scrabble3DPlay = () => {
     resourcesRef.current.meshes.push(arrow);
   };
 
-  const createTheoMascot = (scene) => {
+  const createMascot = (scene, mascotImage = '/images/theomascot.png') => {
     const loader = new THREE.TextureLoader();
-    loader.load('/images/theomascot.png', (texture) => {
+    loader.load(mascotImage, (texture) => {
       const w = 5;
       const h = 6;
       const geometry = new THREE.PlaneGeometry(w, h);
@@ -967,14 +980,31 @@ const Scrabble3DPlay = () => {
         alphaTest: 0.1,
         side: THREE.DoubleSide
       });
-      const theo = new THREE.Mesh(geometry, material);
-      theo.position.set(0, 2.5, -14);
-      scene.add(theo);
+      const mascot = new THREE.Mesh(geometry, material);
+      mascot.position.set(0, 2.5, -14);
+      scene.add(mascot);
       resourcesRef.current.geometries.push(geometry);
       resourcesRef.current.materials.push(material);
       resourcesRef.current.textures.push(texture);
-      resourcesRef.current.meshes.push(theo);
-      sceneRef.current.theoMascot = theo;
+      resourcesRef.current.meshes.push(mascot);
+      sceneRef.current.mascot = mascot;
+      setNeedsRender(true);
+    });
+  };
+
+  const updateMascot = (mascotImage) => {
+    if (!sceneRef.current?.mascot) return;
+
+    const loader = new THREE.TextureLoader();
+    loader.load(mascotImage, (texture) => {
+      // Dispose old texture
+      if (sceneRef.current.mascot.material.map) {
+        sceneRef.current.mascot.material.map.dispose();
+      }
+      // Update to new texture
+      sceneRef.current.mascot.material.map = texture;
+      sceneRef.current.mascot.material.needsUpdate = true;
+      resourcesRef.current.textures.push(texture);
       setNeedsRender(true);
     });
   };

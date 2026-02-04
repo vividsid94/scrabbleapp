@@ -139,16 +139,11 @@ export const makeBotMove = async (botMoveSound) => {
     // First attempt
     let data = await attemptBotMove(false);
 
-    // Only add delay if auto-play is not enabled
+    // Add 5 second delay for thinking animation (only if auto-play is not enabled)
     if (!autoPlayBest) {
-      const startTime = Date.now();
-      
-      // Calculate remaining time to ensure minimum 2 second delay
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 1000 - elapsedTime);
-      if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
-      }
+      console.log('🤖 Bot thinking for 5 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log('🤖 Bot done thinking');
     }
 
     console.log('Bot moves response:', {

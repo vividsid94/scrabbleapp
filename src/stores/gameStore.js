@@ -119,7 +119,7 @@ export const useGameStore = create((set, get) => {
     theoYellCriteria: 'bingo', // 'score' or 'bingo'
     theoYellScoreThreshold: 20, // Score threshold for triggering yell
     // Bot selection
-    selectedBot: { name: 'Theo', img: '/images/theomascot.png' },
+    selectedBot: { name: 'Theo', img: '/images/theomascot.png', mascotImg: '/images/theomascot.png' },
     
     // Defense modal state
     showDefenseModal: false,
