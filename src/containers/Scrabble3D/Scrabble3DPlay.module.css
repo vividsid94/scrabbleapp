@@ -35,8 +35,8 @@
 /* Back Button - match site button style */
 .backButton {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 70px;
+  left: 80px;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -148,7 +148,7 @@
 /* Bot Selector */
 .botSelectorContainer {
   position: absolute;
-  top: 20px;
+  top: 70px;
   right: 20px;
   z-index: 1000;
 }
@@ -314,6 +314,89 @@
   box-shadow: 8px 2px 0 #B45309;
 }
 
+/* Bot Thinking Badge - subtle corner indicator */
+.thinkingBadge {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid rgba(217, 119, 6, 0.5);
+  border-radius: 30px;
+  backdrop-filter: blur(10px);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.thinkingBadgeMascot {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  animation: gentlePulse 2s infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.thinkingBadgeText {
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.thinkingBadgeDots {
+  display: flex;
+  gap: 4px;
+}
+
+.thinkingBadgeDots span {
+  width: 6px;
+  height: 6px;
+  background: #D97706;
+  border-radius: 50%;
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.thinkingBadgeDots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinkingBadgeDots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.thinkingBadgeDots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Victory Overlay */
 .victoryOverlay {
   position: fixed;
@@ -445,8 +528,8 @@
   }
 
   .backButton {
-    top: 10px;
-    left: 10px;
+    top: 70px;
+    left: 70px;
     padding: 8px 12px;
     font-size: 12px;
   }

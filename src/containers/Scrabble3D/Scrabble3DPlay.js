@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useNavigate } from 'react-router-dom';
+import { Modal, Box } from '@mui/material';
 import styles from './Scrabble3DPlay.module.css';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
@@ -10,8 +11,10 @@ import { handleKeyDown } from '../../functions/play/keyboardFunctions';
 import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from '../../functions/play/boardFunctions';
 import { initializeSounds } from '../../functions/play/soundFunctions';
+import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
+import Topbar from '../../components/AppContent/Topbar/Topbar';
 import {
-  Smiley, Robot, UserCircle, ArrowLeft, Play, Cube
+  Smiley, Robot, UserCircle, ArrowLeft, Play, Cube, ArrowsClockwise
 } from '@phosphor-icons/react';
 import {
   CAMERA,
@@ -172,6 +175,7 @@ const Scrabble3DPlay = () => {
     isBotThinking,
     isPlayerThinking,
     selectedBot,
+    tilesToExchange,
     setSelectedBot,
     setPlayer2Name,
     setBoardCoords,
@@ -183,6 +187,7 @@ const Scrabble3DPlay = () => {
     setPlayer1Rack,
     setPlayer2Rack,
     setBlankTiles,
+    setTilesToExchange,
     initializeGame,
     startBotGame,
     handleWordSubmit,
@@ -192,6 +197,20 @@ const Scrabble3DPlay = () => {
     handleKeyDownWrapper,
     updatePreviewScore,
   } = useGameStore();
+
+  // Exchange modal state
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
+
+  // Calculate latest move tiles for highlighting
+  const latestMoveTiles = useMemo(() => {
+    if (!moveHistory || moveHistory.length === 0) return [];
+    const latestMove = moveHistory[moveHistory.length - 1];
+    if (!latestMove || !latestMove.boardDiff) return [];
+    return latestMove.boardDiff.map(tile => ({
+      row: tile.row,
+      col: tile.col
+    }));
+  }, [moveHistory]);
 
   // Sounds
   const [sounds, setSounds] = useState(null);
@@ -415,13 +434,13 @@ const Scrabble3DPlay = () => {
     checkAndPreloadTextures();
   }, []);
 
-  // Update 3D board when boardCoords or tempBoardCoords change
+  // Update 3D board when boardCoords, tempBoardCoords, or moveHistory change
   useEffect(() => {
     if (sceneRef.current && tempBoardCoords?.length > 0) {
       update3DBoard();
       setNeedsRender(true);
     }
-  }, [tempBoardCoords, boardCoords]);
+  }, [tempBoardCoords, boardCoords, moveHistory]);
 
   // Update rack tiles when racks change; hide bot's rack tiles in bot mode
   useEffect(() => {
@@ -1263,10 +1282,17 @@ const Scrabble3DPlay = () => {
     sceneRef.current.scoreboard.texture = newTexture;
   };
 
-  const createTile = (letter, row, col, isTemp = false) => {
+  const createTile = (letter, row, col, isTemp = false, isLastMove = false) => {
     const tileGeometry = new THREE.BoxGeometry(TILE.BOARD.WIDTH, TILE.BOARD.HEIGHT, TILE.BOARD.DEPTH);
+    // Color priority: temp tiles (gold) > last move tiles (cyan) > normal tiles
+    let tileColor = TILE.BOARD.MATERIAL.COLOR;
+    if (isTemp) {
+      tileColor = 0xFFD700; // Gold for uncommitted tiles
+    } else if (isLastMove) {
+      tileColor = 0x00CED1; // Dark cyan for last move tiles
+    }
     const tileMaterial = new THREE.MeshPhongMaterial({
-      color: isTemp ? 0xFFD700 : TILE.BOARD.MATERIAL.COLOR,
+      color: tileColor,
       transparent: true,
       opacity: isTemp ? 0.9 : TILE.BOARD.MATERIAL.OPACITY,
       shininess: TILE.BOARD.MATERIAL.SHININESS
@@ -1411,13 +1437,18 @@ const Scrabble3DPlay = () => {
     });
     boardTilesRef.current = [];
 
+    // Get latest move tiles for highlighting
+    const latestMove = moveHistory?.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+    const lastMoveTilePositions = latestMove?.boardDiff?.map(t => `${t.row},${t.col}`) || [];
+
     // Create tiles
     for (let row = 0; row < 15; row++) {
       for (let col = 0; col < 15; col++) {
         const cellValue = tempBoardCoords[row]?.[col];
         if (typeof cellValue === 'string' && cellValue.length === 1) {
           const isCommitted = typeof boardCoords[row]?.[col] === 'string';
-          const tile = createTile(cellValue, row, col, !isCommitted);
+          const isLastMove = lastMoveTilePositions.includes(`${row},${col}`);
+          const tile = createTile(cellValue, row, col, !isCommitted, isLastMove);
           group.add(tile);
           boardTilesRef.current.push(tile);
         }
@@ -1478,7 +1509,33 @@ const Scrabble3DPlay = () => {
   };
 
   const handleExchangeClick = () => {
-    handleExchange();
+    // Open exchange modal instead of directly exchanging
+    setTilesToExchange([]); // Clear any previously selected tiles
+    setShowExchangeModal(true);
+  };
+
+  // Handle tile selection in exchange modal
+  const handleExchangeTileToggle = (tile, index) => {
+    const isSelected = tilesToExchange.some(t => t.index === index);
+    if (isSelected) {
+      setTilesToExchange(tilesToExchange.filter(t => t.index !== index));
+    } else {
+      setTilesToExchange([...tilesToExchange, { tile, index }]);
+    }
+  };
+
+  // Confirm exchange
+  const handleExchangeConfirm = () => {
+    if (tilesToExchange.length > 0) {
+      handleExchange();
+      setShowExchangeModal(false);
+    }
+  };
+
+  // Cancel exchange
+  const handleExchangeCancel = () => {
+    setTilesToExchange([]);
+    setShowExchangeModal(false);
   };
 
   // Get bot icon
@@ -1492,6 +1549,12 @@ const Scrabble3DPlay = () => {
 
   return (
     <div className={styles.container}>
+      {/* Topbar */}
+      <Topbar />
+
+      {/* Sidenav */}
+      <Sidenav />
+
       <div ref={mountRef} className={styles.canvas} />
 
       {/* Loading indicator */}
@@ -1568,6 +1631,23 @@ const Scrabble3DPlay = () => {
         </div>
       )}
 
+      {/* Bot Thinking Indicator - subtle corner position */}
+      {isBotThinking && (
+        <div className={styles.thinkingBadge}>
+          <img
+            src={selectedBot?.img || '/images/theomascot.png'}
+            alt="Bot thinking"
+            className={styles.thinkingBadgeMascot}
+          />
+          <span className={styles.thinkingBadgeText}>{selectedBot?.name || 'Theo'} thinking</span>
+          <div className={styles.thinkingBadgeDots}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
+
       {/* Start Game Button */}
       {!gameStarted && (
         <div className={styles.startGameContainer}>
@@ -1610,6 +1690,118 @@ const Scrabble3DPlay = () => {
         <p>Click board squares to select position | Type letters to place tiles | Enter to submit</p>
         <p>1 = Pass | 2 = Exchange | Click rack tiles to select</p>
       </div>
+
+      {/* Exchange Modal */}
+      <Modal
+        open={showExchangeModal}
+        onClose={handleExchangeCancel}
+        aria-labelledby="exchange-modal-title"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: '#1a1a2e',
+          border: '2px solid #D97706',
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+          minWidth: 400,
+          maxWidth: 500,
+        }}>
+          <h2 id="exchange-modal-title" style={{
+            color: '#fff',
+            marginTop: 0,
+            marginBottom: 16,
+            textAlign: 'center'
+          }}>
+            Exchange Tiles
+          </h2>
+          <p style={{ color: '#9CA3AF', textAlign: 'center', marginBottom: 20 }}>
+            Click tiles to select them for exchange ({tilesToExchange.length} selected)
+          </p>
+
+          {/* Tile rack for selection */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 24,
+            flexWrap: 'wrap'
+          }}>
+            {(currentPlayer === 1 ? player1Rack : player2Rack).map((tile, index) => {
+              const isSelected = tilesToExchange.some(t => t.index === index);
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleExchangeTileToggle(tile, index)}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    backgroundColor: isSelected ? '#D97706' : '#F5DEB3',
+                    color: isSelected ? '#fff' : '#1a1a2e',
+                    border: isSelected ? '3px solid #fff' : '2px solid #8B4513',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                >
+                  {tile === '?' ? '*' : tile}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Pool count warning */}
+          {pool.length < 7 && (
+            <p style={{ color: '#EF4444', textAlign: 'center', marginBottom: 16 }}>
+              Cannot exchange - fewer than 7 tiles in pool ({pool.length} remaining)
+            </p>
+          )}
+
+          {/* Action buttons */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 16
+          }}>
+            <button
+              onClick={handleExchangeCancel}
+              style={{
+                padding: '10px 24px',
+                fontSize: 16,
+                backgroundColor: 'transparent',
+                color: '#9CA3AF',
+                border: '2px solid #9CA3AF',
+                borderRadius: 6,
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExchangeConfirm}
+              disabled={tilesToExchange.length === 0 || pool.length < 7}
+              style={{
+                padding: '10px 24px',
+                fontSize: 16,
+                backgroundColor: tilesToExchange.length > 0 && pool.length >= 7 ? '#D97706' : '#4B5563',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor: tilesToExchange.length > 0 && pool.length >= 7 ? 'pointer' : 'not-allowed',
+                opacity: tilesToExchange.length > 0 && pool.length >= 7 ? 1 : 0.5,
+              }}
+            >
+              Exchange {tilesToExchange.length > 0 ? `(${tilesToExchange.length})` : ''}
+            </button>
+          </div>
+        </Box>
+      </Modal>
     </div>
   );
 };

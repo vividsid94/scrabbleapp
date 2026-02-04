@@ -53,6 +53,10 @@ export const makeBotMove = async (botMoveSound) => {
   // Only show thinking state if auto-play is not enabled
   if (!autoPlayBest) {
     setIsBotThinking(true);
+    // Add 5 second delay at the START for thinking animation
+    console.log('🤖 Bot thinking for 5 seconds...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log('🤖 Bot done thinking, now calculating move...');
   }
 
   // Create a deep copy of the board and rack (moved outside try block for retry access)
@@ -139,12 +143,7 @@ export const makeBotMove = async (botMoveSound) => {
     // First attempt
     let data = await attemptBotMove(false);
 
-    // Add 5 second delay for thinking animation (only if auto-play is not enabled)
-    if (!autoPlayBest) {
-      console.log('🤖 Bot thinking for 5 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      console.log('🤖 Bot done thinking');
-    }
+    // Delay already added at the start of the function
 
     console.log('Bot moves response:', {
       moves: data.moves,
