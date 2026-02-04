@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase, hasRealCredentials } from '../utils/supabase';
 
 const AuthContext = createContext({});
 
@@ -125,13 +125,19 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password, username, displayName) => {
     try {
+      const normalizedUsername = (username || '').trim().toLowerCase();
+      const usernameOk = /^[a-zA-Z0-9_]{3,20}$/.test((username || '').trim());
+      if (!usernameOk) {
+        throw new Error('Username must be 3-20 characters and use only letters, numbers, and underscores.');
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username || email.split('@')[0],
-            display_name: displayName || username || email.split('@')[0],
+            username: normalizedUsername,
+            display_name: (displayName || normalizedUsername || email.split('@')[0]).trim(),
           },
         },
       });
@@ -148,6 +154,73 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+      });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
+  const signInWithUsername = async (username, password) => {
+    try {
+      const normalizedUsername = (username || '').trim().toLowerCase();
+      const usernameOk = /^[a-zA-Z0-9_]{3,20}$/.test((username || '').trim());
+      if (!usernameOk) {
+        throw new Error('Enter your username (3-20 chars: letters, numbers, underscores).');
+      }
+      if (!password) {
+        throw new Error('Password is required.');
+      }
+
+      // Prefer /api (Netlify redirect). Fall back to /.netlify/functions (Netlify dev / direct).
+      const endpoints = ['/api/usernameLogin', '/.netlify/functions/usernameLogin'];
+      let lastError = null;
+
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: normalizedUsername, password }),
+          });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(json?.error || `Login failed (${res.status})`);
+          }
+
+          const access_token = json?.access_token;
+          const refresh_token = json?.refresh_token;
+          if (!access_token || !refresh_token) {
+            throw new Error('Login failed (missing session tokens).');
+          }
+
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+
+          if (error) throw error;
+          return { data, error: null };
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      throw lastError || new Error('Login failed.');
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
+  const signInWithOAuth = async (provider) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
 
       if (error) throw error;
@@ -228,8 +301,11 @@ export const AuthProvider = ({ children }) => {
     profile,
     session,
     loading,
+    isConfigured: hasRealCredentials,
     signUp,
     signIn,
+    signInWithUsername,
+    signInWithOAuth,
     signOut,
     updateProfile,
     refreshProfile,

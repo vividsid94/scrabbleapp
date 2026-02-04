@@ -38,6 +38,14 @@ REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 You can find these in your Supabase project dashboard under Settings > API.
 
+For Netlify Functions (required for **username + password** login), also add:
+
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
 ### 2. Run Database Migration
 
 Run the migration file in your Supabase SQL editor:
@@ -59,6 +67,13 @@ This will create:
 2. Enable "Email" provider
 3. Configure email settings (you can use Supabase's default email service for testing)
 
+### 3b. (Optional) Enable SSO / OAuth
+
+1. Go to Authentication > Providers in your Supabase dashboard
+2. Enable OAuth providers (e.g. Google, GitHub)
+3. Add your site URL(s) to **Redirect URLs** (example: `https://your-site.netlify.app`)
+4. Add the provider credentials (client id/secret) per Supabase docs
+
 ### 4. Test It Out!
 
 1. Start your app: `npm start`
@@ -71,7 +86,8 @@ This will create:
 
 ### Authentication
 - **Sign Up**: Create account with email, password, username, and optional display name
-- **Sign In**: Login with email and password
+- **Sign In**: Login with username and password
+- **SSO**: Login with Google/GitHub (if enabled in Supabase)
 - **Sign Out**: Logout from account
 - **Session Persistence**: Stays logged in across page refreshes
 

@@ -5,10 +5,10 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://placeholder.s
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'placeholder-key';
 
 // Check if real credentials are provided
-const hasRealCredentials = supabaseUrl !== 'https://placeholder.supabase.co' && 
-                          supabaseAnonKey !== 'placeholder-key' &&
-                          supabaseUrl && 
-                          supabaseAnonKey;
+export const hasRealCredentials = supabaseUrl !== 'https://placeholder.supabase.co' && 
+                                 supabaseAnonKey !== 'placeholder-key' &&
+                                 supabaseUrl && 
+                                 supabaseAnonKey;
 
 if (!hasRealCredentials) {
   console.warn('Supabase environment variables are not set. Auth features will not work.');

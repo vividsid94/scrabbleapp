@@ -21,7 +21,6 @@ export default function Topbar() {
           {!user ? (
             <>
               <button
-                disabled
                 className={homeStyles.secondaryButton}
                 style={{
                   background: 'transparent',
@@ -30,23 +29,15 @@ export default function Topbar() {
                   color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   width: 'auto',
                   whiteSpace: 'nowrap',
-                  cursor: 'not-allowed',
-                  opacity: 0.5
+                  cursor: 'pointer',
+                  opacity: 0.95
+                }}
+                onClick={() => {
+                  setAuthMode('signin');
+                  setShowAuthModal(true);
                 }}
               >
-                Log In
-              </button>
-              <button
-                disabled
-                className={homeStyles.secondaryButton}
-                style={{
-                  width: 'auto',
-                  whiteSpace: 'nowrap',
-                  cursor: 'not-allowed',
-                  opacity: 0.5
-                }}
-              >
-                Sign Up
+                Account
               </button>
             </>
           ) : (
