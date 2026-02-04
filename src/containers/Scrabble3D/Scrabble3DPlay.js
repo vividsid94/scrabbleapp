@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, useContext } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { useNavigate } from 'react-router-dom';
-import { Modal, Box } from '@mui/material';
+import { Modal, Box, Typography } from '@mui/material';
 import styles from './Scrabble3DPlay.module.css';
+import { ThemeContext } from '../../App';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { useGameStore } from '../../stores/gameStore';
@@ -15,7 +15,7 @@ import { formatTime } from '../../functions/play/timeUtils';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import Topbar from '../../components/AppContent/Topbar/Topbar';
 import {
-  Smiley, Robot, UserCircle, ArrowLeft, Play, Cube, ArrowsClockwise
+  Smiley, Robot, UserCircle, Cube, ArrowsClockwise
 } from '@phosphor-icons/react';
 import {
   CAMERA,
@@ -105,7 +105,6 @@ const bots = [
 ];
 
 const Scrabble3DPlay = () => {
-  const navigate = useNavigate();
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
@@ -126,13 +125,15 @@ const Scrabble3DPlay = () => {
   });
   const rack2MeshesRef = useRef([]); // Bot's rack furniture - hide when isBotMode
   const boardGroupRef = useRef(null); // Board + grid + tiles; rotated when bot is thinking
+  const arrowIndicatorRef = useRef(null); // 3D arrow for selected board position
   const botThinkingRef = useRef(false);
   const boardTurnSpeed = 0.06; // Lerp factor for board rotation
   const timerRef = useRef(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
-  const [botSelectorOpen, setBotSelectorOpen] = useState(false);
+
+  const { lightMode } = useContext(ThemeContext);
 
   // Store references for cleanup
   const resourcesRef = useRef({
@@ -380,6 +381,22 @@ const Scrabble3DPlay = () => {
       boardParent: boardGroup,
       boardSquaresRef: boardSquaresRef
     });
+    // Arrow indicator for selected board square (position/visibility updated in useEffect)
+    const arrowGeom = new THREE.ConeGeometry(0.25, 0.5, 8);
+    const arrowMat = new THREE.MeshPhongMaterial({
+      color: 0xF59E0B,
+      shininess: 80,
+      transparent: true,
+      opacity: 0.95,
+    });
+    const arrowMesh = new THREE.Mesh(arrowGeom, arrowMat);
+    arrowMesh.visible = false;
+    arrowMesh.renderOrder = 10;
+    boardGroup.add(arrowMesh);
+    arrowIndicatorRef.current = arrowMesh;
+    resourcesRef.current.geometries.push(arrowGeom);
+    resourcesRef.current.materials.push(arrowMat);
+    resourcesRef.current.meshes.push(arrowMesh);
     createMascot(scene, selectedBot?.img || '/images/theomascot.png');
     createScoresheet(scene);
     createScoreboard(scene);
@@ -544,6 +561,39 @@ const Scrabble3DPlay = () => {
     }
   }, [selectedBot]);
 
+  // Update arrow indicator position/rotation/visibility when selected square or direction changes
+  useEffect(() => {
+    const arrow = arrowIndicatorRef.current;
+    if (!arrow || !boardGroupRef.current) return;
+
+    if (selectedBoardPosition == null || selectedBoardPosition.row == null || selectedBoardPosition.col == null) {
+      arrow.visible = false;
+      setNeedsRender(true);
+      return;
+    }
+
+    const { row, col } = selectedBoardPosition;
+    const size = BOARD.GRID.SIZE;
+    const sq = BOARD.GRID.SQUARE_SIZE;
+    const startX = -(size * sq) / 2 + sq / 2;
+    const startZ = -(size * sq) / 2 + sq / 2;
+    const x = startX + col * sq;
+    const z = startZ + row * sq;
+    const y = BOARD.GRID.Y_POSITION + 0.15;
+
+    arrow.position.set(x, y, z);
+    // Cone defaults to +Y; rotate to point right (+X) or down (-Y into board)
+    if (arrowDirection === 'right') {
+      arrow.rotation.order = 'XYZ';
+      arrow.rotation.set(0, 0, -Math.PI / 2);
+    } else {
+      arrow.rotation.order = 'XYZ';
+      arrow.rotation.set(Math.PI / 2, 0, 0);
+    }
+    arrow.visible = true;
+    setNeedsRender(true);
+  }, [selectedBoardPosition, arrowDirection, isLoaded]);
+
   // Keyboard handling
   useEffect(() => {
     const handleKeyDownEvent = (e) => {
@@ -557,6 +607,18 @@ const Scrabble3DPlay = () => {
   // Track mouse down position to distinguish clicks from drags
   const handleMouseDown = useCallback((event) => {
     mouseDownPosRef.current = { x: event.clientX, y: event.clientY };
+  }, []);
+
+  // Cursor: pointer when hovering a board square, grab otherwise
+  const handleCanvasMouseMove = useCallback((event) => {
+    const canvas = rendererRef.current?.domElement;
+    if (!canvas || !cameraRef.current) return;
+    const rect = canvas.getBoundingClientRect();
+    mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+    const boardIntersects = raycasterRef.current.intersectObjects(boardSquaresRef.current, false);
+    canvas.style.cursor = boardIntersects.length > 0 ? 'pointer' : 'grab';
   }, []);
 
   // Click handling for raycasting
@@ -630,14 +692,17 @@ const Scrabble3DPlay = () => {
   useEffect(() => {
     const canvas = rendererRef.current?.domElement;
     if (canvas) {
+      canvas.style.cursor = 'grab';
       canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleCanvasMouseMove);
       canvas.addEventListener('click', handleCanvasClick);
       return () => {
         canvas.removeEventListener('mousedown', handleMouseDown);
+        canvas.removeEventListener('mousemove', handleCanvasMouseMove);
         canvas.removeEventListener('click', handleCanvasClick);
       };
     }
-  }, [handleCanvasClick, handleMouseDown]);
+  }, [handleCanvasClick, handleMouseDown, handleCanvasMouseMove]);
 
   // Helper functions for 3D scene
   const createMagicalEnvironment = (scene) => {
@@ -1392,11 +1457,10 @@ const Scrabble3DPlay = () => {
     rackTilesRef.current[playerKey] = newRackTiles;
   };
 
-  // Bot selection handler
+  // Bot selection handler (called from scouting report)
   const handleBotSelect = (bot) => {
     setSelectedBot(bot);
     setPlayer2Name(bot.name);
-    setBotSelectorOpen(false);
     startBotGame({ origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound });
   };
 
@@ -1467,47 +1531,140 @@ const Scrabble3DPlay = () => {
         </div>
       )}
 
-      {/* Back to 2D button */}
-      <button
-        className={styles.backButton}
-        onClick={() => navigate('/play')}
-      >
-        <ArrowLeft size={20} />
-        <span>2D Mode</span>
-      </button>
-
-      {/* Bot Selector Dropdown */}
-      <div className={styles.botSelectorContainer}>
-        <button
-          className={styles.botSelectorButton}
-          onClick={() => setBotSelectorOpen(!botSelectorOpen)}
+      {/* Scouting Report - compact modal when game not started */}
+      {isLoaded && !gameStarted && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 900,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 1.5,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+          }}
         >
-          {getBotIcon(selectedBot?.name || 'Theo')}
-          <span>{selectedBot?.name || 'Select Bot'}</span>
-        </button>
-
-        {botSelectorOpen && (
-          <div className={styles.botDropdown}>
-            {bots.map((bot) => (
-              <div
-                key={bot.name}
-                className={styles.botOption}
-                onClick={() => handleBotSelect(bot)}
-              >
-                {bot.img ? (
-                  <img src={bot.img} alt={bot.name} width={24} height={24} style={{ borderRadius: '4px' }} />
-                ) : (
-                  bot.icon
-                )}
-                <div className={styles.botInfo}>
-                  <span className={styles.botName}>{bot.name}</span>
-                  <span className={styles.botDesc}>{bot.desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          <Box
+            sx={{
+              width: '100%',
+              maxWidth: 420,
+              maxHeight: 'calc(100vh - 24px)',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+              p: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+              backgroundColor: lightMode === 'dark' ? 'rgba(31, 41, 55, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+              boxShadow: lightMode === 'dark'
+                ? '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
+                : '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Typography
+              component="div"
+              sx={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.95)' : '#B45309',
+                textAlign: 'center',
+                pb: 1,
+                borderBottom: '1px solid',
+                borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+              }}
+            >
+              Scouting Report
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: 1.5,
+              }}
+            >
+              {bots.map((bot) => (
+                <Box
+                  key={bot.name}
+                  component="button"
+                  onClick={() => handleBotSelect(bot)}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    py: 1.25,
+                    px: 0.75,
+                    borderRadius: 1.5,
+                    border: '1px solid transparent',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                    background: lightMode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                    '&:hover': {
+                      background: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.12)' : 'rgba(245, 158, 11, 0.1)',
+                      borderColor: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.35)' : 'rgba(245, 158, 11, 0.35)',
+                      transform: 'translateY(-2px)',
+                    },
+                    '&:active': { transform: 'translateY(0)' },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 52,
+                      height: 52,
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 1.5,
+                      overflow: 'hidden',
+                      bgcolor: lightMode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)',
+                    }}
+                  >
+                    {bot.img ? (
+                      <img src={bot.img} alt={bot.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <Box sx={{ color: lightMode === 'dark' ? '#94A3B8' : '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {bot.icon}
+                      </Box>
+                    )}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: lightMode === 'dark' ? '#F1F5F9' : '#1E293B',
+                      lineHeight: 1.2,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {bot.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#64748B',
+                      textAlign: 'center',
+                      lineHeight: 1.3,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {bot.desc}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       {/* Action Buttons */}
       {gameStarted && currentPlayer === 1 && !isBotThinking && (
@@ -1548,19 +1705,6 @@ const Scrabble3DPlay = () => {
             <span></span>
             <span></span>
           </div>
-        </div>
-      )}
-
-      {/* Start Game Button */}
-      {!gameStarted && (
-        <div className={styles.startGameContainer}>
-          <button
-            className={styles.startGameButton}
-            onClick={() => setBotSelectorOpen(true)}
-          >
-            <Play size={24} />
-            <span>Start Game</span>
-          </button>
         </div>
       )}
 
