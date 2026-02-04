@@ -53,6 +53,12 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       const newUser = session?.user ?? null;
       setUser(newUser);
+
+      // Avoid re-fetching profile on silent token refresh; keep existing profile
+      if (event === 'TOKEN_REFRESHED') {
+        setLoading(false);
+        return;
+      }
       
       // Only fetch profile if user changed and we haven't fetched for this user yet
       if (newUser) {
@@ -82,31 +88,48 @@ export const AuthProvider = ({ children }) => {
     console.log('AuthContext: fetchUserProfile called for', userId);
     profileFetchingRef.current = true;
     lastFetchedUserIdRef.current = userId;
+    const previousProfile = profile;
     
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile query timeout')), 2000)
-      );
-      
+      // Bounded profile fetch so we don't hang the UI forever
+      const timeoutMs = 2000;
+      let timedOut = false;
+
       const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(
+          () =>
+            resolve({
+              data: null,
+              error: { code: 'TIMEOUT', message: 'Profile query timeout' },
+            }),
+          timeoutMs
+        )
+      );
+
+      const { data, error } = await Promise.race([
+        queryPromise.then((result) => ({ data: result.data, error: result.error })),
+        timeoutPromise,
+      ]);
 
       console.log('AuthContext: Profile fetch result', { data, error });
 
       if (error) {
         // If profile doesn't exist yet, that's okay - it will be created by the trigger
-        if (error.code === 'PGRST116' || error.message === 'Profile query timeout') {
-          console.log('Profile not found yet or timeout, will be created automatically');
-          setProfile(null);
+        if (error.code === 'PGRST116' || error.code === 'TIMEOUT') {
+          console.log('Profile not found yet or timed out, will be created automatically');
+          // Only clear profile if we never had one
+          if (!previousProfile) {
+            setProfile(null);
+          }
         } else {
           console.error('Error fetching user profile:', error);
-          setProfile(null);
+          // Keep previous profile in case of transient errors
         }
       } else {
         console.log('AuthContext: Setting profile', data);
@@ -114,8 +137,10 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Exception fetching user profile:', error);
-      // On error or timeout, set profile to null and continue
-      setProfile(null);
+      // On error, keep whatever profile we had; only clear if we never had one
+      if (!previousProfile) {
+        setProfile(null);
+      }
     } finally {
       console.log('AuthContext: Setting loading to false');
       setLoading(false);

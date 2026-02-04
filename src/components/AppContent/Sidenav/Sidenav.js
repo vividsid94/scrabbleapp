@@ -10,7 +10,7 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Modal from '@mui/material/Modal';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
 import { useGameStore } from '../../../stores/gameStore';
@@ -234,6 +234,8 @@ export default function MiniDrawer() {
     };
   }, []);
 
+  const navigate = useNavigate();
+
   return (
     <Box>
       {/* Force override Material-UI styles */}
@@ -288,6 +290,7 @@ export default function MiniDrawer() {
                 <button
                   onClick={async () => {
                     await signOut();
+                    navigate('/');
                   }}
                   className={homeStyles.secondaryButton}
                   style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}

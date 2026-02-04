@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ThemeContext } from '../../../App';
 import AuthModal from '../../Auth/AuthModal';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './Topbar.module.css';
 import homeStyles from '../../../containers/Home/Home.module.css';
 
@@ -11,6 +11,7 @@ export default function Topbar() {
   const { lightMode } = useContext(ThemeContext);
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
 
@@ -44,6 +45,7 @@ export default function Topbar() {
               <button
                 onClick={async () => {
                   await signOut();
+                  navigate('/');
                 }}
                 className={homeStyles.secondaryButton}
                 style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
