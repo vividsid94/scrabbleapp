@@ -16,7 +16,7 @@ import { formatTime } from '../../functions/play/timeUtils';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import Topbar from '../../components/AppContent/Topbar/Topbar';
 import {
-  Smiley, Robot, UserCircle, Cube, ArrowsClockwise
+  Smiley, Robot, UserCircle, Cube, ArrowsClockwise, CaretDown, CaretUp
 } from '@phosphor-icons/react';
 import {
   CAMERA,
@@ -206,10 +206,19 @@ const Scrabble3DPlay = () => {
     updatePreviewScore,
     timerActive,
     startTimer,
+    topMoves,
+    isLoadingTopMoves,
+    isDictionaryLoading,
+    setTopMoves,
+    handleGetTopMovesForExpandable,
+    handleMoveSelectClick,
   } = useGameStore();
 
   // Exchange modal state
   const [showExchangeModal, setShowExchangeModal] = useState(false);
+
+  // Ask Theo panel state
+  const [isAskTheoExpanded, setIsAskTheoExpanded] = useState(false);
 
   // Calculate latest move tiles for highlighting
   const latestMoveTiles = useMemo(() => {
@@ -255,7 +264,7 @@ const Scrabble3DPlay = () => {
     }
   }, [currentPlayer]);
 
-  // Update 3D clock display from game store (your time, bot time on side, move count)
+  // Update 3D clock display from game store (your time, bot time)
   const updateClockDisplay = useCallback(() => {
     const clock = sceneRef.current?.clock;
     if (!clock) return;
@@ -264,7 +273,7 @@ const Scrabble3DPlay = () => {
     const p2Time = state.player2Time ?? 20 * 60;
     const current = state.currentPlayer ?? 1;
     const isBot = state.isBotMode ?? false;
-    const moves = state.moveHistory?.length ?? 0;
+    const botLabel = state.selectedBot?.name || state.player2Name || 'Bot';
     const w = clock.drawW;
     const h = clock.drawH;
     const ctx = clock.context;
@@ -275,20 +284,17 @@ const Scrabble3DPlay = () => {
     ctx.textBaseline = 'middle';
     // Left half: current player (you) time
     const leftCenter = w * 0.28;
-    ctx.font = 'bold 28px monospace';
+    ctx.font = 'bold 44px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(current === 1 ? 'You' : isBot ? 'Bot' : 'P2', leftCenter, h * 0.32);
-    ctx.font = 'bold 48px monospace';
-    ctx.fillText(formatTime(current === 1 ? p1Time : p2Time), leftCenter, h * 0.58);
+    ctx.fillText(current === 1 ? 'You' : isBot ? botLabel : 'P2', leftCenter, h * 0.35);
+    ctx.font = 'bold 80px monospace';
+    ctx.fillText(formatTime(current === 1 ? p1Time : p2Time), leftCenter, h * 0.62);
     // Right half: other player (bot) time
     const rightCenter = w * 0.72;
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText(current === 1 ? (isBot ? 'Bot' : 'P2') : 'You', rightCenter, h * 0.32);
-    ctx.font = 'bold 48px monospace';
-    ctx.fillText(formatTime(current === 1 ? p2Time : p1Time), rightCenter, h * 0.58);
-    // Bottom: move count
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText('Move ' + moves, w / 2, h * 0.88);
+    ctx.font = 'bold 44px monospace';
+    ctx.fillText(current === 1 ? (isBot ? botLabel : 'P2') : 'You', rightCenter, h * 0.35);
+    ctx.font = 'bold 80px monospace';
+    ctx.fillText(formatTime(current === 1 ? p2Time : p1Time), rightCenter, h * 0.62);
     clock.texture.needsUpdate = true;
   }, []);
 
@@ -405,6 +411,7 @@ const Scrabble3DPlay = () => {
     createScoreboard(scene);
     createClock(scene);
     updateClockDisplay();
+    createBlankSlip(scene);
 
     // Animation loop
     let lastTime = 0;
@@ -552,10 +559,31 @@ const Scrabble3DPlay = () => {
     setNeedsRender(true);
   }, [player1points, player2points, moveHistory, player1Name, player2Name]);
 
+  // Update blank slip when blanks are played
+  useEffect(() => {
+    if (sceneRef.current?.blankSlip) {
+      updateBlankSlip();
+      setNeedsRender(true);
+    }
+  }, [blankTiles, tempBoardCoords]);
+
   // Calculate preview score when tiles are placed (same as 2D Play component)
   useEffect(() => {
     updatePreviewScore();
   }, [selectedTiles, tempBoardCoords]);
+
+  // Clear top moves when turn changes
+  useEffect(() => {
+    setTopMoves([]);
+    setIsAskTheoExpanded(false);
+  }, [currentPlayer, setTopMoves]);
+
+  // Auto-expand Ask Theo when moves are loaded
+  useEffect(() => {
+    if (topMoves && topMoves.length > 0) {
+      setIsAskTheoExpanded(true);
+    }
+  }, [topMoves]);
 
   // Update mascot when selected bot changes
   useEffect(() => {
@@ -1044,38 +1072,67 @@ const Scrabble3DPlay = () => {
     loader.load(mascotImage, (texture) => {
       const w = 5;
       const h = 6;
-      const geometry = new THREE.PlaneGeometry(w, h);
-      const material = new THREE.MeshBasicMaterial({
+      const depth = 0.4;
+      const backTexture = texture.clone();
+
+      // Solid edge material for the four sides (fills space between front and back)
+      const sideMaterial = new THREE.MeshPhongMaterial({
+        color: 0x3d3630,
+        shininess: 15,
+      });
+      const frontMaterial = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
         alphaTest: 0.1,
-        side: THREE.DoubleSide
+        side: THREE.FrontSide,
       });
-      const mascot = new THREE.Mesh(geometry, material);
-      mascot.position.set(0, 2.5, -14);
-      scene.add(mascot);
-      resourcesRef.current.geometries.push(geometry);
-      resourcesRef.current.materials.push(material);
-      resourcesRef.current.textures.push(texture);
-      resourcesRef.current.meshes.push(mascot);
-      sceneRef.current.mascot = mascot;
+      const backMaterial = new THREE.MeshBasicMaterial({
+        map: backTexture,
+        transparent: true,
+        alphaTest: 0.1,
+        side: THREE.FrontSide,
+      });
+
+      // Box: right, left, top, bottom, front (+z), back (-z)
+      const boxGeometry = new THREE.BoxGeometry(w, h, depth);
+      const mascotMesh = new THREE.Mesh(boxGeometry, [
+        sideMaterial,
+        sideMaterial,
+        sideMaterial,
+        sideMaterial,
+        frontMaterial,
+        backMaterial,
+      ]);
+      mascotMesh.position.set(0, 3, -14);
+      mascotMesh.castShadow = true;
+      scene.add(mascotMesh);
+
+      resourcesRef.current.geometries.push(boxGeometry);
+      resourcesRef.current.materials.push(sideMaterial, frontMaterial, backMaterial);
+      resourcesRef.current.textures.push(texture, backTexture);
+      resourcesRef.current.meshes.push(mascotMesh);
+      sceneRef.current.mascot = mascotMesh; // material[4]=front, material[5]=back for updateMascot
       setNeedsRender(true);
     });
   };
 
   const updateMascot = (mascotImage) => {
     if (!sceneRef.current?.mascot) return;
+    const mesh = sceneRef.current.mascot;
+    if (!Array.isArray(mesh.material)) return;
 
     const loader = new THREE.TextureLoader();
     loader.load(mascotImage, (texture) => {
-      // Dispose old texture
-      if (sceneRef.current.mascot.material.map) {
-        sceneRef.current.mascot.material.map.dispose();
-      }
-      // Update to new texture
-      sceneRef.current.mascot.material.map = texture;
-      sceneRef.current.mascot.material.needsUpdate = true;
-      resourcesRef.current.textures.push(texture);
+      const frontMat = mesh.material[4];
+      const backMat = mesh.material[5];
+      if (frontMat.map) frontMat.map.dispose();
+      if (backMat.map) backMat.map.dispose();
+      const backTex = texture.clone();
+      frontMat.map = texture;
+      frontMat.needsUpdate = true;
+      backMat.map = backTex;
+      backMat.needsUpdate = true;
+      resourcesRef.current.textures.push(texture, backTex);
       setNeedsRender(true);
     });
   };
@@ -1164,31 +1221,149 @@ const Scrabble3DPlay = () => {
 
   const createClock = (scene) => {
     const C = TABLE.CLOCK;
+    // Larger clock: ~1.6x size for visibility on back of table
+    const clockWidth = 8.5;
+    const clockHeight = 2.5;
+    const clockDepth = 0.35;
+    const canvasW = 850;
+    const canvasH = 250;
     const canvas = document.createElement('canvas');
-    canvas.width = C.CANVAS.width;
-    canvas.height = C.CANVAS.height;
+    canvas.width = canvasW;
+    canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
     const clockTexture = new THREE.CanvasTexture(canvas);
-    const clockGeometry = new THREE.PlaneGeometry(C.SIZE.width, C.SIZE.height);
+    const clockGeometry = new THREE.PlaneGeometry(clockWidth, clockHeight);
     const clockMaterial = new THREE.MeshBasicMaterial({
       map: clockTexture,
       transparent: true,
       alphaTest: 0.01
     });
     const clockDisplay = new THREE.Mesh(clockGeometry, clockMaterial);
-    clockDisplay.position.set(
-      C.POSITION.x,
-      TABLE.HEIGHT + 0.05,
-      C.POSITION.z
-    );
-    clockDisplay.rotation.x = -Math.PI / 2;
+    clockDisplay.position.z = clockDepth / 2; // Face in front of body
     clockDisplay.renderOrder = 1;
-    scene.add(clockDisplay);
-    resourcesRef.current.geometries.push(clockGeometry);
-    resourcesRef.current.materials.push(clockMaterial);
+
+    // Back / body: shallow box so the clock has depth
+    const bodyGeometry = new THREE.BoxGeometry(clockWidth, clockHeight, clockDepth);
+    const bodyMaterial = new THREE.MeshPhongMaterial({
+      color: 0x1a1a1a,
+      shininess: 30,
+    });
+    const clockBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    clockBody.position.z = -clockDepth / 2;
+    clockBody.castShadow = true;
+
+    const clockGroup = new THREE.Group();
+    clockGroup.add(clockBody);
+    clockGroup.add(clockDisplay);
+    clockGroup.rotation.y = 0; // Face toward front / room
+    const tableTopY = TABLE.Y_POSITION + TABLE.HEIGHT / 2;
+    clockGroup.position.set(
+      -12,
+      tableTopY + clockHeight / 2,
+      -12
+    );
+    scene.add(clockGroup);
+    resourcesRef.current.geometries.push(clockGeometry, bodyGeometry);
+    resourcesRef.current.materials.push(clockMaterial, bodyMaterial);
     resourcesRef.current.textures.push(clockTexture);
-    resourcesRef.current.meshes.push(clockDisplay);
-    sceneRef.current.clock = { canvas, context: ctx, texture: clockTexture, drawW: C.CANVAS.width, drawH: C.CANVAS.height };
+    resourcesRef.current.meshes.push(clockDisplay, clockBody);
+    sceneRef.current.clock = { canvas, context: ctx, texture: clockTexture, drawW: canvasW, drawH: canvasH };
+  };
+
+  const createBlankSlip = (scene) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+    const blankSlipTexture = new THREE.CanvasTexture(canvas);
+    const blankSlipGeometry = new THREE.PlaneGeometry(5, 3);
+    const blankSlipMaterial = new THREE.MeshBasicMaterial({
+      map: blankSlipTexture,
+      transparent: true,
+      alphaTest: 0.01
+    });
+    const blankSlipDisplay = new THREE.Mesh(blankSlipGeometry, blankSlipMaterial);
+    // Position at bottom right of table (right side, toward camera / bottom of view)
+    blankSlipDisplay.position.set(
+      20,
+      TABLE.HEIGHT + 0.05,
+      9
+    );
+    blankSlipDisplay.rotation.x = -Math.PI / 2;
+    blankSlipDisplay.renderOrder = 1;
+    blankSlipDisplay.visible = true;
+    scene.add(blankSlipDisplay);
+    resourcesRef.current.geometries.push(blankSlipGeometry);
+    resourcesRef.current.materials.push(blankSlipMaterial);
+    resourcesRef.current.textures.push(blankSlipTexture);
+    resourcesRef.current.meshes.push(blankSlipDisplay);
+    sceneRef.current.blankSlip = {
+      display: blankSlipDisplay,
+      canvas,
+      context: ctx,
+      texture: blankSlipTexture
+    };
+  };
+
+  const updateBlankSlip = () => {
+    if (!sceneRef.current?.blankSlip) return;
+    const { display, canvas, context: ctx, texture } = sceneRef.current.blankSlip;
+
+    // Get blank tiles and their letters from tempBoardCoords
+    const playedBlanks = [];
+    if (blankTiles && blankTiles.length > 0) {
+      blankTiles.forEach((bt, index) => {
+        const letter = tempBoardCoords?.[bt.row]?.[bt.col];
+        if (letter && typeof letter === 'string') {
+          playedBlanks.push({ index: index + 1, letter: letter.toUpperCase(), row: bt.row, col: bt.col });
+        }
+      });
+    }
+
+    display.visible = true;
+
+    // Clear and draw background
+    ctx.fillStyle = '#F5F5DC'; // Beige paper color
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw border
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+    // Draw title
+    ctx.fillStyle = '#2D1F14';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('BLANKS', canvas.width / 2, 16);
+
+    // Draw line under title
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(40, 60);
+    ctx.lineTo(canvas.width - 40, 60);
+    ctx.stroke();
+
+    // Draw each blank's letter
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    playedBlanks.forEach((blank, i) => {
+      const y = 100 + i * 70;
+      // Label
+      ctx.fillStyle = '#666';
+      ctx.font = '28px Arial';
+      ctx.fillText(`Blank ${blank.index}:`, 30, y);
+      // Letter (large)
+      ctx.fillStyle = '#2D1F14';
+      ctx.font = 'bold 52px Arial';
+      ctx.fillText(blank.letter, 200, y);
+    });
+
+    texture.needsUpdate = true;
   };
 
   const updateScoresheet = () => {
@@ -1339,7 +1514,7 @@ const Scrabble3DPlay = () => {
     sceneRef.current.scoreboard.texture = newTexture;
   };
 
-  const createTile = (letter, row, col, isTemp = false, isLastMove = false) => {
+  const createTile = (letter, row, col, isTemp = false, isLastMove = false, isBlank = false) => {
     // Use rounded box geometry for realistic tile edges
     const tileGeometry = new RoundedBoxGeometry(
       TILE.BOARD.WIDTH,
@@ -1446,64 +1621,70 @@ const Scrabble3DPlay = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Create embossed letter texture
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE * 2; // Higher resolution for clarity
-    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
+    // Create embossed letter texture (only if not a blank tile)
+    if (!isBlank) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = TILE.LETTER.CANVAS_SIZE * 2; // Higher resolution for clarity
+      canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw embossed shadow (offset for depth)
-    context.fillStyle = 'rgba(80, 60, 40, 0.6)';
-    context.font = `bold ${100 * 2}px Arial`;
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(letter.toUpperCase(), canvas.width / 2 + 2, canvas.height / 2 + 2);
+      // Draw embossed shadow (offset for depth)
+      context.fillStyle = 'rgba(80, 60, 40, 0.6)';
+      context.font = `bold ${100 * 2}px Arial`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(letter.toUpperCase(), canvas.width / 2 + 2, canvas.height / 2 + 2);
 
-    // Draw main letter (white)
-    context.fillStyle = '#FFFFFF';
-    context.fillText(letter.toUpperCase(), canvas.width / 2, canvas.height / 2);
-
-    // Draw highlight (top-left offset for emboss effect)
-    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    context.fillText(letter.toUpperCase(), canvas.width / 2 - 1, canvas.height / 2 - 1);
-
-    const pointValue = POINT_VALUES[letter.toUpperCase()] || 0;
-    if (pointValue > 0) {
-      // Point value shadow
-      context.fillStyle = 'rgba(80, 60, 40, 0.5)';
-      context.font = `bold ${45 * 2}px Arial`;
-      context.textAlign = 'right';
-      context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
-
-      // Point value main (white)
+      // Draw main letter (white)
       context.fillStyle = '#FFFFFF';
-      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
+      context.fillText(letter.toUpperCase(), canvas.width / 2, canvas.height / 2);
+
+      // Draw highlight (top-left offset for emboss effect)
+      context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      context.fillText(letter.toUpperCase(), canvas.width / 2 - 1, canvas.height / 2 - 1);
+
+      const pointValue = POINT_VALUES[letter.toUpperCase()] || 0;
+      if (pointValue > 0) {
+        // Point value shadow
+        context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+        context.font = `bold ${45 * 2}px Arial`;
+        context.textAlign = 'right';
+        context.textBaseline = 'bottom';
+        context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+        // Point value main (white)
+        context.fillStyle = '#FFFFFF';
+        context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.anisotropy = 4;
+      const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
+      const letterMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: 0.01,
+        depthWrite: false,
+      });
+      const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
+      letterMesh.position.y = TILE.BOARD.HEIGHT / 2 + 0.001; // Just above tile surface
+      letterMesh.rotation.x = TILE.LETTER.ROTATION;
+      letterMesh.renderOrder = 1;
+      tile.add(letterMesh);
+
+      resourcesRef.current.textures.push(texture);
+      resourcesRef.current.materials.push(letterMaterial);
+      resourcesRef.current.geometries.push(letterGeometry);
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.anisotropy = 4;
-    const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
-    const letterMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      alphaTest: 0.01,
-      depthWrite: false,
-    });
-    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = TILE.BOARD.HEIGHT / 2 + 0.001; // Just above tile surface
-    letterMesh.rotation.x = TILE.LETTER.ROTATION;
-    letterMesh.renderOrder = 1;
-    tile.add(letterMesh);
-
-    tile.userData = { type: 'boardTile', letter, row, col, isTemp };
+    tile.userData = { type: 'boardTile', letter, row, col, isTemp, isBlank };
 
     // Store textures for cleanup
-    resourcesRef.current.textures.push(woodTexture, bumpTexture, texture);
-    resourcesRef.current.materials.push(tileMaterial, letterMaterial);
-    resourcesRef.current.geometries.push(tileGeometry, letterGeometry);
+    resourcesRef.current.textures.push(woodTexture, bumpTexture);
+    resourcesRef.current.materials.push(tileMaterial);
+    resourcesRef.current.geometries.push(tileGeometry);
 
     return tile;
   };
@@ -1603,59 +1784,62 @@ const Scrabble3DPlay = () => {
     tile.rotation.y = player === 1 ? 0 : Math.PI;
     tile.castShadow = true;
 
-    // Create embossed letter texture
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
-    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
+    // Blank tiles ('?' or '_') don't show a letter
+    const isBlankTile = letter === '?' || letter === '_';
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    if (!isBlankTile) {
+      // Create embossed letter texture
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
+      canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
 
-    const displayLetter = letter === '?' ? '*' : letter;
+      context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw embossed shadow
-    context.fillStyle = 'rgba(80, 60, 40, 0.5)';
-    context.font = `bold ${80 * 2}px Arial`;
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(displayLetter, canvas.width / 2 + 2, canvas.height / 2 + 2);
+      // Draw embossed shadow
+      context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+      context.font = `bold ${80 * 2}px Arial`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(letter, canvas.width / 2 + 2, canvas.height / 2 + 2);
 
-    // Draw main letter (white)
-    context.fillStyle = '#FFFFFF';
-    context.fillText(displayLetter, canvas.width / 2, canvas.height / 2);
-
-    // Draw highlight
-    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    context.fillText(displayLetter, canvas.width / 2 - 1, canvas.height / 2 - 1);
-
-    const pointValue = POINT_VALUES[letter] || 0;
-    if (pointValue > 0) {
-      context.fillStyle = 'rgba(80, 60, 40, 0.4)';
-      context.font = `bold ${35 * 2}px Arial`;
-      context.textAlign = 'right';
-      context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
-
+      // Draw main letter (white)
       context.fillStyle = '#FFFFFF';
-      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
+      context.fillText(letter, canvas.width / 2, canvas.height / 2);
+
+      // Draw highlight
+      context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      context.fillText(letter, canvas.width / 2 - 1, canvas.height / 2 - 1);
+
+      const pointValue = POINT_VALUES[letter] || 0;
+      if (pointValue > 0) {
+        context.fillStyle = 'rgba(80, 60, 40, 0.4)';
+        context.font = `bold ${35 * 2}px Arial`;
+        context.textAlign = 'right';
+        context.textBaseline = 'bottom';
+        context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+        context.fillStyle = '#FFFFFF';
+        context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.anisotropy = 4;
+      const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.RACK_SIZE, TILE.LETTER.RACK_SIZE);
+      const letterMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: 0.01,
+        depthWrite: false,
+      });
+      const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
+      letterMesh.position.y = TILE.RACK.HEIGHT / 2 + 0.001;
+      letterMesh.rotation.x = TILE.LETTER.ROTATION;
+      letterMesh.renderOrder = 1;
+      tile.add(letterMesh);
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.anisotropy = 4;
-    const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.RACK_SIZE, TILE.LETTER.RACK_SIZE);
-    const letterMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      alphaTest: 0.01,
-      depthWrite: false,
-    });
-    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = TILE.RACK.HEIGHT / 2 + 0.001;
-    letterMesh.rotation.x = TILE.LETTER.ROTATION;
-    letterMesh.renderOrder = 1;
-    tile.add(letterMesh);
-
-    tile.userData = { type: 'rackTile', letter, index: position, player };
+    tile.userData = { type: 'rackTile', letter, index: position, player, isBlank: isBlankTile };
 
     return tile;
   };
@@ -1693,7 +1877,9 @@ const Scrabble3DPlay = () => {
         if (typeof cellValue === 'string' && cellValue.length === 1) {
           const isCommitted = typeof boardCoords[row]?.[col] === 'string';
           const isLastMove = lastMoveTilePositions.includes(`${row},${col}`);
-          const tile = createTile(cellValue, row, col, !isCommitted, isLastMove);
+          // Check if this tile is a blank
+          const isBlank = blankTiles?.some(bt => bt.row === row && bt.col === col);
+          const tile = createTile(cellValue, row, col, !isCommitted, isLastMove, isBlank);
           group.add(tile);
           boardTilesRef.current.push(tile);
         }
@@ -1789,6 +1975,31 @@ const Scrabble3DPlay = () => {
       return <img src={bot.img} alt={botName} width={24} height={24} style={{ borderRadius: '4px' }} />;
     }
     return bot?.icon || <Robot size={24} color="#9CA3AF" />;
+  };
+
+  // Format move location for display (e.g., "8H" or "H8")
+  const formatMoveLocation = (move) => {
+    if (!move.tiles || move.tiles.length === 0) return null;
+    const firstTile = move.tiles[0];
+    const isHorizontal = move.tiles.some(t => t.row === firstTile.row && t.col === firstTile.col + 1);
+    const row = firstTile.row + 1;
+    const col = String.fromCharCode(65 + firstTile.col);
+    return isHorizontal ? `${row}${col}` : `${col}${row}`;
+  };
+
+  // Handle Ask Theo click
+  const handleAskTheoClick = () => {
+    if (topMoves && topMoves.length > 0) {
+      setIsAskTheoExpanded(!isAskTheoExpanded);
+    } else {
+      handleGetTopMovesForExpandable();
+    }
+  };
+
+  // Handle move selection from Ask Theo
+  const handleTopMoveSelect = (move) => {
+    handleMoveSelectClick(move);
+    setIsAskTheoExpanded(false);
   };
 
   return (
@@ -1966,6 +2177,199 @@ const Scrabble3DPlay = () => {
             Exchange (2)
           </button>
         </div>
+      )}
+
+      {/* Ask Theo Panel */}
+      {gameStarted && currentPlayer === 1 && !isBotThinking && !gameEnded && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 80,
+            right: 16,
+            width: 280,
+            zIndex: 100,
+          }}
+        >
+          {/* Header */}
+          <Box
+            onClick={handleAskTheoClick}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              background: 'linear-gradient(135deg, rgba(55, 65, 81, 0.95) 0%, rgba(31, 41, 55, 0.98) 100%)',
+              borderRadius: isAskTheoExpanded ? '8px 8px 0 0' : '8px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                background: 'linear-gradient(135deg, rgba(65, 75, 91, 0.95) 0%, rgba(41, 51, 65, 0.98) 100%)',
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {topMoves && topMoves.length > 0 ? (
+                <>
+                  <Box sx={{
+                    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                    color: '#FBBF24',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}>
+                    1
+                  </Box>
+                  {formatMoveLocation(topMoves[0]) && (
+                    <Box sx={{
+                      fontSize: '11px',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                    }}>
+                      {formatMoveLocation(topMoves[0])}
+                    </Box>
+                  )}
+                  <Box sx={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>
+                    {topMoves[0].word}
+                  </Box>
+                  <Box sx={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#4ADE80',
+                  }}>
+                    {topMoves[0].score}
+                  </Box>
+                </>
+              ) : (
+                <>
+                  <Box sx={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}>
+                    <img
+                      src="/images/theomascot.png"
+                      alt="Theo"
+                      style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                    />
+                  </Box>
+                  <Box sx={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+                    {isLoadingTopMoves ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{isDictionaryLoading ? 'Loading dictionary...' : 'Thinking...'}</span>
+                        <Box className={styles.thinkingBadgeDots} sx={{ display: 'inline-flex' }}>
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </Box>
+                      </Box>
+                    ) : (
+                      'Ask Theo'
+                    )}
+                  </Box>
+                </>
+              )}
+            </Box>
+            {topMoves && topMoves.length > 0 && (
+              <Box sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center' }}>
+                {isAskTheoExpanded ? <CaretUp size={16} /> : <CaretDown size={16} />}
+              </Box>
+            )}
+          </Box>
+
+          {/* Expanded moves list */}
+          {isAskTheoExpanded && topMoves && topMoves.length > 0 && (
+            <Box
+              sx={{
+                background: 'rgba(31, 41, 55, 0.98)',
+                borderRadius: '0 0 8px 8px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderTop: 'none',
+                maxHeight: '400px',
+                overflowY: 'auto',
+              }}
+            >
+              {topMoves.map((move, index) => (
+                <Box
+                  key={index}
+                  onClick={() => handleTopMoveSelect(move)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderBottom: index < topMoves.length - 1 ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
+                    '&:hover': {
+                      background: 'rgba(255, 255, 255, 0.05)',
+                    },
+                  }}
+                >
+                  <Box sx={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    width: '18px',
+                    textAlign: 'center',
+                  }}>
+                    {index + 1}
+                  </Box>
+                  {formatMoveLocation(move) && (
+                    <Box sx={{
+                      fontSize: '10px',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      padding: '2px 5px',
+                      borderRadius: '3px',
+                      minWidth: '28px',
+                      textAlign: 'center',
+                    }}>
+                      {formatMoveLocation(move)}
+                    </Box>
+                  )}
+                  <Box sx={{
+                    flex: 1,
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: '#fff',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {move.word}
+                  </Box>
+                  <Box sx={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: '#4ADE80',
+                  }}>
+                    {move.score}
+                  </Box>
+                  {move.leaveValue !== undefined && (
+                    <Box sx={{
+                      fontSize: '10px',
+                      color: '#60A5FA',
+                      backgroundColor: 'rgba(96, 165, 250, 0.15)',
+                      padding: '2px 5px',
+                      borderRadius: '3px',
+                    }}>
+                      {Math.round(move.leaveValue)}
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
       )}
 
       {/* Bot Thinking Indicator - subtle corner position */}
