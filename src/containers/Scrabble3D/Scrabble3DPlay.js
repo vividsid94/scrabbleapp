@@ -8,6 +8,8 @@ import { ThemeContext } from '../../App';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { useGameStore } from '../../stores/gameStore';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
+import Rack from '../../components/AppContent/Board/Rack';
 import { handleKeyDown } from '../../functions/play/keyboardFunctions';
 import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from '../../functions/play/boardFunctions';
@@ -135,6 +137,7 @@ const Scrabble3DPlay = () => {
   const [needsRender, setNeedsRender] = useState(true);
 
   const { lightMode } = useContext(ThemeContext);
+  const tileColor = useColorSchemeStore(state => state.color?.current ?? '#E8D5B5');
 
   // Store references for cleanup
   const resourcesRef = useRef({
@@ -2154,31 +2157,6 @@ const Scrabble3DPlay = () => {
         </Box>
       )}
 
-      {/* Action Buttons */}
-      {gameStarted && currentPlayer === 1 && !isBotThinking && (
-        <div className={styles.actionButtons}>
-          <button
-            className={`${styles.actionButton} ${styles.submitButton}`}
-            onClick={handleSubmit}
-            disabled={!selectedTiles || selectedTiles.length === 0}
-          >
-            Submit (Enter)
-          </button>
-          <button
-            className={`${styles.actionButton} ${styles.passButton}`}
-            onClick={handlePassClick}
-          >
-            Pass (1)
-          </button>
-          <button
-            className={`${styles.actionButton} ${styles.exchangeButton}`}
-            onClick={handleExchangeClick}
-          >
-            Exchange (2)
-          </button>
-        </div>
-      )}
-
       {/* Ask Theo Panel */}
       {gameStarted && currentPlayer === 1 && !isBotThinking && !gameEnded && (
         <Box
@@ -2199,7 +2177,7 @@ const Scrabble3DPlay = () => {
               justifyContent: 'space-between',
               padding: '10px 12px',
               background: 'linear-gradient(135deg, rgba(55, 65, 81, 0.95) 0%, rgba(31, 41, 55, 0.98) 100%)',
-              borderRadius: isAskTheoExpanded ? '8px 8px 0 0' : '8px',
+              borderRadius: '8px 8px 0 0',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -2369,6 +2347,38 @@ const Scrabble3DPlay = () => {
               ))}
             </Box>
           )}
+
+          {/* Action buttons + instructions under Ask Theo (compact) */}
+          <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.08)', p: 1, borderRadius: '0 0 8px 8px', background: 'rgba(31, 41, 55, 0.98)' }}>
+            <Box sx={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', mb: 0.75 }}>
+              <button
+                className={`${styles.actionButton} ${styles.submitButton}`}
+                onClick={handleSubmit}
+                disabled={!selectedTiles || selectedTiles.length === 0}
+                style={{ padding: '6px 12px', fontSize: '12px' }}
+              >
+                Submit (Enter)
+              </button>
+              <button
+                className={`${styles.actionButton} ${styles.passButton}`}
+                onClick={handlePassClick}
+                style={{ padding: '6px 12px', fontSize: '12px' }}
+              >
+                Pass (1)
+              </button>
+              <button
+                className={`${styles.actionButton} ${styles.exchangeButton}`}
+                onClick={handleExchangeClick}
+                style={{ padding: '6px 12px', fontSize: '12px' }}
+              >
+                Exchange (2)
+              </button>
+            </Box>
+            <Box sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.45)', fontSize: '10px', lineHeight: 1.3 }}>
+              <p style={{ margin: 0 }}>Click squares for position · Type letters · Enter = Submit</p>
+              <p style={{ margin: 0 }}>1 = Pass · 2 = Exchange · Click rack to select</p>
+            </Box>
+          </Box>
         </Box>
       )}
 
@@ -2413,121 +2423,112 @@ const Scrabble3DPlay = () => {
         </div>
       )}
 
-      {/* Instructions */}
-      <div className={styles.instructions}>
-        <p>Click board squares to select position | Type letters to place tiles | Enter to submit</p>
-        <p>1 = Pass | 2 = Exchange | Click rack tiles to select</p>
-      </div>
-
-      {/* Exchange Modal */}
+      {/* Exchange Modal - consistent with Scouting Report / site modals */}
       <Modal
         open={showExchangeModal}
         onClose={handleExchangeCancel}
         aria-labelledby="exchange-modal-title"
+        BackdropProps={{ sx: { backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)' } }}
       >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          bgcolor: '#1a1a2e',
-          border: '2px solid #D97706',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 4,
-          minWidth: 400,
-          maxWidth: 500,
-        }}>
-          <h2 id="exchange-modal-title" style={{
-            color: '#fff',
-            marginTop: 0,
-            marginBottom: 16,
-            textAlign: 'center'
-          }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '100%',
+            maxWidth: 420,
+            p: 2.5,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+            backgroundColor: lightMode === 'dark' ? 'rgba(31, 41, 55, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+            boxShadow: lightMode === 'dark'
+              ? '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
+              : '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Typography
+            id="exchange-modal-title"
+            component="h2"
+            sx={{
+              fontSize: 14,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.95)' : '#B45309',
+              textAlign: 'center',
+              mb: 1,
+              pb: 1,
+              borderBottom: '1px solid',
+              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            }}
+          >
             Exchange Tiles
-          </h2>
-          <p style={{ color: '#9CA3AF', textAlign: 'center', marginBottom: 20 }}>
-            Click tiles to select them for exchange ({tilesToExchange.length} selected)
-          </p>
+          </Typography>
+          <Typography sx={{ color: lightMode === 'dark' ? '#94A3B8' : '#64748B', textAlign: 'center', fontSize: 13, mb: 2 }}>
+            Click tiles to select ({tilesToExchange.length} selected)
+          </Typography>
 
-          {/* Tile rack for selection */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 8,
-            marginBottom: 24,
-            flexWrap: 'wrap'
-          }}>
-            {(currentPlayer === 1 ? player1Rack : player2Rack).map((tile, index) => {
-              const isSelected = tilesToExchange.some(t => t.index === index);
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleExchangeTileToggle(tile, index)}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    fontSize: 24,
-                    fontWeight: 'bold',
-                    backgroundColor: isSelected ? '#D97706' : '#F5DEB3',
-                    color: isSelected ? '#fff' : '#1a1a2e',
-                    border: isSelected ? '3px solid #fff' : '2px solid #8B4513',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                  }}
-                >
-                  {tile === '?' ? '*' : tile}
-                </button>
-              );
-            })}
-          </div>
+          {/* Tile rack - same Rack component as 2D Play */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Rack
+              rack={currentPlayer === 1 ? player1Rack : player2Rack}
+              color={tileColor}
+              onTileClick={(letter, index) => handleExchangeTileToggle(letter, index)}
+              selectedTiles={tilesToExchange}
+            />
+          </Box>
 
-          {/* Pool count warning */}
           {pool.length < 7 && (
-            <p style={{ color: '#EF4444', textAlign: 'center', marginBottom: 16 }}>
-              Cannot exchange - fewer than 7 tiles in pool ({pool.length} remaining)
-            </p>
+            <Typography sx={{ color: '#EF4444', textAlign: 'center', fontSize: 12, mb: 1.5 }}>
+              Fewer than 7 tiles in pool ({pool.length} remaining)
+            </Typography>
           )}
 
-          {/* Action buttons */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 16
-          }}>
-            <button
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
+            <Box
+              component="button"
               onClick={handleExchangeCancel}
-              style={{
-                padding: '10px 24px',
-                fontSize: 16,
-                backgroundColor: 'transparent',
-                color: '#9CA3AF',
-                border: '2px solid #9CA3AF',
-                borderRadius: 6,
+              sx={{
+                px: 2,
+                py: 1,
+                fontSize: 14,
+                fontWeight: 600,
+                color: lightMode === 'dark' ? '#94A3B8' : '#64748B',
+                border: '1px solid',
+                borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+                borderRadius: 1.5,
                 cursor: 'pointer',
+                background: 'transparent',
+                '&:hover': { background: lightMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
               }}
             >
               Cancel
-            </button>
-            <button
+            </Box>
+            <Box
+              component="button"
               onClick={handleExchangeConfirm}
               disabled={tilesToExchange.length === 0 || pool.length < 7}
-              style={{
-                padding: '10px 24px',
-                fontSize: 16,
-                backgroundColor: tilesToExchange.length > 0 && pool.length >= 7 ? '#D97706' : '#4B5563',
+              sx={{
+                px: 2,
+                py: 1,
+                fontSize: 14,
+                fontWeight: 600,
                 color: '#fff',
                 border: 'none',
-                borderRadius: 6,
+                borderRadius: 1.5,
                 cursor: tilesToExchange.length > 0 && pool.length >= 7 ? 'pointer' : 'not-allowed',
                 opacity: tilesToExchange.length > 0 && pool.length >= 7 ? 1 : 0.5,
+                background: tilesToExchange.length > 0 && pool.length >= 7
+                  ? (lightMode === 'dark' ? 'linear-gradient(135deg, #D97706, #B45309)' : 'linear-gradient(135deg, #EA580C, #C2410C)')
+                  : (lightMode === 'dark' ? '#374151' : '#94A3B8'),
+                '&:hover': (tilesToExchange.length > 0 && pool.length >= 7) ? { opacity: 0.95 } : {},
               }}
             >
               Exchange {tilesToExchange.length > 0 ? `(${tilesToExchange.length})` : ''}
-            </button>
-          </div>
+            </Box>
+          </Box>
         </Box>
       </Modal>
     </div>
