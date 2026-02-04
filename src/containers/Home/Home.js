@@ -340,6 +340,28 @@ export default function Home(){
             </Box>
           </Box>
 
+          {/* Featured: Play in 3D (3D Play) */}
+          <Box
+            className={styles.featured3DSection}
+            sx={{
+              width: '100%',
+              maxWidth: 520,
+              margin: '12px auto 0',
+              padding: { xs: '0 16px', sm: '0 20px' },
+              boxSizing: 'border-box'
+            }}
+          >
+            <Link to="/3dplay" style={{ textDecoration: 'none', display: 'block' }}>
+              <button className={styles.featured3DButton}>
+                <span className={styles.secondaryButtonContent}>
+                  <Cube size={22} weight="fill" />
+                  <span>Play in 3D</span>
+                </span>
+                <span className={styles.featured3DTag}>Featured</span>
+              </button>
+            </Link>
+          </Box>
+
           <Box 
             className={styles.secondaryButtonsContainer}
             sx={{
@@ -354,7 +376,7 @@ export default function Home(){
                 <button className={styles.secondaryButton}>
                   <span className={styles.secondaryButtonContent}>
                     <GameController size={18} weight="fill" />
-                    <span>Play vs bot</span>
+                    <span>Classic play</span>
                   </span>
                 </button>
               </Link>
@@ -374,19 +396,11 @@ export default function Home(){
                   </span>
                 </button>
               </Link>
-              <Link to="/3dviewer" style={{ textDecoration: 'none' }}>
+              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
                   <span className={styles.secondaryButtonContent}>
-                    <Cube size={18} weight="fill" />
-                    <span>3D Viewer</span>
-                  </span>
-                </button>
-              </Link>
-              <Link to="/3dplay" style={{ textDecoration: 'none' }}>
-                <button className={styles.secondaryButton}>
-                  <span className={styles.secondaryButtonContent}>
-                    <GameController size={18} weight="fill" />
-                    <span>3D Play</span>
+                    <Trophy size={18} weight="fill" />
+                    <span>Results & rankings</span>
                   </span>
                 </button>
               </Link>
@@ -454,19 +468,6 @@ export default function Home(){
           }}
         >
           3D Viewer
-        </MenuItem>
-        <MenuItem 
-          onClick={() => { handleToolsMenuClose(); navigate('/3dplay'); }}
-          sx={{
-            color: lightMode === 'dark' ? '#fff' : '#1F2937',
-            fontSize: '14px',
-            padding: '10px 16px',
-            '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-            }
-          }}
-        >
-          3D Play
         </MenuItem>
         <MenuItem 
           onClick={() => { handleToolsMenuClose(); navigate('/tournaments'); }}

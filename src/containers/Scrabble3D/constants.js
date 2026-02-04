@@ -198,6 +198,13 @@ export const TABLE = {
       OPACITY: 0.95,
       SHININESS: 5
     }
+  },
+  CLOCK: {
+    // Flat on table like scoreboard (single plane); right side shows bot time
+    POSITION: { x: 18, z: -4 },
+    SIZE: { width: 5.2, height: 1.5 }, // Larger clock on table
+    CANVAS: { width: 520, height: 150 },
+    DISPLAY: { COLOR_BG: '#0a0a0a', COLOR_TEXT: '#88ffcc' }
   }
 };
 

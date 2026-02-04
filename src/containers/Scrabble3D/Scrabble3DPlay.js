@@ -11,6 +11,7 @@ import { handleKeyDown } from '../../functions/play/keyboardFunctions';
 import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from '../../functions/play/boardFunctions';
 import { initializeSounds } from '../../functions/play/soundFunctions';
+import { formatTime } from '../../functions/play/timeUtils';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import Topbar from '../../components/AppContent/Topbar/Topbar';
 import {
@@ -118,7 +119,6 @@ const Scrabble3DPlay = () => {
   const boardSquaresRef = useRef([]);
   const rackTilesRef = useRef({ player1: [], player2: [] });
   const boardTilesRef = useRef([]);
-  const arrowIndicatorRef = useRef(null);
   // Our side = positive Z (camera side). Swapped so player 1 rack is on our side.
   const rackPositionsRef = useRef({
     player1: RACK.POSITIONS.PLAYER2,
@@ -128,6 +128,7 @@ const Scrabble3DPlay = () => {
   const boardGroupRef = useRef(null); // Board + grid + tiles; rotated when bot is thinking
   const botThinkingRef = useRef(false);
   const boardTurnSpeed = 0.06; // Lerp factor for board rotation
+  const timerRef = useRef(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
@@ -166,6 +167,8 @@ const Scrabble3DPlay = () => {
     currentPlayer,
     pool,
     moveHistory,
+    player1Time,
+    player2Time,
     gameStarted,
     gameEnded,
     isBotMode,
@@ -197,6 +200,8 @@ const Scrabble3DPlay = () => {
     makeBotMove,
     handleKeyDownWrapper,
     updatePreviewScore,
+    timerActive,
+    startTimer,
   } = useGameStore();
 
   // Exchange modal state
@@ -245,6 +250,55 @@ const Scrabble3DPlay = () => {
       botMoveMadeRef.current = false;
     }
   }, [currentPlayer]);
+
+  // Update 3D clock display from game store (your time, bot time on side, move count)
+  const updateClockDisplay = useCallback(() => {
+    const clock = sceneRef.current?.clock;
+    if (!clock) return;
+    const state = useGameStore.getState();
+    const p1Time = state.player1Time ?? 20 * 60;
+    const p2Time = state.player2Time ?? 20 * 60;
+    const current = state.currentPlayer ?? 1;
+    const isBot = state.isBotMode ?? false;
+    const moves = state.moveHistory?.length ?? 0;
+    const w = clock.drawW;
+    const h = clock.drawH;
+    const ctx = clock.context;
+    const C = TABLE.CLOCK.DISPLAY;
+    ctx.fillStyle = C.COLOR_BG;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = C.COLOR_TEXT;
+    ctx.textBaseline = 'middle';
+    // Left half: current player (you) time
+    const leftCenter = w * 0.28;
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(current === 1 ? 'You' : isBot ? 'Bot' : 'P2', leftCenter, h * 0.32);
+    ctx.font = 'bold 48px monospace';
+    ctx.fillText(formatTime(current === 1 ? p1Time : p2Time), leftCenter, h * 0.58);
+    // Right half: other player (bot) time
+    const rightCenter = w * 0.72;
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText(current === 1 ? (isBot ? 'Bot' : 'P2') : 'You', rightCenter, h * 0.32);
+    ctx.font = 'bold 48px monospace';
+    ctx.fillText(formatTime(current === 1 ? p2Time : p1Time), rightCenter, h * 0.58);
+    // Bottom: move count
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText('Move ' + moves, w / 2, h * 0.88);
+    clock.texture.needsUpdate = true;
+  }, []);
+
+  // Keep 3D clock in sync with game timer and move count
+  useEffect(() => {
+    updateClockDisplay();
+    setNeedsRender(true);
+  }, [player1Time, player2Time, currentPlayer, moveHistory, updateClockDisplay]);
+
+  // Start game timer when active (so 3D clock ticks)
+  useEffect(() => {
+    if (!timerActive || !gameStarted) return;
+    return startTimer(timerRef);
+  }, [timerActive, gameStarted, startTimer]);
 
   // Three.js Scene Setup
   useEffect(() => {
@@ -326,10 +380,11 @@ const Scrabble3DPlay = () => {
       boardParent: boardGroup,
       boardSquaresRef: boardSquaresRef
     });
-    createArrowIndicator(scene);
     createMascot(scene, selectedBot?.img || '/images/theomascot.png');
     createScoresheet(scene);
     createScoreboard(scene);
+    createClock(scene);
+    updateClockDisplay();
 
     // Animation loop
     let lastTime = 0;
@@ -476,14 +531,6 @@ const Scrabble3DPlay = () => {
     updateScoreboard();
     setNeedsRender(true);
   }, [player1points, player2points, moveHistory, player1Name, player2Name]);
-
-  // Update selection highlight on board square when selection or bot thinking changes
-  useEffect(() => {
-    if (sceneRef.current) {
-      updateArrowIndicator();
-      setNeedsRender(true);
-    }
-  }, [selectedBoardPosition, arrowDirection, isBotThinking]);
 
   // Calculate preview score when tiles are placed (same as 2D Play component)
   useEffect(() => {
@@ -838,38 +885,6 @@ const Scrabble3DPlay = () => {
     rack2MeshesRef.current.push(rack2Back);
   };
 
-  const createArrowIndicator = (scene) => {
-    // Arrow shape (pointing down) - larger size for visibility (2x original)
-    const arrowShape = new THREE.Shape();
-    arrowShape.moveTo(0, -0.6);
-    arrowShape.lineTo(0.3, 0);
-    arrowShape.lineTo(0.1, 0);
-    arrowShape.lineTo(0.1, 0.4);
-    arrowShape.lineTo(-0.1, 0.4);
-    arrowShape.lineTo(-0.1, 0);
-    arrowShape.lineTo(-0.3, 0);
-    arrowShape.lineTo(0, -0.6);
-
-    const extrudeSettings = { depth: 0.1, bevelEnabled: false };
-    const arrowGeometry = new THREE.ExtrudeGeometry(arrowShape, extrudeSettings);
-    const arrowMaterial = new THREE.MeshPhongMaterial({
-      color: 0xFFD700,
-      emissive: 0xFFD700,
-      emissiveIntensity: 0.35,
-      transparent: true,
-      opacity: 0.95
-    });
-
-    const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
-    arrow.visible = false;
-    scene.add(arrow);
-
-    arrowIndicatorRef.current = arrow;
-    resourcesRef.current.geometries.push(arrowGeometry);
-    resourcesRef.current.materials.push(arrowMaterial);
-    resourcesRef.current.meshes.push(arrow);
-  };
-
   const createMascot = (scene, mascotImage = '/images/theomascot.png') => {
     const loader = new THREE.TextureLoader();
     loader.load(mascotImage, (texture) => {
@@ -909,40 +924,6 @@ const Scrabble3DPlay = () => {
       resourcesRef.current.textures.push(texture);
       setNeedsRender(true);
     });
-  };
-
-  const updateArrowIndicator = () => {
-    const arrow = arrowIndicatorRef.current;
-    const squares = boardSquaresRef.current;
-    const { row: selRow, col: selCol } = selectedBoardPosition || {};
-    const hasSelection = selectedBoardPosition != null && !botThinkingRef.current;
-
-    if (arrow) {
-      if (hasSelection) {
-        const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-        const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-        arrow.position.set(
-          startX + selCol * BOARD.GRID.SQUARE_SIZE,
-          0.35,
-          startZ + selRow * BOARD.GRID.SQUARE_SIZE
-        );
-        arrow.rotation.x = -Math.PI / 2;
-        arrow.rotation.z = arrowDirection === 'right' ? Math.PI / 2 : 0;
-        arrow.visible = true;
-      } else {
-        arrow.visible = false;
-      }
-    }
-
-    // Keep squares at normal color (no highlight) - reading .current keeps ref/board intact
-    if (squares?.length) {
-      squares.forEach((square) => {
-        if (square.material) {
-          square.material.emissive = 0x000000;
-          square.material.emissiveIntensity = 0;
-        }
-      });
-    }
   };
 
   const createScoresheet = (scene) => {
@@ -1025,6 +1006,35 @@ const Scrabble3DPlay = () => {
     resourcesRef.current.textures.push(scoreboardTexture);
     resourcesRef.current.meshes.push(scoreboardDisplayTable);
     sceneRef.current.scoreboard = { scoreboardDisplay: scoreboardDisplayTable, texture: scoreboardTexture };
+  };
+
+  const createClock = (scene) => {
+    const C = TABLE.CLOCK;
+    const canvas = document.createElement('canvas');
+    canvas.width = C.CANVAS.width;
+    canvas.height = C.CANVAS.height;
+    const ctx = canvas.getContext('2d');
+    const clockTexture = new THREE.CanvasTexture(canvas);
+    const clockGeometry = new THREE.PlaneGeometry(C.SIZE.width, C.SIZE.height);
+    const clockMaterial = new THREE.MeshBasicMaterial({
+      map: clockTexture,
+      transparent: true,
+      alphaTest: 0.01
+    });
+    const clockDisplay = new THREE.Mesh(clockGeometry, clockMaterial);
+    clockDisplay.position.set(
+      C.POSITION.x,
+      TABLE.HEIGHT + 0.05,
+      C.POSITION.z
+    );
+    clockDisplay.rotation.x = -Math.PI / 2;
+    clockDisplay.renderOrder = 1;
+    scene.add(clockDisplay);
+    resourcesRef.current.geometries.push(clockGeometry);
+    resourcesRef.current.materials.push(clockMaterial);
+    resourcesRef.current.textures.push(clockTexture);
+    resourcesRef.current.meshes.push(clockDisplay);
+    sceneRef.current.clock = { canvas, context: ctx, texture: clockTexture, drawW: C.CANVAS.width, drawH: C.CANVAS.height };
   };
 
   const updateScoresheet = () => {

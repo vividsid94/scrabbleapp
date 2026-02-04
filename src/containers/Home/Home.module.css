@@ -125,6 +125,77 @@
 }
 
 
+.featured3DSection {
+  max-width: 520px;
+  margin: 12px auto 0;
+  width: 100%;
+}
+
+.featured3DButton {
+  width: 100%;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  font-size: 16px;
+  box-shadow: 0 4px 14px rgba(194, 65, 12, 0.3), 6px 0 0 #9A3412;
+  outline: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.98;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  background: #92400E;
+}
+/* Dotted mesh overlay */
+.featured3DButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 10px 10px;
+  pointer-events: none;
+  z-index: 0;
+}
+.featured3DButton .secondaryButtonContent {
+  position: relative;
+  z-index: 1;
+}
+
+.featured3DButton:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(194, 65, 12, 0.35), 8px 2px 0 #9A3412;
+}
+
+.featured3DButton:active {
+  transform: translateY(0);
+}
+
+.featured3DTag {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  z-index: 1;
+}
+
 .secondaryButtonsContainer {
   max-width: 520px;
   margin: 24px auto 0;
@@ -225,6 +296,9 @@
   }
   .primaryButtonsContainer {
     gap: 12px;
+  }
+  .featured3DSection {
+    max-width: 360px;
   }
   .secondaryButtonsContainer {
     max-width: 360px;
