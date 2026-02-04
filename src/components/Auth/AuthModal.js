@@ -28,10 +28,11 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState(''); // username or email for sign-in
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signInWithUsername, signInWithOAuth, signUp, user, isConfigured } = useAuth();
+  const { signIn, signInWithUsername, signInWithOAuth, signUp, user, isConfigured } = useAuth();
 
   useEffect(() => {
     if (open) setMode(initialMode);
@@ -45,6 +46,7 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
       setEmail('');
       setPassword('');
       setUsername('');
+      setIdentifier('');
       setDisplayName('');
       setError('');
       setMode('signin');
@@ -58,7 +60,17 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
 
     try {
       if (mode === 'signin') {
-        const { error } = await signInWithUsername(username, password);
+        const value = identifier.trim();
+        let error;
+
+        if (value.includes('@')) {
+          // Treat as email login (legacy accounts)
+          ({ error } = await signIn(value, password));
+        } else {
+          // Treat as username login
+          ({ error } = await signInWithUsername(value, password));
+        }
+
         if (error) throw error;
         onClose();
       } else {
@@ -130,32 +142,55 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
         )}
 
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            fullWidth
-            autoComplete="username"
-            helperText={mode === 'signin' ? 'Use your username (not email).' : '3-20 chars: letters, numbers, underscores.'}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                '& fieldset': {
-                  borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+          {mode === 'signin' ? (
+            <TextField
+              label="Username or Email"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+              fullWidth
+              autoComplete="username"
+              helperText="You can use either your username or your email."
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                  '& fieldset': {
+                    borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  },
                 },
-              },
-              '& .MuiInputLabel-root': {
-                color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-              },
-              '& .MuiFormHelperText-root': {
-                color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)',
-              }
-            }}
-          />
-
-          {mode === 'signup' && (
+                '& .MuiInputLabel-root': {
+                  color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                },
+                '& .MuiFormHelperText-root': {
+                  color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)',
+                }
+              }}
+            />
+          ) : (
             <>
+              <TextField
+                label="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                fullWidth
+                autoComplete="username"
+                helperText="3-20 chars: letters, numbers, underscores."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    '& fieldset': {
+                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  },
+                  '& .MuiFormHelperText-root': {
+                    color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(31, 41, 55, 0.7)',
+                  }
+                }}
+              />
               <TextField
                 label="Display Name (optional)"
                 value={displayName}
@@ -223,9 +258,9 @@ export default function AuthModal({ open, onClose, initialMode = 'signin' }) {
             variant="contained"
             disabled={
               loading ||
-              !username.trim() ||
-              !password ||
-              (mode === 'signup' && !email.trim())
+              (mode === 'signin'
+                ? (!identifier.trim() || !password)
+                : (!username.trim() || !email.trim() || !password))
             }
             sx={{
               mt: 1,
