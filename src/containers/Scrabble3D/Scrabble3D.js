@@ -40,6 +40,7 @@ import {
   ANIMATION,
   PRELOAD
 } from './constants';
+import { createBoard as createBoardScene } from './scrabble3DScene';
 
 // Preload all protile images like the Cell component does
 let allLetters = PRELOAD.LETTERS;
@@ -246,8 +247,8 @@ const Scrabble3D = () => {
     // Create magical table and chairs
     createTableAndChairs(scene);
 
-    // Create 3D board
-    createBoard(scene);
+    // Create 3D board (shared with 3D Play so scene matches exactly)
+    createBoardScene(scene, { resourcesRef, origBoard });
 
     // Animation loop with frame rate limiting
     let lastTime = 0;
@@ -947,128 +948,6 @@ const Scrabble3D = () => {
       resourcesRef.current.geometries.push(pillowGeometry);
       resourcesRef.current.materials.push(pillowMaterial);
     });
-  };
-
-  const createBoard = (scene) => {
-    // Create circular board base (raised to create groove effect)
-    const boardGeometry = new THREE.CylinderGeometry(BOARD.RADIUS, BOARD.RADIUS, BOARD.HEIGHT, BOARD.SEGMENTS);
-    const boardMaterial = new THREE.MeshPhongMaterial({ 
-      color: BOARD.MATERIAL.COLOR,
-      transparent: true,
-      opacity: BOARD.MATERIAL.OPACITY,
-      shininess: BOARD.MATERIAL.SHININESS,
-      reflectivity: BOARD.MATERIAL.REFLECTIVITY
-    });
-    const board = new THREE.Mesh(boardGeometry, boardMaterial);
-    board.receiveShadow = true;
-    board.position.y = BOARD.Y_POSITION;
-    scene.add(board);
-    resourcesRef.current.geometries.push(boardGeometry);
-    resourcesRef.current.materials.push(boardMaterial);
-    resourcesRef.current.meshes.push(board);
-
-    // Create colored squares on the board surface
-    const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-    const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-
-    for (let row = 0; row < BOARD.GRID.SIZE; row++) {
-      for (let col = 0; col < BOARD.GRID.SIZE; col++) {
-        // Create colored square boxes on the board surface
-        const squareGeometry = new THREE.BoxGeometry(
-          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE, 
-          BOARD.GRID.SQUARE_HEIGHT, 
-          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE
-        );
-        
-        // Get the actual board value from origBoard
-        const boardValue = JSON.parse(origBoard)[row][col];
-        
-        // Different colors for different square types
-        let squareColor = BOARD.SQUARE_COLORS.EMPTY; // Default white
-        
-        if (boardValue === GAME.BOARD_VALUES.TRIPLE_WORD) {
-          squareColor = BOARD.SQUARE_COLORS.TRIPLE_WORD;
-        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_WORD) {
-          squareColor = BOARD.SQUARE_COLORS.DOUBLE_WORD;
-        } else if (boardValue === GAME.BOARD_VALUES.TRIPLE_LETTER) {
-          squareColor = BOARD.SQUARE_COLORS.TRIPLE_LETTER;
-        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_LETTER) {
-          squareColor = BOARD.SQUARE_COLORS.DOUBLE_LETTER;
-        }
-        
-        const squareMaterial = new THREE.MeshPhongMaterial({ 
-          color: squareColor,
-          shininess: 100,
-          transparent: true,
-          opacity: 0.9
-        });
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.position.set(
-          startX + col * BOARD.GRID.SQUARE_SIZE,
-          BOARD.GRID.Y_POSITION,
-          startZ + row * BOARD.GRID.SQUARE_SIZE
-        );
-        square.castShadow = true;
-        square.receiveShadow = true;
-        scene.add(square);
-        resourcesRef.current.geometries.push(squareGeometry);
-        resourcesRef.current.materials.push(squareMaterial);
-        resourcesRef.current.meshes.push(square);
-      }
-    }
-
-    // Create grid lines between squares
-    const gridLineMaterial = new THREE.MeshPhongMaterial({ 
-      color: BOARD.GRID.GRID_LINE.MATERIAL.COLOR,
-      transparent: true,
-      opacity: BOARD.GRID.GRID_LINE.MATERIAL.OPACITY,
-      shininess: BOARD.GRID.GRID_LINE.MATERIAL.SHININESS
-    });
-
-    // Horizontal grid lines (full width)
-    for (let row = 0; row <= BOARD.GRID.SIZE; row++) {
-      const gridLineGeometry = new THREE.BoxGeometry(
-        BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE, 
-        BOARD.GRID.GRID_LINE.HEIGHT, 
-        BOARD.GRID.GRID_LINE.WIDTH
-      );
-      const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
-      gridLine.position.set(
-        0,
-        BOARD.GRID.GRID_LINE.Y_POSITION,
-        startZ + row * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2
-      );
-      gridLine.castShadow = true;
-      gridLine.receiveShadow = true;
-      scene.add(gridLine);
-      resourcesRef.current.geometries.push(gridLineGeometry);
-      resourcesRef.current.materials.push(gridLineMaterial);
-      resourcesRef.current.meshes.push(gridLine);
-    }
-
-    // Vertical grid lines (broken into segments to avoid corner intersections)
-    for (let col = 0; col <= BOARD.GRID.SIZE; col++) {
-      // Create 15 segments for each vertical line (one for each row gap)
-      for (let row = 0; row < BOARD.GRID.SIZE; row++) {
-        const gridLineGeometry = new THREE.BoxGeometry(
-          BOARD.GRID.GRID_LINE.WIDTH, 
-          BOARD.GRID.GRID_LINE.HEIGHT, 
-          BOARD.GRID.SQUARE_SIZE - BOARD.GRID.GRID_LINE.WIDTH // Slightly shorter than square to create gaps
-        );
-        const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
-        gridLine.position.set(
-          startX + col * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2,
-          BOARD.GRID.GRID_LINE.Y_POSITION,
-          startZ + row * BOARD.GRID.SQUARE_SIZE
-        );
-        gridLine.castShadow = true;
-        gridLine.receiveShadow = true;
-        scene.add(gridLine);
-        resourcesRef.current.geometries.push(gridLineGeometry);
-        resourcesRef.current.materials.push(gridLineMaterial);
-        resourcesRef.current.meshes.push(gridLine);
-      }
-    }
   };
 
   const update3DTilesFromBoardCoords = () => {

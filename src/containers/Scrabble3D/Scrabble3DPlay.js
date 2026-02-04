@@ -34,6 +34,7 @@ import {
   ANIMATION,
   PRELOAD
 } from './constants';
+import { createBoard as createBoardScene } from './scrabble3DScene';
 
 // Preload all protile images
 let allLetters = PRELOAD.LETTERS;
@@ -266,16 +267,16 @@ const Scrabble3DPlay = () => {
     camera.lookAt(CAMERA.TARGET.x, CAMERA.TARGET.y, CAMERA.TARGET.z);
     cameraRef.current = camera;
 
-    // Renderer setup
+    // Renderer setup (alpha: false avoids compositing artefacts that can show as a centre grey patch)
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
-      powerPreference: "high-performance"
+      powerPreference: "high-performance",
+      alpha: false
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDERER.PIXEL_RATIO_MAX));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.shadowMap.autoUpdate = false;
+    renderer.setClearColor(SCENE.BACKGROUND_COLOR, 1);
+    renderer.shadowMap.enabled = false;
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);
 
@@ -301,9 +302,7 @@ const Scrabble3DPlay = () => {
 
     const directionalLight = new THREE.DirectionalLight(LIGHTS.DIRECTIONAL.COLOR, LIGHTS.DIRECTIONAL.INTENSITY);
     directionalLight.position.set(LIGHTS.DIRECTIONAL.POSITION.x, LIGHTS.DIRECTIONAL.POSITION.y, LIGHTS.DIRECTIONAL.POSITION.z);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = RENDERER.SHADOW_MAP_SIZE;
-    directionalLight.shadow.mapSize.height = RENDERER.SHADOW_MAP_SIZE;
+    directionalLight.castShadow = false; // Off to avoid centre grey patch from shadow map
     scene.add(directionalLight);
     resourcesRef.current.lights.push(directionalLight);
 
@@ -314,13 +313,19 @@ const Scrabble3DPlay = () => {
       resourcesRef.current.lights.push(pointLight);
     });
 
-    // Create environment
+    // Create environment (same as 3D viewer)
     createMagicalEnvironment(scene);
     createTableAndChairs(scene);
     const boardGroup = new THREE.Group();
     scene.add(boardGroup);
     boardGroupRef.current = boardGroup;
-    createBoard(scene, boardGroup);
+    // Board from shared scene module - identical to 3D viewer, no grey patch
+    createBoardScene(scene, {
+      resourcesRef,
+      origBoard,
+      boardParent: boardGroup,
+      boardSquaresRef: boardSquaresRef
+    });
     createArrowIndicator(scene);
     createMascot(scene, selectedBot?.img || '/images/theomascot.png');
     createScoresheet(scene);
@@ -472,9 +477,9 @@ const Scrabble3DPlay = () => {
     setNeedsRender(true);
   }, [player1points, player2points, moveHistory, player1Name, player2Name]);
 
-  // Update arrow indicator when selection or bot thinking changes
+  // Update selection highlight on board square when selection or bot thinking changes
   useEffect(() => {
-    if (arrowIndicatorRef.current && sceneRef.current) {
+    if (sceneRef.current) {
       updateArrowIndicator();
       setNeedsRender(true);
     }
@@ -833,148 +838,26 @@ const Scrabble3DPlay = () => {
     rack2MeshesRef.current.push(rack2Back);
   };
 
-  const createBoard = (scene, boardGroup) => {
-    // Circular board base
-    const boardGeometry = new THREE.CylinderGeometry(BOARD.RADIUS, BOARD.RADIUS, BOARD.HEIGHT, BOARD.SEGMENTS);
-    const boardMaterial = new THREE.MeshPhongMaterial({
-      color: BOARD.MATERIAL.COLOR,
-      transparent: true,
-      opacity: BOARD.MATERIAL.OPACITY,
-      shininess: BOARD.MATERIAL.SHININESS,
-      reflectivity: BOARD.MATERIAL.REFLECTIVITY
-    });
-    const board = new THREE.Mesh(boardGeometry, boardMaterial);
-    board.receiveShadow = true;
-    board.position.y = BOARD.Y_POSITION;
-    boardGroup.add(board);
-    resourcesRef.current.geometries.push(boardGeometry);
-    resourcesRef.current.materials.push(boardMaterial);
-    resourcesRef.current.meshes.push(board);
-
-    // Create squares
-    const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-    const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-
-    const parsedOrigBoard = JSON.parse(origBoard);
-
-    for (let row = 0; row < BOARD.GRID.SIZE; row++) {
-      for (let col = 0; col < BOARD.GRID.SIZE; col++) {
-        const squareGeometry = new THREE.BoxGeometry(
-          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE,
-          BOARD.GRID.SQUARE_HEIGHT,
-          BOARD.GRID.SQUARE_SIZE * BOARD.GRID.SQUARE_SCALE
-        );
-
-        const boardValue = parsedOrigBoard[row][col];
-        let squareColor = BOARD.SQUARE_COLORS.EMPTY;
-
-        if (boardValue === GAME.BOARD_VALUES.TRIPLE_WORD) {
-          squareColor = BOARD.SQUARE_COLORS.TRIPLE_WORD;
-        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_WORD) {
-          squareColor = BOARD.SQUARE_COLORS.DOUBLE_WORD;
-        } else if (boardValue === GAME.BOARD_VALUES.TRIPLE_LETTER) {
-          squareColor = BOARD.SQUARE_COLORS.TRIPLE_LETTER;
-        } else if (boardValue === GAME.BOARD_VALUES.DOUBLE_LETTER) {
-          squareColor = BOARD.SQUARE_COLORS.DOUBLE_LETTER;
-        }
-
-        const squareMaterial = new THREE.MeshPhongMaterial({
-          color: squareColor,
-          shininess: 100,
-          transparent: true,
-          opacity: 0.9
-        });
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.position.set(
-          startX + col * BOARD.GRID.SQUARE_SIZE,
-          BOARD.GRID.Y_POSITION,
-          startZ + row * BOARD.GRID.SQUARE_SIZE
-        );
-        square.castShadow = true;
-        square.receiveShadow = true;
-
-        // Store metadata for raycasting
-        square.userData = {
-          type: 'boardSquare',
-          row,
-          col
-        };
-
-        boardGroup.add(square);
-        boardSquaresRef.current.push(square);
-        resourcesRef.current.geometries.push(squareGeometry);
-        resourcesRef.current.materials.push(squareMaterial);
-        resourcesRef.current.meshes.push(square);
-      }
-    }
-
-    // Grid lines
-    const gridLineMaterial = new THREE.MeshPhongMaterial({
-      color: BOARD.GRID.GRID_LINE.MATERIAL.COLOR,
-      transparent: true,
-      opacity: BOARD.GRID.GRID_LINE.MATERIAL.OPACITY,
-      shininess: BOARD.GRID.GRID_LINE.MATERIAL.SHININESS
-    });
-
-    for (let row = 0; row <= BOARD.GRID.SIZE; row++) {
-      const gridLineGeometry = new THREE.BoxGeometry(
-        BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE,
-        BOARD.GRID.GRID_LINE.HEIGHT,
-        BOARD.GRID.GRID_LINE.WIDTH
-      );
-      const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
-      gridLine.position.set(
-        0,
-        BOARD.GRID.GRID_LINE.Y_POSITION,
-        startZ + row * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2
-      );
-      boardGroup.add(gridLine);
-      resourcesRef.current.geometries.push(gridLineGeometry);
-      resourcesRef.current.meshes.push(gridLine);
-    }
-
-    for (let col = 0; col <= BOARD.GRID.SIZE; col++) {
-      for (let row = 0; row < BOARD.GRID.SIZE; row++) {
-        const gridLineGeometry = new THREE.BoxGeometry(
-          BOARD.GRID.GRID_LINE.WIDTH,
-          BOARD.GRID.GRID_LINE.HEIGHT,
-          BOARD.GRID.SQUARE_SIZE - BOARD.GRID.GRID_LINE.WIDTH
-        );
-        const gridLine = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
-        gridLine.position.set(
-          startX + col * BOARD.GRID.SQUARE_SIZE - BOARD.GRID.SQUARE_SIZE / 2,
-          BOARD.GRID.GRID_LINE.Y_POSITION,
-          startZ + row * BOARD.GRID.SQUARE_SIZE
-        );
-        boardGroup.add(gridLine);
-        resourcesRef.current.geometries.push(gridLineGeometry);
-        resourcesRef.current.meshes.push(gridLine);
-      }
-    }
-
-    resourcesRef.current.materials.push(gridLineMaterial);
-  };
-
   const createArrowIndicator = (scene) => {
-    // Create arrow shape (pointing down)
+    // Arrow shape (pointing down) - larger size for visibility (2x original)
     const arrowShape = new THREE.Shape();
-    arrowShape.moveTo(0, -0.3);
-    arrowShape.lineTo(0.15, 0);
-    arrowShape.lineTo(0.05, 0);
-    arrowShape.lineTo(0.05, 0.2);
-    arrowShape.lineTo(-0.05, 0.2);
-    arrowShape.lineTo(-0.05, 0);
-    arrowShape.lineTo(-0.15, 0);
-    arrowShape.lineTo(0, -0.3);
+    arrowShape.moveTo(0, -0.6);
+    arrowShape.lineTo(0.3, 0);
+    arrowShape.lineTo(0.1, 0);
+    arrowShape.lineTo(0.1, 0.4);
+    arrowShape.lineTo(-0.1, 0.4);
+    arrowShape.lineTo(-0.1, 0);
+    arrowShape.lineTo(-0.3, 0);
+    arrowShape.lineTo(0, -0.6);
 
-    const extrudeSettings = { depth: 0.05, bevelEnabled: false };
+    const extrudeSettings = { depth: 0.1, bevelEnabled: false };
     const arrowGeometry = new THREE.ExtrudeGeometry(arrowShape, extrudeSettings);
     const arrowMaterial = new THREE.MeshPhongMaterial({
       color: 0xFFD700,
       emissive: 0xFFD700,
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 0.35,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.95
     });
 
     const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
@@ -1030,25 +913,35 @@ const Scrabble3DPlay = () => {
 
   const updateArrowIndicator = () => {
     const arrow = arrowIndicatorRef.current;
-    if (!arrow) return;
+    const squares = boardSquaresRef.current;
+    const { row: selRow, col: selCol } = selectedBoardPosition || {};
+    const hasSelection = selectedBoardPosition != null && !botThinkingRef.current;
 
-    if (selectedBoardPosition && !botThinkingRef.current) {
-      const { row, col } = selectedBoardPosition;
-      const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
-      const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+    if (arrow) {
+      if (hasSelection) {
+        const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        const startZ = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
+        arrow.position.set(
+          startX + selCol * BOARD.GRID.SQUARE_SIZE,
+          0.35,
+          startZ + selRow * BOARD.GRID.SQUARE_SIZE
+        );
+        arrow.rotation.x = -Math.PI / 2;
+        arrow.rotation.z = arrowDirection === 'right' ? Math.PI / 2 : 0;
+        arrow.visible = true;
+      } else {
+        arrow.visible = false;
+      }
+    }
 
-      arrow.position.set(
-        startX + col * BOARD.GRID.SQUARE_SIZE,
-        0.3,
-        startZ + row * BOARD.GRID.SQUARE_SIZE
-      );
-
-      arrow.rotation.x = -Math.PI / 2;
-      arrow.rotation.z = arrowDirection === 'right' ? Math.PI / 2 : 0;
-
-      arrow.visible = true;
-    } else {
-      arrow.visible = false;
+    // Keep squares at normal color (no highlight) - reading .current keeps ref/board intact
+    if (squares?.length) {
+      squares.forEach((square) => {
+        if (square.material) {
+          square.material.emissive = 0x000000;
+          square.material.emissiveIntensity = 0;
+        }
+      });
     }
   };
 
