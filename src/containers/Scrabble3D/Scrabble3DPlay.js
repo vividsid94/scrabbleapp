@@ -182,6 +182,8 @@ const Scrabble3DPlay = () => {
     isPlayerThinking,
     selectedBot,
     tilesToExchange,
+    invalidWordCoords,
+    setInvalidWordCoords,
     setSelectedBot,
     setPlayer2Name,
     setBoardCoords,
@@ -561,6 +563,92 @@ const Scrabble3DPlay = () => {
       updateMascot(selectedBot.img);
     }
   }, [selectedBot]);
+
+  // Flash invalid word tiles in pinkish-red
+  useEffect(() => {
+    if (!invalidWordCoords || invalidWordCoords.length === 0 || !boardTilesRef.current) return;
+
+    // Find tiles that match invalid word coordinates
+    const invalidTiles = boardTilesRef.current.filter(tile => {
+      const { row, col } = tile.userData;
+      return invalidWordCoords.some(coord => coord.row === row && coord.col === col);
+    });
+
+    if (invalidTiles.length === 0) return;
+
+    // Store original materials and colors
+    const originalStates = invalidTiles.map(tile => ({
+      tile,
+      color: tile.material.color.clone(),
+      emissive: tile.material.emissive ? tile.material.emissive.clone() : new THREE.Color(0x000000),
+      emissiveIntensity: tile.material.emissiveIntensity || 0,
+    }));
+
+    // Flash animation parameters
+    const flashColor = new THREE.Color(0xef4444); // Red
+    const flashEmissive = new THREE.Color(0xff6b6b); // Pinkish-red glow
+    const flashDuration = 350; // ms per flash
+    const numFlashes = 5;
+    const totalDuration = flashDuration * numFlashes;
+    let startTime = null;
+    let animationId = null;
+
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+
+      if (elapsed >= totalDuration) {
+        // Restore original colors
+        originalStates.forEach(({ tile, color, emissive, emissiveIntensity }) => {
+          tile.material.color.copy(color);
+          if (tile.material.emissive) {
+            tile.material.emissive.copy(emissive);
+            tile.material.emissiveIntensity = emissiveIntensity;
+          }
+        });
+        setNeedsRender(true);
+        // Clear invalid word coords after animation
+        setInvalidWordCoords([]);
+        return;
+      }
+
+      // Calculate flash intensity using sine wave for pulsing effect
+      const flashProgress = (elapsed % flashDuration) / flashDuration;
+      const intensity = Math.sin(flashProgress * Math.PI); // 0 -> 1 -> 0
+
+      // Apply flash effect to each invalid tile
+      invalidTiles.forEach((tile, index) => {
+        const original = originalStates[index];
+        // Lerp between original color and flash color
+        tile.material.color.copy(original.color).lerp(flashColor, intensity * 0.6);
+        if (tile.material.emissive) {
+          tile.material.emissive.copy(flashEmissive);
+          tile.material.emissiveIntensity = intensity * 0.8;
+        }
+      });
+
+      setNeedsRender(true);
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      // Restore on cleanup
+      originalStates.forEach(({ tile, color, emissive, emissiveIntensity }) => {
+        if (tile.material) {
+          tile.material.color.copy(color);
+          if (tile.material.emissive) {
+            tile.material.emissive.copy(emissive);
+            tile.material.emissiveIntensity = emissiveIntensity;
+          }
+        }
+      });
+    };
+  }, [invalidWordCoords, setInvalidWordCoords]);
 
   // Update arrow indicator position/rotation/visibility when selected square or direction changes
   useEffect(() => {
