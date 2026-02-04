@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo, useState, useContext } from "react";
-import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel, Checkbox, Box, Modal } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Slider, Collapse, Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel, Checkbox, Box, Modal, Typography } from "@mui/material";
 import TuneIcon from '@mui/icons-material/Tune';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -9,6 +9,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Board from "../../components/AppContent/Board/Board.js";
+import Rack from "../../components/AppContent/Board/Rack.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
@@ -551,6 +552,7 @@ export default function Play({ isMultiplayer = false }) {
   const [poolExpanded, setPoolExpanded] = useState(false);
   const [playNotes, setPlayNotes] = useState('');
   const [telestratorEnabled, setTelestratorEnabled] = useState(false);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
 
   // Detect mobile viewport so we can reliably trigger the soft keyboard
   useEffect(() => {
@@ -724,6 +726,15 @@ export default function Play({ isMultiplayer = false }) {
   useEffect(() => {
     console.log('🎹 Adding keyboard event listener');
     const handleKeyDownWrapperWithParams = (e) => {
+      // Key "2" opens exchange modal instead of triggering store exchange (which would show snackbar)
+      if (e.key === '2' && gameStarted && !gameEnded && currentPlayer === 1 && !isBotThinking && !isPlayerThinking) {
+        const target = e.target && e.target.closest ? e.target.closest('input, textarea, [contenteditable="true"]') : null;
+        if (!target) {
+          e.preventDefault();
+          handleExchangeModalOpen();
+          return;
+        }
+      }
       handleKeyDownWrapper(e, playerMoveSound, origBoard);
     };
 
@@ -732,7 +743,7 @@ export default function Play({ isMultiplayer = false }) {
       console.log('🎹 Removing keyboard event listener');
       window.removeEventListener('keydown', handleKeyDownWrapperWithParams);
     };
-  }, [handleKeyDownWrapper, playerMoveSound, origBoard]);
+  }, [handleKeyDownWrapper, playerMoveSound, origBoard, gameStarted, gameEnded, currentPlayer, isBotThinking, isPlayerThinking]);
 
   // Handle keyboard shortcuts - integrated into handleKeyDownWrapper
   // Removed duplicate keydown listener to prevent double-press issues
@@ -815,6 +826,32 @@ export default function Play({ isMultiplayer = false }) {
       multiplayerHandler();
     } else {
       handleExchangeClick();
+    }
+  };
+
+  const handleExchangeModalOpen = () => {
+    setTilesToExchange([]);
+    setShowExchangeModal(true);
+  };
+
+  const handleExchangeTileToggle = (letter, index) => {
+    const idx = tilesToExchange.findIndex((t) => t.tile === letter && t.index === index);
+    if (idx === -1) {
+      setTilesToExchange([...tilesToExchange, { tile: letter, index }]);
+    } else {
+      setTilesToExchange(tilesToExchange.filter((_, i) => i !== idx));
+    }
+  };
+
+  const handleExchangeModalCancel = () => {
+    setTilesToExchange([]);
+    setShowExchangeModal(false);
+  };
+
+  const handleExchangeModalConfirm = () => {
+    if (tilesToExchange.length > 0 && pool.length >= 7) {
+      handleExchangeWithMultiplayer();
+      setShowExchangeModal(false);
     }
   };
 
@@ -1220,10 +1257,11 @@ export default function Play({ isMultiplayer = false }) {
               currentPlayer,
               player1Rack,
               player2Rack,
-                  selectedTilesArray,
+              selectedTilesArray,
               setSelectedTiles,
               tilesToExchange,
-              setTilesToExchange
+              setTilesToExchange,
+              exchangeModeActive: false
             })}
             selectedPosition={selectedBoardPosition}
             arrowDirection={arrowDirection}
@@ -2775,12 +2813,13 @@ export default function Play({ isMultiplayer = false }) {
               currentPlayer,
               player1Rack,
               player2Rack,
-                selectedTilesArray,
+              selectedTilesArray,
               setSelectedTiles,
               tilesToExchange,
-              setTilesToExchange
+              setTilesToExchange,
+              exchangeModeActive: false
             })}
-            selectedTiles={tilesToExchange}
+            selectedTiles={selectedTilesArray}
             isBotMode={isBotMode}
             isMultiplayerMode={isMultiplayerMode}
             localPlayerNumber={localPlayerNumber}
@@ -2793,7 +2832,7 @@ export default function Play({ isMultiplayer = false }) {
             onGetTopMoves={handleGetTopMovesForExpandable}
             onWordSubmit={handleWordSubmitWithMultiplayer}
             onPass={handlePassWithMultiplayer}
-            onExchange={handleExchangeWithMultiplayer}
+            onExchangeClick={handleExchangeModalOpen}
             onPlayTopMove={handlePlayTopMoveClick}
             selectedBoardPosition={selectedBoardPosition}
             tilesToExchange={tilesToExchange}
@@ -3007,6 +3046,114 @@ export default function Play({ isMultiplayer = false }) {
         />
 
         <GameModal />
+
+        {/* Exchange Modal - same look as 3D Play */}
+        <Modal
+          open={showExchangeModal}
+          onClose={handleExchangeModalCancel}
+          aria-labelledby="exchange-modal-title"
+          BackdropProps={{ sx: { backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)' } }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '100%',
+              maxWidth: 420,
+              p: 2.5,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+              backgroundColor: lightMode === 'dark' ? 'rgba(31, 41, 55, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+              boxShadow: lightMode === 'dark'
+                ? '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
+                : '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Typography
+              id="exchange-modal-title"
+              component="h2"
+              sx={{
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.95)' : '#B45309',
+                textAlign: 'center',
+                mb: 1,
+                pb: 1,
+                borderBottom: '1px solid',
+                borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+              }}
+            >
+              Exchange Tiles
+            </Typography>
+            <Typography sx={{ color: lightMode === 'dark' ? '#94A3B8' : '#64748B', textAlign: 'center', fontSize: 13, mb: 2 }}>
+              Click tiles to select ({tilesToExchange.length} selected)
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Rack
+                rack={currentPlayer === 1 ? player1Rack : player2Rack}
+                color={color?.current ?? '#E8D5B5'}
+                onTileClick={handleExchangeTileToggle}
+                selectedTiles={tilesToExchange}
+              />
+            </Box>
+
+            {pool.length < 7 && (
+              <Typography sx={{ color: '#EF4444', textAlign: 'center', fontSize: 12, mb: 1.5 }}>
+                Fewer than 7 tiles in pool ({pool.length} remaining)
+              </Typography>
+            )}
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
+              <Box
+                component="button"
+                onClick={handleExchangeModalCancel}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: lightMode === 'dark' ? '#94A3B8' : '#64748B',
+                  border: '1px solid',
+                  borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  '&:hover': { background: lightMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
+                }}
+              >
+                Cancel
+              </Box>
+              <Box
+                component="button"
+                onClick={handleExchangeModalConfirm}
+                disabled={tilesToExchange.length === 0 || pool.length < 7}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 1.5,
+                  cursor: tilesToExchange.length > 0 && pool.length >= 7 ? 'pointer' : 'not-allowed',
+                  opacity: tilesToExchange.length > 0 && pool.length >= 7 ? 1 : 0.5,
+                  background: tilesToExchange.length > 0 && pool.length >= 7
+                    ? (lightMode === 'dark' ? 'linear-gradient(135deg, #D97706, #B45309)' : 'linear-gradient(135deg, #EA580C, #C2410C)')
+                    : (lightMode === 'dark' ? '#374151' : '#94A3B8'),
+                  '&:hover': (tilesToExchange.length > 0 && pool.length >= 7) ? { opacity: 0.95 } : {},
+                }}
+              >
+                Exchange {tilesToExchange.length > 0 ? `(${tilesToExchange.length})` : ''}
+              </Box>
+            </Box>
+          </Box>
+        </Modal>
 
               <DefenseModal
           open={showDefenseModal}

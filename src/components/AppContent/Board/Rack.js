@@ -28,7 +28,7 @@ export default (function() {
                 {rack.map((letter, index) => (
                     <Box 
                         key={index}
-                        className={`${styles.Protile} ${props.selectedTiles?.some(t => t.tile === letter && t.index === index) ? styles.selected : ''}`}
+                        className={`${styles.Protile} ${(props.selectedTiles?.some(t => t.tile === letter && t.index === index) && !props.disableSelectionHighlight) ? styles.selected : ''}`}
                         onClick={() => props.onTileClick && props.onTileClick(letter, index)}
                     >
                         <Cell 

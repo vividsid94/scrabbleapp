@@ -15,6 +15,7 @@
  * - setSelectedTiles: (tiles) => void
  * - tilesToExchange: Array<{ tile, index }>
  * - setTilesToExchange: (tiles) => void
+ * - exchangeModeActive: boolean – when true, only exchange selection; when false, only play selection
  */
 export function handleTileClick({
   tile,
@@ -25,17 +26,14 @@ export function handleTileClick({
   selectedTiles,
   setSelectedTiles,
   tilesToExchange,
-  setTilesToExchange
+  setTilesToExchange,
+  exchangeModeActive = false
 }) {
-  const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-
-  // Add safety checks for undefined arrays
   const safeTilesToExchange = tilesToExchange || [];
   const safeSelectedTiles = selectedTiles || [];
 
-  // If we're in exchange mode (some tiles already marked for exchange,
-  // or no tiles currently selected for play), toggle exchange selection.
-  if (safeTilesToExchange.length > 0 || safeSelectedTiles.length === 0) {
+  // Only allow exchange selection when exchange modal is open (exchange mode active)
+  if (exchangeModeActive) {
     const tileIndex = safeTilesToExchange.findIndex(
       (t) => t.tile === tile && t.index === index
     );
@@ -49,7 +47,7 @@ export function handleTileClick({
     return;
   }
 
-  // Otherwise handle normal tile selection for play
+  // Normal tile selection for play (when exchange modal is closed)
   const tileIndex = safeSelectedTiles.findIndex(
     (t) => t.tile === tile && t.index === index
   );

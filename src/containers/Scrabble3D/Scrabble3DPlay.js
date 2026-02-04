@@ -220,6 +220,10 @@ const Scrabble3DPlay = () => {
   // Exchange modal state
   const [showExchangeModal, setShowExchangeModal] = useState(false);
 
+  // Scouting Report: custom rank input (mirrors 2D Play)
+  const [customRank, setCustomRank] = useState('');
+  const [customBotSelected, setCustomBotSelected] = useState(false);
+
   // Ask Theo panel state
   const [isAskTheoExpanded, setIsAskTheoExpanded] = useState(false);
 
@@ -717,12 +721,22 @@ const Scrabble3DPlay = () => {
   // Keyboard handling
   useEffect(() => {
     const handleKeyDownEvent = (e) => {
+      // Key "2" opens exchange modal
+      if (e.key === '2' && gameStarted && !gameEnded && currentPlayer === 1 && !isBotThinking) {
+        const target = e.target && e.target.closest ? e.target.closest('input, textarea, [contenteditable="true"]') : null;
+        if (!target) {
+          e.preventDefault();
+          setTilesToExchange([]);
+          setShowExchangeModal(true);
+          return;
+        }
+      }
       handleKeyDownWrapper(e, playerMoveSound, origBoard);
     };
 
     window.addEventListener('keydown', handleKeyDownEvent);
     return () => window.removeEventListener('keydown', handleKeyDownEvent);
-  }, [handleKeyDownWrapper, playerMoveSound]);
+  }, [handleKeyDownWrapper, playerMoveSound, gameStarted, gameEnded, currentPlayer, isBotThinking]);
 
   // Track mouse down position to distinguish clicks from drags
   const handleMouseDown = useCallback((event) => {
@@ -2079,11 +2093,11 @@ const Scrabble3DPlay = () => {
                 gap: 1.5,
               }}
             >
-              {bots.map((bot) => (
+              {bots.filter(b => b.name !== 'Custom' && b.name !== 'Defense Bot').map((bot) => (
                 <Box
                   key={bot.name}
                   component="button"
-                  onClick={() => handleBotSelect(bot)}
+                  onClick={() => { setCustomBotSelected(false); handleBotSelect(bot); }}
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -2152,6 +2166,87 @@ const Scrabble3DPlay = () => {
                   </Typography>
                 </Box>
               ))}
+            </Box>
+            {/* Custom rank row - type a number and choose */}
+            <Box
+              onClick={() => { if (/^\d+$/.test(customRank) && parseInt(customRank, 10) > 0) { setCustomBotSelected(true); handleBotSelect({ name: 'Custom', desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank, 10) }); } }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                p: 1.25,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: customBotSelected ? (lightMode === 'dark' ? 'rgba(251, 191, 36, 0.5)' : 'rgba(245, 158, 11, 0.5)') : (lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'),
+                background: customBotSelected ? (lightMode === 'dark' ? 'rgba(251, 191, 36, 0.08)' : 'rgba(245, 158, 11, 0.08)') : (lightMode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                '&:hover': { background: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.06)' : 'rgba(245, 158, 11, 0.06)' },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 1.5, bgcolor: lightMode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)', color: lightMode === 'dark' ? '#94A3B8' : '#64748B' }}>
+                <Robot size={20} color="currentColor" />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: lightMode === 'dark' ? '#F1F5F9' : '#1E293B', lineHeight: 1.3, textAlign: 'left' }}>Custom</Typography>
+                <Box
+                  component="span"
+                  sx={{
+                    fontSize: 10,
+                    color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#64748B',
+                    lineHeight: 1.4,
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    flexWrap: 'wrap',
+                    gap: 0.5,
+                    textAlign: 'left',
+                  }}
+                >
+                  Play{' '}
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={customRank}
+                    onChange={e => { if (/^\d*$/.test(e.target.value)) setCustomRank(e.target.value); }}
+                    onClick={e => e.stopPropagation()}
+                    placeholder="X"
+                    style={{
+                      width: 28,
+                      fontSize: 10,
+                      lineHeight: 1.4,
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                      border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e2e8f0',
+                      borderRadius: 4,
+                      margin: 0,
+                      padding: '2px 4px',
+                      background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                      color: lightMode === 'dark' ? '#fff' : '#1E293B',
+                    }}
+                  />
+                  th by points + leave
+                </Box>
+              </Box>
+              <Box
+                component="button"
+                disabled={!/^\d+$/.test(customRank) || parseInt(customRank, 10) <= 0}
+                onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank, 10) > 0) { setCustomBotSelected(true); handleBotSelect({ name: 'Custom', desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank, 10) }); } }}
+                sx={{
+                  flexShrink: 0,
+                  px: 1.25,
+                  py: 0.75,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: '#fff',
+                  border: 0,
+                  borderRadius: 1,
+                  cursor: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? 'pointer' : 'not-allowed',
+                  background: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? (lightMode === 'dark' ? '#3D5A80' : '#B45309') : (lightMode === 'dark' ? '#374151' : '#94A3B8'),
+                  opacity: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? 1 : 0.7,
+                }}
+              >
+                {customBotSelected ? 'Selected' : 'Choose'}
+              </Box>
             </Box>
           </Box>
         </Box>
@@ -2382,21 +2477,39 @@ const Scrabble3DPlay = () => {
         </Box>
       )}
 
-      {/* Bot Thinking Indicator - subtle corner position */}
-      {isBotThinking && (
-        <div className={styles.thinkingBadge}>
-          <img
-            src={selectedBot?.img || '/images/theomascot.png'}
-            alt="Bot thinking"
-            className={styles.thinkingBadgeMascot}
-          />
-          <span className={styles.thinkingBadgeText}>{selectedBot?.name || 'Theo'} thinking</span>
-          <div className={styles.thinkingBadgeDots}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
+      {/* Bot thinking: instructions + indicator at top right (no overlay) */}
+      {gameStarted && !gameEnded && isBotThinking && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 80,
+            right: 16,
+            width: 280,
+            zIndex: 100,
+            p: 1.5,
+            borderRadius: 2,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(31, 41, 55, 0.98)',
+          }}
+        >
+          <Box sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.45)', fontSize: '10px', lineHeight: 1.3, mb: 1 }}>
+            <p style={{ margin: 0 }}>Click squares for position · Type letters · Enter = Submit</p>
+            <p style={{ margin: 0 }}>1 = Pass · 2 = Exchange · Click rack to select</p>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
+            <img
+              src={selectedBot?.img || '/images/theomascot.png'}
+              alt=""
+              style={{ width: 24, height: 24, borderRadius: 6, objectFit: 'contain' }}
+            />
+            <span style={{ color: '#FBBF24', fontSize: 12, fontWeight: 600 }}>{selectedBot?.name || 'Theo'} thinking</span>
+            <Box className={styles.thinkingBadgeDots} sx={{ display: 'inline-flex' }}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </Box>
+          </Box>
+        </Box>
       )}
 
       {/* Victory Overlay */}

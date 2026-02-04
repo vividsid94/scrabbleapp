@@ -152,6 +152,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           color={color.current} 
           onTileClick={onTileClick}
           selectedTiles={selectedTiles}
+          disableSelectionHighlight
         />
       </Box>
     )}
@@ -183,6 +184,7 @@ export default function PlayerInfo({
   onWordSubmit,
   onPass,
   onExchange,
+  onExchangeClick,
   onPlayTopMove,
   selectedBoardPosition,
   tilesToExchange,
@@ -211,7 +213,7 @@ export default function PlayerInfo({
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
-  const isExchangeDisabled = !gameStarted || tilesToExchange.length === 0;
+  const isExchangeDisabled = !gameStarted || (onExchangeClick ? false : tilesToExchange.length === 0);
 
   const handlePassClick = () => {
     if (isPlayerThinking || isBotThinking) return;
@@ -220,7 +222,8 @@ export default function PlayerInfo({
 
   const handleExchangeClick = () => {
     if (isPlayerThinking || isBotThinking) return;
-    onExchange();
+    if (onExchangeClick) onExchangeClick();
+    else onExchange();
   };
 
   const handlePlayTopMoveClick = () => {
