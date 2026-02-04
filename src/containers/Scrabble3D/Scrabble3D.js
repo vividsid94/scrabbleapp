@@ -1713,37 +1713,50 @@ const Scrabble3D = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Create letter texture
+    // Create embossed white letter texture (matches 3D Play)
+    const displayLetter = letter === '?' ? '*' : letter;
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE;
-    canvas.height = TILE.LETTER.CANVAS_SIZE;
-    
-    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
-    
-    // Add white letter
-    context.fillStyle = TILE.LETTER.COLORS.LETTER;
-    context.font = TILE.LETTER.FONT.RACK;
+    canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
+    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw embossed shadow
+    context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+    context.font = `bold ${80 * 2}px Arial`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter, TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
-    
-    // Add point value
+    context.fillText(displayLetter, canvas.width / 2 + 2, canvas.height / 2 + 2);
+
+    // Draw main letter (white)
+    context.fillStyle = '#FFFFFF';
+    context.fillText(displayLetter, canvas.width / 2, canvas.height / 2);
+
+    // Draw highlight
+    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    context.fillText(displayLetter, canvas.width / 2 - 1, canvas.height / 2 - 1);
+
     const pointValue = POINT_VALUES[letter] || 0;
     if (pointValue > 0) {
-      context.fillStyle = TILE.LETTER.COLORS.POINTS;
-      context.font = TILE.LETTER.FONT.RACK_POINTS;
+      context.fillStyle = 'rgba(80, 60, 40, 0.4)';
+      context.font = `bold ${35 * 2}px Arial`;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
+      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+      context.fillStyle = '#FFFFFF';
+      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
     }
     
     const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 4;
     const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.RACK_SIZE, TILE.LETTER.RACK_SIZE);
-    const letterMaterial = new THREE.MeshBasicMaterial({ 
+    const letterMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      alphaTest: 0.01
+      alphaTest: 0.01,
+      depthWrite: false,
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
     letterMesh.position.y = TILE.LETTER.Y_OFFSET;
@@ -1753,7 +1766,7 @@ const Scrabble3D = () => {
     resourcesRef.current.materials.push(letterMaterial);
     resourcesRef.current.textures.push(texture);
     resourcesRef.current.meshes.push(letterMesh);
-    
+
     letterMesh.renderOrder = 1;
     letterMaterial.depthTest = false;
 
@@ -1819,37 +1832,49 @@ const Scrabble3D = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Create clean white lettering
+    // Create embossed white lettering (matches 3D Play)
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE;
-    canvas.height = TILE.LETTER.CANVAS_SIZE;
-    
-    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
-    
-    // Add white fill for main letter
-    context.fillStyle = TILE.LETTER.COLORS.LETTER;
-    context.font = TILE.LETTER.FONT.BOARD;
+    canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
+    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw embossed shadow (offset for depth)
+    context.fillStyle = 'rgba(80, 60, 40, 0.6)';
+    context.font = `bold ${100 * 2}px Arial`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter, TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
-    
-    // Add point value in bottom right
+    context.fillText(letter, canvas.width / 2 + 2, canvas.height / 2 + 2);
+
+    // Draw main letter (white)
+    context.fillStyle = '#FFFFFF';
+    context.fillText(letter, canvas.width / 2, canvas.height / 2);
+
+    // Draw highlight (top-left offset for emboss effect)
+    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    context.fillText(letter, canvas.width / 2 - 1, canvas.height / 2 - 1);
+
     const pointValue = POINT_VALUES[letter] || 0;
     if (pointValue > 0) {
-      context.fillStyle = TILE.LETTER.COLORS.POINTS;
-      context.font = TILE.LETTER.FONT.POINTS;
+      context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+      context.font = `bold ${45 * 2}px Arial`;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
+      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+      context.fillStyle = '#FFFFFF';
+      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
     }
     
     const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 4;
     const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
-    const letterMaterial = new THREE.MeshBasicMaterial({ 
+    const letterMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      alphaTest: 0.01
+      alphaTest: 0.01,
+      depthWrite: false,
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
     letterMesh.position.y = TILE.LETTER.Y_OFFSET;
@@ -1859,12 +1884,10 @@ const Scrabble3D = () => {
     resourcesRef.current.materials.push(letterMaterial);
     resourcesRef.current.textures.push(texture);
     resourcesRef.current.meshes.push(letterMesh);
-    
-    // Make sure the letter is visible
+
     letterMesh.renderOrder = 1;
     letterMaterial.depthTest = false;
 
-    // Add move index for animation
     tile.userData = { moveIndex, player, letter };
 
     return tile;

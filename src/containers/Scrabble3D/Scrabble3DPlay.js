@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo, useContext } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
 import { Modal, Box, Typography } from '@mui/material';
 import styles from './Scrabble3DPlay.module.css';
 import { ThemeContext } from '../../App';
@@ -1251,20 +1252,100 @@ const Scrabble3DPlay = () => {
   };
 
   const createTile = (letter, row, col, isTemp = false, isLastMove = false) => {
-    const tileGeometry = new THREE.BoxGeometry(TILE.BOARD.WIDTH, TILE.BOARD.HEIGHT, TILE.BOARD.DEPTH);
+    // Use rounded box geometry for realistic tile edges
+    const tileGeometry = new RoundedBoxGeometry(
+      TILE.BOARD.WIDTH,
+      TILE.BOARD.HEIGHT,
+      TILE.BOARD.DEPTH,
+      4, // segments for smoothness
+      0.04 // radius for rounded corners
+    );
+
+    // Create wood grain/ivory texture for realistic appearance
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.width = 256;
+    tileCanvas.height = 256;
+    const tileCtx = tileCanvas.getContext('2d');
+
+    // Base color with slight variation per tile for natural look
+    const colorVariation = (row * 15 + col) % 20 - 10;
+    let baseR = 232 + colorVariation;
+    let baseG = 213 + colorVariation;
+    let baseB = 181 + colorVariation;
+
     // Color priority: temp tiles (gold) > last move tiles (cyan) > normal tiles
-    let tileColor = TILE.BOARD.MATERIAL.COLOR;
     if (isTemp) {
-      tileColor = 0xFFD700; // Gold for uncommitted tiles
+      baseR = 255; baseG = 215; baseB = 100; // Gold tint
     } else if (isLastMove) {
-      tileColor = 0x00CED1; // Dark cyan for last move tiles
+      baseR = 180; baseG = 225; baseB = 220; // Cyan tint
     }
-    const tileMaterial = new THREE.MeshPhongMaterial({
-      color: tileColor,
-      transparent: true,
-      opacity: isTemp ? 0.9 : TILE.BOARD.MATERIAL.OPACITY,
-      shininess: TILE.BOARD.MATERIAL.SHININESS
+
+    // Fill base color
+    tileCtx.fillStyle = `rgb(${baseR}, ${baseG}, ${baseB})`;
+    tileCtx.fillRect(0, 0, 256, 256);
+
+    // Add subtle wood grain effect
+    tileCtx.globalAlpha = 0.08;
+    for (let i = 0; i < 40; i++) {
+      const y = Math.random() * 256;
+      const thickness = Math.random() * 2 + 0.5;
+      tileCtx.strokeStyle = `rgb(${baseR - 30}, ${baseG - 25}, ${baseB - 20})`;
+      tileCtx.lineWidth = thickness;
+      tileCtx.beginPath();
+      tileCtx.moveTo(0, y);
+      // Wavy grain lines
+      for (let x = 0; x < 256; x += 10) {
+        tileCtx.lineTo(x, y + Math.sin(x * 0.05 + i) * 3);
+      }
+      tileCtx.stroke();
+    }
+
+    // Add subtle noise for texture
+    tileCtx.globalAlpha = 0.03;
+    for (let i = 0; i < 500; i++) {
+      const x = Math.random() * 256;
+      const y = Math.random() * 256;
+      const shade = Math.random() > 0.5 ? 255 : 0;
+      tileCtx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+      tileCtx.fillRect(x, y, 1, 1);
+    }
+    tileCtx.globalAlpha = 1.0;
+
+    const woodTexture = new THREE.CanvasTexture(tileCanvas);
+    woodTexture.wrapS = THREE.RepeatWrapping;
+    woodTexture.wrapT = THREE.RepeatWrapping;
+
+    // Create bump map for surface texture
+    const bumpCanvas = document.createElement('canvas');
+    bumpCanvas.width = 128;
+    bumpCanvas.height = 128;
+    const bumpCtx = bumpCanvas.getContext('2d');
+    bumpCtx.fillStyle = '#808080';
+    bumpCtx.fillRect(0, 0, 128, 128);
+    // Add subtle bumps
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * 128;
+      const y = Math.random() * 128;
+      const brightness = 128 + (Math.random() - 0.5) * 20;
+      bumpCtx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+      bumpCtx.beginPath();
+      bumpCtx.arc(x, y, Math.random() * 2 + 0.5, 0, Math.PI * 2);
+      bumpCtx.fill();
+    }
+    const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+
+    // Use MeshStandardMaterial for realistic lighting
+    const tileMaterial = new THREE.MeshStandardMaterial({
+      map: woodTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.002,
+      roughness: 0.35,
+      metalness: 0.0,
+      envMapIntensity: 0.3,
+      transparent: isTemp,
+      opacity: isTemp ? 0.92 : 1.0,
     });
+
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
 
     const startX = -(BOARD.GRID.SIZE * BOARD.GRID.SQUARE_SIZE) / 2 + BOARD.GRID.SQUARE_SIZE / 2;
@@ -1277,106 +1358,214 @@ const Scrabble3DPlay = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Letter texture
+    // Create embossed letter texture
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE;
-    canvas.height = TILE.LETTER.CANVAS_SIZE;
+    canvas.width = TILE.LETTER.CANVAS_SIZE * 2; // Higher resolution for clarity
+    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
 
-    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
-    context.fillStyle = TILE.LETTER.COLORS.LETTER;
-    context.font = TILE.LETTER.FONT.BOARD;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw embossed shadow (offset for depth)
+    context.fillStyle = 'rgba(80, 60, 40, 0.6)';
+    context.font = `bold ${100 * 2}px Arial`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter.toUpperCase(), TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
+    context.fillText(letter.toUpperCase(), canvas.width / 2 + 2, canvas.height / 2 + 2);
+
+    // Draw main letter (white)
+    context.fillStyle = '#FFFFFF';
+    context.fillText(letter.toUpperCase(), canvas.width / 2, canvas.height / 2);
+
+    // Draw highlight (top-left offset for emboss effect)
+    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    context.fillText(letter.toUpperCase(), canvas.width / 2 - 1, canvas.height / 2 - 1);
 
     const pointValue = POINT_VALUES[letter.toUpperCase()] || 0;
     if (pointValue > 0) {
-      context.fillStyle = TILE.LETTER.COLORS.POINTS;
-      context.font = TILE.LETTER.FONT.POINTS;
+      // Point value shadow
+      context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+      context.font = `bold ${45 * 2}px Arial`;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
+      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+      // Point value main (white)
+      context.fillStyle = '#FFFFFF';
+      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 4;
     const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
     const letterMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      alphaTest: 0.01
+      alphaTest: 0.01,
+      depthWrite: false,
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = TILE.LETTER.Y_OFFSET;
+    letterMesh.position.y = TILE.BOARD.HEIGHT / 2 + 0.001; // Just above tile surface
     letterMesh.rotation.x = TILE.LETTER.ROTATION;
+    letterMesh.renderOrder = 1;
     tile.add(letterMesh);
 
     tile.userData = { type: 'boardTile', letter, row, col, isTemp };
+
+    // Store textures for cleanup
+    resourcesRef.current.textures.push(woodTexture, bumpTexture, texture);
+    resourcesRef.current.materials.push(tileMaterial, letterMaterial);
+    resourcesRef.current.geometries.push(tileGeometry, letterGeometry);
 
     return tile;
   };
 
   const createRackTile = (letter, position, player) => {
-    const tileGeometry = new THREE.BoxGeometry(TILE.RACK.WIDTH, TILE.RACK.HEIGHT, TILE.RACK.DEPTH);
+    // Use rounded box geometry for realistic tile edges
+    const tileGeometry = new RoundedBoxGeometry(
+      TILE.RACK.WIDTH,
+      TILE.RACK.HEIGHT,
+      TILE.RACK.DEPTH,
+      4, // segments for smoothness
+      0.03 // radius for rounded corners
+    );
 
     // Check if this tile is selected
-    const isSelected = selectedTiles?.some(t => t.tile === letter);
+    const isSelected = selectedTiles?.some(t => t.tile === letter && t.index === position);
 
-    const tileMaterial = new THREE.MeshPhongMaterial({
-      color: isSelected ? 0x90EE90 : TILE.RACK.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TILE.RACK.MATERIAL.OPACITY,
-      shininess: TILE.RACK.MATERIAL.SHININESS,
-      emissive: isSelected ? 0x00FF00 : 0x000000,
-      emissiveIntensity: isSelected ? 0.3 : 0
+    // Create wood grain/ivory texture
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.width = 256;
+    tileCanvas.height = 256;
+    const tileCtx = tileCanvas.getContext('2d');
+
+    // Base color with position-based variation
+    const colorVariation = (position * 7) % 15 - 7;
+    let baseR = isSelected ? 180 : 232 + colorVariation;
+    let baseG = isSelected ? 238 : 213 + colorVariation;
+    let baseB = isSelected ? 180 : 181 + colorVariation;
+
+    // Fill base color
+    tileCtx.fillStyle = `rgb(${baseR}, ${baseG}, ${baseB})`;
+    tileCtx.fillRect(0, 0, 256, 256);
+
+    // Add subtle wood grain effect
+    tileCtx.globalAlpha = 0.08;
+    for (let i = 0; i < 35; i++) {
+      const y = Math.random() * 256;
+      const thickness = Math.random() * 2 + 0.5;
+      tileCtx.strokeStyle = `rgb(${baseR - 30}, ${baseG - 25}, ${baseB - 20})`;
+      tileCtx.lineWidth = thickness;
+      tileCtx.beginPath();
+      tileCtx.moveTo(0, y);
+      for (let x = 0; x < 256; x += 10) {
+        tileCtx.lineTo(x, y + Math.sin(x * 0.05 + i) * 3);
+      }
+      tileCtx.stroke();
+    }
+
+    // Add subtle noise
+    tileCtx.globalAlpha = 0.03;
+    for (let i = 0; i < 400; i++) {
+      const x = Math.random() * 256;
+      const y = Math.random() * 256;
+      const shade = Math.random() > 0.5 ? 255 : 0;
+      tileCtx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+      tileCtx.fillRect(x, y, 1, 1);
+    }
+    tileCtx.globalAlpha = 1.0;
+
+    const woodTexture = new THREE.CanvasTexture(tileCanvas);
+
+    // Create bump map for surface texture
+    const bumpCanvas = document.createElement('canvas');
+    bumpCanvas.width = 64;
+    bumpCanvas.height = 64;
+    const bumpCtx = bumpCanvas.getContext('2d');
+    bumpCtx.fillStyle = '#808080';
+    bumpCtx.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * 64;
+      const y = Math.random() * 64;
+      const brightness = 128 + (Math.random() - 0.5) * 15;
+      bumpCtx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+      bumpCtx.beginPath();
+      bumpCtx.arc(x, y, Math.random() * 1.5 + 0.3, 0, Math.PI * 2);
+      bumpCtx.fill();
+    }
+    const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+
+    const tileMaterial = new THREE.MeshStandardMaterial({
+      map: woodTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.002,
+      roughness: 0.35,
+      metalness: 0.0,
+      emissive: isSelected ? 0x2d5a2d : 0x000000,
+      emissiveIntensity: isSelected ? 0.3 : 0,
     });
+
     const tile = new THREE.Mesh(tileGeometry, tileMaterial);
 
     const rackZ = player === 1 ? rackPositionsRef.current.player1.z : rackPositionsRef.current.player2.z;
     tile.position.set(position * TILE.RACK.SPACING - TILE.RACK.OFFSET, TILE.RACK.Y_POSITION, rackZ);
-    // Use same tile rotation as original bot's rack (PI/2 - slant, no Y flip) for our side so lettering is forward
     tile.rotation.x = player === 1
       ? Math.PI / 2 - RACK.SLANT_ANGLE
       : Math.PI / 2 + RACK.SLANT_ANGLE;
     tile.rotation.y = player === 1 ? 0 : Math.PI;
     tile.castShadow = true;
 
-    // Letter texture
+    // Create embossed letter texture
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE;
-    canvas.height = TILE.LETTER.CANVAS_SIZE;
+    canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
+    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
 
-    context.clearRect(0, 0, TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
-    context.fillStyle = TILE.LETTER.COLORS.LETTER;
-    context.font = TILE.LETTER.FONT.RACK;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const displayLetter = letter === '?' ? '*' : letter;
+
+    // Draw embossed shadow
+    context.fillStyle = 'rgba(80, 60, 40, 0.5)';
+    context.font = `bold ${80 * 2}px Arial`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(letter === '?' ? '*' : letter, TILE.LETTER.CANVAS_SIZE/2, TILE.LETTER.CANVAS_SIZE/2);
+    context.fillText(displayLetter, canvas.width / 2 + 2, canvas.height / 2 + 2);
+
+    // Draw main letter (white)
+    context.fillStyle = '#FFFFFF';
+    context.fillText(displayLetter, canvas.width / 2, canvas.height / 2);
+
+    // Draw highlight
+    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    context.fillText(displayLetter, canvas.width / 2 - 1, canvas.height / 2 - 1);
 
     const pointValue = POINT_VALUES[letter] || 0;
     if (pointValue > 0) {
-      context.fillStyle = TILE.LETTER.COLORS.POINTS;
-      context.font = TILE.LETTER.FONT.RACK_POINTS;
+      context.fillStyle = 'rgba(80, 60, 40, 0.4)';
+      context.font = `bold ${35 * 2}px Arial`;
       context.textAlign = 'right';
       context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), TILE.LETTER.CANVAS_SIZE, TILE.LETTER.CANVAS_SIZE);
+      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
+
+      context.fillStyle = '#FFFFFF';
+      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 4;
     const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.RACK_SIZE, TILE.LETTER.RACK_SIZE);
     const letterMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      alphaTest: 0.01
+      alphaTest: 0.01,
+      depthWrite: false,
     });
     const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = TILE.LETTER.Y_OFFSET;
+    letterMesh.position.y = TILE.RACK.HEIGHT / 2 + 0.001;
     letterMesh.rotation.x = TILE.LETTER.ROTATION;
-    tile.add(letterMesh);
-
     letterMesh.renderOrder = 1;
-    letterMaterial.depthTest = false;
+    tile.add(letterMesh);
 
     tile.userData = { type: 'rackTile', letter, index: position, player };
 
