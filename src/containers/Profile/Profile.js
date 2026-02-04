@@ -4,6 +4,8 @@ import { getUserStats } from '../../utils/stats';
 import { getUserGames } from '../../utils/games';
 import { ThemeContext } from '../../App';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
+import { useColorSchemeStore } from '../../stores/colorSchemeStore';
+import { useGameStore } from '../../stores/gameStore';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
@@ -14,14 +16,29 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, ChartLineUp, Target, ArrowUp, CheckCircle, XCircle, User, Clock, CircleNotch } from '@phosphor-icons/react';
+import { Trophy, ChartLineUp, Target, ArrowUp, CheckCircle, XCircle, User, Clock, CircleNotch, Sun, Moon, Palette, Star, SpeakerHigh, CaretDown, CaretRight } from '@phosphor-icons/react';
 import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import UsernameSetupModal from '../../components/Auth/UsernameSetupModal';
 import styles from './Profile.module.css';
 
 export default function Profile() {
-  const { lightMode } = useContext(ThemeContext);
+  const { lightMode, setLightMode } = useContext(ThemeContext);
   const { user, profile, loading: authLoading, refreshProfile, updateProfile } = useAuth();
+  const color = useColorSchemeStore(state => state.color);
+  const boardColor = useColorSchemeStore(state => state.boardColor);
+  const updateColor = useColorSchemeStore(state => state.updateColor);
+  const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
+  const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
+  const showApplePolygon = useColorSchemeStore(state => state.showApplePolygon);
+  const updateShowWoodenCircle = useColorSchemeStore(state => state.updateShowWoodenCircle);
+  const updateShowApplePolygon = useColorSchemeStore(state => state.updateShowApplePolygon);
+  const playerMoveSoundType = useGameStore(state => state.playerMoveSoundType);
+  const botMoveSoundType = useGameStore(state => state.botMoveSoundType);
+  const setPlayerMoveSoundType = useGameStore(state => state.setPlayerMoveSoundType);
+  const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [games, setGames] = useState([]);
@@ -31,6 +48,8 @@ export default function Profile() {
   const [loadedOnce, setLoadedOnce] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [displayName, setDisplayName] = useState('Player');
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [boardSoundOpen, setBoardSoundOpen] = useState(false);
 
   // Stabilize display name so it doesn't flicker back to a placeholder
   useEffect(() => {
@@ -275,56 +294,391 @@ export default function Profile() {
           </Box>
         </Box>
 
-        {/* Avatar selection */}
+        {/* Settings & avatar */}
         {user && (
           <Box
             sx={{
               mt: 2,
-              borderRadius: 2,
-              paddingX: 2,
-              paddingY: 1.5,
-              backgroundColor: lightMode === 'dark' ? 'rgba(31,41,55,0.9)' : '#F9FAFB',
-              border: lightMode === 'dark'
-                ? '1px solid rgba(75,85,99,0.9)'
-                : '1px solid rgba(209,213,219,0.9)',
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1.1fr 1.2fr' },
+              gap: 2,
             }}
           >
-            <Typography
-              variant="caption"
+            {/* Avatar + theme */}
+            <Box
               sx={{
-                textTransform: 'uppercase',
-                letterSpacing: 1.2,
-                fontSize: 11,
-                fontWeight: 600,
-                color: lightMode === 'dark' ? 'rgba(249,250,251,0.8)' : '#6B7280',
-                mb: 1,
-                display: 'block',
+                borderRadius: 2,
+                paddingX: 2,
+                paddingY: appearanceOpen ? 1.5 : 0.75,
+                backgroundColor: lightMode === 'dark' ? 'rgba(31,41,55,0.9)' : '#F9FAFB',
+                border: lightMode === 'dark'
+                  ? '1px solid rgba(75,85,99,0.9)'
+                  : '1px solid rgba(209,213,219,0.9)',
               }}
             >
-              Avatar
-            </Typography>
-            <Box className={styles.avatarGrid}>
-              {avatarOptions.map((src) => {
-                const selected = profile?.avatar_url === src;
-                return (
-                  <button
-                    key={src}
-                    type="button"
-                    className={`${styles.avatarOption} ${selected ? styles.avatarOptionSelected : ''}`}
-                    onClick={async () => {
-                      if (avatarSaving || selected || !user) return;
-                      setAvatarSaving(true);
-                      const { error } = await updateProfile({ avatar_url: src });
-                      if (!error && refreshProfile) {
-                        await refreshProfile();
-                      }
-                      setAvatarSaving(false);
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: appearanceOpen ? 1 : 0,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    textTransform: 'uppercase',
+                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: lightMode === 'dark' ? 'rgba(249,250,251,0.8)' : '#6B7280',
+                    display: 'block',
+                  }}
+                >
+                  Appearance
+                </Typography>
+                <button
+                  type="button"
+                  onClick={() => setAppearanceOpen((open) => !open)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    margin: 0,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: lightMode === 'dark' ? '#9CA3AF' : '#6B7280',
+                  }}
+                  aria-label={appearanceOpen ? 'Collapse appearance section' : 'Expand appearance section'}
+                >
+                  {appearanceOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
+                </button>
+              </Box>
+
+              {appearanceOpen && (
+                <>
+                  {/* Theme toggle */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mb: 1.5,
+                      gap: 1.5,
                     }}
                   >
-                    <img src={src} alt="Avatar option" />
-                  </button>
-                );
-              })}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {lightMode === 'dark' ? (
+                        <Moon size={16} weight="fill" />
+                      ) : (
+                        <Sun size={16} weight="fill" />
+                      )}
+                      <Typography
+                        variant="body2"
+                        sx={{ fontSize: 12.5, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563' }}
+                      >
+                        {lightMode === 'dark' ? 'Dark mode' : 'Light mode'}
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={async () => {
+                        const next = lightMode === 'dark' ? 'light' : 'dark';
+                        if (setLightMode) {
+                          setLightMode(next);
+                        }
+                        if (user && updateProfile) {
+                          await updateProfile({ theme_preference: next });
+                        }
+                        if (typeof window !== 'undefined') {
+                          window.localStorage.setItem('lightMode', next);
+                        }
+                      }}
+                      sx={{
+                        borderColor: '#9CA3AF',
+                        color: lightMode === 'dark' ? '#F9FAFB' : '#374151',
+                        textTransform: 'none',
+                        fontSize: 11,
+                        px: 1.5,
+                        py: 0.3,
+                        borderRadius: 999,
+                      }}
+                    >
+                      {lightMode === 'dark' ? 'Use light mode' : 'Use dark mode'}
+                    </Button>
+                  </Box>
+
+                  {/* Avatar options */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      textTransform: 'uppercase',
+                      letterSpacing: 1.2,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: lightMode === 'dark' ? 'rgba(249,250,251,0.8)' : '#6B7280',
+                      mb: 1,
+                      display: 'block',
+                    }}
+                  >
+                    Avatar
+                  </Typography>
+                  <Box className={styles.avatarGrid}>
+                    {avatarOptions.map((src) => {
+                      const selected = profile?.avatar_url === src;
+                      return (
+                        <button
+                          key={src}
+                          type="button"
+                          className={`${styles.avatarOption} ${selected ? styles.avatarOptionSelected : ''}`}
+                          onClick={async () => {
+                            if (avatarSaving || selected || !user) return;
+                            setAvatarSaving(true);
+                            const { error } = await updateProfile({ avatar_url: src });
+                            if (!error && refreshProfile) {
+                              await refreshProfile();
+                            }
+                            setAvatarSaving(false);
+                          }}
+                        >
+                          <img src={src} alt="Avatar option" />
+                        </button>
+                      );
+                    })}
+                  </Box>
+                </>
+              )}
+            </Box>
+
+            {/* Board & sound settings */}
+            <Box
+              sx={{
+                borderRadius: 2,
+                paddingX: 2,
+                paddingY: boardSoundOpen ? 1.5 : 0.75,
+                backgroundColor: lightMode === 'dark' ? 'rgba(31,41,55,0.9)' : '#F9FAFB',
+                border: lightMode === 'dark'
+                  ? '1px solid rgba(75,85,99,0.9)'
+                  : '1px solid rgba(209,213,219,0.9)',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: boardSoundOpen ? 1 : 0,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    textTransform: 'uppercase',
+                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: lightMode === 'dark' ? 'rgba(249,250,251,0.8)' : '#6B7280',
+                    display: 'block',
+                  }}
+                >
+                  Board & sound
+                </Typography>
+                <button
+                  type="button"
+                  onClick={() => setBoardSoundOpen((open) => !open)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    margin: 0,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: lightMode === 'dark' ? '#9CA3AF' : '#6B7280',
+                  }}
+                  aria-label={boardSoundOpen ? 'Collapse board and sound section' : 'Expand board and sound section'}
+                >
+                  {boardSoundOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
+                </button>
+              </Box>
+
+              {boardSoundOpen && (
+                <>
+                  {/* Colors */}
+                  <Box sx={{ display: 'flex', gap: 2, mb: 1.5, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: 11, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563' }}
+                      >
+                        Tile color
+                      </Typography>
+                      <input
+                        type="color"
+                        value={color.current}
+                        onChange={(e) => updateColor(e.target.value)}
+                        onBlur={async () => {
+                          if (user && updateProfile) {
+                            await updateProfile({ tile_color: color.current });
+                          }
+                        }}
+                        style={{
+                          width: 36,
+                          height: 26,
+                          borderRadius: 6,
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                        }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: 11, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563' }}
+                      >
+                        Board color
+                      </Typography>
+                      <input
+                        type="color"
+                        value={boardColor.current}
+                        onChange={(e) => {
+                          updateBoardColor(e.target.value);
+                          document.documentElement.style.setProperty('--board-color', e.target.value);
+                        }}
+                        onBlur={async () => {
+                          if (user && updateProfile) {
+                            await updateProfile({ board_color: boardColor.current });
+                          }
+                        }}
+                        style={{
+                          width: 36,
+                          height: 26,
+                          borderRadius: 6,
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                        }}
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Decorations */}
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontSize: 11, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563', mb: 0.5 }}
+                    >
+                      Board decoration
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant={showWoodenCircle.current ? 'contained' : 'outlined'}
+                        size="small"
+                        onClick={async () => {
+                          updateShowWoodenCircle(true);
+                          updateShowApplePolygon(false);
+                          if (user && updateProfile) {
+                            await updateProfile({ board_decoration: 'wood' });
+                          }
+                        }}
+                        sx={{ textTransform: 'none', fontSize: 11, px: 1.4, borderRadius: 999 }}
+                      >
+                        Wood
+                      </Button>
+                      <Button
+                        variant={showApplePolygon.current ? 'contained' : 'outlined'}
+                        size="small"
+                        onClick={async () => {
+                          updateShowWoodenCircle(false);
+                          updateShowApplePolygon(true);
+                          if (user && updateProfile) {
+                            await updateProfile({ board_decoration: 'circle' });
+                          }
+                        }}
+                        sx={{ textTransform: 'none', fontSize: 11, px: 1.4, borderRadius: 999 }}
+                      >
+                        Red circle
+                      </Button>
+                      <Button
+                        variant={!showWoodenCircle.current && !showApplePolygon.current ? 'contained' : 'outlined'}
+                        size="small"
+                        onClick={async () => {
+                          updateShowWoodenCircle(false);
+                          updateShowApplePolygon(false);
+                          if (user && updateProfile) {
+                            await updateProfile({ board_decoration: 'none' });
+                          }
+                        }}
+                        sx={{ textTransform: 'none', fontSize: 11, px: 1.4, borderRadius: 999 }}
+                      >
+                        None
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Sound */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <FormControl fullWidth size="small">
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: 11, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563', mb: 0.5 }}
+                      >
+                        Player move sound
+                      </Typography>
+                      <Select
+                        value={playerMoveSoundType}
+                        onChange={async (e) => {
+                          const value = e.target.value;
+                          setPlayerMoveSoundType(value);
+                          if (user && updateProfile) {
+                            await updateProfile({ player_move_sound_type: value });
+                          }
+                        }}
+                        sx={{
+                          backgroundColor: lightMode === 'dark' ? 'rgba(15,23,42,0.9)' : '#FFFFFF',
+                          color: lightMode === 'dark' ? '#F9FAFB' : '#111827',
+                          fontSize: 12,
+                        }}
+                      >
+                        <MenuItem value="classic" sx={{ fontSize: 12 }}>Classic</MenuItem>
+                        <MenuItem value="sword" sx={{ fontSize: 12 }}>Sword</MenuItem>
+                        <MenuItem value="puzzle" sx={{ fontSize: 12 }}>Puzzle</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth size="small">
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: 11, color: lightMode === 'dark' ? '#E5E7EB' : '#4B5563', mb: 0.5 }}
+                      >
+                        Bot move sound
+                      </Typography>
+                      <Select
+                        value={botMoveSoundType}
+                        onChange={async (e) => {
+                          const value = e.target.value;
+                          setBotMoveSoundType(value);
+                          if (user && updateProfile) {
+                            await updateProfile({ bot_move_sound_type: value });
+                          }
+                        }}
+                        sx={{
+                          backgroundColor: lightMode === 'dark' ? 'rgba(15,23,42,0.9)' : '#FFFFFF',
+                          color: lightMode === 'dark' ? '#F9FAFB' : '#111827',
+                          fontSize: 12,
+                        }}
+                      >
+                        <MenuItem value="classic" sx={{ fontSize: 12 }}>Classic</MenuItem>
+                        <MenuItem value="sword" sx={{ fontSize: 12 }}>Sword</MenuItem>
+                        <MenuItem value="puzzle" sx={{ fontSize: 12 }}>Puzzle</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </>
+              )}
             </Box>
           </Box>
         )}

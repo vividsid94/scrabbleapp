@@ -38,8 +38,10 @@ import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
 import WordStorm from "./containers/WordStorm/WordStorm";
 import ScrabbleDash from "./containers/ScrabbleDash/ScrabbleDash";
 import { useColorSchemeStore } from "./stores/colorSchemeStore";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { useGameStore } from "./stores/gameStore";
+import { AuthProvider } from "./contexts/AuthContext";
 import Topbar from "./components/AppContent/Topbar/Topbar";
+import { supabase } from "./utils/supabase";
 
 export const ThemeContext = React.createContext();
 
@@ -48,7 +50,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
   const is3DViewerRoute = location.pathname === '/3dviewer' || location.pathname === '/3dplay';
-  const { user } = useAuth();
+  // const { user } = useAuth(); // not currently needed here
 
   const getHeaderBackground = () => {
     if (lightMode === 'dark') {
@@ -124,20 +126,117 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 
 function App() {
   const [appState, setAppState] = useState('VIEWER');
-  const [lightMode, setLightMode] = useState('dark');
+  const [lightMode, setLightMode] = useState(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const stored = window.localStorage.getItem('lightMode');
+    return stored === 'light' || stored === 'dark' ? stored : 'dark';
+  });
   
-  // Get the colors from the store
+  // Get the colors and settings from the stores
   const boardColor = useColorSchemeStore(state => state.boardColor);
   const tileColor = useColorSchemeStore(state => state.color);
   const updateColor = useColorSchemeStore(state => state.updateColor);
-  
-  // Update protiles color - slightly lighter in light mode, richer in dark mode
+  const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
+  const updateShowWoodenCircle = useColorSchemeStore(state => state.updateShowWoodenCircle);
+  const updateShowApplePolygon = useColorSchemeStore(state => state.updateShowApplePolygon);
+  const setPlayerMoveSoundType = useGameStore(state => state.setPlayerMoveSoundType);
+  const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
+
+  // Hydrate visual settings once from Supabase profile on app start
   useEffect(() => {
-    const protilesColor = lightMode === 'dark' ? '#92400E' : '#C47F36';
-    updateColor(protilesColor);
-  }, [lightMode, updateColor]);
+    const hydrate = async () => {
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('SettingsHydrate: error getting session', sessionError);
+          return;
+        }
+
+        const userId = session?.user?.id;
+        if (!userId) {
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error || !profile) {
+          console.error('SettingsHydrate: error fetching profile', error);
+          return;
+        }
+
+        // Theme preference
+        if (profile.theme_preference === 'dark' || profile.theme_preference === 'light') {
+          setLightMode(profile.theme_preference);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('lightMode', profile.theme_preference);
+          }
+        }
+
+        // Tile color
+        if (profile.tile_color) {
+          updateColor(profile.tile_color);
+        } else {
+          const effectiveTheme =
+            profile.theme_preference === 'dark' || profile.theme_preference === 'light'
+              ? profile.theme_preference
+              : lightMode;
+          const protilesColor = effectiveTheme === 'dark' ? '#92400E' : '#C47F36';
+          updateColor(protilesColor);
+        }
+
+        // Board color
+        if (profile.board_color) {
+          updateBoardColor(profile.board_color);
+          document.documentElement.style.setProperty('--board-color', profile.board_color);
+        }
+
+        // Decorations
+        if (profile.board_decoration) {
+          if (profile.board_decoration === 'wood') {
+            updateShowWoodenCircle(true);
+            updateShowApplePolygon(false);
+          } else if (profile.board_decoration === 'circle') {
+            updateShowWoodenCircle(false);
+            updateShowApplePolygon(true);
+          } else {
+            updateShowWoodenCircle(false);
+            updateShowApplePolygon(false);
+          }
+        }
+
+        // Sounds
+        if (profile.player_move_sound_type) {
+          setPlayerMoveSoundType(profile.player_move_sound_type);
+        }
+        if (profile.bot_move_sound_type) {
+          setBotMoveSoundType(profile.bot_move_sound_type);
+        }
+      } catch (e) {
+        console.error('SettingsHydrate: unexpected error', e);
+      }
+    };
+
+    hydrate();
+  }, [
+    lightMode,
+    setLightMode,
+    updateColor,
+    updateBoardColor,
+    updateShowWoodenCircle,
+    updateShowApplePolygon,
+    setPlayerMoveSoundType,
+    setBotMoveSoundType,
+  ]);
   
-  // Initialize CSS custom properties when the app starts
+  // Keep CSS custom properties in sync with store
   useEffect(() => {
     document.documentElement.style.setProperty('--board-color', boardColor.current);
     document.documentElement.style.setProperty('--tile-color', tileColor.current);
