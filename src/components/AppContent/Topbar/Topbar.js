@@ -22,16 +22,7 @@ export default function Topbar() {
             <>
               <button
                 className={homeStyles.secondaryButton}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #D97706',
-                  padding: '8px 20px',
-                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                  width: 'auto',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  opacity: 0.95
-                }}
+                style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
                 onClick={() => {
                   setAuthMode('signin');
                   setShowAuthModal(true);
@@ -44,22 +35,8 @@ export default function Topbar() {
             <>
               <Link to="/profile" style={{ textDecoration: 'none' }}>
                 <button
-                  style={{
-                    background: 'transparent',
-                    color: '#D97706',
-                    border: '2px solid #D97706',
-                    borderRadius: 8,
-                    padding: '5px 20px',
-                    fontWeight: 'normal',
-                    letterSpacing: 1,
-                    fontSize: 15,
-                    boxShadow: 'none',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
+                  className={homeStyles.secondaryButton}
+                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
                 >
                   {profile?.display_name || profile?.username || 'Profile'}
                 </button>
@@ -68,22 +45,8 @@ export default function Topbar() {
                 onClick={async () => {
                   await signOut();
                 }}
-                style={{
-                  background: 'transparent',
-                  color: '#D97706',
-                  border: '2px solid #D97706',
-                  borderRadius: 8,
-                  padding: '5px 20px',
-                  fontWeight: 'normal',
-                  letterSpacing: 1,
-                  fontSize: 15,
-                  boxShadow: 'none',
-                  outline: 'transparent',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  opacity: 0.95
-                }}
+                className={homeStyles.secondaryButton}
+                style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
               >
                 Sign Out
               </button>

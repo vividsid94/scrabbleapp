@@ -48,6 +48,7 @@ import AppleIcon from '@mui/icons-material/Apple';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import styles from './Sidenav.module.css';
+import homeStyles from '../../../containers/Home/Home.module.css';
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -268,22 +269,8 @@ export default function MiniDrawer() {
                     setAuthMode('signin');
                     setShowAuthModal(true);
                   }}
-                  style={{
-                    background: 'transparent',
-                    color: '#D97706',
-                    border: '2px solid #D97706',
-                    borderRadius: 8,
-                    padding: '5px 16px',
-                    fontWeight: 'normal',
-                    letterSpacing: 1,
-                    fontSize: 14,
-                    boxShadow: 'none',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
+                  className={homeStyles.secondaryButton}
+                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
                 >
                   Account
                 </button>
@@ -292,22 +279,8 @@ export default function MiniDrawer() {
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <Link to="/profile" style={{ textDecoration: 'none' }}>
                   <button
-                    style={{
-                      background: 'transparent',
-                      color: '#D97706',
-                      border: '2px solid #D97706',
-                      borderRadius: 8,
-                      padding: '5px 16px',
-                      fontWeight: 'normal',
-                      letterSpacing: 1,
-                      fontSize: 14,
-                      boxShadow: 'none',
-                      outline: 'transparent',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                      opacity: 0.95
-                    }}
+                    className={homeStyles.secondaryButton}
+                    style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
                   >
                     {profile?.display_name || profile?.username || 'Profile'}
                   </button>
@@ -316,22 +289,8 @@ export default function MiniDrawer() {
                   onClick={async () => {
                     await signOut();
                   }}
-                  style={{
-                    background: 'transparent',
-                    color: '#D97706',
-                    border: '2px solid #D97706',
-                    borderRadius: 8,
-                    padding: '5px 16px',
-                    fontWeight: 'normal',
-                    letterSpacing: 1,
-                    fontSize: 14,
-                    boxShadow: 'none',
-                    outline: 'transparent',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                    opacity: 0.95
-                  }}
+                  className={homeStyles.secondaryButton}
+                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
                 >
                   Sign Out
                 </button>
