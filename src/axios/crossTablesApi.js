@@ -174,14 +174,25 @@ export const getPlayer = async (options) => {
 /**
  * Get list of recent tournaments (up to 200)
  * @param {string} search - Optional search parameter
+ * @param {Object} options - Optional extra parameters
+ * @param {number} options.maxcount - Maximum number of results to return
+ * @param {number} options.maxage - Maximum age in days
  * @returns {Promise<Array>} Array of recent tournaments
  */
-export const getRecentTournaments = async (search = null) => {
+export const getRecentTournaments = async (search = null, options = {}) => {
   try {
-    let url = `${BASE_URL}/recenttourneys.php`;
+    const params = new URLSearchParams();
     if (search) {
-      url += `?search=${encodeURIComponent(search)}`;
+      params.append('search', search);
     }
+    if (options.maxcount) {
+      params.append('maxcount', options.maxcount);
+    }
+    if (options.maxage) {
+      params.append('maxage', options.maxage);
+    }
+    const query = params.toString();
+    const url = `${BASE_URL}/recenttourneys.php${query ? '?' + query : ''}`;
     const response = await axios.get(url);
     const data = response.data;
     if (Array.isArray(data)) return data;
@@ -417,7 +428,7 @@ export const searchTournaments = async (searchTerm) => {
       getUpcomingTournaments(searchTerm),
       getRecentTournaments(searchTerm)
     ]);
-    
+
     return {
       upcoming,
       recent
@@ -425,6 +436,21 @@ export const searchTournaments = async (searchTerm) => {
   } catch (error) {
     console.error('Error searching tournaments:', error);
     throw error;
+  }
+};
+
+/**
+ * Get recent annotated games (wrapper around getAllAnnotatedGames with optional limit)
+ * @param {number} limit - Maximum number of games to return (0 = all)
+ * @returns {Promise<Array>} Array of annotated games
+ */
+export const getRecentAnnotatedGames = async (limit = 20) => {
+  try {
+    const games = await getAllAnnotatedGames();
+    return limit > 0 ? games.slice(0, limit) : games;
+  } catch (error) {
+    console.error('Error fetching recent annotated games:', error);
+    return [];
   }
 };
 

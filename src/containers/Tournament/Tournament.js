@@ -1,24 +1,36 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import { ThemeContext } from '../../App';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
 import styles from './Tournament.module.css';
-import { getTournament, getResults } from '../../axios/crossTablesApi';
-import { Trophy, Calendar, MapPin, Users, ArrowLeft } from '@phosphor-icons/react';
+import {
+  getTournament,
+  getResults,
+  getUpcomingTournamentDetail,
+  getTournamentEntrants,
+} from '../../axios/crossTablesApi';
+import { getThemeColors } from '../../utils/themeColors';
+import { ArrowLeft, Trophy, Users } from '@phosphor-icons/react';
+import TournamentHeader from './TournamentHeader';
+import DivisionTabs from './DivisionTabs';
+import ResultsTable from './ResultsTable';
+import EntrantsList from './EntrantsList';
 
 export default function Tournament() {
   const { tournamentId } = useParams();
   const navigate = useNavigate();
   const { lightMode } = useContext(ThemeContext);
+  const colors = getThemeColors(lightMode);
+
   const [tournament, setTournament] = useState(null);
   const [results, setResults] = useState([]);
+  const [entrants, setEntrants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [loadingResults, setLoadingResults] = useState(false);
+  const [isUpcoming, setIsUpcoming] = useState(false);
+  const [activeDivision, setActiveDivision] = useState(null);
 
   useEffect(() => {
     loadTournamentData();
@@ -28,48 +40,72 @@ export default function Tournament() {
     try {
       setLoading(true);
       setError(null);
-      
-      // Load tournament with results
-      const tournamentData = await getTournament(parseInt(tournamentId), true);
-      setTournament(tournamentData);
-      
-      // Load detailed results if available
-      if (tournamentData.results) {
-        setResults(tournamentData.results);
-      } else {
-        try {
-          setLoadingResults(true);
-          const resultsData = await getResults({ tourney: parseInt(tournamentId) });
-          setResults(resultsData);
-        } catch (err) {
-          console.error('Error loading results:', err);
-        } finally {
-          setLoadingResults(false);
+      setIsUpcoming(false);
+
+      // Check if this is an upcoming tournament (prefixed with "upcoming-")
+      const isUpcomingId = String(tournamentId).startsWith('upcoming-');
+
+      if (isUpcomingId) {
+        const upId = parseInt(String(tournamentId).replace('upcoming-', ''));
+        setIsUpcoming(true);
+        const detailData = await getUpcomingTournamentDetail(upId);
+        // Build a tournament-like object from detail data
+        const firstComponent = detailData[0] || {};
+        setTournament({
+          name: firstComponent.name || firstComponent.tourneyname || 'Upcoming Tournament',
+          date: firstComponent.date || firstComponent.startdate,
+          location: firstComponent.location,
+          ...firstComponent,
+        });
+        // Load entrants for each component
+        const allEntrants = [];
+        for (const comp of detailData) {
+          if (comp.upcomingcomponentid) {
+            try {
+              const ents = await getTournamentEntrants(comp.upcomingcomponentid);
+              allEntrants.push(...ents);
+            } catch { /* skip */ }
+          }
         }
+        setEntrants(allEntrants);
+      } else {
+        // Completed tournament
+        const id = parseInt(tournamentId);
+        const [tournamentData, resultsData] = await Promise.all([
+          getTournament(id, true),
+          getResults({ tourney: id }).catch(() => []),
+        ]);
+
+        setTournament(tournamentData);
+        // Prefer results from tournament data, fallback to separate call
+        const finalResults = tournamentData.results || resultsData;
+        setResults(Array.isArray(finalResults) ? finalResults : []);
       }
     } catch (err) {
-      console.error('Error loading tournament:', err);
       setError('Failed to load tournament data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch {
-      return dateString;
-    }
-  };
+  // Extract divisions
+  const divisions = useMemo(() => {
+    if (results.length === 0) return [];
+    const divSet = [...new Set(results.map(r => r.division).filter(Boolean))];
+    return divSet.sort();
+  }, [results]);
+
+  // Filter by division
+  const filteredResults = useMemo(() => {
+    if (!activeDivision) return results;
+    return results.filter(r => r.division === activeDivision);
+  }, [results, activeDivision]);
 
   if (loading) {
     return (
       <Box sx={{ display: 'flex' }}>
         <Sidenav />
-        <Box className={styles.page} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <Box className={styles.page} style={{ backgroundColor: colors.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
           <CircularProgress />
         </Box>
       </Box>
@@ -80,215 +116,113 @@ export default function Tournament() {
     return (
       <Box sx={{ display: 'flex' }}>
         <Sidenav />
-        <Box className={styles.page} sx={{ p: 3 }}>
-          <Alert severity="error">{error || 'Tournament not found'}</Alert>
-          <button 
-            onClick={() => navigate('/')} 
-            style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}
+        <Box className={styles.page} style={{ backgroundColor: colors.pageBg, padding: 24 }}>
+          <div style={{
+            padding: 16,
+            borderRadius: 8,
+            backgroundColor: colors.errorBg,
+            color: colors.errorText,
+            marginBottom: 16,
+          }}>
+            {error || 'Tournament not found'}
+          </div>
+          <button
+            onClick={() => navigate('/tournaments')}
+            style={{
+              padding: '8px 16px',
+              cursor: 'pointer',
+              backgroundColor: colors.cardBg,
+              color: colors.textPrimary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 6,
+              fontFamily: 'inherit',
+            }}
           >
-            Back to Home
+            Back to Tournaments
           </button>
         </Box>
       </Box>
     );
   }
 
-  // Sort results by rank
-  const sortedResults = [...results].sort((a, b) => {
-    if (a.rank && b.rank) {
-      return parseInt(a.rank) - parseInt(b.rank);
-    }
-    if (a.rank) return -1;
-    if (b.rank) return 1;
-    return 0;
-  });
-
   return (
     <Box sx={{ display: 'flex' }}>
       <Sidenav />
-      <Box className={styles.page}>
+      <Box className={styles.page} style={{ backgroundColor: colors.pageBg }}>
         {/* Header */}
-        <Box className={styles.header} style={{
-          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
-          borderBottom: `1px solid ${lightMode === 'dark' ? '#374151' : '#e5e7eb'}`
+        <div className={styles.header} style={{
+          backgroundColor: colors.headerBg,
+          borderBottom: `1px solid ${colors.border}`,
         }}>
-          <Box className={styles.tournamentHeader}>
-            <IconButton
-              onClick={() => navigate('/')}
-              sx={{
-                color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
-                '&:hover': {
-                  backgroundColor: lightMode === 'dark' ? '#374151' : '#f3f4f6'
-                },
-                marginRight: 1
-              }}
+          <div className={styles.headerInner}>
+            <button
+              onClick={() => navigate('/tournaments')}
+              className={styles.backBtn}
+              style={{ color: colors.textSecondary }}
             >
               <ArrowLeft size={18} />
-            </IconButton>
-            <Box className={styles.tournamentInfo}>
-              <h1 className={styles.tournamentName} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                {tournament.name || tournament.tourneyname}
-              </h1>
-              <Box className={styles.tournamentMeta}>
-                {tournament.date && (
-                  <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <Calendar size={16} style={{ marginRight: 6 }} />
-                    {formatDate(tournament.date)}
-                  </Box>
-                )}
-                {tournament.location && (
-                  <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <MapPin size={16} style={{ marginRight: 6 }} />
-                    {tournament.location}
-                  </Box>
-                )}
-                {tournament.entrants !== undefined && (
-                  <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    <Users size={16} style={{ marginRight: 6 }} />
-                    {tournament.entrants} players
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+            </button>
+            <TournamentHeader tournament={tournament} colors={colors} />
+          </div>
+        </div>
 
-        {/* Tournament Details */}
-        {(tournament.description || tournament.format) && (
-          <Box className={styles.section} style={{
-            backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
-            borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
+        {/* Description */}
+        {tournament.description && (
+          <div className={styles.section} style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border,
           }}>
-            <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-              Tournament Information
-            </h2>
-            {tournament.description && (
-              <p style={{ 
-                color: lightMode === 'dark' ? '#d1d5db' : '#4b5563', 
-                marginBottom: 12,
-                fontSize: 13,
-                lineHeight: 1.5
-              }}>
-                {tournament.description}
-              </p>
-            )}
-            {tournament.format && (
-              <p style={{ 
-                color: lightMode === 'dark' ? '#d1d5db' : '#4b5563',
-                fontSize: 13
-              }}>
-                <strong>Format:</strong> {tournament.format}
-              </p>
-            )}
-          </Box>
+            <p style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+              {tournament.description}
+            </p>
+          </div>
         )}
 
-        {/* Results List */}
-        {sortedResults.length > 0 && (
-          <Box className={styles.section} style={{
-            backgroundColor: lightMode === 'dark' ? '#1F2937' : '#fff',
-            borderColor: lightMode === 'dark' ? '#374151' : '#e5e7eb'
+        {/* Upcoming: show entrants */}
+        {isUpcoming && (
+          <div className={styles.section} style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border,
           }}>
-            <h2 className={styles.sectionTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+            <h2 className={styles.sectionTitle} style={{ color: colors.textPrimary }}>
+              <Users size={18} weight="fill" style={{ marginRight: 8 }} />
+              Registered Entrants
+            </h2>
+            <EntrantsList entrants={entrants} colors={colors} />
+          </div>
+        )}
+
+        {/* Completed: show results */}
+        {!isUpcoming && filteredResults.length > 0 && (
+          <div className={styles.section} style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border,
+          }}>
+            <h2 className={styles.sectionTitle} style={{ color: colors.textPrimary }}>
               <Trophy size={18} weight="fill" style={{ marginRight: 8 }} />
               Final Results
             </h2>
-            {loadingResults ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                <CircularProgress size={20} />
-              </Box>
-            ) : (
-              <Box className={styles.resultsList}>
-                {sortedResults.map((result, index) => (
-                  <Box
-                    key={index}
-                    className={styles.resultItem}
-                    style={{
-                      backgroundColor: lightMode === 'dark' ? '#374151' : '#f9fafb',
-                      borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
-                      cursor: result.playerid ? 'pointer' : 'default'
-                    }}
-                    onClick={() => {
-                      if (result.playerid) {
-                        navigate(`/player/${result.playerid}`);
-                      }
-                    }}
-                  >
-                    <Box className={styles.resultRankBox}>
-                      <span className={styles.resultRank} style={{ 
-                        color: result.rank === 1 
-                          ? (lightMode === 'dark' ? '#f59e0b' : '#d97706')
-                          : (lightMode === 'dark' ? '#9ca3af' : '#6b7280'),
-                        fontWeight: result.rank === 1 ? 700 : 600
-                      }}>
-                        #{result.rank || '-'}
-                      </span>
-                    </Box>
-                    <Box className={styles.resultInfo}>
-                      <div className={styles.resultPlayer} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                        {result.playername || result.name || 'Unknown'}
-                      </div>
-                      <Box className={styles.resultStats}>
-                        {result.wins !== undefined && (
-                          <span style={{ 
-                            color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
-                            fontSize: 11,
-                            marginRight: 8
-                          }}>
-                            W: {result.wins}
-                          </span>
-                        )}
-                        {result.losses !== undefined && (
-                          <span style={{ 
-                            color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
-                            fontSize: 11,
-                            marginRight: 8
-                          }}>
-                            L: {result.losses}
-                          </span>
-                        )}
-                        {result.spread !== undefined && (
-                          <span style={{ 
-                            color: result.spread >= 0 
-                              ? (lightMode === 'dark' ? '#10b981' : '#059669')
-                              : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
-                            fontSize: 11,
-                            fontWeight: 600,
-                            marginRight: 8
-                          }}>
-                            Spread: {result.spread >= 0 ? '+' : ''}{result.spread}
-                          </span>
-                        )}
-                        {result.ratingchange !== undefined && (
-                          <span style={{ 
-                            color: result.ratingchange >= 0 
-                              ? (lightMode === 'dark' ? '#10b981' : '#059669')
-                              : (lightMode === 'dark' ? '#ef4444' : '#dc2626'),
-                            fontSize: 11,
-                            fontWeight: 600
-                          }}>
-                            Rating: {result.ratingchange >= 0 ? '+' : ''}{result.ratingchange}
-                          </span>
-                        )}
-                      </Box>
-                    </Box>
-                    {result.playerid && (
-                      <Box style={{ 
-                        color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
-                        fontSize: 13,
-                        fontWeight: 500
-                      }}>
-                        →
-                      </Box>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
+            <DivisionTabs
+              divisions={divisions}
+              activeDivision={activeDivision}
+              onDivisionChange={setActiveDivision}
+              colors={colors}
+            />
+            <ResultsTable results={filteredResults} colors={colors} />
+          </div>
+        )}
+
+        {!isUpcoming && results.length === 0 && (
+          <div className={styles.section} style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border,
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: 13, textAlign: 'center', padding: 24 }}>
+              No results available for this tournament.
+            </p>
+          </div>
         )}
       </Box>
     </Box>
   );
 }
-

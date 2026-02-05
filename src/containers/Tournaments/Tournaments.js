@@ -1,256 +1,251 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import { ThemeContext } from '../../App';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
 import styles from './Tournaments.module.css';
-import { getUpcomingTournaments, getRecentTournaments, searchTournaments } from '../../axios/crossTablesApi';
-import { MagnifyingGlass, Calendar, Trophy, MapPin } from '@phosphor-icons/react';
+import { getUpcomingTournaments, getRecentTournaments, getMilestones, getTopMovers } from '../../axios/crossTablesApi';
+import { getThemeColors } from '../../utils/themeColors';
+import { MagnifyingGlass, Calendar, Trophy } from '@phosphor-icons/react';
+import TournamentCard from './TournamentCard';
+import MilestonesPanel from './MilestonesPanel';
+import MoversPanel from './MoversPanel';
+import TournamentFilters from './TournamentFilters';
 
 export default function Tournaments() {
   const { lightMode } = useContext(ThemeContext);
+  const colors = getThemeColors(lightMode);
   const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(0); // 0 = upcoming, 1 = recent
   const [upcoming, setUpcoming] = useState([]);
   const [recent, setRecent] = useState([]);
+  const [milestones, setMilestones] = useState([]);
+  const [movers, setMovers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortField, setSortField] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
 
+  const searchTimer = useRef(null);
+
+  // Load all data on mount
   useEffect(() => {
-    loadTournaments();
+    const loadAll = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [upcomingData, recentData, milestonesData, moversData] = await Promise.all([
+          getUpcomingTournaments(),
+          getRecentTournaments(),
+          getMilestones().catch(() => []),
+          getTopMovers().catch(() => []),
+        ]);
+        setUpcoming(upcomingData);
+        setRecent(recentData);
+        setMilestones(milestonesData);
+        setMovers(moversData);
+      } catch (err) {
+        setError('Failed to load tournaments. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
   }, []);
 
-  useEffect(() => {
-    if (searchTerm) {
-      handleSearch();
-    } else {
-      loadTournaments();
-    }
-  }, [searchTerm, activeTab]);
-
-  const loadTournaments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      if (activeTab === 0) {
-        const upcomingData = await getUpcomingTournaments();
-        setUpcoming(upcomingData);
-      } else {
-        const recentData = await getRecentTournaments();
-        setRecent(recentData);
+  // Debounced search
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      if (!value.trim()) return;
+      try {
+        setLoading(true);
+        const [upRes, recRes] = await Promise.all([
+          getUpcomingTournaments(value),
+          getRecentTournaments(value),
+        ]);
+        setUpcoming(upRes);
+        setRecent(recRes);
+      } catch {
+        // Keep existing data on search failure
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading tournaments:', err);
-      setError('Failed to load tournaments. Please try again.');
-    } finally {
-      setLoading(false);
+    }, 300);
+  }, []);
+
+  // Reset when search cleared
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      const reload = async () => {
+        try {
+          setLoading(true);
+          const [upData, recData] = await Promise.all([
+            getUpcomingTournaments(),
+            getRecentTournaments(),
+          ]);
+          setUpcoming(upData);
+          setRecent(recData);
+        } catch {
+          // Ignore
+        } finally {
+          setLoading(false);
+        }
+      };
+      reload();
     }
+  }, [searchTerm]);
+
+  const rawList = activeTab === 0 ? upcoming : recent;
+
+  // Sort
+  const sortedList = useMemo(() => {
+    const list = [...rawList];
+    list.sort((a, b) => {
+      let va, vb;
+      if (sortField === 'date') {
+        va = new Date(a.date || a.startdate || 0).getTime();
+        vb = new Date(b.date || b.startdate || 0).getTime();
+      } else if (sortField === 'name') {
+        va = (a.name || a.tourneyname || a.mastername || '').toLowerCase();
+        vb = (b.name || b.tourneyname || b.mastername || '').toLowerCase();
+      } else if (sortField === 'entrants') {
+        va = Number(a.entrants || a.numplayers || 0);
+        vb = Number(b.entrants || b.numplayers || 0);
+      }
+      if (va < vb) return sortDirection === 'asc' ? -1 : 1;
+      if (va > vb) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [rawList, sortField, sortDirection]);
+
+  const handleSortChange = (field, dir) => {
+    setSortField(field);
+    setSortDirection(dir);
   };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const results = await searchTournaments(searchTerm);
-      setUpcoming(results.upcoming);
-      setRecent(results.recent);
-    } catch (err) {
-      console.error('Error searching tournaments:', err);
-      setError('Failed to search tournaments. Please try again.');
-    } finally {
-      setLoading(false);
+  const handleCardClick = (t) => {
+    if (t.tourneyid) {
+      navigate(`/tournament/${t.tourneyid}`);
+    } else if (t.upcomingid) {
+      navigate(`/tournament/upcoming-${t.upcomingid}`);
     }
   };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const tournaments = activeTab === 0 ? upcoming : recent;
 
   return (
     <Box sx={{ display: 'flex' }}>
       <Sidenav />
-      <Box className={styles.page}>
+      <Box className={styles.page} style={{ backgroundColor: colors.pageBg }}>
+        {/* Header */}
         <Box className={styles.header} style={{
-          backgroundColor: lightMode === 'dark' ? '#1F2937' : '#f9fafb',
-          borderBottom: `1px solid ${lightMode === 'dark' ? '#374151' : '#e5e7eb'}`
+          backgroundColor: colors.headerBg,
+          borderBottom: `1px solid ${colors.border}`,
         }}>
           <Box className={styles.headerContent}>
-            <h1 className={styles.pageTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+            <h1 className={styles.pageTitle} style={{ color: colors.textPrimary }}>
               Tournaments
             </h1>
-            
-            {/* Search */}
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search tournaments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                maxWidth: 500,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
-                  '& fieldset': {
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#d1d5db'
-                  },
-                  '&:hover fieldset': {
-                    borderColor: lightMode === 'dark' ? '#6b7280' : '#9ca3af'
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#3b82f6'
-                  }
-                },
-                '& .MuiInputBase-input': {
-                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
-                }
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <MagnifyingGlass size={20} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                  </InputAdornment>
-                )
-              }}
-            />
 
-            {/* Tabs */}
-            <Tabs
-              value={activeTab}
-              onChange={(e, newValue) => setActiveTab(newValue)}
-              sx={{
-                '& .MuiTab-root': {
-                  color: lightMode === 'dark' ? '#9ca3af' : '#6b7280',
-                  fontWeight: 500,
-                  '&.Mui-selected': {
-                    color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6',
-                    fontWeight: 600
-                  }
-                },
-                '& .MuiTabs-indicator': {
-                  backgroundColor: lightMode === 'dark' ? '#60a5fa' : '#3b82f6'
-                }
-              }}
-            >
-              <Tab label="Upcoming" icon={<Calendar size={18} />} iconPosition="start" />
-              <Tab label="Recent" icon={<Trophy size={18} />} iconPosition="start" />
-            </Tabs>
+            {/* Search */}
+            <div className={styles.searchRow}>
+              <div className={styles.searchBox} style={{
+                backgroundColor: colors.inputBg,
+                borderColor: colors.borderLight,
+              }}>
+                <MagnifyingGlass size={18} style={{ color: colors.textSecondary, flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Search tournaments..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className={styles.searchInput}
+                  style={{ color: colors.textPrimary }}
+                />
+              </div>
+            </div>
+
+            {/* Tabs + Sort */}
+            <div className={styles.controlsRow}>
+              <div className={styles.tabs}>
+                <button
+                  className={`${styles.tab} ${activeTab === 0 ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(0)}
+                  style={{
+                    backgroundColor: activeTab === 0 ? colors.tabActive : colors.tabInactive,
+                    color: activeTab === 0 ? colors.tabActiveText : colors.tabText,
+                    borderColor: activeTab === 0 ? 'transparent' : colors.border,
+                  }}
+                >
+                  <Calendar size={16} style={{ marginRight: 6 }} />
+                  Upcoming
+                </button>
+                <button
+                  className={`${styles.tab} ${activeTab === 1 ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(1)}
+                  style={{
+                    backgroundColor: activeTab === 1 ? colors.tabActive : colors.tabInactive,
+                    color: activeTab === 1 ? colors.tabActiveText : colors.tabText,
+                    borderColor: activeTab === 1 ? 'transparent' : colors.border,
+                  }}
+                >
+                  <Trophy size={16} style={{ marginRight: 6 }} />
+                  Recent
+                </button>
+              </div>
+              <TournamentFilters
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortChange={handleSortChange}
+                colors={colors}
+              />
+            </div>
           </Box>
         </Box>
 
         {/* Content */}
         <Box className={styles.content}>
+          {/* Milestones & Movers banners */}
+          <MilestonesPanel milestones={milestones} colors={colors} />
+          <MoversPanel movers={movers} colors={colors} />
+
           {error && (
-            <Box className={styles.error} style={{
-              backgroundColor: lightMode === 'dark' ? '#7f1d1d' : '#fee2e2',
-              color: lightMode === 'dark' ? '#fca5a5' : '#991b1b',
-              padding: 16,
-              borderRadius: 8,
-              marginBottom: 24
+            <div className={styles.error} style={{
+              backgroundColor: colors.errorBg,
+              color: colors.errorText,
             }}>
               {error}
-            </Box>
+            </div>
           )}
 
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-              <CircularProgress />
-            </Box>
-          ) : tournaments.length === 0 ? (
-            <Box className={styles.emptyState} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
+            <div className={styles.loadingContainer}>
+              <CircularProgress size={32} />
+            </div>
+          ) : sortedList.length === 0 ? (
+            <div className={styles.emptyState} style={{ color: colors.textSecondary }}>
               <Trophy size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
               <p>No tournaments found</p>
-            </Box>
+            </div>
           ) : (
-            <Box className={styles.tournamentsGrid}>
-              {tournaments.map((tournament, index) => (
-                <Box
-                  key={index}
-                  className={styles.tournamentCard}
-                  style={{
-                    backgroundColor: lightMode === 'dark' ? '#374151' : '#fff',
-                    borderColor: lightMode === 'dark' ? '#4b5563' : '#e5e7eb',
-                    transition: 'transform 0.2s, box-shadow 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  onClick={() => {
-                    if (tournament.tourneyid) {
-                      navigate(`/tournament/${tournament.tourneyid}`);
-                    } else if (tournament.upcomingid) {
-                      // Handle upcoming tournament detail
-                      // Could navigate to a detail page or show modal
-                    }
-                  }}
-                >
-                  <Box className={styles.tournamentCardHeader}>
-                    <h3 className={styles.tournamentCardTitle} style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
-                      {tournament.name || tournament.tourneyname || tournament.mastername}
-                    </h3>
-                    {tournament.tourneytype && (
-                      <span className={styles.tournamentType} style={{
-                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#f3f4f6',
-                        color: lightMode === 'dark' ? '#9ca3af' : '#6b7280'
-                      }}>
-                        {tournament.tourneytype}
-                      </span>
-                    )}
-                  </Box>
-                  
-                  <Box className={styles.tournamentCardMeta}>
-                    {tournament.date && (
-                      <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                        <Calendar size={16} style={{ marginRight: 8 }} />
-                        {formatDate(tournament.date)}
-                      </Box>
-                    )}
-                    {tournament.location && (
-                      <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                        <MapPin size={16} style={{ marginRight: 8 }} />
-                        {tournament.location}
-                      </Box>
-                    )}
-                    {tournament.entrants !== undefined && (
-                      <Box className={styles.metaItem} style={{ color: lightMode === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                        <Trophy size={16} style={{ marginRight: 8 }} />
-                        {tournament.entrants} players
-                      </Box>
-                    )}
-                  </Box>
-
-                  {tournament.tourneyid && (
-                    <Box className={styles.tournamentCardAction} style={{ color: lightMode === 'dark' ? '#60a5fa' : '#3b82f6' }}>
-                      View Details →
-                    </Box>
-                  )}
-                </Box>
+            <div className={styles.tournamentsGrid}>
+              {sortedList.map((t, i) => (
+                <TournamentCard
+                  key={t.tourneyid || t.upcomingid || i}
+                  tournament={t}
+                  isUpcoming={activeTab === 0}
+                  colors={colors}
+                  onClick={() => handleCardClick(t)}
+                />
               ))}
-            </Box>
+            </div>
           )}
         </Box>
       </Box>
     </Box>
   );
 }
-

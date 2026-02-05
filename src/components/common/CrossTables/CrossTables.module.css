@@ -1,0 +1,41 @@
+/* Shared styles for CrossTables components */
+
+.playerLink {
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.playerLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.scrollStrip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.scrollStrip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollStrip::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 2px;
+}
