@@ -25,11 +25,11 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Collapse from "@mui/material/Collapse";
 import { Tooltip, Select, FormControl, Divider } from "@mui/material";
 
-import { 
-  House, 
-  Binoculars, 
-  Upload, 
-  Palette, 
+import {
+  House,
+  Binoculars,
+  Upload,
+  Palette,
   Star,
   Sun,
   Moon,
@@ -316,11 +316,11 @@ export default function MiniDrawer() {
             }}
           >
             {/* Home */}
-            <MenuItem 
-              onClick={handleClose} 
-              component={Link} 
-              to="/" 
-              sx={{ 
+            <MenuItem
+              onClick={handleClose}
+              component={Link}
+              to="/"
+              sx={{
                 backgroundColor: isCurrentPage('/') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                 fontWeight: isCurrentPage('/') ? '600' : '400',
                 display: 'flex',
@@ -331,7 +331,7 @@ export default function MiniDrawer() {
               <House size={20} weight={isCurrentPage('/') ? "fill" : "regular"} />
               Home {isCurrentPage('/') && '✓'}
             </MenuItem>
-            
+
             <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
             
             {/* Modes Section */}
@@ -617,22 +617,22 @@ export default function MiniDrawer() {
 
         {/* Modes Section - Expandable (combines Games and Tools) */}
         <List className={styles.btnContainer}>
-          <ListItem 
-            className={styles.listItem} 
+          <ListItem
+            className={styles.listItem}
             onClick={() => {
               setIsModesExpanded(!isModesExpanded);
               setSidebarExpanded(true);
-            }} 
+            }}
             sx={{ ...listItemStyle, cursor: 'pointer' }}
           >
             <ListItemIcon sx={iconStyle}>
               <Tooltip title="Modes" placement="right">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
-                  <GameController 
-                    style={{ 
+                  <GameController
+                    style={{
                       color: isModesExpanded ? '#8B5CF6' : getTextColor(),
                       fontSize: isModesExpanded ? '24px' : '20px'
-                    }} 
+                    }}
                     weight={isModesExpanded ? "fill" : "regular"}
                   />
                   {sidebarExpanded && (

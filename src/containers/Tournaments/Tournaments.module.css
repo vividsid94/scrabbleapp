@@ -1,12 +1,19 @@
+/* Clear fixed topbar (48px) on desktop; mobile AppBar handled in media query */
 .page {
   flex: 1;
   min-height: 100vh;
   padding: 0;
+  padding-top: 52px;
+  width: 100%;
+  min-width: 0; /* allow flex child to shrink below content size */
+  overflow-x: hidden;
 }
 
 .header {
-  padding: 28px 32px 20px;
+  padding: 20px 32px 16px;
   border-bottom: 1px solid #e5e7eb;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .headerContent {
@@ -14,15 +21,45 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
 }
 
-.pageTitle {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0;
+/* Section switcher (Tournaments / Players) */
+.sectionSwitcher {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(107, 114, 128, 0.08);
+  width: fit-content;
 }
 
+.sectionBtn {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sectionBtn:hover {
+  opacity: 0.9;
+}
+
+.sectionBtnActive {
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Search */
 .searchRow {
   display: flex;
   align-items: center;
@@ -57,6 +94,7 @@
   color: #9ca3af;
 }
 
+/* Sub-tabs and controls */
 .controlsRow {
   display: flex;
   align-items: center;
@@ -68,6 +106,7 @@
 .tabs {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -82,6 +121,7 @@
   transition: all 0.15s;
   background: none;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -92,16 +132,30 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
+/* Content area */
 .content {
   padding: 28px 32px;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tournamentsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 20px;
+}
+
+.playerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.rankingsInfo {
+  font-size: 13px;
+  margin-bottom: 14px;
 }
 
 .loadingContainer {
@@ -123,21 +177,115 @@
   font-size: 14px;
 }
 
+@media (max-width: 992px) {
+  .page {
+    /* Clear mobile AppBar (48px) + safe area for notched devices */
+    padding-top: max(56px, calc(56px + env(safe-area-inset-top, 0px)));
+  }
+}
+
 @media (max-width: 768px) {
   .tournamentsGrid {
     grid-template-columns: 1fr;
   }
 
+  .playerGrid {
+    grid-template-columns: 1fr;
+  }
+
   .header {
-    padding: 20px 16px 16px;
+    padding: 14px 16px 12px;
   }
 
   .content {
-    padding: 20px 16px;
+    padding: 16px;
   }
 
   .controlsRow {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
+  }
+
+  .sectionSwitcher {
+    width: 100%;
+  }
+
+  .sectionBtn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .searchBox {
+    max-width: 100%;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Very small phones: tighter padding, prevent overflow */
+@media (max-width: 480px) {
+  .header {
+    padding: 12px 12px 10px;
+  }
+
+  .headerContent {
+    gap: 10px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .sectionBtn {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .searchBox {
+    padding: 6px 12px;
+  }
+
+  .searchInput {
+    font-size: 16px; /* prevents zoom on focus on iOS */
+  }
+
+  .tabs {
+    gap: 6px;
+  }
+
+  .tab {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .tournamentsGrid {
+    gap: 12px;
+  }
+
+  .playerGrid {
+    gap: 10px;
+  }
+
+  .rankingsInfo {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .emptyState {
+    padding: 40px 16px;
+  }
+
+  .loadingContainer {
+    min-height: 200px;
   }
 }

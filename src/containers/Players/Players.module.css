@@ -1,0 +1,153 @@
+.page {
+  flex: 1;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: border-color 0.2s;
+}
+
+.searchBox:focus-within {
+  border-color: #3b82f6;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  opacity: 0.85;
+}
+
+.tabActive {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.content {
+  padding: 28px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.rankingsInfo {
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.playerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 64px 32px;
+}
+
+.error {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .playerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    padding: 20px 16px 16px;
+  }
+
+  .content {
+    padding: 20px 16px;
+  }
+
+  .controlsRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+}

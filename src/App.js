@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import {
-  BrowserRouter as Router, Route, Routes, useLocation
+  BrowserRouter as Router, Route, Routes, useLocation, Navigate
 } from "react-router-dom";
 import "./App.css";
 import Viewer from "./containers/Viewer/Viewer";
@@ -104,6 +104,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/player/:playerId" element={<PlayerProfile />} />
             <Route path="/tournament/:tournamentId" element={<Tournament />} />
             <Route path="/tournaments" element={<Tournaments />} />
+            <Route path="/players" element={<Navigate to="/tournaments?view=players" replace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/camera-scan" element={<CameraScan />} />
             <Route path="/multiplayer" element={<MultiplayerLobby />} />
