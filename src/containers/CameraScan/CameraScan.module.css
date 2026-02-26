@@ -1,76 +1,71 @@
 .container {
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  max-width: 1400px;
+  padding: 20px 24px;
+  max-width: 1440px;
   margin: 0 auto;
   min-height: 100vh;
 }
 
-.header {
-  margin-bottom: 24px;
-  text-align: center;
+.pageTitle {
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-.title {
-  font-weight: 800;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.pageSubtitle {
+  font-size: 13px;
+  margin-bottom: 18px;
+  max-width: 700px;
 }
 
-.subtitle {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.mainContent {
+.layout {
   display: grid;
   grid-template-columns: 1fr 400px;
-  gap: 24px;
+  gap: 20px;
+  align-items: start;
 }
 
-.cameraSection {
+/* ── Camera Panel ── */
+
+.cameraPanel {
   padding: 16px;
-  background: #fff;
   border-radius: 12px;
+  border: 1px solid;
 }
 
-.cameraControls {
+.controls {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
-.videoContainer {
+.videoWrap {
   position: relative;
   width: 100%;
-  background: #000;
+  aspect-ratio: 16 / 9;
+  background: #0a0a0a;
   border-radius: 8px;
   overflow: hidden;
-  aspect-ratio: 16/9;
 }
 
 .video {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
+/* The overlay canvas is absolutely stacked on the video.
+   pointer-events is toggled via inline style (none normally, auto when calibrating). */
 .overlayCanvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: auto;
-  cursor: crosshair;
 }
 
-.processingOverlay {
+.scanOverlay {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -78,121 +73,272 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 20px;
-  border-radius: 8px;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.78);
+  border-radius: 10px;
+  padding: 18px 28px;
+  pointer-events: none;
 }
 
-.controlsSection {
-  padding: 16px;
-  background: #fff;
-  border-radius: 12px;
+.cameraOff {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  color: #fff;
 }
 
-.miniBoard {
-  display: inline-block;
-  border: 2px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 4px;
-  background: #f9fafb;
-}
+/* ── Right Panel ── */
 
-.miniBoardRow {
+.rightPanel {
   display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.miniBoardCell {
-  width: 20px;
-  height: 20px;
-  border: 1px solid #d1d5db;
+/* ── Board ── */
+
+.boardPanel {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.boardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Column header row */
+.colHeaders {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1px;
+  margin-left: 1px;
+}
+
+.rowHeaderSpacer {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.colHeader {
+  width: 24px;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0.6;
+  user-select: none;
+}
+
+.boardGrid {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid rgba(100, 116, 139, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.boardRow {
+  display: flex;
+  align-items: center;
+}
+
+.rowHeader {
+  width: 18px;
+  flex-shrink: 0;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 3px;
+  opacity: 0.6;
+  user-select: none;
+}
+
+.cell {
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.2s;
-}
-
-.miniBoardCell:hover {
-  background: #f3f4f6;
-  border-color: #3b82f6;
-}
-
-.miniBoardCell.selected {
-  background: #3b82f6;
-  color: #fff;
-  border-color: #2563eb;
-}
-
-.miniBoardCell.unrecognized {
-  background: #fef3c7;
-  border-color: #f59e0b;
+  font-size: 9.5px;
   font-weight: 700;
+  cursor: pointer;
+  border: 0.5px solid;
+  transition: filter 0.1s;
+  user-select: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.cell:hover {
+  filter: brightness(0.82);
+  z-index: 1;
+  position: relative;
+}
+
+.hasTile {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.selected {
+  z-index: 2;
+  position: relative;
+  box-shadow: 0 0 0 2px #93c5fd inset;
+}
+
+.sqLabel {
+  font-size: 5.5px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* ── Rack ── */
+
+.rackPanel {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid;
 }
 
 .rackInput {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rackInputField {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
+  width: 120px;
+  padding: 7px 10px;
   border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
+  border: 1px solid;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 3px;
   text-transform: uppercase;
-}
-
-.rackInputField:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.loadingBox {
+.rackInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.rackTile {
+  width: 28px;
+  height: 28px;
+  background: #f5e6c8;
+  border: 1px solid #c4a882;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
   justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  user-select: none;
 }
 
-.topMoves {
+/* ── Moves ── */
+
+.movesPanel {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.moveRow {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 2px;
+  border-bottom: 1px solid;
 }
 
-.moveCard {
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e5e7eb;
+.moveRow:last-child {
+  border-bottom: none !important;
 }
 
-.moveCard:hover {
-  background: #f3f4f6;
-  border-color: #3b82f6;
-  transform: translateX(4px);
+.mRank {
+  font-size: 11px;
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
-@media (max-width: 1024px) {
-  .mainContent {
+.mPos {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 4px;
+  min-width: 26px;
+  text-align: center;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.mWord {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 0.3px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mScore {
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mLeave {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  flex-shrink: 0;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1080px) {
+  .layout {
     grid-template-columns: 1fr;
   }
-  
-  .controlsSection {
-    max-height: none;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 12px;
+  }
+  .cell {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+  }
+  .colHeader {
+    width: 22px;
+  }
+  .rackInput {
+    width: 100px;
   }
 }
