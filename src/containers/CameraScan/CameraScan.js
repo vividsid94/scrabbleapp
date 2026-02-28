@@ -125,7 +125,10 @@ export default function CameraScan() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || `Server error ${res.status}`);
+        const detail = data.detail
+          ? (typeof data.detail === 'object' ? JSON.stringify(data.detail) : data.detail)
+          : null;
+        throw new Error(detail || data.error || `Server error ${res.status}`);
       }
 
       if (!data.board) throw new Error('No board data in response');
