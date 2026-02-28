@@ -15,7 +15,7 @@
 .pageSubtitle {
   font-size: 13px;
   margin-bottom: 18px;
-  max-width: 700px;
+  max-width: 720px;
 }
 
 .layout {
@@ -38,6 +38,7 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+  align-items: center;
 }
 
 .videoWrap {
@@ -56,28 +57,15 @@
   object-fit: contain;
 }
 
-/* The overlay canvas is absolutely stacked on the video.
-   pointer-events is toggled via inline style (none normally, auto when calibrating). */
-.overlayCanvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
 .scanOverlay {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.78);
-  border-radius: 10px;
-  padding: 18px 28px;
-  pointer-events: none;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 8px;
 }
 
 .cameraOff {
@@ -89,6 +77,24 @@
   justify-content: center;
   background: #0a0a0a;
   color: #fff;
+}
+
+.previewRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.previewThumb {
+  width: 96px;
+  height: auto;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* ── Right Panel ── */
@@ -114,32 +120,31 @@
   margin-bottom: 8px;
 }
 
-/* Column header row */
 .colHeaders {
   display: flex;
   align-items: center;
   margin-bottom: 1px;
-  margin-left: 1px;
 }
 
-.rowHeaderSpacer {
+.rowSpacer {
   width: 18px;
   flex-shrink: 0;
 }
 
-.colHeader {
+.colHdr {
   width: 24px;
   text-align: center;
   font-size: 8px;
   font-weight: 600;
-  opacity: 0.6;
+  opacity: 0.55;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .boardGrid {
   display: flex;
   flex-direction: column;
-  border: 1.5px solid rgba(100, 116, 139, 0.4);
+  border: 1.5px solid rgba(100, 116, 139, 0.35);
   border-radius: 4px;
   overflow: hidden;
   width: fit-content;
@@ -150,14 +155,14 @@
   align-items: center;
 }
 
-.rowHeader {
+.rowHdr {
   width: 18px;
   flex-shrink: 0;
   font-size: 8px;
   font-weight: 600;
   text-align: right;
   padding-right: 3px;
-  opacity: 0.6;
+  opacity: 0.55;
   user-select: none;
 }
 
@@ -271,7 +276,7 @@
   width: 16px;
   text-align: right;
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .mPos {
@@ -320,7 +325,7 @@
 
 /* ── Responsive ── */
 
-@media (max-width: 1080px) {
+@media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
   }
@@ -331,14 +336,11 @@
     padding: 12px;
   }
   .cell {
-    width: 22px;
-    height: 22px;
+    width: 21px;
+    height: 21px;
     font-size: 9px;
   }
-  .colHeader {
-    width: 22px;
-  }
-  .rackInput {
-    width: 100px;
+  .colHdr {
+    width: 21px;
   }
 }

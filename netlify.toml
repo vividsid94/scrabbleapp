@@ -57,6 +57,10 @@
     timeout = 10
     memory = 1024
 
+[functions.scanBoard]
+    timeout = 45
+    memory = 1024
+
 [functions.proxy]
     timeout = 15
     memory = 1024
