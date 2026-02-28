@@ -189,7 +189,10 @@ export default function CameraScan() {
 
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || `Server error ${res.status}`);
+        const detail  = errBody.detail
+          ? (typeof errBody.detail === 'string' ? errBody.detail : JSON.stringify(errBody.detail))
+          : '';
+        throw new Error((errBody.error || `Server error ${res.status}`) + (detail ? ` — ${detail}` : ''));
       }
 
       data = await res.json();
