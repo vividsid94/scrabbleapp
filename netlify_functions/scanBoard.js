@@ -72,7 +72,7 @@ exports.handler = async (event) => {
   let geminiResponse;
   try {
     geminiResponse = await axios.post(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
       {
         contents: [{
           parts: [
