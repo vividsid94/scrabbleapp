@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Button, Typography, Paper, CircularProgress, Alert, LinearProgress } from '@mui/material';
-import { Camera, CornersOut, Repeat, X, Lightning } from '@phosphor-icons/react';
+import { Camera, X, Lightning, Repeat } from '@phosphor-icons/react';
 import { ThemeContext } from '../../App';
 import styles from './CameraScan.module.css';
 
@@ -29,19 +29,11 @@ export default function CameraScan() {
   const { lightMode } = React.useContext(ThemeContext);
   const isDark = lightMode === 'dark';
 
-  const videoRef      = useRef(null);
-  const videoWrapRef  = useRef(null);
-  const streamRef     = useRef(null);
-  const dragStartRef  = useRef(null);
-  const isDraggingRef = useRef(false);
+  const videoRef  = useRef(null);
+  const streamRef = useRef(null);
 
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError,  setCameraError]  = useState(null);
-
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [liveBox,     setLiveBox]     = useState(null);
-  const [selection,   setSelection]   = useState(null);
-
   const [isScanning,   setIsScanning]   = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanError,    setScanError]    = useState(null);
@@ -62,7 +54,7 @@ export default function CameraScan() {
     setCameraError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
@@ -81,101 +73,31 @@ export default function CameraScan() {
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  // ── Drag-to-select ──────────────────────────────────────────────────────────
-  const getContainerPt = (e) => {
-    const rect = videoWrapRef.current.getBoundingClientRect();
-    const src  = e.touches ? e.touches[0] : e;
-    return {
-      x: Math.max(0, Math.min(src.clientX - rect.left, rect.width)),
-      y: Math.max(0, Math.min(src.clientY - rect.top,  rect.height)),
-    };
-  };
-
-  const makeBox = (a, b) => ({
-    left:   Math.min(a.x, b.x),
-    top:    Math.min(a.y, b.y),
-    width:  Math.abs(b.x - a.x),
-    height: Math.abs(b.y - a.y),
-  });
-
-  const handlePointerDown = useCallback((e) => {
-    if (!isSelecting) return;
-    e.preventDefault();
-    const pt = getContainerPt(e);
-    dragStartRef.current  = pt;
-    isDraggingRef.current = true;
-    setSelection(null);
-    setLiveBox({ left: pt.x, top: pt.y, width: 0, height: 0 });
-  }, [isSelecting]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handlePointerMove = useCallback((e) => {
-    if (!isDraggingRef.current) return;
-    e.preventDefault();
-    setLiveBox(makeBox(dragStartRef.current, getContainerPt(e)));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const finaliseSelection = useCallback((e) => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    const box = makeBox(dragStartRef.current, getContainerPt(e));
-    if (box.width > 20 && box.height > 20) {
-      setSelection(box);
-      setLiveBox(box);
-      setIsSelecting(false);
-    } else {
-      setLiveBox(null);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    window.addEventListener('mouseup',  finaliseSelection);
-    window.addEventListener('touchend', finaliseSelection);
-    return () => {
-      window.removeEventListener('mouseup',  finaliseSelection);
-      window.removeEventListener('touchend', finaliseSelection);
-    };
-  }, [finaliseSelection]);
-
-  // ── Scan — calls the scanBoard Netlify function (Gemini) ───────────────────
+  // ── Capture current frame → send to scanBoard function ────────────────────
   const runScan = useCallback(async () => {
-    const video     = videoRef.current;
-    const container = videoWrapRef.current;
-    const box       = selection;
-    if (!video || !container || !box) return;
-    if (video.readyState < 2) { setScanError('Camera still loading.'); return; }
+    const video = videoRef.current;
+    if (!video || video.readyState < 2) { setScanError('Camera still loading.'); return; }
 
     setIsScanning(true);
     setScanProgress(10);
     setScanError(null);
 
-    // 1. Snapshot the full video frame
+    // Snapshot the full video frame at native resolution
     const cap = document.createElement('canvas');
     cap.width  = video.videoWidth;
     cap.height = video.videoHeight;
     cap.getContext('2d').drawImage(video, 0, 0);
 
-    // 2. Crop selected region to its own canvas
-    const sx = video.videoWidth  / container.clientWidth;
-    const sy = video.videoHeight / container.clientHeight;
-    const rx = Math.round(box.left   * sx), ry = Math.round(box.top    * sy);
-    const rw = Math.round(box.width  * sx), rh = Math.round(box.height * sy);
-
-    const crop = document.createElement('canvas');
-    crop.width  = rw;
-    crop.height = rh;
-    crop.getContext('2d').drawImage(cap, rx, ry, rw, rh, 0, 0, rw, rh);
-
-    // Show a preview thumbnail of what we're sending
+    // Show a small preview thumbnail
     const thumb = document.createElement('canvas');
-    const thumbSize = 120;
-    thumb.width = thumb.height = thumbSize;
-    thumb.getContext('2d').drawImage(crop, 0, 0, thumbSize, thumbSize);
+    thumb.width  = 160;
+    thumb.height = Math.round(160 * (video.videoHeight / video.videoWidth));
+    thumb.getContext('2d').drawImage(cap, 0, 0, thumb.width, thumb.height);
     setPreviewSrc(thumb.toDataURL('image/jpeg', 0.8));
 
-    setScanProgress(30);
+    setScanProgress(25);
 
-    // 3. Encode as base64 JPEG and send to the scanBoard function
-    const imageDataUrl = crop.toDataURL('image/jpeg', 0.85);
+    const imageDataUrl = cap.toDataURL('image/jpeg', 0.92);
 
     let data;
     try {
@@ -202,11 +124,7 @@ export default function CameraScan() {
       return;
     }
 
-    if (!data?.board) {
-      setScanError('Unexpected response from server.');
-      setIsScanning(false);
-      return;
-    }
+    if (!data?.board) { setScanError('Unexpected response from server.'); setIsScanning(false); return; }
 
     setBoardLetters(data.board);
     setScanProgress(100);
@@ -215,9 +133,9 @@ export default function CameraScan() {
     setTopMoves([]);
 
     if (!data.tileCount) {
-      setScanError('No tiles detected. Check lighting and make sure the selection covers only the board grid.');
+      setScanError('No tiles detected — make sure the full board is visible and well-lit.');
     }
-  }, [selection]);
+  }, []);
 
   // ── Manual board editing ────────────────────────────────────────────────────
   const handleCellClick = useCallback((r, c) => setSelectedCell({ row: r, col: c }), []);
@@ -289,15 +207,14 @@ export default function CameraScan() {
   const sub       = isDark ? '#94a3b8'  : '#64748b';
   const border    = isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
   const tileCount = boardLetters.flat().filter(Boolean).length;
-  const displayBox = liveBox;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <Box className={styles.container} style={{ color: text }}>
       <Typography variant="h5" className={styles.pageTitle}>Live Board Scanner</Typography>
       <Typography variant="body2" className={styles.pageSubtitle} style={{ color: sub }}>
-        Point your webcam at a Scrabble board, drag to select the board area, then scan.
-        Powered by Llama 3.2 Vision (free) — set <code>OPENROUTER_API_KEY</code> in your Netlify env vars.
+        Point your camera at the board and tap <strong>Scan</strong>.
+        Board detection is automatic — no need to crop or select.
       </Typography>
 
       <Box className={styles.layout}>
@@ -313,29 +230,17 @@ export default function CameraScan() {
             ) : (
               <>
                 <Button
-                  variant={isSelecting ? 'contained' : 'outlined'}
-                  size="small"
-                  color={isSelecting ? 'warning' : 'primary'}
-                  startIcon={<CornersOut size={15} />}
-                  onClick={() => setIsSelecting(s => !s)}
+                  variant="contained" size="small" color="success"
+                  startIcon={isScanning ? null : <Lightning size={15} />}
+                  disabled={isScanning}
+                  onClick={runScan}
                 >
-                  {isSelecting ? 'Drag to select…' : selection ? 'Re-select Area' : 'Select Board Area'}
+                  {isScanning
+                    ? <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CircularProgress size={12} color="inherit" />Scanning…
+                      </Box>
+                    : 'Scan Board'}
                 </Button>
-
-                {selection && (
-                  <Button
-                    variant="contained" size="small" color="success"
-                    startIcon={isScanning ? null : <Lightning size={15} />}
-                    disabled={isScanning}
-                    onClick={runScan}
-                  >
-                    {isScanning
-                      ? <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <CircularProgress size={12} color="inherit" />Scanning…
-                        </Box>
-                      : 'Scan Board'}
-                  </Button>
-                )}
 
                 <Button variant="outlined" size="small" onClick={stopCamera}
                   style={{ color: sub, borderColor: border }}>
@@ -347,51 +252,14 @@ export default function CameraScan() {
 
           {cameraError && <Alert severity="error"   sx={{ mb: 1 }}>{cameraError}</Alert>}
           {scanError   && <Alert severity="warning" sx={{ mb: 1 }} onClose={() => setScanError(null)}>{scanError}</Alert>}
-          {isSelecting && (
-            <Alert severity="info" sx={{ mb: 1, fontSize: 12 }}>
-              Click and drag a rectangle tightly around the 15×15 grid.
-            </Alert>
-          )}
 
-          {/* Video + div selection overlay */}
-          <Box
-            ref={videoWrapRef}
-            className={styles.videoWrap}
-            style={{ cursor: isSelecting ? 'crosshair' : 'default' }}
-            onMouseDown={handlePointerDown}
-            onMouseMove={handlePointerMove}
-            onTouchStart={handlePointerDown}
-            onTouchMove={handlePointerMove}
-          >
+          <Box className={styles.videoWrap}>
             <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
-
-            {displayBox && displayBox.width > 2 && displayBox.height > 2 && (
-              <div style={{
-                position:      'absolute',
-                left:          displayBox.left,
-                top:           displayBox.top,
-                width:         displayBox.width,
-                height:        displayBox.height,
-                border:        '2px solid #00e676',
-                background:    'rgba(0,230,118,0.10)',
-                pointerEvents: 'none',
-                boxSizing:     'border-box',
-              }}>
-                {[{ top: -4, left: -4 }, { top: -4, right: -4 },
-                  { bottom: -4, left: -4 }, { bottom: -4, right: -4 }].map((pos, i) => (
-                  <div key={i} style={{
-                    position: 'absolute', width: 8, height: 8,
-                    background: '#00e676', borderRadius: 1, ...pos,
-                  }} />
-                ))}
-              </div>
-            )}
-
             {isScanning && (
               <Box className={styles.scanOverlay}>
                 <CircularProgress size={30} style={{ color: '#00e676' }} />
                 <Typography variant="caption" style={{ color: '#00e676', marginTop: 8 }}>
-                  Reading tiles…
+                  Reading board…
                 </Typography>
                 <LinearProgress variant="determinate" value={scanProgress}
                   style={{ width: '75%', marginTop: 8 }} />
@@ -410,7 +278,7 @@ export default function CameraScan() {
               <img src={previewSrc} alt="Last scan" className={styles.previewThumb} />
               <Box>
                 <Typography variant="caption" style={{ color: sub, display: 'block' }}>Last scan</Typography>
-                {selection && cameraActive && (
+                {cameraActive && (
                   <Button size="small" variant="text" startIcon={<Repeat size={13} />}
                     onClick={runScan}
                     style={{ color: sub, fontSize: 12, padding: '2px 6px' }}>
@@ -422,8 +290,8 @@ export default function CameraScan() {
           )}
 
           <Typography variant="caption" style={{ color: sub, display: 'block', marginTop: 10, lineHeight: 1.6 }}>
-            Tips: Good even lighting, no glare. Select only the inner 15×15 grid.
-            Click any board cell to correct a misread letter after scanning.
+            Tips: Hold the camera directly above the board. Good even lighting with no glare works best.
+            Click any cell to correct a letter after scanning.
           </Typography>
         </Paper>
 
@@ -443,7 +311,6 @@ export default function CameraScan() {
                 onClick={() => {
                   setBoardLetters(Array(15).fill(null).map(() => Array(15).fill(null)));
                   setSelectedCell(null); setTopMoves([]); setPreviewSrc(null);
-                  setLiveBox(null); setSelection(null);
                 }}
                 style={{ color: sub, fontSize: 12, minWidth: 0 }}>
                 Clear
