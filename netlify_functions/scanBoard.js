@@ -1,12 +1,15 @@
 /**
- * scanBoard — uses a free vision model via OpenRouter to read a Scrabble board photo.
+ * scanBoard — reads a Scrabble board photo using a free vision AI.
  *
- * Get a free API key at: https://openrouter.ai  (no billing required)
- * Free models: 200 requests/day, 10 req/min.
+ * Tries providers in order. Set at least ONE of these env vars:
  *
- * Set OPENROUTER_API_KEY in:
- *   • local: .env file  →  OPENROUTER_API_KEY=sk-or-v1-...
- *   • production: Netlify → Site settings → Environment variables
+ *   GEMINI_API_KEY      — recommended, most reliable
+ *                         Get a FREE key at https://aistudio.google.com/apikey
+ *                         (must use AI Studio, NOT Google Cloud Console)
+ *                         Free tier: 1,500 requests/day, no billing required.
+ *
+ *   OPENROUTER_API_KEY  — fallback; free-tier models are sometimes unavailable
+ *                         Get a free key at https://openrouter.ai
  */
 const axios = require('axios');
 
@@ -22,14 +25,6 @@ const err = (code, msg, extra = {}) => ({
   headers:    CORS,
   body:       JSON.stringify({ error: msg, ...extra }),
 });
-
-// Free-tier vision models on OpenRouter — tried in order until one succeeds.
-const MODELS = [
-  'google/gemini-2.0-flash-exp:free',
-  'qwen/qwen-2-vl-7b-instruct:free',
-  'meta-llama/llama-3.2-11b-vision-instruct:free',
-  'meta-llama/llama-3.2-90b-vision-instruct:free',
-];
 
 const PROMPT = `You are looking at a photograph of a physical Scrabble board (15 columns × 15 rows).
 
@@ -60,34 +55,33 @@ const normaliseBoard = (board) => {
   });
 };
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
-
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return err(500,
-    'OPENROUTER_API_KEY is not configured. ' +
-    'Get a free key at https://openrouter.ai and add it to Netlify → Site settings → Environment variables.'
+// ── Provider: Gemini (Google AI Studio) ──────────────────────────────────────
+async function callGemini(apiKey, mimeType, b64Data) {
+  const res = await axios.post(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
+    {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: b64Data } },
+          { text: PROMPT },
+        ],
+      }],
+      generationConfig: { temperature: 0, maxOutputTokens: 2048 },
+    },
+    { headers: { 'content-type': 'application/json' }, timeout: 45000 }
   );
+  return res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+}
 
-  let image;
-  try {
-    ({ image } = JSON.parse(event.body || '{}'));
-  } catch {
-    return err(400, 'Invalid JSON body.');
-  }
-  if (!image) return err(400, 'No image provided.');
+// ── Provider: OpenRouter ──────────────────────────────────────────────────────
+const OPENROUTER_MODELS = [
+  'google/gemini-2.0-flash-exp:free',
+  'qwen/qwen-2-vl-7b-instruct:free',
+  'meta-llama/llama-3.2-11b-vision-instruct:free',
+];
 
-  // Reconstruct the full data-URL so OpenRouter receives it correctly
-  const match    = image.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s);
-  const mimeType = match ? `image/${match[1] === 'jpg' ? 'jpeg' : match[1]}` : 'image/jpeg';
-  const b64Data  = match ? match[2] : image;
-  const dataUrl  = `data:${mimeType};base64,${b64Data}`;
-
-  // Try each model in order — on rate-limit (429) move on to the next
-  let rawText = null;
-  let lastError = null;
-
-  for (const model of MODELS) {
+async function callOpenRouter(apiKey, dataUrl) {
+  for (const model of OPENROUTER_MODELS) {
     let res;
     try {
       res = await axios.post(
@@ -115,26 +109,74 @@ exports.handler = async (event) => {
         }
       );
     } catch (e) {
-      lastError = e.response?.data || e.message;
       const status = e.response?.status;
-      // 404 (no endpoints) or 429 (rate-limited) → try next model
       if (status === 404 || status === 429) {
-        console.warn(`Model ${model} unavailable (${status}), trying next…`);
+        console.warn(`OpenRouter model ${model} unavailable (${status}), trying next…`);
         continue;
       }
-      console.error('OpenRouter API error:', lastError);
-      return err(502, 'Vision API call failed.', { detail: lastError });
+      throw e; // unexpected error — propagate
     }
+    const text = res.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    if (text) return text;
+  }
+  throw new Error('All OpenRouter free models are currently unavailable. Try again in a minute.');
+}
 
-    rawText = res.data?.choices?.[0]?.message?.content?.trim() ?? '';
-    if (rawText) break; // got a response
+// ── Handler ───────────────────────────────────────────────────────────────────
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
+
+  const geminiKey     = process.env.GEMINI_API_KEY;
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+
+  if (!geminiKey && !openrouterKey) {
+    return err(500,
+      'No vision API key configured. Set GEMINI_API_KEY (recommended — free from https://aistudio.google.com/apikey) ' +
+      'or OPENROUTER_API_KEY in Netlify → Site settings → Environment variables.'
+    );
+  }
+
+  let image;
+  try {
+    ({ image } = JSON.parse(event.body || '{}'));
+  } catch {
+    return err(400, 'Invalid JSON body.');
+  }
+  if (!image) return err(400, 'No image provided.');
+
+  const match    = image.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s);
+  const mimeType = match ? `image/${match[1] === 'jpg' ? 'jpeg' : match[1]}` : 'image/jpeg';
+  const b64Data  = match ? match[2] : image;
+  const dataUrl  = `data:${mimeType};base64,${b64Data}`;
+
+  // Try Gemini first (more reliable free tier), then OpenRouter as fallback
+  let rawText = null;
+  const errors = [];
+
+  if (geminiKey) {
+    try {
+      rawText = await callGemini(geminiKey, mimeType, b64Data);
+    } catch (e) {
+      const detail = e.response?.data || e.message;
+      console.error('Gemini failed:', detail);
+      errors.push({ provider: 'Gemini', detail });
+    }
+  }
+
+  if (!rawText && openrouterKey) {
+    try {
+      rawText = await callOpenRouter(openrouterKey, dataUrl);
+    } catch (e) {
+      const detail = e.response?.data || e.message;
+      console.error('OpenRouter failed:', detail);
+      errors.push({ provider: 'OpenRouter', detail });
+    }
   }
 
   if (!rawText) {
-    return err(429, 'All free models are rate-limited right now. Try again in a minute.', { detail: lastError });
+    return err(502, 'All vision providers failed.', { errors });
   }
 
-  // Extract the JSON array (handles accidental markdown fences)
   const jsonMatch = rawText.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
     console.error('No JSON array in response:', rawText.slice(0, 200));
@@ -149,9 +191,7 @@ exports.handler = async (event) => {
   }
 
   board = normaliseBoard(board);
-
   const tileCount = board.flat().filter(Boolean).length;
-  console.log(`scanBoard: detected ${tileCount} tiles via OpenRouter`);
-
+  console.log(`scanBoard: detected ${tileCount} tiles`);
   return ok({ board, tileCount });
 };
