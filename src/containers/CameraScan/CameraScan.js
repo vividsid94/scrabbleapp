@@ -297,7 +297,7 @@ export default function CameraScan() {
       <Typography variant="h5" className={styles.pageTitle}>Live Board Scanner</Typography>
       <Typography variant="body2" className={styles.pageSubtitle} style={{ color: sub }}>
         Point your webcam at a Scrabble board, drag to select the board area, then scan.
-        Powered by Gemini Vision — set <code>GEMINI_API_KEY</code> in your Netlify env vars.
+        Powered by Llama 3.2 Vision (free) — set <code>OPENROUTER_API_KEY</code> in your Netlify env vars.
       </Typography>
 
       <Box className={styles.layout}>

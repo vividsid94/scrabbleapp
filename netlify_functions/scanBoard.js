@@ -1,25 +1,35 @@
 /**
- * scanBoard — uses Gemini Flash (free tier) to read a photo of a Scrabble board
- * and return the 15×15 grid of letters.
+ * scanBoard — uses a free vision model via OpenRouter to read a Scrabble board photo.
  *
- * Requires the environment variable GEMINI_API_KEY to be set.
- * Get a free key at: https://aistudio.google.com/apikey
- * Free tier: 1,500 requests/day, no billing required.
+ * Get a free API key at: https://openrouter.ai  (no billing required)
+ * Free models: 200 requests/day, 10 req/min.
+ *
+ * Set OPENROUTER_API_KEY in:
+ *   • local: .env file  →  OPENROUTER_API_KEY=sk-or-v1-...
+ *   • production: Netlify → Site settings → Environment variables
  */
 const axios = require('axios');
 
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Headers': 'Content-Type',
-  'Content-Type': 'application/json',
+  'Content-Type':                 'application/json',
 };
 
 const ok  = (body) => ({ statusCode: 200, headers: CORS, body: JSON.stringify(body) });
 const err = (code, msg, extra = {}) => ({
   statusCode: code,
-  headers: CORS,
-  body: JSON.stringify({ error: msg, ...extra }),
+  headers:    CORS,
+  body:       JSON.stringify({ error: msg, ...extra }),
 });
+
+// Free-tier vision models on OpenRouter — first available one is used.
+// All are capable of reading physical text from photos.
+const MODELS = [
+  'meta-llama/llama-3.2-11b-vision-instruct:free',
+  'qwen/qwen-2-vl-7b-instruct:free',
+  'google/gemini-2.0-flash-exp:free',
+];
 
 const PROMPT = `You are looking at a photograph of a physical Scrabble board (15 columns × 15 rows).
 
@@ -53,8 +63,11 @@ const normaliseBoard = (board) => {
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return err(500, 'GEMINI_API_KEY is not configured. Add it in Netlify → Site settings → Environment variables.');
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return err(500,
+    'OPENROUTER_API_KEY is not configured. ' +
+    'Get a free key at https://openrouter.ai and add it to Netlify → Site settings → Environment variables.'
+  );
 
   let image;
   try {
@@ -64,58 +77,81 @@ exports.handler = async (event) => {
   }
   if (!image) return err(400, 'No image provided.');
 
-  // Strip the data-URL prefix
-  const match = image.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s);
+  // Reconstruct the full data-URL so OpenRouter receives it correctly
+  const match    = image.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s);
   const mimeType = match ? `image/${match[1] === 'jpg' ? 'jpeg' : match[1]}` : 'image/jpeg';
-  const base64Data = match ? match[2] : image;
+  const b64Data  = match ? match[2] : image;
+  const dataUrl  = `data:${mimeType};base64,${b64Data}`;
 
-  let geminiResponse;
-  try {
-    geminiResponse = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: mimeType, data: base64Data } },
-            { text: PROMPT },
-          ],
-        }],
-        generationConfig: {
+  // Try each model in order — on rate-limit (429) move on to the next
+  let rawText = null;
+  let lastError = null;
+
+  for (const model of MODELS) {
+    let res;
+    try {
+      res = await axios.post(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          model,
+          messages: [{
+            role:    'user',
+            content: [
+              { type: 'image_url', image_url: { url: dataUrl } },
+              { type: 'text',      text: PROMPT },
+            ],
+          }],
           temperature: 0,
-          maxOutputTokens: 4096,
+          max_tokens:  2048,
         },
-      },
-      {
-        headers: { 'content-type': 'application/json' },
-        timeout: 45000,
+        {
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer':  'https://scrabbleapp.netlify.app',
+            'X-Title':       'Scrabble Board Scanner',
+          },
+          timeout: 45000,
+        }
+      );
+    } catch (e) {
+      lastError = e.response?.data || e.message;
+      const status = e.response?.status;
+      // 429 rate-limit → try next model; anything else → bail immediately
+      if (status === 429) {
+        console.warn(`Model ${model} rate-limited, trying next…`);
+        continue;
       }
-    );
-  } catch (e) {
-    const detail = e.response?.data || e.message;
-    console.error('Gemini API error:', detail);
-    return err(502, 'Gemini API call failed.', { detail });
+      console.error('OpenRouter API error:', lastError);
+      return err(502, 'Vision API call failed.', { detail: lastError });
+    }
+
+    rawText = res.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    if (rawText) break; // got a response
   }
 
-  const rawText = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  if (!rawText) {
+    return err(429, 'All free models are rate-limited right now. Try again in a minute.', { detail: lastError });
+  }
 
   // Extract the JSON array (handles accidental markdown fences)
   const jsonMatch = rawText.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    console.error('No JSON array in Gemini response:', rawText.slice(0, 200));
-    return err(500, 'Unexpected response — no board array found.', { raw: rawText.slice(0, 300) });
+    console.error('No JSON array in response:', rawText.slice(0, 200));
+    return err(500, 'Unexpected model response — no board array found.', { raw: rawText.slice(0, 300) });
   }
 
   let board;
   try {
     board = JSON.parse(jsonMatch[0]);
   } catch {
-    return err(500, 'Could not parse Gemini response as JSON.', { raw: rawText.slice(0, 300) });
+    return err(500, 'Could not parse model response as JSON.', { raw: rawText.slice(0, 300) });
   }
 
   board = normaliseBoard(board);
 
   const tileCount = board.flat().filter(Boolean).length;
-  console.log(`scanBoard: detected ${tileCount} tiles`);
+  console.log(`scanBoard: detected ${tileCount} tiles via OpenRouter`);
 
   return ok({ board, tileCount });
 };
