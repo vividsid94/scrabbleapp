@@ -23,12 +23,12 @@ const err = (code, msg, extra = {}) => ({
   body:       JSON.stringify({ error: msg, ...extra }),
 });
 
-// Free-tier vision models on OpenRouter — first available one is used.
-// All are capable of reading physical text from photos.
+// Free-tier vision models on OpenRouter — tried in order until one succeeds.
 const MODELS = [
-  'meta-llama/llama-3.2-11b-vision-instruct:free',
-  'qwen/qwen-2-vl-7b-instruct:free',
   'google/gemini-2.0-flash-exp:free',
+  'qwen/qwen-2-vl-7b-instruct:free',
+  'meta-llama/llama-3.2-11b-vision-instruct:free',
+  'meta-llama/llama-3.2-90b-vision-instruct:free',
 ];
 
 const PROMPT = `You are looking at a photograph of a physical Scrabble board (15 columns × 15 rows).
@@ -117,9 +117,9 @@ exports.handler = async (event) => {
     } catch (e) {
       lastError = e.response?.data || e.message;
       const status = e.response?.status;
-      // 429 rate-limit → try next model; anything else → bail immediately
-      if (status === 429) {
-        console.warn(`Model ${model} rate-limited, trying next…`);
+      // 404 (no endpoints) or 429 (rate-limited) → try next model
+      if (status === 404 || status === 429) {
+        console.warn(`Model ${model} unavailable (${status}), trying next…`);
         continue;
       }
       console.error('OpenRouter API error:', lastError);
