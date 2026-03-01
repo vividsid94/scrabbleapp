@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Button, Typography, Paper, CircularProgress, Alert, LinearProgress } from '@mui/material';
+import { Box, Button, Paper, CircularProgress, Alert, LinearProgress } from '@mui/material';
 import { Camera, X, Lightning, Repeat } from '@phosphor-icons/react';
+import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import { ThemeContext } from '../../App';
 import styles from './CameraScan.module.css';
 
@@ -73,7 +74,7 @@ export default function CameraScan() {
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  // ── Capture current frame → send to scanBoard function ────────────────────
+  // ── Capture current frame → send to scanBoard function ─────────────────────
   const runScan = useCallback(async () => {
     const video = videoRef.current;
     if (!video || video.readyState < 2) { setScanError('Camera still loading.'); return; }
@@ -82,13 +83,11 @@ export default function CameraScan() {
     setScanProgress(10);
     setScanError(null);
 
-    // Snapshot the full video frame at native resolution
     const cap = document.createElement('canvas');
     cap.width  = video.videoWidth;
     cap.height = video.videoHeight;
     cap.getContext('2d').drawImage(video, 0, 0);
 
-    // Show a small preview thumbnail
     const thumb = document.createElement('canvas');
     thumb.width  = 160;
     thumb.height = Math.round(160 * (video.videoHeight / video.videoWidth));
@@ -96,7 +95,6 @@ export default function CameraScan() {
     setPreviewSrc(thumb.toDataURL('image/jpeg', 0.8));
 
     setScanProgress(25);
-
     const imageDataUrl = cap.toDataURL('image/jpeg', 0.92);
 
     let data;
@@ -201,221 +199,253 @@ export default function CameraScan() {
       : `${String.fromCharCode(65 + f.col)}${f.row + 1}`;
   };
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-  const cardBg    = isDark ? 'rgba(28,32,44,0.95)' : '#fff';
-  const text      = isDark ? '#e2e8f0' : '#1a202c';
-  const sub       = isDark ? '#94a3b8'  : '#64748b';
-  const border    = isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
-  const tileCount = boardLetters.flat().filter(Boolean).length;
+  // ── Theme shortcuts ─────────────────────────────────────────────────────────
+  const cardBg = isDark ? 'rgba(28,32,44,0.95)' : '#fff';
+  const text   = isDark ? '#e2e8f0' : '#1a202c';
+  const sub    = isDark ? '#94a3b8'  : '#64748b';
+  const border = isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+  const tileCount = boardLetters.flat().filter(v => v !== null).length;
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <Box className={styles.container} style={{ color: text }}>
-      <Typography variant="h5" className={styles.pageTitle}>Live Board Scanner</Typography>
-      <Typography variant="body2" className={styles.pageSubtitle} style={{ color: sub }}>
-        Point your camera at the board and tap <strong>Scan</strong>.
-        Board detection is automatic — no need to crop or select.
-      </Typography>
+    <Box sx={{ display: 'flex' }}>
+      <Sidenav />
+      <Box className={styles.page} style={{ color: text }}>
 
-      <Box className={styles.layout}>
+        <div className={styles.header}>
+          <h1 className={styles.title} style={{ color: text }}>Live Board Scanner</h1>
+          <p className={styles.subtitle} style={{ color: sub }}>
+            Point your camera at the board and tap <strong>Scan</strong>.
+            Board detection is automatic — no need to crop or select.
+          </p>
+        </div>
 
-        {/* ── Camera panel ── */}
-        <Paper className={styles.cameraPanel} elevation={2} style={{ background: cardBg, borderColor: border }}>
+        <Box className={styles.layout}>
 
-          <Box className={styles.controls}>
-            {!cameraActive ? (
-              <Button variant="contained" size="small" startIcon={<Camera size={15} />} onClick={startCamera}>
-                Start Camera
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="contained" size="small" color="success"
-                  startIcon={isScanning ? null : <Lightning size={15} />}
-                  disabled={isScanning}
-                  onClick={runScan}
-                >
-                  {isScanning
-                    ? <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <CircularProgress size={12} color="inherit" />Scanning…
-                      </Box>
-                    : 'Scan Board'}
+          {/* ── Camera panel ── */}
+          <Paper className={styles.cameraPanel} elevation={2}
+            style={{ background: cardBg, borderColor: border }}>
+
+            <Box className={styles.controls}>
+              {!cameraActive ? (
+                <Button variant="contained" size="small"
+                  startIcon={<Camera size={15} />}
+                  onClick={startCamera}>
+                  Start Camera
                 </Button>
-
-                <Button variant="outlined" size="small" onClick={stopCamera}
-                  style={{ color: sub, borderColor: border }}>
-                  Stop
-                </Button>
-              </>
-            )}
-          </Box>
-
-          {cameraError && <Alert severity="error"   sx={{ mb: 1 }}>{cameraError}</Alert>}
-          {scanError   && <Alert severity="warning" sx={{ mb: 1 }} onClose={() => setScanError(null)}>{scanError}</Alert>}
-
-          <Box className={styles.videoWrap}>
-            <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
-            {isScanning && (
-              <Box className={styles.scanOverlay}>
-                <CircularProgress size={30} style={{ color: '#00e676' }} />
-                <Typography variant="caption" style={{ color: '#00e676', marginTop: 8 }}>
-                  Reading board…
-                </Typography>
-                <LinearProgress variant="determinate" value={scanProgress}
-                  style={{ width: '75%', marginTop: 8 }} />
-              </Box>
-            )}
-            {!cameraActive && (
-              <Box className={styles.cameraOff}>
-                <Camera size={44} style={{ opacity: 0.2 }} />
-                <Typography variant="body2" style={{ opacity: 0.3, marginTop: 10 }}>Camera off</Typography>
-              </Box>
-            )}
-          </Box>
-
-          {previewSrc && !isScanning && (
-            <Box className={styles.previewRow}>
-              <img src={previewSrc} alt="Last scan" className={styles.previewThumb} />
-              <Box>
-                <Typography variant="caption" style={{ color: sub, display: 'block' }}>Last scan</Typography>
-                {cameraActive && (
-                  <Button size="small" variant="text" startIcon={<Repeat size={13} />}
+              ) : (
+                <>
+                  <Button
+                    className={styles.scanBtn}
+                    variant="contained" size="small"
+                    startIcon={isScanning ? null : <Lightning size={15} />}
+                    disabled={isScanning}
                     onClick={runScan}
-                    style={{ color: sub, fontSize: 12, padding: '2px 6px' }}>
-                    Re-scan
+                  >
+                    {isScanning
+                      ? <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CircularProgress size={12} color="inherit" />Scanning…
+                        </Box>
+                      : 'Scan Board'}
+                  </Button>
+
+                  <Button className={styles.stopBtn} variant="outlined" size="small"
+                    onClick={stopCamera}
+                    style={{ color: sub, borderColor: border }}>
+                    Stop
+                  </Button>
+                </>
+              )}
+            </Box>
+
+            {cameraError && <Alert severity="error"   sx={{ m: '8px 16px 0' }}>{cameraError}</Alert>}
+            {scanError   && <Alert severity="warning" sx={{ m: '8px 16px 0' }} onClose={() => setScanError(null)}>{scanError}</Alert>}
+
+            <Box className={styles.videoWrap}>
+              <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
+              {isScanning && (
+                <Box className={styles.scanOverlay}>
+                  <CircularProgress size={30} style={{ color: '#D97706' }} />
+                  <p style={{ color: '#D97706', margin: '8px 0 0', fontSize: 12 }}>Reading board…</p>
+                  <LinearProgress variant="determinate" value={scanProgress}
+                    style={{ width: '75%', marginTop: 8 }} />
+                </Box>
+              )}
+              {!cameraActive && (
+                <Box className={styles.cameraOff}>
+                  <Camera size={44} style={{ opacity: 0.2 }} />
+                  <p style={{ opacity: 0.3, marginTop: 10, fontSize: 14, margin: '10px 0 0' }}>Camera off</p>
+                </Box>
+              )}
+            </Box>
+
+            {previewSrc && !isScanning && (
+              <Box className={styles.previewRow}
+                style={{ background: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc' }}>
+                <img src={previewSrc} alt="Last scan" className={styles.previewThumb} />
+                <Box>
+                  <p style={{ color: sub, fontSize: 11, margin: '0 0 4px' }}>Last scan</p>
+                  {cameraActive && (
+                    <Button size="small" variant="text"
+                      startIcon={<Repeat size={13} />}
+                      onClick={runScan}
+                      style={{ color: sub, fontSize: 12, padding: '2px 6px' }}>
+                      Re-scan
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            <p className={styles.tips} style={{ color: sub }}>
+              Tips: Hold the camera directly above the board. Good even lighting with no glare
+              works best. Click any cell to correct a letter after scanning.
+            </p>
+          </Paper>
+
+          {/* ── Right panel ── */}
+          <Box className={styles.rightPanel}>
+
+            {/* Board viewer */}
+            <Paper className={styles.boardPanel} elevation={2}
+              style={{ background: cardBg, borderColor: border }}>
+
+              <Box className={styles.boardHeader}>
+                <Box className={styles.boardTitleRow}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: text }}>Board</span>
+                  {tileCount > 0 && (
+                    <span className={styles.tileCountBadge}>{tileCount} tiles</span>
+                  )}
+                </Box>
+                <Button size="small" variant="text" startIcon={<X size={13} />}
+                  onClick={() => {
+                    setBoardLetters(Array(15).fill(null).map(() => Array(15).fill(null)));
+                    setSelectedCell(null); setTopMoves([]); setPreviewSrc(null);
+                  }}
+                  style={{ color: sub, fontSize: 12, minWidth: 0 }}>
+                  Clear
+                </Button>
+              </Box>
+
+              {selectedCell && (
+                <p style={{ color: '#60a5fa', fontSize: 11, margin: '0 0 6px' }}>
+                  Editing {String.fromCharCode(65 + selectedCell.col)}{selectedCell.row + 1}
+                  {' '}— type a letter · Backspace to clear · Esc · arrows
+                </p>
+              )}
+
+              <Box className={styles.colHeaders} style={{ color: sub }}>
+                <Box className={styles.rowSpacer} />
+                {'ABCDEFGHIJKLMNO'.split('').map(l => (
+                  <Box key={l} className={styles.colHdr}>{l}</Box>
+                ))}
+              </Box>
+
+              <Box className={styles.boardGrid}>
+                {BOARD_LAYOUT.map((rowArr, r) => (
+                  <Box key={r} className={styles.boardRow}>
+                    <Box className={styles.rowHdr} style={{ color: sub }}>{r + 1}</Box>
+                    {rowArr.map((sq, c) => {
+                      const letter   = boardLetters[r]?.[c];
+                      const isBlank  = letter === '?';
+                      const hasTile  = !!letter;
+                      const isSel    = selectedCell?.row === r && selectedCell?.col === c;
+                      const sqColor  = SQUARE_COLORS[sq];
+                      const isCenter = r === 7 && c === 7;
+                      return (
+                        <Box key={c}
+                          className={`${styles.cell} ${hasTile ? styles.hasTile : ''} ${isSel ? styles.selected : ''}`}
+                          style={{
+                            background:  isSel ? '#2563eb' : isBlank ? '#e8e8e8' : letter ? '#f5e6c8' : sqColor || (isDark ? '#2d3748' : '#f0f4f8'),
+                            color:       isSel ? '#fff' : isBlank ? '#888' : letter ? '#111' : sqColor ? '#fff' : sub,
+                            borderColor: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',
+                            fontStyle:   isBlank ? 'italic' : 'normal',
+                          }}
+                          onClick={() => handleCellClick(r, c)}
+                        >
+                          {letter ? letter
+                            : sq > 0 ? <span className={styles.sqLabel}>{SQUARE_LABELS[sq]}</span>
+                            : isCenter ? <span style={{ fontSize: 11, opacity: 0.5 }}>★</span>
+                            : null}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+
+            {/* Rack */}
+            <Paper className={styles.rackPanel} elevation={2}
+              style={{ background: cardBg, borderColor: border }}>
+              <span style={{ fontWeight: 700, fontSize: 13, color: text, display: 'block', marginBottom: 10 }}>
+                Your Rack
+              </span>
+              <Box style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input className={styles.rackInput}
+                  style={{ background: isDark ? '#1e293b' : '#f8fafc', color: text, borderColor: border }}
+                  value={rack}
+                  onChange={e => setRack(e.target.value.toUpperCase().replace(/[^A-Z?]/g, '').slice(0, 7))}
+                  placeholder="e.g. AEINRST"
+                  maxLength={7}
+                />
+                {rack.length > 0 && (
+                  <Box style={{ display: 'flex', gap: 3 }}>
+                    {rack.split('').map((t, i) => <Box key={i} className={styles.rackTile}>{t}</Box>)}
+                  </Box>
+                )}
+              </Box>
+              <p style={{ color: sub, fontSize: 11, margin: '4px 0 0' }}>Use ? for blank tiles</p>
+              <Box style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Button
+                  className={styles.scanBtn}
+                  variant="contained" size="small"
+                  onClick={calculateMoves}
+                  disabled={isLoadingMoves || !rack}
+                  startIcon={isLoadingMoves ? <CircularProgress size={13} color="inherit" /> : <Lightning size={14} />}
+                >
+                  {isLoadingMoves ? 'Calculating…' : 'Get Best Moves'}
+                </Button>
+                {rack && (
+                  <Button variant="text" size="small"
+                    onClick={() => { setRack(''); setMoveError(null); }}
+                    style={{ color: sub, fontSize: 12 }}>
+                    Clear rack
                   </Button>
                 )}
               </Box>
-            </Box>
-          )}
+              {moveError && <Alert severity="error" sx={{ mt: 1, fontSize: 12 }}>{moveError}</Alert>}
+            </Paper>
 
-          <Typography variant="caption" style={{ color: sub, display: 'block', marginTop: 10, lineHeight: 1.6 }}>
-            Tips: Hold the camera directly above the board. Good even lighting with no glare works best.
-            Click any cell to correct a letter after scanning.
-          </Typography>
-        </Paper>
-
-        {/* ── Right panel ── */}
-        <Box className={styles.rightPanel}>
-
-          {/* Board */}
-          <Paper className={styles.boardPanel} elevation={2} style={{ background: cardBg, borderColor: border }}>
-            <Box className={styles.boardHeader}>
-              <Box style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Typography variant="subtitle2" style={{ fontWeight: 700 }}>Board</Typography>
-                {tileCount > 0 && (
-                  <Typography variant="caption" style={{ color: sub }}>{tileCount} tiles</Typography>
-                )}
-              </Box>
-              <Button size="small" variant="text" startIcon={<X size={13} />}
-                onClick={() => {
-                  setBoardLetters(Array(15).fill(null).map(() => Array(15).fill(null)));
-                  setSelectedCell(null); setTopMoves([]); setPreviewSrc(null);
-                }}
-                style={{ color: sub, fontSize: 12, minWidth: 0 }}>
-                Clear
-              </Button>
-            </Box>
-
-            {selectedCell && (
-              <Typography variant="caption" style={{ color: '#60a5fa', display: 'block', marginBottom: 6, fontSize: 11 }}>
-                Editing {String.fromCharCode(65 + selectedCell.col)}{selectedCell.row + 1} — type a letter · Backspace to clear · Esc · arrows
-              </Typography>
+            {/* Best moves */}
+            {topMoves.length > 0 && (
+              <Paper className={styles.movesPanel} elevation={2}
+                style={{ background: cardBg, borderColor: border }}>
+                <span style={{ fontWeight: 700, fontSize: 13, color: text, display: 'block', marginBottom: 8 }}>
+                  Best Moves
+                </span>
+                {topMoves.slice(0, 10).map((move, i) => (
+                  <Box key={i} className={styles.moveRow}
+                    style={{ borderBottomColor: isDark ? 'rgba(255,255,255,0.07)' : '#f1f5f9' }}>
+                    <Box className={styles.mRank} style={{ color: sub }}>{i + 1}</Box>
+                    <Box className={styles.mPos}
+                      style={{ color: sub, background: isDark ? 'rgba(255,255,255,0.07)' : '#f1f5f9' }}>
+                      {formatLocation(move)}
+                    </Box>
+                    <Box className={styles.mWord} style={{ color: text }}>{move.word}</Box>
+                    <Box className={styles.mScore}>{move.score}</Box>
+                    {move.leave !== undefined && (
+                      <Box className={styles.mLeave}
+                        style={{ color: sub, background: isDark ? 'rgba(217,119,6,0.12)' : '#fffbeb' }}>
+                        {move.leave}
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Paper>
             )}
 
-            <Box className={styles.colHeaders} style={{ color: sub }}>
-              <Box className={styles.rowSpacer} />
-              {'ABCDEFGHIJKLMNO'.split('').map(l => (
-                <Box key={l} className={styles.colHdr}>{l}</Box>
-              ))}
-            </Box>
-
-            <Box className={styles.boardGrid}>
-              {BOARD_LAYOUT.map((rowArr, r) => (
-                <Box key={r} className={styles.boardRow}>
-                  <Box className={styles.rowHdr} style={{ color: sub }}>{r + 1}</Box>
-                  {rowArr.map((sq, c) => {
-                    const letter   = boardLetters[r]?.[c];
-                    const isSel    = selectedCell?.row === r && selectedCell?.col === c;
-                    const sqColor  = SQUARE_COLORS[sq];
-                    const isCenter = r === 7 && c === 7;
-                    return (
-                      <Box key={c}
-                        className={`${styles.cell} ${letter ? styles.hasTile : ''} ${isSel ? styles.selected : ''}`}
-                        style={{
-                          background:  isSel ? '#2563eb' : letter ? '#f5e6c8' : sqColor || (isDark ? '#2d3748' : '#f0f4f8'),
-                          color:       isSel ? '#fff' : letter ? '#111' : sqColor ? '#fff' : sub,
-                          borderColor: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',
-                        }}
-                        onClick={() => handleCellClick(r, c)}
-                      >
-                        {letter ? letter
-                          : sq > 0 ? <span className={styles.sqLabel}>{SQUARE_LABELS[sq]}</span>
-                          : isCenter ? <span style={{ fontSize: 11, opacity: 0.5 }}>★</span>
-                          : null}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-
-          {/* Rack */}
-          <Paper className={styles.rackPanel} elevation={2} style={{ background: cardBg, borderColor: border }}>
-            <Typography variant="subtitle2" style={{ fontWeight: 700, marginBottom: 10 }}>Your Rack</Typography>
-            <Box style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input className={styles.rackInput}
-                style={{ background: isDark ? '#1e293b' : '#f8fafc', color: text, borderColor: border }}
-                value={rack}
-                onChange={e => setRack(e.target.value.toUpperCase().replace(/[^A-Z?]/g, '').slice(0, 7))}
-                placeholder="e.g. AEINRST" maxLength={7}
-              />
-              {rack.length > 0 && (
-                <Box style={{ display: 'flex', gap: 3 }}>
-                  {rack.split('').map((t, i) => <Box key={i} className={styles.rackTile}>{t}</Box>)}
-                </Box>
-              )}
-            </Box>
-            <Typography variant="caption" style={{ color: sub, display: 'block', marginTop: 4 }}>Use ? for blank tiles</Typography>
-            <Box style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <Button variant="contained" color="primary" size="small" onClick={calculateMoves}
-                disabled={isLoadingMoves || !rack}
-                startIcon={isLoadingMoves ? <CircularProgress size={13} color="inherit" /> : <Lightning size={14} />}>
-                {isLoadingMoves ? 'Calculating…' : 'Get Best Moves'}
-              </Button>
-              {rack && (
-                <Button variant="text" size="small" onClick={() => { setRack(''); setMoveError(null); }}
-                  style={{ color: sub, fontSize: 12 }}>
-                  Clear rack
-                </Button>
-              )}
-            </Box>
-            {moveError && <Alert severity="error" sx={{ mt: 1, fontSize: 12 }}>{moveError}</Alert>}
-          </Paper>
-
-          {/* Moves */}
-          {topMoves.length > 0 && (
-            <Paper className={styles.movesPanel} elevation={2} style={{ background: cardBg, borderColor: border }}>
-              <Typography variant="subtitle2" style={{ fontWeight: 700, marginBottom: 8 }}>Best Moves</Typography>
-              {topMoves.slice(0, 10).map((move, i) => (
-                <Box key={i} className={styles.moveRow}
-                  style={{ borderBottomColor: isDark ? 'rgba(255,255,255,0.07)' : '#f1f5f9' }}>
-                  <Box className={styles.mRank}  style={{ color: sub }}>{i + 1}</Box>
-                  <Box className={styles.mPos}   style={{ color: sub, background: isDark ? 'rgba(255,255,255,0.07)' : '#f1f5f9' }}>
-                    {formatLocation(move)}
-                  </Box>
-                  <Box className={styles.mWord}  style={{ color: text }}>{move.word}</Box>
-                  <Box className={styles.mScore} style={{ color: '#60a5fa' }}>{move.score}</Box>
-                  {move.leave !== undefined && (
-                    <Box className={styles.mLeave} style={{ color: sub, background: isDark ? 'rgba(59,130,246,0.12)' : '#eff6ff' }}>
-                      {move.leave}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Paper>
-          )}
+          </Box>
         </Box>
       </Box>
     </Box>

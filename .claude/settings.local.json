@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:scrabblecam.com)"
+      "WebFetch(domain:scrabblecam.com)",
+      "Bash(grep -n \"Topbar\\\\|topBar\\\\|height\\\\|52\\\\|60\\\\|64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/Topbar.module.css 2>/dev/null | head -20\ngrep -rn \"height.*52\\\\|height.*60\\\\|height.*64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/ 2>/dev/null | head -10)"
     ]
   }
 }

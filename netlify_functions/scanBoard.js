@@ -31,7 +31,8 @@ function parseBoard(boardStr) {
     const cells = rowStr.split(',').slice(0, 15);
     while (cells.length < 15) cells.push('');
     return cells.map(cell => {
-      if (!cell || cell === '?') return null;
+      if (!cell) return null;
+      if (cell === '?') return '?';                          // blank tile
       const letter = cell.replace('?', '').toUpperCase();
       return /^[A-Z]$/.test(letter) ? letter : null;
     });
