@@ -5,31 +5,6 @@
 const CACHE_NAME = 'tileturnover-v4';
 const OLD_CACHES = ['tileturnover-v1', 'tileturnover-v2', 'tileturnover-v3']; // Add old cache names here when updating
 
-function isCacheableRequest(request) {
-  if (request.method !== 'GET') {
-    return false;
-  }
-  // Range requests produce 206 responses, which Cache.put rejects
-  if (request.headers.get('range')) {
-    return false;
-  }
-  const url = new URL(request.url);
-  // Don't cache dynamic API / proxy responses
-  if (url.pathname.startsWith('/.netlify/functions/')) {
-    return false;
-  }
-  return true;
-}
-
-function isCacheableResponse(response) {
-  // Cache API only supports full 200 responses (not 206 partial content)
-  return (
-    response &&
-    response.status === 200 &&
-    (response.type === 'basic' || response.type === 'cors')
-  );
-}
-
 // Install: Skip waiting to activate immediately
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Force activation of new service worker
@@ -60,19 +35,19 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Network-first strategy for better updates
 self.addEventListener('fetch', (event) => {
-  if (!isCacheableRequest(event.request)) {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (isCacheableResponse(response)) {
+        // Cache API rejects partial (206) responses
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            return cache.put(event.request, responseToCache);
-          }).catch(() => {
-            // Ignore cache write failures (e.g. quota, unsupported response)
+            cache.put(event.request, responseToCache);
           });
         }
         return response;

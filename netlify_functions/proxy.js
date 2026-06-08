@@ -16,15 +16,15 @@ exports.handler = async (event) => {
 
   // Forward Authorization header if present
   const authHeader = event.headers.authorization || event.headers.Authorization;
-  const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
+  const isPost = method.toUpperCase() === 'POST';
+  const headers = isPost
+    ? { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+    : { 'Accept': '*/*', 'User-Agent': 'Mozilla/5.0 (compatible; TileTurnover/1.0)' };
   if (authHeader) headers.Authorization = authHeader;
 
   try {
     let response;
-    if (method.toUpperCase() === 'POST') {
+    if (isPost) {
       response = await axios.post(url, body ? JSON.parse(body) : {}, { headers });
     } else {
       response = await axios.get(url, { headers });
