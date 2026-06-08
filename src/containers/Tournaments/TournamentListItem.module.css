@@ -1,9 +1,12 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
-  padding: 14px 16px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 14px 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--card-bg);
@@ -23,8 +26,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
-  padding: 8px 6px;
+  width: 48px;
+  min-width: 48px;
+  padding: 8px 4px;
   border-radius: 10px;
   border-left: 3px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -85,7 +89,8 @@
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .metaItem {
@@ -94,6 +99,11 @@
   gap: 4px;
   font-size: 12px;
   color: var(--text-secondary);
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chevron {

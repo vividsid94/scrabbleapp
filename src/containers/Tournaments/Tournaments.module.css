@@ -1,11 +1,13 @@
 .page {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   padding-top: 52px;
   box-sizing: border-box;
+  position: relative;
 }
 
 /* ─── Hero ─── */
@@ -13,6 +15,9 @@
   position: relative;
   padding: 28px 24px 24px;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .hero::before {
@@ -29,6 +34,9 @@
   position: relative;
   max-width: 1100px;
   margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .heroIcon {
@@ -72,13 +80,15 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
   background: var(--card-bg);
   border: 1px solid var(--border);
   color: var(--text-primary);
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* Desktop section nav (hidden on mobile — bottom nav used instead) */
@@ -111,7 +121,8 @@
 
 .searchBox:focus-within {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-ring);
+  outline: 2px solid var(--brand-ring);
+  outline-offset: -2px;
 }
 
 .searchInput {
@@ -133,6 +144,9 @@
   display: grid;
   gap: 8px;
   margin-bottom: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .segmentRow2 {
@@ -148,7 +162,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 11px 12px;
+  padding: 11px 8px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--card-bg);
@@ -159,6 +173,8 @@
   font-family: inherit;
   transition: all 0.15s ease;
   min-height: 44px;
+  min-width: 0;
+  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -172,9 +188,10 @@
 .segmentCount {
   font-size: 11px;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
 }
 
 .segmentBtn:not(.segmentBtnActive) .segmentCount {
@@ -187,6 +204,10 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ─── Content ─── */
@@ -217,23 +238,35 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .playerGrid {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .rankingsSection {
   margin-top: 4px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .rankingsBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 12px;
+  min-width: 0;
 }
 
 .rankingsInfo {
@@ -460,11 +493,32 @@
 
   .pageTitle {
     font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .pageSubtitle {
+    overflow-wrap: anywhere;
   }
 
   .heroIcon {
     width: 42px;
     height: 42px;
     margin-bottom: 10px;
+  }
+
+  .segmentBtn {
+    font-size: 11px;
+    gap: 4px;
+    padding: 10px 4px;
+  }
+
+  .segmentCount {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  .statChip {
+    font-size: 12px;
+    padding: 7px 10px;
   }
 }

@@ -1,5 +1,9 @@
 .podium {
   margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .heading {
@@ -13,9 +17,10 @@
 
 .stand {
   display: grid;
-  grid-template-columns: 1fr 1.15fr 1fr;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 8px;
   align-items: end;
+  width: 100%;
 }
 
 .slot {
@@ -23,7 +28,10 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 14px 10px 16px;
+  padding: 12px 6px 14px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 16px 16px 12px 12px;
   border: 2px solid var(--border);
   background: var(--card-bg);
@@ -112,6 +120,44 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .stand {
+    gap: 6px;
+  }
+
+  .slot {
+    padding: 10px 4px 12px;
+  }
+
+  .avatar,
+  .avatarFallback {
+    width: 40px;
+    height: 40px;
+  }
+
+  .first .avatar,
+  .first .avatarFallback {
+    width: 48px;
+    height: 48px;
+  }
+
+  .rating {
+    font-size: 16px;
+  }
+
+  .first .rating {
+    font-size: 18px;
+  }
+
+  .playerName {
+    font-size: 12px;
+  }
+
+  .location {
+    display: none;
+  }
 }
 
 @media (min-width: 769px) {

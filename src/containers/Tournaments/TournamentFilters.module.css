@@ -4,6 +4,9 @@
   gap: 6px;
   flex-wrap: wrap;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .label {
@@ -46,6 +49,9 @@
     flex-wrap: nowrap;
     scrollbar-width: none;
     padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    /* Contain horizontal scroll inside this row — don't expand the page */
+    max-width: 100%;
   }
 
   .container::-webkit-scrollbar {
