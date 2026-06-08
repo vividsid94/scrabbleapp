@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
-import styles from '../containers/Play/Play.module.css';
+import { ThemeContext } from '../App';
+import styles from './MobileKeyboardOverlay.module.css';
 
 /**
  * Shared mobile keyboard overlay for board input.
@@ -11,23 +12,31 @@ import styles from '../containers/Play/Play.module.css';
  * - label?: string – optional label text above keyboard (e.g. mode or hint)
  */
 export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
+  const { lightMode } = useContext(ThemeContext);
+
   if (!visible) return null;
 
+  const isDark = lightMode === 'dark';
   const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+  const keyClass = isDark ? styles.keyDark : styles.keyLight;
+  const wideKeyClass = isDark ? styles.keyWideDark : styles.keyWideLight;
 
   return (
-    <Box className={styles.mobileKeyboardOverlay}>
+    <Box
+      className={`${styles.overlay} ${isDark ? styles.overlayDark : styles.overlayLight}`}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
       {label && (
-        <Box className={styles.mobileKeyboardLabel}>
+        <Box className={`${styles.label} ${isDark ? styles.labelDark : styles.labelLight}`}>
           {label}
         </Box>
       )}
       {rows.map((row, rowIndex) => (
-        <Box key={row} className={styles.mobileKeyboardRow}>
+        <Box key={row} className={styles.row}>
           {row.split('').map((letter) => (
             <Box
               key={letter}
-              className={styles.mobileKey}
+              className={`${styles.key} ${keyClass}`}
               onClick={() => onKeyPress && onKeyPress(letter)}
             >
               {letter}
@@ -36,16 +45,16 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
           {rowIndex === 2 && (
             <>
               <Box
-                className={`${styles.mobileKey} ${styles.mobileKeyWide}`}
+                className={`${styles.key} ${styles.keyWide} ${wideKeyClass}`}
                 onClick={() => onKeyPress && onKeyPress('Backspace')}
               >
-                ⌫
+                Del
               </Box>
               <Box
-                className={`${styles.mobileKey} ${styles.mobileKeyWide} ${styles.mobileKeyPrimary}`}
+                className={`${styles.key} ${styles.keyWide} ${styles.keyPrimary}`}
                 onClick={() => onKeyPress && onKeyPress('Enter')}
               >
-                ↵
+                Go
               </Box>
             </>
           )}
@@ -54,4 +63,3 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
     </Box>
   );
 }
-

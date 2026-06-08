@@ -1,8 +1,7 @@
 import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
 import { Tooltip } from "@mui/material";
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { Pause, Play, GridFour, Lightning, ArrowClockwise, ScribbleLoop } from '@phosphor-icons/react';
+import { Pause, Play, GridFour, Lightning, ArrowClockwise, ScribbleLoop, Robot } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import { usePuzzleStore } from '../../stores/puzzleStore';
@@ -138,17 +137,28 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
         <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
-            <SmartToyIcon 
-              className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
-            style={{ 
-              fontSize: 20, 
-              cursor: 'pointer',
-              color: gameStarted ? '#FF9800' : '#4CAF50',
-              marginRight: '4px'
+          <Box
+            onClick={() => !isBotThinking && handleBotModeToggle()}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '4px',
+              cursor: isBotThinking ? 'not-allowed' : 'pointer',
             }}
-            onClick={() => handleBotModeToggle()}
-            sx={{ color: lightMode === 'dark' ? (gameStarted ? '#FF9800' : '#4CAF50') : (gameStarted ? '#EA580C' : '#059669') }}
+          >
+            <Robot
+              size={20}
+              weight="fill"
+              className={`${styles.keyBtn} ${styles.botIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
+              style={{
+                cursor: isBotThinking ? 'not-allowed' : 'pointer',
+                color: lightMode === 'dark'
+                  ? (gameStarted ? '#FF9800' : '#4CAF50')
+                  : (gameStarted ? '#EA580C' : '#059669'),
+              }}
             />
+          </Box>
         </Tooltip>
         <Tooltip title="Puzzle Mode">
           <div style={{ position: 'relative', display: 'inline-block' }}>

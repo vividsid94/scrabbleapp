@@ -1,0 +1,130 @@
+.overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1300;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.overlayDark {
+  background: linear-gradient(180deg, rgba(31, 41, 55, 0.97) 0%, rgba(17, 24, 39, 0.99) 100%);
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.overlayLight {
+  background: linear-gradient(180deg, rgba(249, 250, 251, 0.98) 0%, rgba(243, 244, 246, 0.99) 100%);
+  border-top-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  font-family: 'Syne', sans-serif;
+}
+
+.labelDark {
+  color: rgba(229, 231, 235, 0.75);
+}
+
+.labelLight {
+  color: rgba(75, 85, 99, 0.85);
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.key {
+  flex: 1;
+  max-width: 36px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+  font-family: 'Syne', system-ui, sans-serif;
+}
+
+.keyDark {
+  color: #1f2937;
+  background: linear-gradient(180deg, #f8edd4 0%, #e8d5b5 55%, #d4bc8e 100%);
+  border: 1px solid rgba(120, 90, 40, 0.25);
+  box-shadow:
+    0 2px 0 rgba(120, 90, 40, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.keyLight {
+  color: #1f2937;
+  background: linear-gradient(180deg, #fffdf8 0%, #f5e6c8 55%, #e8d5b5 100%);
+  border: 1px solid rgba(120, 90, 40, 0.2);
+  box-shadow:
+    0 2px 0 rgba(120, 90, 40, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.keyDark:active,
+.keyLight:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 rgba(120, 90, 40, 0.35),
+    inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.keyWide {
+  flex: 1.4;
+  max-width: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.keyWideDark {
+  color: #f9fafb;
+  background: linear-gradient(180deg, #4b5563 0%, #374151 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.keyWideLight {
+  color: #374151;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.keyPrimary {
+  flex: 1.6;
+  max-width: none;
+  color: #fff;
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 0 rgba(4, 120, 87, 0.5);
+}
+
+.keyPrimary:active {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+}
