@@ -37,7 +37,10 @@ exports.handler = async (event) => {
 
     const url = params.toString() ? `${BASE_URL}?${params.toString()}` : BASE_URL;
 
-    const response = await axios.get(url, { timeout: 12000 });
+    const response = await axios.get(url, {
+      timeout: 12000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TileTurnover/1.0)' },
+    });
     const players = Array.isArray(response.data)
       ? response.data
       : Array.isArray(response.data?.players)

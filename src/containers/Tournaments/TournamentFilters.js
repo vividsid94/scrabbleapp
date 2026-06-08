@@ -1,14 +1,12 @@
 import React from 'react';
 import { SortAscending, SortDescending } from '@phosphor-icons/react';
+import styles from './TournamentFilters.module.css';
 
-/**
- * Sort buttons for tournament list: Date, Name, Entrants with toggle direction.
- */
 export default function TournamentFilters({ sortField, sortDirection, onSortChange, colors }) {
   const fields = [
     { key: 'date', label: 'Date' },
     { key: 'name', label: 'Name' },
-    { key: 'entrants', label: 'Players' },
+    { key: 'entrants', label: 'Size' },
   ];
 
   const handleClick = (key) => {
@@ -22,28 +20,25 @@ export default function TournamentFilters({ sortField, sortDirection, onSortChan
   const SortIcon = sortDirection === 'asc' ? SortAscending : SortDescending;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontSize: 12, color: colors.textSecondary, marginRight: 4 }}>Sort:</span>
+    <div
+      className={styles.container}
+      style={{
+        '--text-secondary': colors.textSecondary,
+        '--border': colors.border,
+        '--card-bg': colors.cardBg,
+        '--brand': '#D97706',
+        '--brand-bg': colors.accentGoldBg,
+      }}
+    >
+      <span className={styles.label}>Sort</span>
       {fields.map(f => {
         const active = sortField === f.key;
         return (
           <button
             key={f.key}
+            type="button"
+            className={`${styles.btn} ${active ? styles.btnActive : ''}`}
             onClick={() => handleClick(f.key)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '5px 12px',
-              borderRadius: 6,
-              border: `1px solid ${active ? colors.accentBlue : colors.border}`,
-              backgroundColor: active ? colors.accentBlueBg : 'transparent',
-              color: active ? colors.accentBlue : colors.textSecondary,
-              fontSize: 12,
-              fontWeight: active ? 600 : 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
           >
             {f.label}
             {active && <SortIcon size={14} />}

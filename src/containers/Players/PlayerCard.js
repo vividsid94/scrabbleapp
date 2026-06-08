@@ -1,9 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import styles from './PlayerCard.module.css';
 
-/**
- * Card for a single player in the grid/list view.
- */
 export default function PlayerCard({ player, rank, colors }) {
   const navigate = useNavigate();
 
@@ -13,125 +11,61 @@ export default function PlayerCard({ player, rank, colors }) {
   const wins = player.w || player.wins || 0;
   const losses = player.l || player.losses || 0;
 
+  const rankStyle = rank != null ? {
+    backgroundColor: rank === 1 ? colors.accentGoldBg
+      : rank === 2 ? colors.accentBlueBg
+      : rank === 3 ? colors.accentGreenBg
+      : colors.badgeBg,
+    color: rank === 1 ? colors.accentGold
+      : rank === 2 ? colors.accentSilver
+      : rank === 3 ? colors.accentBronze
+      : colors.textSecondary,
+  } : null;
+
   return (
-    <div
+    <button
+      type="button"
+      className={styles.card}
       onClick={() => player.playerid && navigate(`/player/${player.playerid}`)}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '12px 16px',
-        borderRadius: 10,
-        backgroundColor: colors.cardBg,
-        border: `1px solid ${colors.border}`,
-        cursor: player.playerid ? 'pointer' : 'default',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = `0 4px 16px ${colors.shadow}`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
+        '--card-bg': colors.cardBg,
+        '--card-hover': colors.cardBgHover,
+        '--border': colors.border,
+        '--text-primary': colors.textPrimary,
+        '--text-secondary': colors.textSecondary,
       }}
     >
-      {/* Rank badge */}
       {rank != null && (
-        <div style={{
-          minWidth: 32,
-          height: 32,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 13,
-          fontWeight: 700,
-          backgroundColor: rank === 1 ? colors.accentGoldBg
-            : rank === 2 ? colors.accentBlueBg
-            : rank === 3 ? colors.accentGreenBg
-            : colors.badgeBg,
-          color: rank === 1 ? colors.accentGold
-            : rank === 2 ? colors.accentSilver
-            : rank === 3 ? colors.accentBronze
-            : colors.textSecondary,
-          flexShrink: 0,
-        }}>
-          {rank}
-        </div>
+        <div className={styles.rankBadge} style={rankStyle}>{rank}</div>
       )}
 
-      {/* Photo */}
       {player.photourl ? (
         <img
           src={player.photourl}
           alt=""
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-            objectFit: 'cover',
-            flexShrink: 0,
-          }}
+          className={styles.avatar}
           onError={(e) => { e.target.style.display = 'none'; }}
         />
       ) : (
-        <div style={{
-          width: 40,
-          height: 40,
-          borderRadius: 8,
-          backgroundColor: colors.badgeBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 16,
-          fontWeight: 600,
-          color: colors.textSecondary,
-          flexShrink: 0,
-        }}>
+        <div
+          className={styles.avatarFallback}
+          style={{ backgroundColor: colors.badgeBg, color: colors.textSecondary }}
+        >
           {name.charAt(0).toUpperCase()}
         </div>
       )}
 
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: colors.accentBlue,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          marginBottom: 2,
-        }}>
-          {name}
-        </div>
-        {location && (
-          <div style={{
-            fontSize: 12,
-            color: colors.textSecondary,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>
-            {location}
-          </div>
-        )}
+      <div className={styles.info}>
+        <div className={styles.name} style={{ color: colors.accentBlue }}>{name}</div>
+        {location && <div className={styles.location}>{location}</div>}
       </div>
 
-      {/* Stats */}
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        {rating && (
-          <div style={{ fontSize: 16, fontWeight: 700, color: colors.textPrimary }}>
-            {Math.round(Number(rating))}
-          </div>
-        )}
+      <div className={styles.stats}>
+        {rating && <div className={styles.rating}>{Math.round(Number(rating))}</div>}
         {(wins > 0 || losses > 0) && (
-          <div style={{ fontSize: 11, color: colors.textSecondary }}>
-            {wins}W-{losses}L
-          </div>
+          <div className={styles.record}>{wins}W-{losses}L</div>
         )}
       </div>
-    </div>
+    </button>
   );
 }

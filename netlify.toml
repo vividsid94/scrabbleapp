@@ -65,6 +65,10 @@
     timeout = 15
     memory = 1024
 
+[functions.getTopPlayers]
+    timeout = 15
+    memory = 1024
+
 [functions.multiplayerGame]
     timeout = 15
     memory = 1024

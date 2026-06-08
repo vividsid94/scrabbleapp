@@ -372,19 +372,13 @@ export const searchPlayers = async (playerName) => {
  * @returns {Promise<Array>} Array of player summaries
  */
 export const getTopPlayers = async ({ lexicon = 'twl', limit = 25 } = {}) => {
-  try {
-    const params = new URLSearchParams();
-    if (lexicon) {
-      params.append('lexicon', lexicon);
-    }
-    params.append('limit', limit.toString());
-
-    const response = await axios.get(`/.netlify/functions/getTopPlayers?${params.toString()}`);
-    return response.data?.players || [];
-  } catch (error) {
-    console.error('Error fetching top players:', error);
-    return [];
+  const options = {};
+  if (lexicon && lexicon.toLowerCase() === 'csw') {
+    options.lexicon = 'csw';
   }
+  const players = await getPlayers(options);
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 25, 200));
+  return players.slice(0, safeLimit);
 };
 
 /**

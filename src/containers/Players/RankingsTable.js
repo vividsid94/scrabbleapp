@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SortableTable from '../../components/common/CrossTables/SortableTable';
 import PlayerLink from '../../components/common/CrossTables/PlayerLink';
+import PlayerCard from './PlayerCard';
+import styles from './RankingsTable.module.css';
 
-/**
- * Sortable rankings table for top players.
- */
-export default function RankingsTable({ players = [], lexicon = 'twl', colors, pageSize = 25 }) {
+export default function RankingsTable({ players = [], lexicon = 'twl', colors, pageSize = 25, startRank = 1 }) {
   const navigate = useNavigate();
+  const [mobilePage, setMobilePage] = useState(0);
+
+  useEffect(() => {
+    setMobilePage(0);
+  }, [lexicon, players.length]);
 
   const ratingField = lexicon === 'csw' ? 'cswrating' : 'twlrating';
   const rankField = lexicon === 'csw' ? 'cswrank' : 'twlrank';
@@ -91,16 +95,75 @@ export default function RankingsTable({ players = [], lexicon = 'twl', colors, p
     },
   ];
 
+  if (players.length === 0) {
+    return (
+      <div className={styles.empty} style={{ '--text-secondary': colors.textSecondary }}>
+        No players found
+      </div>
+    );
+  }
+
+  const sortedByRank = [...players].sort(
+    (a, b) => (Number(a[rankField] || a.rank) || 9999) - (Number(b[rankField] || b.rank) || 9999)
+  );
+  const totalMobilePages = Math.ceil(sortedByRank.length / pageSize);
+  const mobileSlice = sortedByRank.slice(mobilePage * pageSize, (mobilePage + 1) * pageSize);
+
   return (
-    <SortableTable
-      columns={columns}
-      data={players}
-      defaultSort={{ key: 'rank', direction: 'asc' }}
-      pageSize={pageSize}
-      onRowClick={(row) => row.playerid && navigate(`/player/${row.playerid}`)}
-      colors={colors}
-      rowKey={(row, i) => row.playerid || i}
-      emptyMessage="No players found"
-    />
+    <div
+      className={styles.container}
+      style={{
+        '--border': colors.border,
+        '--text-secondary': colors.textSecondary,
+        '--card-bg': colors.cardBg,
+      }}
+    >
+      <div className={styles.desktopTable}>
+        <SortableTable
+          columns={columns}
+          data={players}
+          defaultSort={{ key: 'rank', direction: 'asc' }}
+          pageSize={pageSize}
+          onRowClick={(row) => row.playerid && navigate(`/player/${row.playerid}`)}
+          colors={colors}
+          rowKey={(row, i) => row.playerid || i}
+          emptyMessage="No players found"
+        />
+      </div>
+
+      <div className={styles.mobileList}>
+        {mobileSlice.map((player, i) => (
+          <PlayerCard
+            key={player.playerid || i}
+            player={player}
+            rank={Number(player[rankField] || player.rank) || startRank + mobilePage * pageSize + i}
+            colors={colors}
+          />
+        ))}
+        {totalMobilePages > 1 && (
+          <div className={styles.mobilePagination}>
+            <button
+              className={styles.pageBtn}
+              disabled={mobilePage === 0}
+              onClick={() => setMobilePage((p) => p - 1)}
+              style={{ color: colors.accentBlue, borderColor: colors.border }}
+            >
+              Prev
+            </button>
+            <span className={styles.pageInfo}>
+              Page {mobilePage + 1} of {totalMobilePages}
+            </span>
+            <button
+              className={styles.pageBtn}
+              disabled={mobilePage >= totalMobilePages - 1}
+              onClick={() => setMobilePage((p) => p + 1)}
+              style={{ color: colors.accentBlue, borderColor: colors.border }}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

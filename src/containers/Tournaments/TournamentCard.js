@@ -1,10 +1,7 @@
 import React from 'react';
-import { Calendar, MapPin, Users } from '@phosphor-icons/react';
+import { Calendar, MapPin, Users, ArrowRight } from '@phosphor-icons/react';
+import styles from './TournamentCard.module.css';
 
-/**
- * Card for a single tournament with left-border accent.
- * Green = upcoming, Blue = recent.
- */
 export default function TournamentCard({ tournament, isUpcoming, colors, onClick }) {
   const accentColor = isUpcoming ? colors.accentGreen : colors.accentBlue;
   const name = tournament.name || tournament.tourneyname || tournament.mastername || 'Untitled';
@@ -23,75 +20,50 @@ export default function TournamentCard({ tournament, isUpcoming, colors, onClick
 
   return (
     <div
+      className={styles.card}
       onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); } }}
       style={{
-        backgroundColor: colors.cardBg,
-        border: `1px solid ${colors.border}`,
-        borderLeft: `4px solid ${accentColor}`,
-        borderRadius: 10,
-        padding: '18px 20px',
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = `0 6px 20px ${colors.shadow}`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
+        '--card-bg': colors.cardBg,
+        '--border': colors.border,
+        '--accent': accentColor,
+        '--text-primary': colors.textPrimary,
+        '--text-secondary': colors.textSecondary,
+        '--badge-bg': colors.badgeBg,
+        '--shadow': colors.shadow,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: colors.textPrimary, flex: 1 }}>
-          {name}
-        </div>
-        {type && (
-          <span style={{
-            fontSize: 11,
-            fontWeight: 500,
-            padding: '3px 8px',
-            borderRadius: 6,
-            backgroundColor: colors.badgeBg,
-            color: colors.textSecondary,
-            whiteSpace: 'nowrap',
-          }}>
-            {type}
-          </span>
-        )}
+      <div className={styles.cardHeader}>
+        <div className={styles.name}>{name}</div>
+        {type && <span className={styles.badge}>{type}</span>}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className={styles.meta}>
         {dateStr && (
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: colors.textSecondary }}>
-            <Calendar size={15} style={{ marginRight: 7, flexShrink: 0 }} />
+          <div className={styles.metaRow}>
+            <Calendar size={15} weight="duotone" />
             {dateStr}
           </div>
         )}
         {location && (
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: colors.textSecondary }}>
-            <MapPin size={15} style={{ marginRight: 7, flexShrink: 0 }} />
+          <div className={styles.metaRow}>
+            <MapPin size={15} weight="duotone" />
             {location}
           </div>
         )}
         {entrants !== undefined && entrants !== null && (
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: colors.textSecondary }}>
-            <Users size={15} style={{ marginRight: 7, flexShrink: 0 }} />
+          <div className={styles.metaRow}>
+            <Users size={15} weight="duotone" />
             {entrants} players
           </div>
         )}
       </div>
 
       {onClick && (
-        <div style={{
-          color: accentColor,
-          fontSize: 13,
-          fontWeight: 500,
-          marginTop: 14,
-          paddingTop: 12,
-          borderTop: `1px solid ${colors.border}`,
-        }}>
-          View Details →
+        <div className={styles.footer}>
+          View details <ArrowRight size={14} weight="bold" style={{ verticalAlign: -2, marginLeft: 4 }} />
         </div>
       )}
     </div>
