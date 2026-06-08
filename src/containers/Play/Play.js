@@ -612,6 +612,7 @@ export default function Play({ isMultiplayer = false }) {
   const [defenseWeight, setDefenseWeight] = useState(1.0);
   const [poolPreset, setPoolPreset] = useState('standard');
   const [bonusSquarePreset, setBonusSquarePreset] = useState('default');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   // Initialize sounds (simplified) - only once
   const [sounds, setSounds] = useState(null);
@@ -1744,27 +1745,21 @@ export default function Play({ isMultiplayer = false }) {
                 <>
             <Box 
               sx={{
-                    // Mobile: full-screen slideout. Desktop: in-flow panel that replaces scouting report.
                     position: { xs: 'fixed', sm: 'relative' },
-                    top: { xs: 0, sm: 'auto' },
+                    top: { xs: 'auto', sm: 'auto' },
                     left: { xs: 0, sm: 'auto' },
                     right: { xs: 0, sm: 'auto' },
                     bottom: { xs: 0, sm: 'auto' },
                     width: '100%',
-                    maxWidth: { xs: '100%', sm: '420px' },
-                    height: { xs: '100vh', sm: '100%' },
+                    maxWidth: { xs: '100%', sm: '500px', md: '540px' },
+                    height: { xs: 'auto', sm: 'auto' },
+                    maxHeight: { xs: 'min(92vh, 780px)', sm: 'min(85vh, 720px)' },
                     backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
-                    // Subtle border, no shadow for slideout feel
-                    border: lightMode === 'dark' 
-                      ? 'none' 
-                      : 'none',
                     borderLeft: { xs: 'none', sm: lightMode === 'dark' ? '1px solid rgba(139, 115, 85, 0.1)' : '1px solid rgba(200, 180, 150, 0.2)' },
-                    // Minimal shadow - just enough for depth, not modal-like
-                    boxShadow: { xs: 'none', sm: 'none' },
-                    borderRadius: { xs: '16px 16px 0 0', sm: 0 },
+                    boxShadow: { xs: '0 -8px 32px rgba(0,0,0,0.35)', sm: '0 4px 24px rgba(0,0,0,0.12)' },
+                    borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
                     padding: 0,
                     overflow: 'hidden',
-                    // Since this is conditionally rendered only when open, keep it visible (no off-canvas transform).
                     transform: 'none',
                     zIndex: { xs: 1300, sm: 2 },
                     display: 'flex',
@@ -1808,6 +1803,8 @@ export default function Play({ isMultiplayer = false }) {
                     Back
       </Box>
 
+                  {/* Slide panels wrapper */}
+                  <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                   {/* Bot Selection Content */}
           <Box
             sx={{
@@ -1821,22 +1818,21 @@ export default function Play({ isMultiplayer = false }) {
                       height: '100%',
               display: 'flex',
               flexDirection: 'column',
-                      padding: { xs: '14px 12px', sm: '16px 20px' },
-                      overflowY: 'auto',
-                      overflowX: 'hidden',
+                      overflow: 'hidden',
                       backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
                       color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                      gap: '8px',
                       flex: 1,
                       minHeight: 0,
                       boxSizing: 'border-box'
                     }}
                   >
-                    <Box sx={{ fontSize: { xs: '14px', sm: '14px' }, fontWeight: 700, textAlign: 'center', letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0.5 }}>
-                      Who will you play against today?
+                    <Box sx={{ flexShrink: 0, padding: { xs: '40px 16px 8px', sm: '40px 20px 8px' }, textAlign: 'center' }}>
+                      <Box sx={{ fontSize: { xs: '16px', sm: '17px' }, fontWeight: 700, letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                        Who will you play against today?
+                      </Box>
                     </Box>
-                    <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-                      <Box sx={{ marginTop: 1, width: '100%', maxWidth: '100%', maxHeight: { xs: '300px', sm: '240px' }, overflowY: 'auto', paddingRight: { xs: '12px', sm: '12px' }, boxSizing: 'border-box' }}>
+                    <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: { xs: '0 16px', sm: '0 20px' }, boxSizing: 'border-box' }}>
+                      <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                         {skillBots.map(bot => (
                           <Box
                             key={bot.name}
@@ -1870,8 +1866,8 @@ export default function Play({ isMultiplayer = false }) {
                           >
                             <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: { xs: '18px', sm: '18px' }, height: { xs: '18px', sm: '18px' }, '& img': { width: '100%', height: '100%', objectFit: 'contain' } }}>{bot.icon}</Box>
                             <Box sx={{ flex: 1, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
-                              <Box sx={{ fontWeight: 700, fontSize: { xs: '12px', sm: '11px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.name}</Box>
-                              <Box sx={{ fontSize: { xs: '10px', sm: '9px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.desc}</Box>
+                              <Box sx={{ fontWeight: 700, fontSize: { xs: '14px', sm: '13px' }, color: lightMode === 'dark' ? '#fff' : '#1F2937', marginBottom: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.name}</Box>
+                              <Box sx={{ fontSize: { xs: '12px', sm: '12px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bot.desc}</Box>
                             </Box>
                             <Box
                               component="button"
@@ -1883,10 +1879,10 @@ export default function Play({ isMultiplayer = false }) {
                   color: '#fff',
                                 border: 0,
                                 borderRadius: 3,
-                                padding: { xs: '4px 8px', sm: '3px 8px' },
+                                padding: { xs: '6px 10px', sm: '5px 10px' },
                                 fontWeight: 600,
                                 letterSpacing: 0.3,
-                                fontSize: { xs: '10px', sm: '9px' },
+                                fontSize: { xs: '12px', sm: '12px' },
                                 boxShadow: selectedBot.name === bot.name && !customBotSelected ? '3px 0px 0px #60A5FA' : '3px 0px 0px #374151',
                                 outline: 'transparent',
                                 cursor: 'pointer',
@@ -2068,20 +2064,28 @@ export default function Play({ isMultiplayer = false }) {
                       </Box>
                     </Box>
                     <Box
+                      sx={{
+                        flexShrink: 0,
+                        padding: { xs: '12px 16px 16px', sm: '12px 20px 16px' },
+                        borderTop: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
+                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                    <Box
                       component="button"
                       onClick={() => { setShowTimeControls(true); }}
                       sx={{
                         width: '100%',
                         maxWidth: '100%',
                         boxSizing: 'border-box',
-                        marginTop: 2,
                         background: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.9)' : 'rgba(217, 119, 6, 0.95)',
                         color: '#fff',
             border: 'none', 
                         borderRadius: 4,
-                        padding: { xs: '8px 12px', sm: '7px 12px' },
+                        padding: { xs: '12px 16px', sm: '11px 16px' },
                         fontWeight: 600,
-                        fontSize: { xs: '12px', sm: '11px' },
+                        fontSize: { xs: '14px', sm: '14px' },
                         cursor: 'pointer',
                         boxShadow: '0 1px 4px rgba(0, 0, 0, 0.15)',
                         transition: 'all 0.2s ease',
@@ -2095,6 +2099,7 @@ export default function Play({ isMultiplayer = false }) {
           }}
         >
                       Continue
+                    </Box>
                     </Box>
                   </Box>
 
@@ -2111,19 +2116,18 @@ export default function Play({ isMultiplayer = false }) {
               transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
               flexDirection: 'column',
-                      padding: { xs: '14px 12px', sm: '12px 12px' },
+              overflow: 'hidden',
               zIndex: 10,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-                      justifyContent: 'space-between',
-                      borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
               boxSizing: 'border-box'
             }}
           >
-                    <Box sx={{ fontSize: { xs: '14px', sm: '14px' }, fontWeight: 700, marginBottom: 0.5, textAlign: 'center', letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                    <Box sx={{ flexShrink: 0, padding: { xs: '40px 16px 8px', sm: '40px 20px 8px' }, textAlign: 'center' }}>
+                      <Box sx={{ fontSize: { xs: '16px', sm: '17px' }, fontWeight: 700, letterSpacing: '0.01em', color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
               Options
+                      </Box>
                     </Box>
-            
+
+                    <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: { xs: '0 16px', sm: '0 20px' }, boxSizing: 'border-box' }}>
             {/* Time Controls */}
             <Box sx={{ width: '100%', marginBottom: 2 }}>
                       <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 0.5, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -2161,8 +2165,8 @@ export default function Play({ isMultiplayer = false }) {
                             component="button"
                     onClick={() => setGameTime(time)}
                             sx={{
-                              padding: { xs: '4px 6px', sm: '3px 6px' },
-                              fontSize: { xs: '10px', sm: '9px' },
+                              padding: { xs: '6px 8px', sm: '6px 8px' },
+                              fontSize: { xs: '12px', sm: '12px' },
                       fontWeight: 600,
                               color: gameTime === time ? '#fff' : (lightMode === 'dark' ? 'rgba(255,255,255,0.8)' : '#374151'),
                               backgroundColor: gameTime === time ? '#3D5A80' : (lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0, 0, 0, 0.04)'),
@@ -2190,7 +2194,7 @@ export default function Play({ isMultiplayer = false }) {
                   value={selectedDictionary}
                   onChange={(e) => setSelectedDictionary(e.target.value)}
                   sx={{
-                            fontSize: { xs: '12px', sm: '11px' },
+                            fontSize: { xs: '14px', sm: '14px' },
                     fontWeight: 600,
                             color: lightMode === 'dark' ? '#fff' : '#1F2937',
                             backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
@@ -2215,11 +2219,49 @@ export default function Play({ isMultiplayer = false }) {
               </FormControl>
             </Box>
 
-            {/* Variants */}
+            {/* Variants — collapsed by default to reduce scroll */}
             <Box sx={{ width: '100%', marginBottom: 2 }}>
-                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Variants
-                      </Box>
+              <Box
+                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: { xs: '10px 12px', sm: '9px 12px' },
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: '#3D5A80',
+                    backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(61, 90, 128, 0.05)'
+                  }
+                }}
+              >
+                <Box>
+                  <Box sx={{ fontSize: { xs: '13px', sm: '13px' }, fontWeight: 600, color: lightMode === 'dark' ? '#fff' : '#1F2937' }}>
+                    Variants (optional)
+                  </Box>
+                  {!showAdvancedOptions && (randomizeBonusSquares || twoTurnsPerPlayer || variablePool) && (
+                    <Box sx={{ fontSize: { xs: '11px', sm: '11px' }, color: lightMode === 'dark' ? 'rgba(255,255,255,0.5)' : '#6B7280', marginTop: '2px' }}>
+                      Custom settings enabled
+                    </Box>
+                  )}
+                </Box>
+                <CaretDown
+                  size={16}
+                  weight="bold"
+                  color={lightMode === 'dark' ? 'rgba(255,255,255,0.7)' : '#6B7280'}
+                  style={{
+                    transform: showAdvancedOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }}
+                />
+              </Box>
+
+              <Collapse in={showAdvancedOptions}>
+            <Box sx={{ marginTop: 1 }}>
               
               {/* Randomize Bonus Squares */}
               <Box sx={{ marginBottom: 1 }}>
@@ -2494,10 +2536,12 @@ export default function Play({ isMultiplayer = false }) {
                 </Collapse>
               </Box>
             </Box>
+              </Collapse>
+            </Box>
 
             {/* Move Coach & Theo Yell Toggles - Grouped, Mutually Exclusive */}
-            <Box sx={{ width: '100%', marginTop: 1, marginBottom: 'auto' }}>
-                      <Box sx={{ fontSize: { xs: '10px', sm: '10px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Box sx={{ width: '100%', marginTop: 1, marginBottom: 2 }}>
+                      <Box sx={{ fontSize: { xs: '11px', sm: '11px' }, fontWeight: 600, marginBottom: 1, color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Analysis Mode
                       </Box>
               
@@ -2715,8 +2759,20 @@ export default function Play({ isMultiplayer = false }) {
                 />
               </Box>
             </Box>
+                    </Box>
 
-            <Box sx={{ display: 'flex', gap: { xs: 6, sm: 6 }, width: '100%', maxWidth: '100%', marginTop: 2, paddingTop: 0, boxSizing: 'border-box' }}>
+            <Box
+              sx={{
+                flexShrink: 0,
+                display: 'flex',
+                gap: { xs: 8, sm: 8 },
+                width: '100%',
+                padding: { xs: '12px 16px 16px', sm: '12px 20px 16px' },
+                borderTop: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
+                backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                boxSizing: 'border-box'
+              }}
+            >
                       <Box
                         component="button"
                 onClick={() => setShowTimeControls(false)}
@@ -2727,9 +2783,9 @@ export default function Play({ isMultiplayer = false }) {
                           color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   border: 'none',
                   borderRadius: 4,
-                          padding: { xs: '8px 12px', sm: '7px 12px' },
+                          padding: { xs: '12px 16px', sm: '11px 16px' },
                   fontWeight: 600,
-                          fontSize: { xs: '12px', sm: '11px' },
+                          fontSize: { xs: '14px', sm: '14px' },
                   cursor: 'pointer',
                           boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
                           transition: 'all 0.2s ease',
@@ -2750,9 +2806,9 @@ export default function Play({ isMultiplayer = false }) {
                           color: '#fff',
                   border: 'none',
                   borderRadius: 4,
-                          padding: { xs: '8px 12px', sm: '7px 12px' },
+                          padding: { xs: '12px 16px', sm: '11px 16px' },
                   fontWeight: 600,
-                          fontSize: { xs: '12px', sm: '11px' },
+                          fontSize: { xs: '14px', sm: '14px' },
                   cursor: 'pointer',
                           boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
                           transition: 'all 0.2s ease',
@@ -2769,7 +2825,8 @@ export default function Play({ isMultiplayer = false }) {
                       </Box>
                     </Box>
             </Box>
-          </Box>
+                  </Box>
+            </Box>
 
                 {/* Backdrop for mobile */}
                 {botSelectOpen && (
