@@ -7,6 +7,38 @@
     }
 }
 
+.navAuthButton {
+  background: linear-gradient(45deg, transparent 5%, #D97706 5%);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  box-shadow: 4px 0 0 #B45309;
+  outline: none;
+  width: auto;
+  white-space: nowrap;
+  cursor: pointer;
+  line-height: 1.25;
+  height: auto;
+  min-height: 0;
+  flex-shrink: 0;
+  align-self: center;
+  transition: opacity 0.2s ease;
+}
+
+.navAuthButton:hover {
+  opacity: 0.92;
+}
+
+.navAuthLink {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
 @media screen and (min-width: 993px) {
     .myAppBar {
         display: none !important;

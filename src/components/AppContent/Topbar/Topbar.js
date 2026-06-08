@@ -5,7 +5,6 @@ import { ThemeContext } from '../../../App';
 import AuthModal from '../../Auth/AuthModal';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './Topbar.module.css';
-import homeStyles from '../../../containers/Home/Home.module.css';
 
 export default function Topbar() {
   const { lightMode } = useContext(ThemeContext);
@@ -22,8 +21,7 @@ export default function Topbar() {
           {!user ? (
             <>
               <button
-                className={homeStyles.secondaryButton}
-                style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
+                className={styles.navAuthButton}
                 onClick={() => {
                   setAuthMode('signin');
                   setShowAuthModal(true);
@@ -34,11 +32,8 @@ export default function Topbar() {
             </>
           ) : (
             <>
-              <Link to="/profile" style={{ textDecoration: 'none' }}>
-                <button
-                  className={homeStyles.secondaryButton}
-                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
-                >
+              <Link to="/profile" className={styles.navAuthLink}>
+                <button className={styles.navAuthButton}>
                   {profile?.display_name || profile?.username || 'Profile'}
                 </button>
               </Link>
@@ -47,8 +42,7 @@ export default function Topbar() {
                   await signOut();
                   navigate('/');
                 }}
-                className={homeStyles.secondaryButton}
-                style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 20px' }}
+                className={styles.navAuthButton}
               >
                 Sign Out
               </button>

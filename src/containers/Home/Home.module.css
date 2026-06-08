@@ -307,7 +307,8 @@
   .modeButtonGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .secondaryButton {
+  .secondaryButtonsContainer .secondaryButton,
+  .modeButtonGrid .secondaryButton {
     padding: 8px 14px;
     font-size: 14px;
     min-height: 56px;

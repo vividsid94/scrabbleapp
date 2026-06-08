@@ -48,7 +48,6 @@ import AppleIcon from '@mui/icons-material/Apple';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import styles from './Sidenav.module.css';
-import homeStyles from '../../../containers/Home/Home.module.css';
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -124,7 +123,9 @@ export default function MiniDrawer() {
 
   const MyToolbar = styled(Toolbar)({
     display: "flex",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    alignItems: "center",
+    minHeight: "48px",
   });
 
   const handleClick = (event) => {
@@ -271,19 +272,15 @@ export default function MiniDrawer() {
                     setAuthMode('signin');
                     setShowAuthModal(true);
                   }}
-                  className={homeStyles.secondaryButton}
-                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
+                  className={styles.navAuthButton}
                 >
                   Account
                 </button>
               </Box>
             ) : (
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <Link to="/profile" style={{ textDecoration: 'none' }}>
-                  <button
-                    className={homeStyles.secondaryButton}
-                    style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
-                  >
+                <Link to="/profile" className={styles.navAuthLink}>
+                  <button className={styles.navAuthButton}>
                     {profile?.display_name || profile?.username || 'Profile'}
                   </button>
                 </Link>
@@ -292,8 +289,7 @@ export default function MiniDrawer() {
                     await signOut();
                     navigate('/');
                   }}
-                  className={homeStyles.secondaryButton}
-                  style={{ width: 'auto', whiteSpace: 'nowrap', padding: '10px 16px' }}
+                  className={styles.navAuthButton}
                 >
                   Sign Out
                 </button>
