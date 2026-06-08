@@ -3042,6 +3042,7 @@ export default function Play({ isMultiplayer = false }) {
         <MobileKeyboardOverlay
           visible={isMobile && gameStarted && !!selectedBoardPosition && !gameEnded}
           onKeyPress={triggerKeyFromOverlay}
+          onClose={() => setSelectedBoardPosition(null)}
           label="Type your move"
         />
 

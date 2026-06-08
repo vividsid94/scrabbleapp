@@ -433,6 +433,7 @@ export default function Puzzle() {
             metaKey: false, 
             preventDefault: () => {} 
           })}
+          onClose={() => setSelectedBoardPosition(null)}
           label="Type your puzzle guess"
         />
 

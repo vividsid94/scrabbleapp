@@ -9,9 +9,10 @@ import styles from './MobileKeyboardOverlay.module.css';
  * Props:
  * - visible: boolean – whether to render the overlay
  * - onKeyPress: (key: string) => void – called with letter / 'Backspace' / 'Enter'
+ * - onClose?: () => void – dismiss the keyboard overlay
  * - label?: string – optional label text above keyboard (e.g. mode or hint)
  */
-export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
+export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, label }) {
   const { lightMode } = useContext(ThemeContext);
 
   if (!visible) return null;
@@ -19,18 +20,36 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
   const isDark = lightMode === 'dark';
   const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
   const keyClass = isDark ? styles.keyDark : styles.keyLight;
-  const wideKeyClass = isDark ? styles.keyWideDark : styles.keyWideLight;
+  const backspaceClass = isDark ? styles.backspaceBtnDark : styles.backspaceBtnLight;
+  const exitClass = isDark ? styles.exitBtnDark : styles.exitBtnLight;
 
   return (
     <Box
       className={`${styles.overlay} ${isDark ? styles.overlayDark : styles.overlayLight}`}
       onTouchStart={(e) => e.stopPropagation()}
     >
-      {label && (
-        <Box className={`${styles.label} ${isDark ? styles.labelDark : styles.labelLight}`}>
-          {label}
+      <Box className={styles.header}>
+        {label && (
+          <Box className={`${styles.label} ${isDark ? styles.labelDark : styles.labelLight}`}>
+            {label}
+          </Box>
+        )}
+        <Box
+          className={`${styles.headerBtn} ${backspaceClass}`}
+          onClick={() => onKeyPress && onKeyPress('Backspace')}
+          aria-label="Backspace"
+        >
+          ⌫
         </Box>
-      )}
+        <Box
+          className={`${styles.headerBtn} ${exitClass}`}
+          onClick={() => onClose && onClose()}
+          aria-label="Close keyboard"
+        >
+          ✕
+        </Box>
+      </Box>
+
       {rows.map((row, rowIndex) => (
         <Box key={row} className={styles.row}>
           {row.split('').map((letter) => (
@@ -43,20 +62,12 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, label }) {
             </Box>
           ))}
           {rowIndex === 2 && (
-            <>
-              <Box
-                className={`${styles.key} ${styles.keyWide} ${wideKeyClass}`}
-                onClick={() => onKeyPress && onKeyPress('Backspace')}
-              >
-                Del
-              </Box>
-              <Box
-                className={`${styles.key} ${styles.keyWide} ${styles.keyPrimary}`}
-                onClick={() => onKeyPress && onKeyPress('Enter')}
-              >
-                Go
-              </Box>
-            </>
+            <Box
+              className={`${styles.key} ${styles.keyPrimary}`}
+              onClick={() => onKeyPress && onKeyPress('Enter')}
+            >
+              Go
+            </Box>
           )}
         </Box>
       ))}
