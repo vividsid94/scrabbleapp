@@ -137,28 +137,19 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
         <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
-          <Box
-            onClick={() => !isBotThinking && handleBotModeToggle()}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '4px',
-              cursor: isBotThinking ? 'not-allowed' : 'pointer',
-            }}
-          >
             <Robot
-              size={20}
               weight="fill"
-              className={`${styles.keyBtn} ${styles.botIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
+              className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
               style={{
+                fontSize: 20,
                 cursor: isBotThinking ? 'not-allowed' : 'pointer',
                 color: lightMode === 'dark'
                   ? (gameStarted ? '#FF9800' : '#4CAF50')
                   : (gameStarted ? '#EA580C' : '#059669'),
+                marginRight: '4px',
               }}
+              onClick={() => !isBotThinking && handleBotModeToggle()}
             />
-          </Box>
         </Tooltip>
         <Tooltip title="Puzzle Mode">
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -276,7 +267,6 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
               onClick={() => {
-                console.log(' Reset rack clicked');
                 clearPuzzlePlacement();
               }}
             />

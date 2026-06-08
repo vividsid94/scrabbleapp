@@ -379,16 +379,12 @@
     font-size: 14px;
   }
   
-  .playerToggle .keyBtn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    min-height: 40px;
-    width: 40px;
-    height: 40px;
-    padding: 8px;
-    box-sizing: border-box;
+  .keyBtn {
+    font-size: 18px !important;
+    line-height: 18px !important;
+    height: 32px;
+    width: 32px;
+    padding: 6px;
   }
   .mainBox{
     padding: 16px !important;
