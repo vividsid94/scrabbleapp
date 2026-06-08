@@ -37,7 +37,7 @@ import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
 import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
 import WordStorm from "./containers/WordStorm/WordStorm";
 import ScrabbleDash from "./containers/ScrabbleDash/ScrabbleDash";
-import { useColorSchemeStore } from "./stores/colorSchemeStore";
+import { useColorSchemeStore, getDefaultTileColor, LEGACY_TILE_DEFAULTS } from "./stores/colorSchemeStore";
 import { useGameStore } from "./stores/gameStore";
 import { AuthProvider } from "./contexts/AuthContext";
 import Topbar from "./components/AppContent/Topbar/Topbar";
@@ -189,8 +189,7 @@ function App() {
             profile.theme_preference === 'dark' || profile.theme_preference === 'light'
               ? profile.theme_preference
               : lightMode;
-          const protilesColor = effectiveTheme === 'dark' ? '#92400E' : '#C47F36';
-          updateColor(protilesColor);
+          updateColor(getDefaultTileColor(effectiveTheme));
         }
 
         // Board color
@@ -236,6 +235,29 @@ function App() {
     setPlayerMoveSoundType,
     setBotMoveSoundType,
   ]);
+
+  // Guests without a saved tile color: match protile tint to light/dark theme
+  useEffect(() => {
+    let cancelled = false;
+    const syncGuestTileColor = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled || session?.user) return;
+
+      const { color, updateColor: setTileColor } = useColorSchemeStore.getState();
+      const defaultForTheme = getDefaultTileColor(lightMode);
+      const otherThemeDefault = getDefaultTileColor(lightMode === 'dark' ? 'light' : 'dark');
+      // Only reset when still on a theme default (not a custom pick from the color picker)
+      if (
+        color.current === defaultForTheme ||
+        color.current === otherThemeDefault ||
+        LEGACY_TILE_DEFAULTS.includes(color.current)
+      ) {
+        setTileColor(defaultForTheme);
+      }
+    };
+    syncGuestTileColor();
+    return () => { cancelled = true; };
+  }, [lightMode]);
   
   // Keep CSS custom properties in sync with store
   useEffect(() => {
