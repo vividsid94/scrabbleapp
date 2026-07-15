@@ -441,7 +441,7 @@ export const useGameStore = create((set, get) => {
     getBoardDiff: (beforeBoard, afterBoard) => getBoardDiff(beforeBoard, afterBoard),
     
     // Game initialization actions
-    initializeGame: (origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound) => {
+    initializeGame: (origBoard, origPool, gameStartSound, botMoveSound) => {
       const { setBoardCoords, setTempBoardCoords, setOrigBoardCoords, setIsDictionaryLoading, premiumSquares } = get();
       
       // Initialize board - if premiumSquares are set, use empty board (all zeros)

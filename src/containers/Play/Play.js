@@ -22,7 +22,6 @@ import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
 import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
 import { ThemeContext } from '../../App';
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
-import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { createBoard } from "../../functions/boardFunctions.js";
 import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
@@ -634,7 +633,7 @@ export default function Play({ isMultiplayer = false }) {
   // Initialize game using store action
   useEffect(() => {
     if (sounds) {
-      initializeGame(origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound);
+      initializeGame(origBoard, origPool, gameStartSound, botMoveSound);
     }
   }, [sounds]);
 

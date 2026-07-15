@@ -251,7 +251,7 @@ const Scrabble3DPlay = () => {
   // Initialize game if not started
   useEffect(() => {
     if (sounds && !gameStarted) {
-      initializeGame(origBoard, origPool, TEST_RACKS, gameStartSound, botMoveSound);
+      initializeGame(origBoard, origPool, gameStartSound, botMoveSound);
     }
   }, [sounds, gameStarted, initializeGame, gameStartSound, botMoveSound]);
 

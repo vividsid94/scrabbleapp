@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:scrabblecam.com)",
-      "Bash(grep -n \"Topbar\\\\|topBar\\\\|height\\\\|52\\\\|60\\\\|64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/Topbar.module.css 2>/dev/null | head -20\ngrep -rn \"height.*52\\\\|height.*60\\\\|height.*64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/ 2>/dev/null | head -10)"
+      "Bash(grep -n \"Topbar\\\\|topBar\\\\|height\\\\|52\\\\|60\\\\|64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/Topbar.module.css 2>/dev/null | head -20\ngrep -rn \"height.*52\\\\|height.*60\\\\|height.*64\" C:/Users/Sid/Documents/GitHub/scrabbleapp/src/components/AppContent/Topbar/ 2>/dev/null | head -10)",
+      "Bash(chromium-cli --help)",
+      "Bash(node -e \"console.log\\(require\\('fs'\\).existsSync\\('node_modules/playwright'\\)\\)\")",
+      "Bash(timeout 180 npx react-scripts build)",
+      "Bash(CI=true timeout 120 npx react-scripts test --watchAll=false --testPathPattern=\"Play\\\\.\\(test|simple|integration\\)\")"
     ]
   }
 }
