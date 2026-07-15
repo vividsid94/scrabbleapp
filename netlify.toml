@@ -73,6 +73,13 @@
     timeout = 15
     memory = 1024
 
+# Keeps the Railway-hosted bot move-generator warm so it doesn't cold-start
+# (runs every 10 minutes, regardless of site traffic)
+[functions.pingBotService]
+    schedule = "*/10 * * * *"
+    timeout = 15
+    memory = 1024
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
