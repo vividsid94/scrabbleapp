@@ -195,10 +195,8 @@ export const handleKeyDown = ({
               setPlayer2Rack(alphabetizeRack(newRack));
             }
 
-            // Remove from blankTiles if it was a blank
-            if (placedTile.tile === '*') {
-              setBlankTiles(prev => prev.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
-            }
+            // Clear this square from blankTiles (no-op if it wasn't a blank)
+            setBlankTiles(blankTiles.filter(tile => !(tile.row === lastRow && tile.col === lastCol)));
 
             // Update selectedTiles to match what's actually on the board
             const currentSelectedTiles = selectedTiles || [];
