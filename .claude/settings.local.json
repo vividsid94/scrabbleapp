@@ -8,7 +8,16 @@
       "Bash(timeout 180 npx react-scripts build)",
       "Bash(CI=true timeout 120 npx react-scripts test --watchAll=false --testPathPattern=\"Play\\\\.\\(test|simple|integration\\)\")",
       "Bash(node -e \"console.log\\(require.resolve\\('@netlify/functions'\\)\\)\")",
-      "Bash(node --check netlify_functions/pingBotService.js)"
+      "Bash(node --check netlify_functions/pingBotService.js)",
+      "Bash(grep -A25 \"^src\\\\\\\\\\\\\\\\containers\\\\\\\\\\\\\\\\Scrabble3D\\\\\\\\\\\\\\\\Scrabble3DPlay.js$\" /tmp/build3.txt)",
+      "Bash(sed -n '/Scrabble3DPlay.js$/,/^$/p' /tmp/build4.txt)",
+      "Bash(grep -n \"Scrabble3D.js$\" /tmp/build13.txt)",
+      "Bash(grep -n \"scrabble3DScene.js\\\\|Scrabble3DPlay.js$\\\\|Scrabble3D.js$\" /tmp/build14.txt)",
+      "Bash(grep -n \"Failed to compile\\\\|Scrabble3DPlay.js$\" /tmp/build15.txt)",
+      "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build16.txt)",
+      "Bash(sed -n '/Scrabble3DPlay.js$/,/^$/p' /tmp/build16.txt)",
+      "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build17.txt)",
+      "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build18.txt)"
     ]
   }
 }

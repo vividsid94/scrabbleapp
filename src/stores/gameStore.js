@@ -585,7 +585,7 @@ export const useGameStore = create((set, get) => {
       // Set game started state
       setGameStarted(true);
       setTimerActive(true);
-      
+
       // Import and call the startBotGame function with updated pool
       import('../functions/play/botFunctions').then(({ startBotGame: startBotGameFunction }) => {
         startBotGameFunction({ ...params, origPool: poolToUse });

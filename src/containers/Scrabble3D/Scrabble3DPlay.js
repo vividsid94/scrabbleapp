@@ -28,7 +28,6 @@ import {
   MATERIALS,
   ENVIRONMENT,
   TABLE,
-  FUTON,
   BOARD,
   RACK,
   TILE,
@@ -39,6 +38,17 @@ import {
   PRELOAD
 } from './constants';
 import { createBoard as createBoardScene } from './scrabble3DScene';
+import {
+  createFloorAndRug,
+  createTableSurface,
+  createChairs,
+  createScoresheetBase,
+  paintScoresheet,
+  createBrassStandingConsole,
+  paintScoreboardConsole,
+  loadFoxCrestIcon,
+  attachTileLetter
+} from './scrabble3DDecor';
 
 // Preload all protile images
 let allLetters = PRELOAD.LETTERS;
@@ -132,6 +142,7 @@ const Scrabble3DPlay = () => {
   const botThinkingRef = useRef(false);
   const boardTurnSpeed = 0.06; // Lerp factor for board rotation
   const timerRef = useRef(null);
+  const foxIconRef = useRef(null); // Gold-tinted fox crest, pre-rendered once for the scoreboard
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [needsRender, setNeedsRender] = useState(true);
@@ -246,6 +257,16 @@ const Scrabble3DPlay = () => {
     setSounds(soundObjects);
   }, []);
 
+  // Pre-render the fox crest once, tinted brass gold, so the scoreboard can
+  // just drawImage() it on every update instead of re-tinting every frame
+  useEffect(() => {
+    loadFoxCrestIcon((tintedIcon) => {
+      foxIconRef.current = tintedIcon;
+      updateScoreboard();
+      setNeedsRender(true);
+    });
+  }, []);
+
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
   // Initialize game if not started
@@ -284,24 +305,56 @@ const Scrabble3DPlay = () => {
     const w = clock.drawW;
     const h = clock.drawH;
     const ctx = clock.context;
-    const C = TABLE.CLOCK.DISPLAY;
-    ctx.fillStyle = C.COLOR_BG;
+
+    // Dark glass background, warm rather than cold
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, h);
+    bgGradient.addColorStop(0, '#1a1410');
+    bgGradient.addColorStop(0.5, '#0d0906');
+    bgGradient.addColorStop(1, '#1a1410');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = C.COLOR_TEXT;
+
+    // Brass frame, same palette as the scoreboard
+    const brassGradient = ctx.createLinearGradient(0, 0, w, h);
+    brassGradient.addColorStop(0, '#FDE68A');
+    brassGradient.addColorStop(0.5, '#D97706');
+    brassGradient.addColorStop(1, '#92400E');
+    ctx.strokeStyle = brassGradient;
+    ctx.lineWidth = 5;
+    ctx.strokeRect(4, 4, w - 8, h - 8);
+
     ctx.textBaseline = 'middle';
-    // Left half: current player (you) time
-    const leftCenter = w * 0.28;
-    ctx.font = 'bold 44px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(current === 1 ? 'You' : isBot ? botLabel : 'P2', leftCenter, h * 0.35);
-    ctx.font = 'bold 80px monospace';
-    ctx.fillText(formatTime(current === 1 ? p1Time : p2Time), leftCenter, h * 0.62);
-    // Right half: other player (bot) time
+
+    // Left half always shows whoever's turn it is right now, lit up bright
+    const leftCenter = w * 0.28;
+    ctx.fillStyle = '#FDE68A';
+    ctx.font = '700 40px "Palatino Linotype", Georgia, serif';
+    ctx.fillText(current === 1 ? 'You' : isBot ? botLabel : 'P2', leftCenter, h * 0.32);
+    ctx.shadowColor = 'rgba(245, 158, 11, 0.95)';
+    ctx.shadowBlur = 26;
+    ctx.fillStyle = '#FBBF24';
+    ctx.font = '700 76px "Courier New", monospace';
+    ctx.fillText(formatTime(current === 1 ? p1Time : p2Time), leftCenter, h * 0.65);
+    ctx.shadowBlur = 0;
+
+    // Right half is the other player's clock, dimmed since it isn't running
     const rightCenter = w * 0.72;
-    ctx.font = 'bold 44px monospace';
-    ctx.fillText(current === 1 ? (isBot ? botLabel : 'P2') : 'You', rightCenter, h * 0.35);
-    ctx.font = 'bold 80px monospace';
-    ctx.fillText(formatTime(current === 1 ? p2Time : p1Time), rightCenter, h * 0.62);
+    ctx.fillStyle = 'rgba(253, 230, 138, 0.5)';
+    ctx.font = '700 40px "Palatino Linotype", Georgia, serif';
+    ctx.fillText(current === 1 ? (isBot ? botLabel : 'P2') : 'You', rightCenter, h * 0.32);
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.45)';
+    ctx.font = '700 76px "Courier New", monospace';
+    ctx.fillText(formatTime(current === 1 ? p2Time : p1Time), rightCenter, h * 0.65);
+
+    // Brass center divider
+    ctx.strokeStyle = brassGradient;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(w / 2, h * 0.12);
+    ctx.lineTo(w / 2, h * 0.88);
+    ctx.stroke();
+
     clock.texture.needsUpdate = true;
   }, []);
 
@@ -311,11 +364,14 @@ const Scrabble3DPlay = () => {
     setNeedsRender(true);
   }, [player1Time, player2Time, currentPlayer, moveHistory, updateClockDisplay]);
 
-  // Start game timer when active (so 3D clock ticks)
+  // Start game timer when active (so 3D clock ticks). currentPlayer must be a
+  // dependency here: startTimer() captures currentPlayer in its setInterval
+  // closure once and never re-reads it, so without this the interval keeps
+  // ticking down whichever player was active when it was first created.
   useEffect(() => {
     if (!timerActive || !gameStarted) return;
     return startTimer(timerRef);
-  }, [timerActive, gameStarted, startTimer]);
+  }, [timerActive, gameStarted, currentPlayer, startTimer]);
 
   // Three.js Scene Setup
   useEffect(() => {
@@ -390,7 +446,10 @@ const Scrabble3DPlay = () => {
     const boardGroup = new THREE.Group();
     scene.add(boardGroup);
     boardGroupRef.current = boardGroup;
-    // Board from shared scene module - identical to 3D viewer, no grey patch
+    // Board from shared scene module - identical to 3D viewer, no grey patch.
+    // Coordinate lettering is created inside this shared function too, so it
+    // rotates rigidly with the board when it turns to face the bot - an
+    // unmistakable "which way is it turned" cue built into the board itself.
     createBoardScene(scene, {
       resourcesRef,
       origBoard,
@@ -418,7 +477,6 @@ const Scrabble3DPlay = () => {
     createScoreboard(scene);
     createClock(scene);
     updateClockDisplay();
-    createBlankSlip(scene);
 
     // Animation loop
     let lastTime = 0;
@@ -565,14 +623,6 @@ const Scrabble3DPlay = () => {
     updateScoreboard();
     setNeedsRender(true);
   }, [player1points, player2points, moveHistory, player1Name, player2Name]);
-
-  // Update blank slip when blanks are played
-  useEffect(() => {
-    if (sceneRef.current?.blankSlip) {
-      updateBlankSlip();
-      setNeedsRender(true);
-    }
-  }, [blankTiles, tempBoardCoords]);
 
   // Calculate preview score when tiles are placed (same as 2D Play component)
   useEffect(() => {
@@ -840,39 +890,8 @@ const Scrabble3DPlay = () => {
 
   // Helper functions for 3D scene
   const createMagicalEnvironment = (scene) => {
-    // Floor
-    const floorGeometry = new THREE.PlaneGeometry(ENVIRONMENT.FLOOR.WIDTH, ENVIRONMENT.FLOOR.HEIGHT);
-    const floorMaterial = new THREE.MeshPhongMaterial({
-      color: MATERIALS.FLOOR.COLOR,
-      transparent: true,
-      opacity: MATERIALS.FLOOR.OPACITY,
-      shininess: MATERIALS.FLOOR.SHININESS
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = ENVIRONMENT.FLOOR.Y_POSITION;
-    floor.receiveShadow = true;
-    scene.add(floor);
-    resourcesRef.current.geometries.push(floorGeometry);
-    resourcesRef.current.materials.push(floorMaterial);
-    resourcesRef.current.meshes.push(floor);
-
-    // Carpet
-    const carpetGeometry = new THREE.PlaneGeometry(60, 45);
-    const carpetMaterial = new THREE.MeshPhongMaterial({
-      color: 0x8B0000,
-      transparent: true,
-      opacity: 1.0,
-      shininess: 5
-    });
-    const carpet = new THREE.Mesh(carpetGeometry, carpetMaterial);
-    carpet.rotation.x = -Math.PI / 2;
-    carpet.position.y = ENVIRONMENT.FLOOR.Y_POSITION + 0.05;
-    carpet.receiveShadow = true;
-    scene.add(carpet);
-    resourcesRef.current.geometries.push(carpetGeometry);
-    resourcesRef.current.materials.push(carpetMaterial);
-    resourcesRef.current.meshes.push(carpet);
+    // Wood-plank floor + hunter-green rug (shared with the 3D viewer)
+    createFloorAndRug(scene, resourcesRef);
 
     // Lamps
     const lamps = [];
@@ -947,141 +966,106 @@ const Scrabble3DPlay = () => {
   };
 
   const createTableAndChairs = (scene) => {
-    // Table
-    const tableGeometry = new THREE.BoxGeometry(TABLE.WIDTH, TABLE.HEIGHT, TABLE.DEPTH);
-    const tableMaterial = new THREE.MeshPhongMaterial({
-      color: TABLE.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.MATERIAL.OPACITY,
-      shininess: TABLE.MATERIAL.SHININESS
-    });
-    const table = new THREE.Mesh(tableGeometry, tableMaterial);
-    table.position.y = TABLE.Y_POSITION;
-    table.castShadow = true;
-    table.receiveShadow = true;
-    scene.add(table);
-    resourcesRef.current.geometries.push(tableGeometry);
-    resourcesRef.current.materials.push(tableMaterial);
-    resourcesRef.current.meshes.push(table);
+    // Table with honey-oak top + legs (shared with the 3D viewer)
+    createTableSurface(scene, resourcesRef);
 
     // Racks
     createPlayerRacks(scene);
 
-    // Table legs
-    const legGeometry = new THREE.BoxGeometry(TABLE.LEG.WIDTH, TABLE.LEG.HEIGHT, TABLE.LEG.DEPTH);
-    const legMaterial = new THREE.MeshPhongMaterial({
-      color: TABLE.LEG.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.LEG.MATERIAL.OPACITY,
-      shininess: TABLE.LEG.MATERIAL.SHININESS
-    });
-
-    TABLE.LEG.POSITIONS.forEach(pos => {
-      const leg = new THREE.Mesh(legGeometry, legMaterial);
-      leg.position.set(...pos);
-      leg.castShadow = true;
-      scene.add(leg);
-      resourcesRef.current.meshes.push(leg);
-    });
-
-    resourcesRef.current.geometries.push(legGeometry);
-    resourcesRef.current.materials.push(legMaterial);
-
-    // Futons
-    FUTON.POSITIONS.forEach((pos, index) => {
-      const cushionGeometry = new THREE.BoxGeometry(FUTON.CUSHION.WIDTH, FUTON.CUSHION.HEIGHT, FUTON.CUSHION.DEPTH);
-      const cushionMaterial = new THREE.MeshPhongMaterial({
-        color: FUTON.CUSHION.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.CUSHION.MATERIAL.OPACITY,
-        shininess: FUTON.CUSHION.MATERIAL.SHININESS
-      });
-      const cushion = new THREE.Mesh(cushionGeometry, cushionMaterial);
-      cushion.position.set(pos.x, FUTON.CUSHION.Y_POSITION, pos.z);
-      cushion.castShadow = true;
-      scene.add(cushion);
-      resourcesRef.current.geometries.push(cushionGeometry);
-      resourcesRef.current.materials.push(cushionMaterial);
-      resourcesRef.current.meshes.push(cushion);
-
-      const backCushionGeometry = new THREE.BoxGeometry(FUTON.BACK_CUSHION.WIDTH, FUTON.BACK_CUSHION.HEIGHT, FUTON.BACK_CUSHION.DEPTH);
-      const backCushionMaterial = new THREE.MeshPhongMaterial({
-        color: FUTON.BACK_CUSHION.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.BACK_CUSHION.MATERIAL.OPACITY,
-        shininess: FUTON.BACK_CUSHION.MATERIAL.SHININESS
-      });
-      const backCushion = new THREE.Mesh(backCushionGeometry, backCushionMaterial);
-      backCushion.position.set(pos.x, FUTON.BACK_CUSHION.Y_POSITION, pos.z + (pos.rotation === 0 ? -FUTON.BACK_CUSHION.Z_OFFSET : FUTON.BACK_CUSHION.Z_OFFSET));
-      scene.add(backCushion);
-      resourcesRef.current.geometries.push(backCushionGeometry);
-      resourcesRef.current.materials.push(backCushionMaterial);
-      resourcesRef.current.meshes.push(backCushion);
-
-      const frameGeometry = new THREE.BoxGeometry(FUTON.FRAME.WIDTH, FUTON.FRAME.HEIGHT, FUTON.FRAME.DEPTH);
-      const frameMaterial = new THREE.MeshPhongMaterial({
-        color: FUTON.FRAME.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.FRAME.MATERIAL.OPACITY,
-        shininess: FUTON.FRAME.MATERIAL.SHININESS
-      });
-      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-      frame.position.set(pos.x, FUTON.FRAME.Y_POSITION, pos.z);
-      scene.add(frame);
-      resourcesRef.current.geometries.push(frameGeometry);
-      resourcesRef.current.materials.push(frameMaterial);
-      resourcesRef.current.meshes.push(frame);
-    });
+    // Tufted leather club chairs (shared with the 3D viewer)
+    createChairs(scene, resourcesRef);
   };
 
   const createPlayerRacks = (scene) => {
+    // Warm walnut wood-grain texture, matching the board's new look
+    const woodCanvas = document.createElement('canvas');
+    woodCanvas.width = 512;
+    woodCanvas.height = 128;
+    const woodCtx = woodCanvas.getContext('2d');
+    const woodGradient = woodCtx.createLinearGradient(0, 0, 0, woodCanvas.height);
+    woodGradient.addColorStop(0, '#8a5a34');
+    woodGradient.addColorStop(0.5, '#6b4226');
+    woodGradient.addColorStop(1, '#4a2f1a');
+    woodCtx.fillStyle = woodGradient;
+    woodCtx.fillRect(0, 0, woodCanvas.width, woodCanvas.height);
+    woodCtx.globalCompositeOperation = 'overlay';
+    for (let i = 0; i < 50; i++) {
+      const y = Math.random() * woodCanvas.height;
+      woodCtx.strokeStyle = Math.random() > 0.5 ? 'rgba(255, 220, 180, 0.12)' : 'rgba(30, 15, 5, 0.18)';
+      woodCtx.lineWidth = 0.6 + Math.random() * 1.4;
+      woodCtx.beginPath();
+      woodCtx.moveTo(0, y);
+      for (let x = 0; x <= woodCanvas.width; x += 24) {
+        const yy = y + Math.sin(x * 0.03 + i) * 3 + (Math.random() - 0.5) * 2;
+        woodCtx.lineTo(x, yy);
+      }
+      woodCtx.stroke();
+    }
+    woodCtx.globalCompositeOperation = 'source-over';
+    const woodTexture = new THREE.CanvasTexture(woodCanvas);
+    woodTexture.wrapS = THREE.RepeatWrapping;
+    woodTexture.wrapT = THREE.RepeatWrapping;
+    woodTexture.repeat.set(2, 1);
+    woodTexture.needsUpdate = true;
+
     const rackMaterial = new THREE.MeshPhongMaterial({
-      color: RACK.MATERIAL.COLOR,
+      map: woodTexture,
       transparent: true,
       opacity: RACK.MATERIAL.OPACITY,
-      shininess: RACK.MATERIAL.SHININESS
+      shininess: 70
+    });
+
+    // Brass cap along the back wall's top edge, matching the board's gold coordinate lettering
+    const brassMaterial = new THREE.MeshPhongMaterial({
+      color: 0xd97706,
+      emissive: 0x92400e,
+      emissiveIntensity: 0.15,
+      shininess: 120
     });
 
     const pos1 = rackPositionsRef.current.player1;
     const pos2 = rackPositionsRef.current.player2;
+    const trimHeight = 0.08;
+
+    const buildRack = (pos, slantSign, trackedMeshes) => {
+      const baseGeometry = new RoundedBoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH, 3, 0.03);
+      const base = new THREE.Mesh(baseGeometry, rackMaterial);
+      base.position.set(pos.x, pos.y, pos.z);
+      base.rotation.x = slantSign * RACK.SLANT_ANGLE;
+      base.castShadow = true;
+      scene.add(base);
+      resourcesRef.current.geometries.push(baseGeometry);
+      resourcesRef.current.meshes.push(base);
+
+      const backGeometry = new RoundedBoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH, 3, 0.03);
+      const back = new THREE.Mesh(backGeometry, rackMaterial);
+      back.position.set(pos.x, pos.backY, pos.backZ);
+      back.rotation.x = slantSign * RACK.SLANT_ANGLE;
+      scene.add(back);
+      resourcesRef.current.geometries.push(backGeometry);
+      resourcesRef.current.meshes.push(back);
+
+      // Child of the back wall, so it automatically inherits its tilt correctly
+      const trimGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH - 0.1, trimHeight, RACK.BACK.DEPTH + 0.03);
+      const trim = new THREE.Mesh(trimGeometry, brassMaterial);
+      trim.position.set(0, RACK.BACK.HEIGHT / 2 + trimHeight / 2, 0);
+      back.add(trim);
+      resourcesRef.current.geometries.push(trimGeometry);
+      resourcesRef.current.meshes.push(trim);
+
+      if (trackedMeshes) {
+        trackedMeshes.push(base, back, trim);
+      }
+    };
 
     // Player 1 rack (our side - positive Z, near camera)
-    const rack1BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
-    const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
-    rack1Base.position.set(pos1.x, pos1.y, pos1.z);
-    rack1Base.rotation.x = -RACK.SLANT_ANGLE;
-    rack1Base.castShadow = true;
-    scene.add(rack1Base);
-    resourcesRef.current.geometries.push(rack1BaseGeometry);
-    resourcesRef.current.materials.push(rackMaterial);
-    resourcesRef.current.meshes.push(rack1Base);
-
-    const rack1BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
-    const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
-    rack1Back.position.set(pos1.x, pos1.backY, pos1.backZ);
-    rack1Back.rotation.x = -RACK.SLANT_ANGLE;
-    scene.add(rack1Back);
-    resourcesRef.current.geometries.push(rack1BackGeometry);
-    resourcesRef.current.meshes.push(rack1Back);
+    buildRack(pos1, -1, null);
 
     // Player 2 rack (bot's side - hidden when isBotMode)
-    const rack2BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
-    const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
-    rack2Base.position.set(pos2.x, pos2.y, pos2.z);
-    rack2Base.rotation.x = RACK.SLANT_ANGLE;
-    scene.add(rack2Base);
-    resourcesRef.current.geometries.push(rack2BaseGeometry);
-    resourcesRef.current.meshes.push(rack2Base);
-    rack2MeshesRef.current.push(rack2Base);
+    buildRack(pos2, 1, rack2MeshesRef.current);
 
-    const rack2BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
-    const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
-    rack2Back.position.set(pos2.x, pos2.backY, pos2.backZ);
-    rack2Back.rotation.x = RACK.SLANT_ANGLE;
-    scene.add(rack2Back);
-    resourcesRef.current.geometries.push(rack2BackGeometry);
-    resourcesRef.current.meshes.push(rack2Back);
-    rack2MeshesRef.current.push(rack2Back);
+    resourcesRef.current.materials.push(rackMaterial, brassMaterial);
+    resourcesRef.current.textures.push(woodTexture);
   };
 
   const createMascot = (scene, mascotImage = '/images/theomascot.png') => {
@@ -1155,85 +1139,20 @@ const Scrabble3DPlay = () => {
   };
 
   const createScoresheet = (scene) => {
-    const scoresheetGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH, TABLE.SCORESHEET.HEIGHT);
-    const scoresheetMaterial = new THREE.MeshPhongMaterial({
-      color: TABLE.SCORESHEET.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.SCORESHEET.MATERIAL.OPACITY,
-      shininess: TABLE.SCORESHEET.MATERIAL.SHININESS
-    });
-    const scoresheet = new THREE.Mesh(scoresheetGeometry, scoresheetMaterial);
-    scoresheet.rotation.x = -Math.PI / 2;
-    scoresheet.position.set(
-      TABLE.SCORESHEET.POSITION.x,
-      TABLE.SCORESHEET.Y_POSITION,
-      TABLE.SCORESHEET.POSITION.z
-    );
-    scoresheet.castShadow = true;
-    scoresheet.receiveShadow = true;
-    scene.add(scoresheet);
-    resourcesRef.current.geometries.push(scoresheetGeometry);
-    resourcesRef.current.materials.push(scoresheetMaterial);
-    resourcesRef.current.meshes.push(scoresheet);
-
-    const scoresCanvas = document.createElement('canvas');
-    const scale = window.devicePixelRatio || 1;
-    scoresCanvas.width = 360 * scale;
-    scoresCanvas.height = 416 * scale;
-    scoresCanvas.style.width = '360px';
-    scoresCanvas.style.height = '416px';
-    const scoresContext = scoresCanvas.getContext('2d');
-    scoresContext.scale(scale, scale);
-
-    const scoresTexture = new THREE.CanvasTexture(scoresCanvas);
-    const scoresGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH - 0.5, TABLE.SCORESHEET.HEIGHT - 0.5);
-    const scoresMaterial = new THREE.MeshBasicMaterial({
-      map: scoresTexture,
-      transparent: true,
-      alphaTest: 0.01
-    });
-    const scoresMesh = new THREE.Mesh(scoresGeometry, scoresMaterial);
-    scoresMesh.position.set(
-      TABLE.SCORESHEET.POSITION.x,
-      TABLE.SCORESHEET.Y_POSITION + 0.01,
-      TABLE.SCORESHEET.POSITION.z
-    );
-    scoresMesh.rotation.x = -Math.PI / 2;
-    scene.add(scoresMesh);
-    resourcesRef.current.geometries.push(scoresGeometry);
-    resourcesRef.current.materials.push(scoresMaterial);
-    resourcesRef.current.textures.push(scoresTexture);
-    resourcesRef.current.meshes.push(scoresMesh);
-
-    sceneRef.current.scoresheet = { base: scoresheet, scores: scoresMesh, canvas: scoresCanvas, context: scoresContext };
+    // Parchment base + score-grid overlay (shared with the 3D viewer)
+    sceneRef.current.scoresheet = createScoresheetBase(scene, resourcesRef);
   };
 
+  // A portrait brass trophy plaque - deliberately a different silhouette and
+  // material language from the clock's wide glass console (burgundy velvet
+  // and embossed brass instead of dark glass and glowing amber LEDs), even
+  // though both are standing consoles mirrored across the table. Shared
+  // shell with the 3D viewer; this file just picks the position.
   const createScoreboard = (scene) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 700;
-    canvas.height = 180;
-    const ctx = canvas.getContext('2d');
-    const scoreboardTexture = new THREE.CanvasTexture(canvas);
-    const scoreboardDisplayGeometry = new THREE.PlaneGeometry(6.8, 1.6);
-    const scoreboardDisplayMaterial = new THREE.MeshBasicMaterial({
-      map: scoreboardTexture,
-      transparent: true,
-      alphaTest: 0.01
+    sceneRef.current.scoreboard = createBrassStandingConsole(scene, resourcesRef, {
+      x: 12, // mirrored from the clock's -12, opposite side of the table
+      z: -12
     });
-    const scoreboardDisplayTable = new THREE.Mesh(scoreboardDisplayGeometry, scoreboardDisplayMaterial);
-    scoreboardDisplayTable.position.set(
-      TABLE.SCORESHEET.POSITION.x + 34,
-      TABLE.HEIGHT + 0.05,
-      TABLE.SCORESHEET.POSITION.z
-    );
-    scoreboardDisplayTable.rotation.x = -Math.PI / 2;
-    scoreboardDisplayTable.renderOrder = 1;
-    scene.add(scoreboardDisplayTable);
-    resourcesRef.current.geometries.push(scoreboardDisplayGeometry);
-    resourcesRef.current.materials.push(scoreboardDisplayMaterial);
-    resourcesRef.current.textures.push(scoreboardTexture);
-    resourcesRef.current.meshes.push(scoreboardDisplayTable);
-    sceneRef.current.scoreboard = { scoreboardDisplay: scoreboardDisplayTable, texture: scoreboardTexture };
   };
 
   const createClock = (scene) => {
@@ -1262,8 +1181,8 @@ const Scrabble3DPlay = () => {
     // Back / body: shallow box so the clock has depth
     const bodyGeometry = new THREE.BoxGeometry(clockWidth, clockHeight, clockDepth);
     const bodyMaterial = new THREE.MeshPhongMaterial({
-      color: 0x1a1a1a,
-      shininess: 30,
+      color: 0x3e2723,
+      shininess: 55,
     });
     const clockBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
     clockBody.position.z = -clockDepth / 2;
@@ -1287,248 +1206,53 @@ const Scrabble3DPlay = () => {
     sceneRef.current.clock = { canvas, context: ctx, texture: clockTexture, drawW: canvasW, drawH: canvasH };
   };
 
-  const createBlankSlip = (scene) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 240;
-    const ctx = canvas.getContext('2d');
-    const blankSlipTexture = new THREE.CanvasTexture(canvas);
-    const blankSlipGeometry = new THREE.PlaneGeometry(5, 3);
-    const blankSlipMaterial = new THREE.MeshBasicMaterial({
-      map: blankSlipTexture,
-      transparent: true,
-      alphaTest: 0.01
-    });
-    const blankSlipDisplay = new THREE.Mesh(blankSlipGeometry, blankSlipMaterial);
-    // Position at bottom right of table (right side, toward camera / bottom of view)
-    blankSlipDisplay.position.set(
-      20,
-      TABLE.HEIGHT + 0.05,
-      9
-    );
-    blankSlipDisplay.rotation.x = -Math.PI / 2;
-    blankSlipDisplay.renderOrder = 1;
-    blankSlipDisplay.visible = true;
-    scene.add(blankSlipDisplay);
-    resourcesRef.current.geometries.push(blankSlipGeometry);
-    resourcesRef.current.materials.push(blankSlipMaterial);
-    resourcesRef.current.textures.push(blankSlipTexture);
-    resourcesRef.current.meshes.push(blankSlipDisplay);
-    sceneRef.current.blankSlip = {
-      display: blankSlipDisplay,
-      canvas,
-      context: ctx,
-      texture: blankSlipTexture
-    };
-  };
-
-  const updateBlankSlip = () => {
-    if (!sceneRef.current?.blankSlip) return;
-    const { display, canvas, context: ctx, texture } = sceneRef.current.blankSlip;
-
-    // Get blank tiles and their letters from tempBoardCoords
-    const playedBlanks = [];
-    if (blankTiles && blankTiles.length > 0) {
-      blankTiles.forEach((bt, index) => {
-        const letter = tempBoardCoords?.[bt.row]?.[bt.col];
-        if (letter && typeof letter === 'string') {
-          playedBlanks.push({ index: index + 1, letter: letter.toUpperCase(), row: bt.row, col: bt.col });
-        }
-      });
-    }
-
-    display.visible = true;
-
-    // Clear and draw background
-    ctx.fillStyle = '#F5F5DC'; // Beige paper color
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw border
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
-
-    // Draw title
-    ctx.fillStyle = '#2D1F14';
-    ctx.font = 'bold 32px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText('BLANKS', canvas.width / 2, 16);
-
-    // Draw line under title
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(40, 60);
-    ctx.lineTo(canvas.width - 40, 60);
-    ctx.stroke();
-
-    // Draw each blank's letter
-    ctx.font = 'bold 22px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-
-    playedBlanks.forEach((blank, i) => {
-      const y = 100 + i * 70;
-      // Label
-      ctx.fillStyle = '#666';
-      ctx.font = '28px Arial';
-      ctx.fillText(`Blank ${blank.index}:`, 30, y);
-      // Letter (large)
-      ctx.fillStyle = '#2D1F14';
-      ctx.font = 'bold 52px Arial';
-      ctx.fillText(blank.letter, 200, y);
-    });
-
-    texture.needsUpdate = true;
-  };
-
   const updateScoresheet = () => {
     if (!sceneRef.current?.scoresheet?.scores) return;
-    const { canvas, context: scoresContext } = sceneRef.current.scoresheet;
+    const { context: scoresContext } = sceneRef.current.scoresheet;
     const state = useGameStore.getState();
     const p1Name = state.player1Name || 'Player 1';
-    const p2Name = state.player2Name || 'Player 2';
+    // Prefer selectedBot's name, same as the clock - player2Name alone can
+    // lag behind whichever bot was actually picked
+    const p2Name = state.selectedBot?.name || state.player2Name || 'Player 2';
     const history = state.moveHistory || [];
-
-    const scale = window.devicePixelRatio || 1;
-    scoresContext.setTransform(1, 0, 0, 1, 0, 0);
-    scoresContext.scale(scale, scale);
-    scoresContext.fillStyle = '#F5F5DC';
-    scoresContext.fillRect(0, 0, 360, 416);
-    scoresContext.strokeStyle = '#000000';
-    scoresContext.lineWidth = 1;
-    scoresContext.beginPath();
-    scoresContext.moveTo(80, 0); scoresContext.lineTo(80, 416);
-    scoresContext.moveTo(160, 0); scoresContext.lineTo(160, 416);
-    scoresContext.moveTo(200, 0); scoresContext.lineTo(200, 416);
-    scoresContext.moveTo(280, 0); scoresContext.lineTo(280, 416);
-    scoresContext.moveTo(360, 0); scoresContext.lineTo(360, 416);
-    scoresContext.stroke();
-    scoresContext.beginPath();
-    for (let i = 0; i <= 21; i++) {
-      scoresContext.moveTo(0, 20 + i * 18);
-      scoresContext.lineTo(360, 20 + i * 18);
-    }
-    scoresContext.stroke();
-
-    scoresContext.fillStyle = '#000000';
-    scoresContext.font = 'bold 14px monospace';
-    scoresContext.textAlign = 'center';
-    scoresContext.textBaseline = 'middle';
-    scoresContext.fillText(p1Name, 120, 10);
-    scoresContext.fillText(p2Name, 320, 10);
-    scoresContext.fillText('Word(s)', 40, 29);
-    scoresContext.fillText('Score', 120, 29);
-    scoresContext.fillText('Turn', 180, 29);
-    scoresContext.fillText('Word(s)', 240, 29);
-    scoresContext.fillText('Score', 320, 29);
-    scoresContext.font = '12px monospace';
-    for (let i = 1; i <= 20; i++) {
-      scoresContext.fillText(i.toString(), 180, 29 + i * 18);
-    }
-    scoresContext.fillText('+', 180, 29 + 21 * 18);
 
     let player1Total = 0;
     let player2Total = 0;
-    history.slice(0, 20).forEach((move, index) => {
-      const row = index + 1;
-      const y = 29 + row * 18;
-      const score = move.score || 0;
-      const word = move.word || 'Pass';
-      const isPlayer1 = move.player === p1Name;
-      if (isPlayer1) {
-        player1Total += score;
-        scoresContext.fillText(word, 40, y);
-        scoresContext.fillText(`+${score}`, 120, y);
-      } else {
-        player2Total += score;
-        scoresContext.fillText(word, 240, y);
-        scoresContext.fillText(`+${score}`, 320, y);
-      }
+    history.forEach((move) => {
+      if (move.player === p1Name) player1Total += move.score || 0;
+      else player2Total += move.score || 0;
     });
-    const totalY = 29 + 21 * 18;
-    scoresContext.fillText(state.player1points ?? player1Total, 120, totalY);
-    scoresContext.fillText(state.player2points ?? player2Total, 320, totalY);
+
+    paintScoresheet(scoresContext, {
+      p1Name,
+      p2Name,
+      moves: history,
+      p1Total: state.player1points ?? player1Total,
+      p2Total: state.player2points ?? player2Total
+    });
 
     sceneRef.current.scoresheet.scores.material.map.needsUpdate = true;
   };
 
+  // Structurally identical to updateClockDisplay - same layout fractions,
+  // same brass/glass styling, same "whoever's turn it is sits on the left"
+  // reordering. Only the metric differs: score instead of time.
   const updateScoreboard = () => {
-    if (!sceneRef.current?.scoreboard?.scoreboardDisplay) return;
+    const board = sceneRef.current?.scoreboard;
+    if (!board) return;
     const state = useGameStore.getState();
     const p1Name = state.player1Name || 'Player 1';
-    const p2Name = state.player2Name || 'Player 2';
+    // Prefer selectedBot's name, same as the clock - player2Name alone can
+    // lag behind whichever bot was actually picked
+    const p2Name = state.selectedBot?.name || state.player2Name || 'Player 2';
     const p1Score = state.player1points ?? 0;
     const p2Score = state.player2points ?? 0;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const scale = window.devicePixelRatio || 1;
-    canvas.width = 700 * scale;
-    canvas.height = 180 * scale;
-    ctx.scale(scale, scale);
+    paintScoreboardConsole(board.context, board.drawW, board.drawH, {
+      p1Name, p2Name, p1Score, p2Score, foxIcon: foxIconRef.current
+    });
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-    gradient.addColorStop(0, '#0a0a1a');
-    gradient.addColorStop(0.5, '#1a1a3a');
-    gradient.addColorStop(1, '#0a0a1a');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 700, 180);
-    ctx.strokeStyle = '#2a2a4a';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i < 700; i += 20) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, 180);
-      ctx.stroke();
-    }
-    for (let i = 0; i < 180; i += 20) {
-      ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(700, i);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = '#00ffff';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(2, 2, 696, 176);
-    ctx.strokeStyle = '#ff6b6b';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(6, 6, 688, 168);
-    ctx.fillStyle = '#4ecdc4';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(p1Name, 175, 40);
-    ctx.shadowColor = '#4ecdc4';
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText(String(p1Score), 175, 100);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ff6b6b';
-    ctx.font = 'bold 24px Arial';
-    ctx.fillText(p2Name, 525, 40);
-    ctx.shadowColor = '#ff6b6b';
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText(String(p2Score), 525, 100);
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#ff6b6b';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(350, 20);
-    ctx.lineTo(350, 160);
-    ctx.stroke();
-
-    const newTexture = new THREE.CanvasTexture(canvas);
-    if (sceneRef.current.scoreboard.texture?.dispose) {
-      sceneRef.current.scoreboard.texture.dispose();
-    }
-    sceneRef.current.scoreboard.scoreboardDisplay.material.map = newTexture;
-    sceneRef.current.scoreboard.scoreboardDisplay.material.needsUpdate = true;
-    sceneRef.current.scoreboard.texture = newTexture;
+    board.texture.needsUpdate = true;
   };
 
   const createTile = (letter, row, col, isTemp = false, isLastMove = false, isBlank = false) => {
@@ -1638,62 +1362,14 @@ const Scrabble3DPlay = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Create embossed letter texture (only if not a blank tile)
-    if (!isBlank) {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = TILE.LETTER.CANVAS_SIZE * 2; // Higher resolution for clarity
-      canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
-
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw embossed shadow (offset for depth)
-      context.fillStyle = 'rgba(80, 60, 40, 0.6)';
-      context.font = `bold ${100 * 2}px Arial`;
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillText(letter.toUpperCase(), canvas.width / 2 + 2, canvas.height / 2 + 2);
-
-      // Draw main letter (white)
-      context.fillStyle = '#FFFFFF';
-      context.fillText(letter.toUpperCase(), canvas.width / 2, canvas.height / 2);
-
-      // Draw highlight (top-left offset for emboss effect)
-      context.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      context.fillText(letter.toUpperCase(), canvas.width / 2 - 1, canvas.height / 2 - 1);
-
-      const pointValue = POINT_VALUES[letter.toUpperCase()] || 0;
-      if (pointValue > 0) {
-        // Point value shadow
-        context.fillStyle = 'rgba(80, 60, 40, 0.5)';
-        context.font = `bold ${45 * 2}px Arial`;
-        context.textAlign = 'right';
-        context.textBaseline = 'bottom';
-        context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
-
-        // Point value main (white)
-        context.fillStyle = '#FFFFFF';
-        context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.anisotropy = 4;
-      const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
-      const letterMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        alphaTest: 0.01,
-        depthWrite: false,
-      });
-      const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-      letterMesh.position.y = TILE.BOARD.HEIGHT / 2 + 0.001; // Just above tile surface
-      letterMesh.rotation.x = TILE.LETTER.ROTATION;
-      letterMesh.renderOrder = 1;
-      tile.add(letterMesh);
-
-      resourcesRef.current.textures.push(texture);
-      resourcesRef.current.materials.push(letterMaterial);
-      resourcesRef.current.geometries.push(letterGeometry);
+    // Embossed letter texture. An uncommitted blank stays completely blank -
+    // same as it looks on the rack - until the move is confirmed; only then
+    // does it reveal its assigned letter, gold-tinted with a prominent star.
+    // (shared with the 3D viewer, which has no "uncommitted" concept and
+    // always passes isTemp=false)
+    const isUncommittedBlank = isBlank && isTemp;
+    if (!isUncommittedBlank) {
+      attachTileLetter(tile, resourcesRef, letter, isBlank);
     }
 
     tile.userData = { type: 'boardTile', letter, row, col, isTemp, isBlank };
@@ -2036,7 +1712,7 @@ const Scrabble3DPlay = () => {
         </div>
       )}
 
-      {/* Scouting Report - compact modal when game not started */}
+      {/* Scouting Report - brass-and-walnut modal matching the 3D room, shown before the game starts */}
       {isLoaded && !gameStarted && (
         <Box
           sx={{
@@ -2047,49 +1723,59 @@ const Scrabble3DPlay = () => {
             alignItems: 'center',
             justifyContent: 'center',
             p: 1.5,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(14, 10, 7, 0.8)',
+            backdropFilter: 'blur(10px)',
           }}
         >
           <Box
             sx={{
               width: '100%',
-              maxWidth: 420,
+              maxWidth: 440,
               maxHeight: 'calc(100vh - 24px)',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              gap: 1.5,
-              p: 2,
+              gap: 1.75,
+              p: 2.5,
               borderRadius: 2,
-              border: '1px solid',
-              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
-              backgroundColor: lightMode === 'dark' ? 'rgba(31, 41, 55, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-              boxShadow: lightMode === 'dark'
-                ? '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-                : '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)',
+              border: '1px solid rgba(217, 119, 6, 0.5)',
+              background: 'linear-gradient(160deg, #2a1c12 0%, #1a1008 100%)',
+              boxShadow: '0 30px 60px -15px rgba(0,0,0,0.7), 0 0 0 5px rgba(217, 119, 6, 0.12), inset 0 1px 0 rgba(253, 230, 138, 0.08)',
             }}
           >
-            <Typography
-              component="div"
-              sx={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.95)' : '#B45309',
-                textAlign: 'center',
-                pb: 1,
-                borderBottom: '1px solid',
-                borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-              }}
-            >
-              Scouting Report
-            </Typography>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography
+                component="div"
+                sx={{
+                  fontFamily: '"Palatino Linotype", Georgia, "Book Antiqua", serif',
+                  fontSize: 20,
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  background: 'linear-gradient(180deg, #FDE68A 0%, #D97706 60%, #92400E 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 1px 12px rgba(217, 119, 6, 0.35)',
+                }}
+              >
+                Scouting Report
+              </Typography>
+              <Box sx={{
+                mt: 1,
+                mx: 'auto',
+                width: 96,
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, #D97706, transparent)',
+              }} />
+              <Typography sx={{ mt: 1, fontSize: 11.5, color: 'rgba(253, 230, 138, 0.55)', letterSpacing: '0.03em' }}>
+                Choose your opponent
+              </Typography>
+            </Box>
+
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))',
                 gap: 1.5,
               }}
             >
@@ -2103,16 +1789,17 @@ const Scrabble3DPlay = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 0.75,
-                    py: 1.25,
+                    py: 1.5,
                     px: 0.75,
                     borderRadius: 1.5,
-                    border: '1px solid transparent',
+                    border: '1px solid rgba(217, 119, 6, 0.18)',
                     transition: 'all 0.2s ease',
                     cursor: 'pointer',
-                    background: lightMode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                    background: 'rgba(253, 230, 138, 0.03)',
                     '&:hover': {
-                      background: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.12)' : 'rgba(245, 158, 11, 0.1)',
-                      borderColor: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.35)' : 'rgba(245, 158, 11, 0.35)',
+                      background: 'rgba(217, 119, 6, 0.12)',
+                      borderColor: 'rgba(251, 191, 36, 0.6)',
+                      boxShadow: '0 8px 20px -6px rgba(217, 119, 6, 0.4)',
                       transform: 'translateY(-2px)',
                     },
                     '&:active': { transform: 'translateY(0)' },
@@ -2120,30 +1807,35 @@ const Scrabble3DPlay = () => {
                 >
                   <Box
                     sx={{
-                      width: 52,
-                      height: 52,
+                      width: 56,
+                      height: 56,
                       flexShrink: 0,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRadius: 1.5,
+                      borderRadius: '50%',
                       overflow: 'hidden',
-                      bgcolor: lightMode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)',
+                      bgcolor: 'rgba(0,0,0,0.3)',
+                      border: '2px solid transparent',
+                      backgroundImage: 'linear-gradient(#1a1008, #1a1008), linear-gradient(160deg, #FDE68A, #D97706 60%, #92400E)',
+                      backgroundOrigin: 'border-box',
+                      backgroundClip: 'content-box, border-box',
                     }}
                   >
                     {bot.img ? (
                       <img src={bot.img} alt={bot.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <Box sx={{ color: lightMode === 'dark' ? '#94A3B8' : '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Box sx={{ color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {bot.icon}
                       </Box>
                     )}
                   </Box>
                   <Typography
                     sx={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: lightMode === 'dark' ? '#F1F5F9' : '#1E293B',
+                      fontFamily: '"Palatino Linotype", Georgia, serif',
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      color: '#FDE68A',
                       lineHeight: 1.2,
                       textAlign: 'center',
                     }}
@@ -2153,7 +1845,7 @@ const Scrabble3DPlay = () => {
                   <Typography
                     sx={{
                       fontSize: 10,
-                      color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#64748B',
+                      color: 'rgba(253, 230, 138, 0.55)',
                       textAlign: 'center',
                       lineHeight: 1.3,
                       display: '-webkit-box',
@@ -2177,23 +1869,27 @@ const Scrabble3DPlay = () => {
                 p: 1.25,
                 borderRadius: 1.5,
                 border: '1px solid',
-                borderColor: customBotSelected ? (lightMode === 'dark' ? 'rgba(251, 191, 36, 0.5)' : 'rgba(245, 158, 11, 0.5)') : (lightMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'),
-                background: customBotSelected ? (lightMode === 'dark' ? 'rgba(251, 191, 36, 0.08)' : 'rgba(245, 158, 11, 0.08)') : (lightMode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                borderColor: customBotSelected ? 'rgba(251, 191, 36, 0.6)' : 'rgba(217, 119, 6, 0.18)',
+                background: customBotSelected ? 'rgba(217, 119, 6, 0.14)' : 'rgba(253, 230, 138, 0.03)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                '&:hover': { background: lightMode === 'dark' ? 'rgba(251, 191, 36, 0.06)' : 'rgba(245, 158, 11, 0.06)' },
+                '&:hover': { background: 'rgba(217, 119, 6, 0.1)' },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 1.5, bgcolor: lightMode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)', color: lightMode === 'dark' ? '#94A3B8' : '#64748B' }}>
+              <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40,
+                borderRadius: '50%', bgcolor: 'rgba(0,0,0,0.3)', color: '#FBBF24',
+                border: '2px solid rgba(217, 119, 6, 0.4)',
+              }}>
                 <Robot size={20} color="currentColor" />
               </Box>
               <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: lightMode === 'dark' ? '#F1F5F9' : '#1E293B', lineHeight: 1.3, textAlign: 'left' }}>Custom</Typography>
+                <Typography sx={{ fontFamily: '"Palatino Linotype", Georgia, serif', fontSize: 12.5, fontWeight: 700, color: '#FDE68A', lineHeight: 1.3, textAlign: 'left' }}>Custom</Typography>
                 <Box
                   component="span"
                   sx={{
                     fontSize: 10,
-                    color: lightMode === 'dark' ? 'rgba(255,255,255,0.6)' : '#64748B',
+                    color: 'rgba(253, 230, 138, 0.55)',
                     lineHeight: 1.4,
                     display: 'flex',
                     alignItems: 'baseline',
@@ -2216,12 +1912,12 @@ const Scrabble3DPlay = () => {
                       lineHeight: 1.4,
                       textAlign: 'center',
                       verticalAlign: 'middle',
-                      border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e2e8f0',
+                      border: '1px solid rgba(217, 119, 6, 0.4)',
                       borderRadius: 4,
                       margin: 0,
                       padding: '2px 4px',
-                      background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
-                      color: lightMode === 'dark' ? '#fff' : '#1E293B',
+                      background: 'rgba(0,0,0,0.3)',
+                      color: '#FDE68A',
                     }}
                   />
                   th by points + leave
@@ -2233,16 +1929,19 @@ const Scrabble3DPlay = () => {
                 onClick={e => { e.stopPropagation(); if (/^\d+$/.test(customRank) && parseInt(customRank, 10) > 0) { setCustomBotSelected(true); handleBotSelect({ name: 'Custom', desc: `Plays the ${customRank}th best move by points + leave.`, customRank: parseInt(customRank, 10) }); } }}
                 sx={{
                   flexShrink: 0,
-                  px: 1.25,
+                  px: 1.5,
                   py: 0.75,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: '#fff',
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  letterSpacing: '0.03em',
+                  color: '#1a1008',
                   border: 0,
                   borderRadius: 1,
                   cursor: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? 'pointer' : 'not-allowed',
-                  background: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? (lightMode === 'dark' ? '#3D5A80' : '#B45309') : (lightMode === 'dark' ? '#374151' : '#94A3B8'),
-                  opacity: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? 1 : 0.7,
+                  background: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0
+                    ? 'linear-gradient(180deg, #FDE68A, #D97706)'
+                    : 'rgba(255,255,255,0.15)',
+                  opacity: /^\d+$/.test(customRank) && parseInt(customRank, 10) > 0 ? 1 : 0.6,
                 }}
               >
                 {customBotSelected ? 'Selected' : 'Choose'}

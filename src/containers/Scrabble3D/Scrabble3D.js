@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
 import styles from './Scrabble3D.module.css';
 import { getMoveSet } from '../../axios/api';
 import { parseGCG } from '../../utils/gcgParser';
@@ -29,7 +30,6 @@ import {
   LIGHTS,
   MATERIALS,
   ENVIRONMENT,
-  TABLE,
   FUTON,
   BOARD,
   RACK,
@@ -41,6 +41,17 @@ import {
   PRELOAD
 } from './constants';
 import { createBoard as createBoardScene } from './scrabble3DScene';
+import {
+  createFloorAndRug,
+  createTableSurface,
+  createChairs,
+  createScoresheetBase,
+  paintScoresheet,
+  createBrassStandingConsole,
+  paintScoreboardConsole,
+  loadFoxCrestIcon,
+  attachTileLetter
+} from './scrabble3DDecor';
 
 // Preload all protile images like the Cell component does
 let allLetters = PRELOAD.LETTERS;
@@ -158,6 +169,8 @@ const Scrabble3D = () => {
     cylinderGeometry: new THREE.CylinderGeometry(1, 1, 1, 8),
     sphereGeometry: new THREE.SphereGeometry(1, 8, 6)
   });
+
+  const foxIconRef = useRef(null); // Gold-tinted fox crest, pre-rendered once for the scoreboard
 
   // Add state for full player names
   const [player1Name, setPlayer1Name] = useState('Player 1');
@@ -377,6 +390,16 @@ const Scrabble3D = () => {
       // Cleanup preloaded resources
       cleanupPreloadedResources();
     };
+  }, []);
+
+  // Pre-render the fox crest once, tinted brass gold, so the scoreboard can
+  // just drawImage() it on every update instead of re-tinting every frame
+  useEffect(() => {
+    loadFoxCrestIcon((tintedIcon) => {
+      foxIconRef.current = tintedIcon;
+      updateScoreboard();
+      setNeedsRender(true);
+    });
   }, []);
 
   // Preload textures once images are ready
@@ -599,43 +622,8 @@ const Scrabble3D = () => {
   }, [tiles]);
 
   const createMagicalEnvironment = (scene) => {
-    // Create stone floor
-    const floorGeometry = new THREE.PlaneGeometry(ENVIRONMENT.FLOOR.WIDTH, ENVIRONMENT.FLOOR.HEIGHT);
-    const floorMaterial = new THREE.MeshPhongMaterial({ 
-      color: MATERIALS.FLOOR.COLOR,
-      transparent: true,
-      opacity: MATERIALS.FLOOR.OPACITY,
-      shininess: MATERIALS.FLOOR.SHININESS
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = ENVIRONMENT.FLOOR.Y_POSITION;
-    floor.receiveShadow = true;
-    scene.add(floor);
-    resourcesRef.current.geometries.push(floorGeometry);
-    resourcesRef.current.materials.push(floorMaterial);
-    resourcesRef.current.meshes.push(floor);
-
-    // Create carpet on top of the floor
-    const carpetGeometry = new THREE.PlaneGeometry(60, 45); // Much larger carpet
-    const carpetMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0x8B0000, // Lighter red carpet color
-      transparent: true,
-      opacity: 1.0,
-      shininess: 5
-    });
-    
-    // Add carpet texture
-    const carpetTexture = new THREE.CanvasTexture(createCarpetTexture());
-    carpetMaterial.map = carpetTexture;
-    const carpet = new THREE.Mesh(carpetGeometry, carpetMaterial);
-    carpet.rotation.x = -Math.PI / 2;
-    carpet.position.y = ENVIRONMENT.FLOOR.Y_POSITION + 0.05; // Higher above floor
-    carpet.receiveShadow = true;
-    scene.add(carpet);
-    resourcesRef.current.geometries.push(carpetGeometry);
-    resourcesRef.current.materials.push(carpetMaterial);
-    resourcesRef.current.meshes.push(carpet);
+    // Wood-plank floor + hunter-green rug (shared with 3D Play)
+    createFloorAndRug(scene, resourcesRef);
 
     // Walls and pillars removed for open-air feel
 
@@ -724,48 +712,6 @@ const Scrabble3D = () => {
     sceneRef.current.lamps = lamps;
   };
 
-  const createCarpetTexture = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Set canvas size
-    const size = 512;
-    canvas.width = size;
-    canvas.height = size;
-    
-    // Fill with base color
-    ctx.fillStyle = '#8B0000';
-    ctx.fillRect(0, 0, size, size);
-    
-    // Create elegant carpet pattern
-    ctx.strokeStyle = '#660000';
-    ctx.lineWidth = 1;
-    
-    // Create subtle diagonal lines for texture
-    for (let i = -size; i < size * 2; i += 8) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + size, size);
-      ctx.stroke();
-    }
-    
-    // Add some subtle shading
-    ctx.fillStyle = '#660000';
-    ctx.globalAlpha = 0.3;
-    for (let x = 0; x < size; x += 64) {
-      for (let y = 0; y < size; y += 64) {
-        ctx.beginPath();
-        ctx.arc(x + 32, y + 32, 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    
-    // Reset alpha
-    ctx.globalAlpha = 1.0;
-    
-    return canvas;
-  };
-
   const createNameTexture = (playerName, isFlipped = false) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -814,140 +760,29 @@ const Scrabble3D = () => {
   };
 
   const createTableAndChairs = (scene) => {
-    // Create magical white table
-    const tableGeometry = new THREE.BoxGeometry(TABLE.WIDTH, TABLE.HEIGHT, TABLE.DEPTH);
-    const tableMaterial = new THREE.MeshPhongMaterial({ 
-      color: TABLE.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.MATERIAL.OPACITY,
-      shininess: TABLE.MATERIAL.SHININESS
-    });
-    const table = new THREE.Mesh(tableGeometry, tableMaterial);
-    table.position.y = TABLE.Y_POSITION;
-    table.castShadow = true;
-    table.receiveShadow = true;
-    scene.add(table);
-    resourcesRef.current.geometries.push(tableGeometry);
-    resourcesRef.current.materials.push(tableMaterial);
-    resourcesRef.current.meshes.push(table);
+    // Table with honey-oak top + legs (shared with 3D Play)
+    createTableSurface(scene, resourcesRef);
 
     // Create 3D racks for both players
     createPlayerRacks(scene);
 
     // Create amazing scoreboard on the table
     createAmazingScoreboard(scene);
-    
+
     // Create scoresheet on the table
     createScoresheet(scene);
 
-    // Create table legs
-    const legGeometry = new THREE.BoxGeometry(TABLE.LEG.WIDTH, TABLE.LEG.HEIGHT, TABLE.LEG.DEPTH);
-    const legMaterial = new THREE.MeshPhongMaterial({ 
-      color: TABLE.LEG.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.LEG.MATERIAL.OPACITY,
-      shininess: TABLE.LEG.MATERIAL.SHININESS
-    });
+    // Tufted leather club chairs (shared with 3D Play)
+    createChairs(scene, resourcesRef);
 
-    // Position legs at corners
-    TABLE.LEG.POSITIONS.forEach(pos => {
-      const leg = new THREE.Mesh(legGeometry, legMaterial);
-      leg.position.set(...pos);
-      leg.castShadow = true;
-      leg.receiveShadow = true;
-      scene.add(leg);
-      resourcesRef.current.meshes.push(leg);
-    });
-    
-    resourcesRef.current.geometries.push(legGeometry);
-    resourcesRef.current.materials.push(legMaterial);
-
-    // Create two cozy futons
-    FUTON.POSITIONS.forEach((pos, index) => {
-      // Futon base/cushion
-      const cushionGeometry = new THREE.BoxGeometry(FUTON.CUSHION.WIDTH, FUTON.CUSHION.HEIGHT, FUTON.CUSHION.DEPTH);
-      const cushionMaterial = new THREE.MeshPhongMaterial({ 
-        color: FUTON.CUSHION.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.CUSHION.MATERIAL.OPACITY,
-        shininess: FUTON.CUSHION.MATERIAL.SHININESS
-      });
-      const cushion = new THREE.Mesh(cushionGeometry, cushionMaterial);
-      cushion.position.set(pos.x, FUTON.CUSHION.Y_POSITION, pos.z);
-      cushion.castShadow = true;
-      cushion.receiveShadow = true;
-      scene.add(cushion);
-      resourcesRef.current.geometries.push(cushionGeometry);
-      resourcesRef.current.materials.push(cushionMaterial);
-      resourcesRef.current.meshes.push(cushion);
-
-      // Futon back cushion (folded up)
-      const backCushionGeometry = new THREE.BoxGeometry(FUTON.BACK_CUSHION.WIDTH, FUTON.BACK_CUSHION.HEIGHT, FUTON.BACK_CUSHION.DEPTH);
-      const backCushionMaterial = new THREE.MeshPhongMaterial({ 
-        color: FUTON.BACK_CUSHION.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.BACK_CUSHION.MATERIAL.OPACITY,
-        shininess: FUTON.BACK_CUSHION.MATERIAL.SHININESS
-      });
-      const backCushion = new THREE.Mesh(backCushionGeometry, backCushionMaterial);
-      backCushion.position.set(pos.x, FUTON.BACK_CUSHION.Y_POSITION, pos.z + (pos.rotation === 0 ? -FUTON.BACK_CUSHION.Z_OFFSET : FUTON.BACK_CUSHION.Z_OFFSET));
-      backCushion.castShadow = true;
-      backCushion.receiveShadow = true;
-      scene.add(backCushion);
-      resourcesRef.current.geometries.push(backCushionGeometry);
-      resourcesRef.current.materials.push(backCushionMaterial);
-      resourcesRef.current.meshes.push(backCushion);
-
-      // Store futon position for later name creation
-      if (!sceneRef.current.futonPositions) {
-        sceneRef.current.futonPositions = [];
-      }
-      sceneRef.current.futonPositions.push({
-        x: pos.x,
-        z: pos.z,
-        rotation: pos.rotation,
-        index: index
-      });
-
-      // Futon frame/legs (low profile)
-      const frameGeometry = new THREE.BoxGeometry(FUTON.FRAME.WIDTH, FUTON.FRAME.HEIGHT, FUTON.FRAME.DEPTH);
-      const frameMaterial = new THREE.MeshPhongMaterial({ 
-        color: FUTON.FRAME.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.FRAME.MATERIAL.OPACITY,
-        shininess: FUTON.FRAME.MATERIAL.SHININESS
-      });
-      const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-      frame.position.set(pos.x, FUTON.FRAME.Y_POSITION, pos.z);
-      frame.castShadow = true;
-      frame.receiveShadow = true;
-      scene.add(frame);
-      resourcesRef.current.geometries.push(frameGeometry);
-      resourcesRef.current.materials.push(frameMaterial);
-      resourcesRef.current.meshes.push(frame);
-
-      // Add some decorative pillows
-      const pillowGeometry = new THREE.BoxGeometry(FUTON.PILLOW.WIDTH, FUTON.PILLOW.HEIGHT, FUTON.PILLOW.DEPTH);
-      const pillowMaterial = new THREE.MeshPhongMaterial({ 
-        color: FUTON.PILLOW.MATERIAL.COLOR,
-        transparent: true,
-        opacity: FUTON.PILLOW.MATERIAL.OPACITY,
-        shininess: FUTON.PILLOW.MATERIAL.SHININESS
-      });
-
-      // Two pillows on each futon
-      FUTON.PILLOW.POSITIONS.forEach(pillowPos => {
-        const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
-        pillow.position.set(pos.x + pillowPos.x, FUTON.PILLOW.Y_POSITION, pos.z + pillowPos.z);
-        pillow.castShadow = true;
-        pillow.receiveShadow = true;
-        scene.add(pillow);
-        resourcesRef.current.meshes.push(pillow);
-      });
-      
-      resourcesRef.current.geometries.push(pillowGeometry);
-      resourcesRef.current.materials.push(pillowMaterial);
-    });
+    // Viewer-only: remember futon positions for the player name plaques
+    // that sit on top of each chair (createPlayerNames, below)
+    sceneRef.current.futonPositions = FUTON.POSITIONS.map((pos, index) => ({
+      x: pos.x,
+      z: pos.z,
+      rotation: pos.rotation,
+      index
+    }));
   };
 
   const update3DTilesFromBoardCoords = () => {
@@ -1073,99 +908,97 @@ const Scrabble3D = () => {
   };
 
   const createPlayerRacks = (scene) => {
-    const rackMaterial = new THREE.MeshPhongMaterial({ 
-      color: RACK.MATERIAL.COLOR,
+    // Warm walnut wood-grain texture, matching the board's look
+    const woodCanvas = document.createElement('canvas');
+    woodCanvas.width = 512;
+    woodCanvas.height = 128;
+    const woodCtx = woodCanvas.getContext('2d');
+    const woodGradient = woodCtx.createLinearGradient(0, 0, 0, woodCanvas.height);
+    woodGradient.addColorStop(0, '#8a5a34');
+    woodGradient.addColorStop(0.5, '#6b4226');
+    woodGradient.addColorStop(1, '#4a2f1a');
+    woodCtx.fillStyle = woodGradient;
+    woodCtx.fillRect(0, 0, woodCanvas.width, woodCanvas.height);
+    woodCtx.globalCompositeOperation = 'overlay';
+    for (let i = 0; i < 50; i++) {
+      const y = Math.random() * woodCanvas.height;
+      woodCtx.strokeStyle = Math.random() > 0.5 ? 'rgba(255, 220, 180, 0.12)' : 'rgba(30, 15, 5, 0.18)';
+      woodCtx.lineWidth = 0.6 + Math.random() * 1.4;
+      woodCtx.beginPath();
+      woodCtx.moveTo(0, y);
+      for (let x = 0; x <= woodCanvas.width; x += 24) {
+        const yy = y + Math.sin(x * 0.03 + i) * 3 + (Math.random() - 0.5) * 2;
+        woodCtx.lineTo(x, yy);
+      }
+      woodCtx.stroke();
+    }
+    woodCtx.globalCompositeOperation = 'source-over';
+    const woodTexture = new THREE.CanvasTexture(woodCanvas);
+    woodTexture.wrapS = THREE.RepeatWrapping;
+    woodTexture.wrapT = THREE.RepeatWrapping;
+    woodTexture.repeat.set(2, 1);
+    woodTexture.needsUpdate = true;
+
+    const rackMaterial = new THREE.MeshPhongMaterial({
+      map: woodTexture,
       transparent: true,
       opacity: RACK.MATERIAL.OPACITY,
-      shininess: RACK.MATERIAL.SHININESS
+      shininess: 70
     });
 
-    // Create slanted rack for Player 1 (bottom of board)
-    // Base of the rack (slanted)
-    const rack1BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
-    const rack1Base = new THREE.Mesh(rack1BaseGeometry, rackMaterial);
-    rack1Base.position.set(RACK.POSITIONS.PLAYER1.x, RACK.POSITIONS.PLAYER1.y, RACK.POSITIONS.PLAYER1.z);
-    rack1Base.rotation.x = RACK.SLANT_ANGLE;
-    rack1Base.castShadow = true;
-    rack1Base.receiveShadow = true;
-    scene.add(rack1Base);
-    resourcesRef.current.geometries.push(rack1BaseGeometry);
-    resourcesRef.current.materials.push(rackMaterial);
-    resourcesRef.current.meshes.push(rack1Base);
+    // Brass cap along the back wall's top edge, matching the board's gold coordinate lettering
+    const brassMaterial = new THREE.MeshPhongMaterial({
+      color: 0xd97706,
+      emissive: 0x92400e,
+      emissiveIntensity: 0.15,
+      shininess: 120
+    });
 
-    // Back support of the rack (slanted)
-    const rack1BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
-    const rack1Back = new THREE.Mesh(rack1BackGeometry, rackMaterial);
-    rack1Back.position.set(RACK.POSITIONS.PLAYER1.x, RACK.POSITIONS.PLAYER1.backY, RACK.POSITIONS.PLAYER1.backZ);
-    rack1Back.rotation.x = RACK.SLANT_ANGLE;
-    rack1Back.castShadow = true;
-    rack1Back.receiveShadow = true;
-    scene.add(rack1Back);
-    resourcesRef.current.geometries.push(rack1BackGeometry);
-    resourcesRef.current.meshes.push(rack1Back);
+    const trimHeight = 0.08;
 
-    // Create slanted rack for Player 2 (top of board)
-    // Base of the rack (slanted)
-    const rack2BaseGeometry = new THREE.BoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH);
-    const rack2Base = new THREE.Mesh(rack2BaseGeometry, rackMaterial);
-    rack2Base.position.set(RACK.POSITIONS.PLAYER2.x, RACK.POSITIONS.PLAYER2.y, RACK.POSITIONS.PLAYER2.z);
-    rack2Base.rotation.x = -RACK.SLANT_ANGLE; // -15 degree slant (opposite direction)
-    rack2Base.castShadow = true;
-    rack2Base.receiveShadow = true;
-    scene.add(rack2Base);
-    resourcesRef.current.geometries.push(rack2BaseGeometry);
-    resourcesRef.current.meshes.push(rack2Base);
+    const buildRack = (pos, slantSign) => {
+      const baseGeometry = new RoundedBoxGeometry(RACK.BASE.WIDTH, RACK.BASE.HEIGHT, RACK.BASE.DEPTH, 3, 0.03);
+      const base = new THREE.Mesh(baseGeometry, rackMaterial);
+      base.position.set(pos.x, pos.y, pos.z);
+      base.rotation.x = slantSign * RACK.SLANT_ANGLE;
+      base.castShadow = true;
+      base.receiveShadow = true;
+      scene.add(base);
+      resourcesRef.current.geometries.push(baseGeometry);
+      resourcesRef.current.meshes.push(base);
 
-    // Back support of the rack (slanted)
-    const rack2BackGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH);
-    const rack2Back = new THREE.Mesh(rack2BackGeometry, rackMaterial);
-    rack2Back.position.set(RACK.POSITIONS.PLAYER2.x, RACK.POSITIONS.PLAYER2.backY, RACK.POSITIONS.PLAYER2.backZ);
-    rack2Back.rotation.x = -RACK.SLANT_ANGLE; // -15 degree slant (opposite direction)
-    rack2Back.castShadow = true;
-    rack2Back.receiveShadow = true;
-    scene.add(rack2Back);
-    resourcesRef.current.geometries.push(rack2BackGeometry);
-    resourcesRef.current.meshes.push(rack2Back);
+      const backGeometry = new RoundedBoxGeometry(RACK.BACK.WIDTH, RACK.BACK.HEIGHT, RACK.BACK.DEPTH, 3, 0.03);
+      const back = new THREE.Mesh(backGeometry, rackMaterial);
+      back.position.set(pos.x, pos.backY, pos.backZ);
+      back.rotation.x = slantSign * RACK.SLANT_ANGLE;
+      back.castShadow = true;
+      back.receiveShadow = true;
+      scene.add(back);
+      resourcesRef.current.geometries.push(backGeometry);
+      resourcesRef.current.meshes.push(back);
+
+      // Child of the back wall, so it automatically inherits its tilt correctly
+      const trimGeometry = new THREE.BoxGeometry(RACK.BACK.WIDTH - 0.1, trimHeight, RACK.BACK.DEPTH + 0.03);
+      const trim = new THREE.Mesh(trimGeometry, brassMaterial);
+      trim.position.set(0, RACK.BACK.HEIGHT / 2 + trimHeight / 2, 0);
+      back.add(trim);
+      resourcesRef.current.geometries.push(trimGeometry);
+      resourcesRef.current.meshes.push(trim);
+    };
+
+    // Player 1 rack (bottom of board)
+    buildRack(RACK.POSITIONS.PLAYER1, 1);
+
+    // Player 2 rack (top of board, opposite slant direction)
+    buildRack(RACK.POSITIONS.PLAYER2, -1);
+
+    resourcesRef.current.materials.push(rackMaterial, brassMaterial);
+    resourcesRef.current.textures.push(woodTexture);
   };
 
   const createAmazingScoreboard = (scene) => {
-    // Only create the flat scoreboard on the table
-    const createScoreboardTexture = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      // ... existing code for drawing scoreboard ...
-      return canvas;
-    };
-
-    // Create and apply the texture
-    const scoreboardCanvas = createScoreboardTexture();
-    const scoreboardTexture = new THREE.CanvasTexture(scoreboardCanvas);
-    const scoreboardDisplayGeometry = new THREE.PlaneGeometry(6.8, 1.6);
-    const scoreboardDisplayMaterial = new THREE.MeshBasicMaterial({ 
-      map: scoreboardTexture,
-      transparent: true,
-      alphaTest: 0.01
-    });
-    // Add a copy of the scoreboard flat on the table (this is now the only scoreboard)
-    const scoreboardDisplayTable = new THREE.Mesh(scoreboardDisplayGeometry, scoreboardDisplayMaterial);
-    scoreboardDisplayTable.position.set(
-      TABLE.SCORESHEET.POSITION.x + 34, // Way to the right
-      TABLE.HEIGHT + 0.05, // Slightly above the table
-      TABLE.SCORESHEET.POSITION.z
-    );
-    scoreboardDisplayTable.rotation.x = -Math.PI / 2; // Lay flat
-    scoreboardDisplayTable.renderOrder = 1;
-    scene.add(scoreboardDisplayTable);
-    resourcesRef.current.geometries.push(scoreboardDisplayGeometry);
-    resourcesRef.current.materials.push(scoreboardDisplayMaterial);
-    resourcesRef.current.textures.push(scoreboardTexture);
-    resourcesRef.current.meshes.push(scoreboardDisplayTable);
-
-    // Store reference to scoreboard for updates (only the table version)
-    sceneRef.current.scoreboard = {
-      scoreboardDisplay: scoreboardDisplayTable,
-      texture: scoreboardTexture
-    };
+    // Standing brass trophy plaque (shared with 3D Play)
+    sceneRef.current.scoreboard = createBrassStandingConsole(scene, resourcesRef, { x: 12, z: -12 });
   };
 
   // Function to update scoresheet with current game data
@@ -1263,430 +1096,89 @@ const Scrabble3D = () => {
   };
 
     const createScoresheet = (scene) => {
-    // Create simple paper scoresheet
-    const scoresheetGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH, TABLE.SCORESHEET.HEIGHT);
-    const scoresheetMaterial = new THREE.MeshPhongMaterial({ 
-      color: TABLE.SCORESHEET.MATERIAL.COLOR,
-      transparent: true,
-      opacity: TABLE.SCORESHEET.MATERIAL.OPACITY,
-      shininess: TABLE.SCORESHEET.MATERIAL.SHININESS
-    });
-    const scoresheet = new THREE.Mesh(scoresheetGeometry, scoresheetMaterial);
-    scoresheet.rotation.x = -Math.PI / 2; // Lay flat on table
-    scoresheet.position.set(
-      TABLE.SCORESHEET.POSITION.x, 
-      TABLE.SCORESHEET.Y_POSITION, 
-      TABLE.SCORESHEET.POSITION.z
-    );
-    scoresheet.castShadow = true;
-    scoresheet.receiveShadow = true;
-    scene.add(scoresheet);
-    resourcesRef.current.geometries.push(scoresheetGeometry);
-    resourcesRef.current.materials.push(scoresheetMaterial);
-    resourcesRef.current.meshes.push(scoresheet);
+      // Aged parchment scoresheet (shared with 3D Play)
+      sceneRef.current.scoresheet = createScoresheetBase(scene, resourcesRef);
 
-    // Store reference to scoresheet for updates
-    sceneRef.current.scoresheet = {
-      base: scoresheet,
-      scores: null // Will be set when texture is created
-    };
-
-    // Create scores text with high-DPI scaling
-    const scoresCanvas = document.createElement('canvas');
-    const scoresContext = scoresCanvas.getContext('2d');
-    
-    // High-DPI scaling for crisp text
-    const scale = window.devicePixelRatio || 1;
-    scoresCanvas.width = 360 * scale;
-    scoresCanvas.height = 416 * scale;
-    scoresCanvas.style.width = '360px';
-    scoresCanvas.style.height = '416px';
-    
-    // Scale the context to match the device pixel ratio
-    scoresContext.scale(scale, scale);
-    
-    // White background
-    scoresContext.fillStyle = '#F5F5DC';
-    scoresContext.fillRect(0, 0, 360, 416);
-    
-    // Draw grid lines
-    scoresContext.strokeStyle = '#000000';
-    scoresContext.lineWidth = 1;
-    
-    // Vertical lines for columns
-    scoresContext.beginPath();
-    scoresContext.moveTo(80, 0);
-    scoresContext.lineTo(80, 416);
-    scoresContext.moveTo(160, 0);
-    scoresContext.lineTo(160, 416);
-    scoresContext.moveTo(200, 0);
-    scoresContext.lineTo(200, 416);
-    scoresContext.moveTo(280, 0);
-    scoresContext.lineTo(280, 416);
-    scoresContext.moveTo(360, 0);
-    scoresContext.lineTo(360, 416);
-    scoresContext.stroke();
-    
-    // Horizontal lines for rows
-    scoresContext.beginPath();
-    for (let i = 0; i <= 21; i++) {
-      scoresContext.moveTo(0, 20 + i * 18);
-      scoresContext.lineTo(360, 20 + i * 18);
-    }
-    scoresContext.stroke();
-    
-    // Function to create and apply texture
-    const createTexture = () => {
-      const scoresTexture = new THREE.CanvasTexture(scoresCanvas);
-      const scoresGeometry = new THREE.PlaneGeometry(TABLE.SCORESHEET.WIDTH - 0.5, TABLE.SCORESHEET.HEIGHT - 0.5);
-      const scoresMaterial = new THREE.MeshBasicMaterial({ 
-        map: scoresTexture,
-        transparent: true,
-        alphaTest: 0.01
-      });
-      const scoresMesh = new THREE.Mesh(scoresGeometry, scoresMaterial);
-      scoresMesh.position.set(
-        TABLE.SCORESHEET.POSITION.x,
-        TABLE.SCORESHEET.Y_POSITION + 0.01, // Slightly above paper
-        TABLE.SCORESHEET.POSITION.z
-      );
-      scoresMesh.rotation.x = -Math.PI / 2;
-      scene.add(scoresMesh);
-      resourcesRef.current.geometries.push(scoresGeometry);
-      resourcesRef.current.materials.push(scoresMaterial);
-      resourcesRef.current.textures.push(scoresTexture);
-      resourcesRef.current.meshes.push(scoresMesh);
-
-      // Store reference to scoresheet for updates
-      sceneRef.current.scoresheet = {
-        base: scoresheet,
-        scores: scoresMesh
-      };
-    };
-    
-    // Draw text with system fonts that actually work
-    const drawText = () => {
-      // Set text color and draw all text
-      scoresContext.fillStyle = '#000000';
-      scoresContext.font = 'bold 14px monospace';
-      scoresContext.textAlign = 'center';
-      scoresContext.textBaseline = 'middle';
-      
-      // Get player names from game data
       const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
       const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
-      
-      // Player name headers
-      scoresContext.fillText(player1Name, 120, 10);
-      scoresContext.fillText(player2Name, 320, 10);
-      
-      // Column headers
-      scoresContext.fillText('Word(s)', 40, 29);   // Center of 0-80 column
-      scoresContext.fillText('Score', 120, 29);         // Center of 80-160 column
-      scoresContext.fillText('Turn', 180, 29);          // Center of 160-200 column
-      scoresContext.fillText('Word(s)', 240, 29);  // Center of 200-280 column
-      scoresContext.fillText('Score', 320, 29);         // Center of 280-360 column
-      
-      scoresContext.font = '12px monospace';
-      for (let i = 1; i <= 20; i++) {
-        scoresContext.fillText(i.toString(), 180, 29 + i * 18);  // Center of 160-200 column
-      }
-      scoresContext.fillText('+', 180, 29 + 21 * 18);  // Center of 160-200 column
-      
-      // Draw real game data
-      if (gameData && gameData.length > 0) {
-        scoresContext.textAlign = 'center';
-        scoresContext.textBaseline = 'middle';
-        
-        // Calculate running totals
-        let player1Total = 0;
-        let player2Total = 0;
-        
-        gameData.forEach((move, index) => {
-          if (index >= 20) return; // Only show first 20 moves
-          
-          const row = index + 1;
-          const y = 29 + row * 18;
-          const score = move.score || 0;
-          const word = move.word || 'Pass';
-          
-          // Determine which player this move belongs to
-          const isPlayer1 = move.player === player1Name;
-          
-          if (isPlayer1) {
-            player1Total += score;
-            scoresContext.fillText(word, 40, y);  // Player 1 word column
-            scoresContext.fillText(`+${score}`, 120, y);  // Player 1 score column
-          } else {
-            player2Total += score;
-            scoresContext.fillText(word, 240, y);  // Player 2 word column
-            scoresContext.fillText(`+${score}`, 320, y);  // Player 2 score column
-          }
-        });
-        
-        // Draw totals in the last row
-        const totalY = 29 + 21 * 18;
-        scoresContext.fillText(player1Total.toString(), 120, totalY);
-        scoresContext.fillText(player2Total.toString(), 320, totalY);
-      }
-      
-      createTexture();
+      let player1Total = 0;
+      let player2Total = 0;
+      const moves = gameData || [];
+      moves.forEach((move) => {
+        if (move.player === player1Name) player1Total += move.score || 0;
+        else player2Total += move.score || 0;
+      });
+
+      paintScoresheet(sceneRef.current.scoresheet.context, {
+        p1Name: player1Name,
+        p2Name: player2Name,
+        moves,
+        p1Total: player1Total,
+        p2Total: player2Total
+      });
+      sceneRef.current.scoresheet.scores.material.map.needsUpdate = true;
     };
-    
-    // Draw immediately with system fonts
-    drawText();
-  };
 
   const updateScoresheet = () => {
-    if (sceneRef.current.scoresheet && sceneRef.current.scoresheet.scores) {
-      // Recreate the texture with updated data
-      const scoresCanvas = document.createElement('canvas');
-      const scoresContext = scoresCanvas.getContext('2d');
-      
-      // High-DPI scaling for crisp text
-      const scale = window.devicePixelRatio || 1;
-      scoresCanvas.width = 360 * scale;
-      scoresCanvas.height = 416 * scale;
-      scoresCanvas.style.width = '360px';
-      scoresCanvas.style.height = '416px';
-      
-      // Scale the context to match the device pixel ratio
-      scoresContext.scale(scale, scale);
-      
-      // White background
-      scoresContext.fillStyle = '#F5F5DC';
-      scoresContext.fillRect(0, 0, 360, 416);
-      
-      // Draw grid lines
-      scoresContext.strokeStyle = '#000000';
-      scoresContext.lineWidth = 1;
-      
-      // Vertical lines for columns
-      scoresContext.beginPath();
-      scoresContext.moveTo(80, 0);
-      scoresContext.lineTo(80, 416);
-      scoresContext.moveTo(160, 0);
-      scoresContext.lineTo(160, 416);
-      scoresContext.moveTo(200, 0);
-      scoresContext.lineTo(200, 416);
-      scoresContext.moveTo(280, 0);
-      scoresContext.lineTo(280, 416);
-      scoresContext.moveTo(360, 0);
-      scoresContext.lineTo(360, 416);
-      scoresContext.stroke();
-      
-      // Horizontal lines for rows
-      scoresContext.beginPath();
-      for (let i = 0; i <= 21; i++) {
-        scoresContext.moveTo(0, 20 + i * 18);
-        scoresContext.lineTo(360, 20 + i * 18);
+    const sheet = sceneRef.current.scoresheet;
+    if (!sheet || !sheet.context || !gameData || gameData.length === 0) return;
+
+    const player1Name = gameData[0].player;
+    const player2Name = gameData.length > 1 ? gameData[1].player : 'Player 2';
+
+    // Track the latest cumulative total for each player from the move data
+    // (gameData moves carry a precomputed running `total`, unlike Play's
+    // live store which only has per-move `score` and needs to sum it)
+    let player1LatestTotal = 0;
+    let player2LatestTotal = 0;
+    const visibleMoves = gameData.slice(0, currentMoveIndex + 1);
+    visibleMoves.forEach((move) => {
+      const total = move.total || 0;
+      if (move.player === player1Name) {
+        player1LatestTotal = total;
+      } else {
+        player2LatestTotal = total;
       }
-      scoresContext.stroke();
-      
-      // Draw updated text
-      const drawUpdatedText = () => {
-        scoresContext.fillStyle = '#000000';
-        scoresContext.font = 'bold 14px monospace';
-        scoresContext.textAlign = 'center';
-        scoresContext.textBaseline = 'middle';
-        
-        // Get player names from game data
-        const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
-        const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
-        
-        // Player name headers
-        scoresContext.fillText(player1Name, 120, 10);
-        scoresContext.fillText(player2Name, 320, 10);
-        
-        // Column headers
-        scoresContext.fillText('Word(s)', 40, 29);
-        scoresContext.fillText('Score', 120, 29);
-        scoresContext.fillText('Turn', 180, 29);
-        scoresContext.fillText('Word(s)', 240, 29);
-        scoresContext.fillText('Score', 320, 29);
-        
-        scoresContext.font = '12px monospace';
-        for (let i = 1; i <= 20; i++) {
-          scoresContext.fillText(i.toString(), 180, 29 + i * 18);
-        }
-        scoresContext.fillText('+', 180, 29 + 21 * 18);
-        
-        // Draw real game data up to current move
-        if (gameData && gameData.length > 0) {
-          scoresContext.textAlign = 'center';
-          scoresContext.textBaseline = 'middle';
-          
-          // Track the latest totals for each player
-          let player1LatestTotal = 0;
-          let player2LatestTotal = 0;
-          
-          gameData.slice(0, currentMoveIndex + 1).forEach((move, index) => {
-            if (index >= 20) return; // Only show first 20 moves
-            
-            const row = index + 1;
-            const y = 29 + row * 18;
-            const score = move.score || 0;
-            const total = move.total || 0;
-            const word = move.word || 'Pass';
-            
-            // Determine which player this move belongs to
-            const isPlayer1 = move.player === player1Name;
-            
-            if (isPlayer1) {
-              player1LatestTotal = total; // Use the total from the move data
-              scoresContext.fillText(word, 40, y);
-              scoresContext.fillText(`+${score}`, 120, y);
-            } else {
-              player2LatestTotal = total; // Use the total from the move data
-              scoresContext.fillText(word, 240, y);
-              scoresContext.fillText(`+${score}`, 320, y);
-            }
-          });
-          
-          // Draw totals in the last row using the latest totals from move data
-          const totalY = 29 + 21 * 18;
-          scoresContext.fillText(player1LatestTotal.toString(), 120, totalY);
-          scoresContext.fillText(player2LatestTotal.toString(), 320, totalY);
-        }
-      };
-      
-      drawUpdatedText();
-      
-      // Update the texture
-      const newTexture = new THREE.CanvasTexture(scoresCanvas);
-      sceneRef.current.scoresheet.scores.material.map = newTexture;
-      sceneRef.current.scoresheet.scores.material.needsUpdate = true;
-      
-      // Clean up old texture
-      if (sceneRef.current.scoresheet.scores.material.map) {
-        sceneRef.current.scoresheet.scores.material.map.dispose();
-      }
-      sceneRef.current.scoresheet.scores.material.map = newTexture;
-    }
+    });
+
+    paintScoresheet(sheet.context, {
+      p1Name: player1Name,
+      p2Name: player2Name,
+      moves: visibleMoves,
+      p1Total: player1LatestTotal,
+      p2Total: player2LatestTotal
+    });
+    sheet.scores.material.map.needsUpdate = true;
   };
 
   const updateScoreboard = () => {
-    if (sceneRef.current.scoreboard && sceneRef.current.scoreboard.scoreboardDisplay) {
-      // Recreate the scoreboard texture with updated data
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // High-DPI scaling for crisp text
-      const scale = window.devicePixelRatio || 1;
-      canvas.width = 700 * scale;
-      canvas.height = 180 * scale;
-      canvas.style.width = '700px';
-      canvas.style.height = '180px';
-      
-      ctx.scale(scale, scale);
-      
-      // Create gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-      gradient.addColorStop(0, '#0a0a1a');
-      gradient.addColorStop(0.5, '#1a1a3a');
-      gradient.addColorStop(1, '#0a0a1a');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 700, 180);
-      
-      // Add subtle grid pattern
-      ctx.strokeStyle = '#2a2a4a';
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < 700; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, 180);
-        ctx.stroke();
-      }
-      for (let i = 0; i < 180; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(700, i);
-        ctx.stroke();
-      }
-      
-      // Add glowing border effect
-      ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 696, 176);
-      
-      // Add inner border
-      ctx.strokeStyle = '#ff6b6b';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(6, 6, 688, 168);
-      
-      // Get player names and scores
-      const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
-      const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
-      
-      // Calculate current scores
-      let player1Score = 0;
-      let player2Score = 0;
-      
-      if (gameData && gameData.length > 0) {
-        gameData.slice(0, currentMoveIndex + 1).forEach(move => {
-          const score = move.score || 0;
-          if (move.player === player1Name) {
-            player1Score += score;
-          } else {
-            player2Score += score;
-          }
-        });
-      }
-      
-      // Draw player 1 section (left side)
-      ctx.fillStyle = '#4ecdc4';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(player1Name, 175, 40);
-      
-      // Player 1 score with glow effect
-      ctx.shadowColor = '#4ecdc4';
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px Arial';
-      ctx.fillText(player1Score.toString(), 175, 100);
-      
-      // Draw player 2 section (right side)
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#ff6b6b';
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText(player2Name, 525, 40);
-      
-      // Player 2 score with glow effect
-      ctx.shadowColor = '#ff6b6b';
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px Arial';
-      ctx.fillText(player2Score.toString(), 525, 100);
-      
-      // Draw center divider
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#ff6b6b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(350, 20);
-      ctx.lineTo(350, 160);
-      ctx.stroke();
-      
-      // Remove VS, TURN, and Move __ labels
-      // (No ctx.fillText for those)
-      
-      // Add decorative elements
-      ctx.fillStyle = '#ffd93d';
-      ctx.font = '12px Arial';
-      
-      // Update the texture
-      const newTexture = new THREE.CanvasTexture(canvas);
-      sceneRef.current.scoreboard.scoreboardDisplay.material.map = newTexture;
-      sceneRef.current.scoreboard.scoreboardDisplay.material.needsUpdate = true;
-      
-      // Clean up old texture
-      if (sceneRef.current.scoreboard.texture) {
-        sceneRef.current.scoreboard.texture.dispose();
-      }
-      sceneRef.current.scoreboard.texture = newTexture;
+    const board = sceneRef.current.scoreboard;
+    if (!board || !board.context) return;
+
+    const player1Name = gameData && gameData.length > 0 ? gameData[0].player : 'Player 1';
+    const player2Name = gameData && gameData.length > 1 ? gameData[1].player : 'Player 2';
+
+    let player1Score = 0;
+    let player2Score = 0;
+    if (gameData && gameData.length > 0) {
+      gameData.slice(0, currentMoveIndex + 1).forEach(move => {
+        const score = move.score || 0;
+        if (move.player === player1Name) {
+          player1Score += score;
+        } else {
+          player2Score += score;
+        }
+      });
     }
+
+    paintScoreboardConsole(board.context, board.drawW, board.drawH, {
+      p1Name: player1Name,
+      p2Name: player2Name,
+      p1Score: player1Score,
+      p2Score: player2Score,
+      foxIcon: foxIconRef.current
+    });
+    board.texture.needsUpdate = true;
   };
 
   const createRackTile = (letter, position, player) => {
@@ -1832,61 +1324,10 @@ const Scrabble3D = () => {
     tile.castShadow = true;
     tile.receiveShadow = true;
 
-    // Create embossed white lettering (matches 3D Play)
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = TILE.LETTER.CANVAS_SIZE * 2;
-    canvas.height = TILE.LETTER.CANVAS_SIZE * 2;
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw embossed shadow (offset for depth)
-    context.fillStyle = 'rgba(80, 60, 40, 0.6)';
-    context.font = `bold ${100 * 2}px Arial`;
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(letter, canvas.width / 2 + 2, canvas.height / 2 + 2);
-
-    // Draw main letter (white)
-    context.fillStyle = '#FFFFFF';
-    context.fillText(letter, canvas.width / 2, canvas.height / 2);
-
-    // Draw highlight (top-left offset for emboss effect)
-    context.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    context.fillText(letter, canvas.width / 2 - 1, canvas.height / 2 - 1);
-
-    const pointValue = POINT_VALUES[letter] || 0;
-    if (pointValue > 0) {
-      context.fillStyle = 'rgba(80, 60, 40, 0.5)';
-      context.font = `bold ${45 * 2}px Arial`;
-      context.textAlign = 'right';
-      context.textBaseline = 'bottom';
-      context.fillText(pointValue.toString(), canvas.width - 8, canvas.height - 6);
-
-      context.fillStyle = '#FFFFFF';
-      context.fillText(pointValue.toString(), canvas.width - 10, canvas.height - 8);
-    }
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.anisotropy = 4;
-    const letterGeometry = new THREE.PlaneGeometry(TILE.LETTER.BOARD_SIZE, TILE.LETTER.BOARD_SIZE);
-    const letterMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      alphaTest: 0.01,
-      depthWrite: false,
-    });
-    const letterMesh = new THREE.Mesh(letterGeometry, letterMaterial);
-    letterMesh.position.y = TILE.LETTER.Y_OFFSET;
-    letterMesh.rotation.x = TILE.LETTER.ROTATION;
-    tile.add(letterMesh);
-    resourcesRef.current.geometries.push(letterGeometry);
-    resourcesRef.current.materials.push(letterMaterial);
-    resourcesRef.current.textures.push(texture);
-    resourcesRef.current.meshes.push(letterMesh);
-
-    letterMesh.renderOrder = 1;
-    letterMaterial.depthTest = false;
+    // Blank tiles come through as a lowercase letter (GCG convention - see
+    // gcgParser.js); gold+star styling matches 3D Play's blank rendering.
+    const isBlank = typeof letter === 'string' && letter.length === 1 && letter !== letter.toUpperCase();
+    attachTileLetter(tile, resourcesRef, letter.toUpperCase(), isBlank);
 
     tile.userData = { moveIndex, player, letter };
 

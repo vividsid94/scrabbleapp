@@ -894,8 +894,8 @@ export default function Play({ isMultiplayer = false }) {
   useEffect(() => {
     if (isMultiplayerMode) return;
     setPlayer1Name(isBotMode ? 'You' : 'Player 1');
-    setPlayer2Name(isBotMode ? 'Theo' : 'Player 2');
-  }, [isBotMode, isMultiplayerMode]);
+    setPlayer2Name(isBotMode ? (selectedBot?.name || 'Theo') : 'Player 2');
+  }, [isBotMode, isMultiplayerMode, selectedBot]);
 
   // Start timer when game starts or player changes
   useEffect(() => {

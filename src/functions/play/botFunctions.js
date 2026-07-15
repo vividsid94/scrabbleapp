@@ -762,7 +762,6 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
     setPlayer2Rack,
     setIsBotMode,
     setPlayer1Name,
-    setPlayer2Name,
     setSimulatingMove,
     setSimulationResult,
     setSimulationProgress,
@@ -847,11 +846,12 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setPlayer2Rack(rack2);
   setPool(newPool);
   
-  // Set bot mode and names
+  // Set bot mode. Player 2's name is left alone here - whoever called this
+  // (bot selection, "New Game", etc.) already set it to the actual selected
+  // bot's name, and hardcoding it to 'Theo' here would clobber that.
   setIsBotMode(true);
   setPlayer1Name('You');
-        setPlayer2Name('Theo');
-  
+
   // Clear all temporary states
   setSimulatingMove(null);
   setSimulationResult(null);
