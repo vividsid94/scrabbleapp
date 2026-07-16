@@ -47,12 +47,8 @@ function parseTopePrompt(promptText) {
   return { preamble, examples, postamble };
 }
 
-const TOPE_EXAMPLE_TRUNCATE_AT = 140;
-
 function TopeExampleBlock({ number, meta, body, lightMode }) {
   const [expanded, setExpanded] = useState(false);
-  const isTruncatable = body.length > TOPE_EXAMPLE_TRUNCATE_AT;
-  const displayText = (expanded || !isTruncatable) ? body : `${body.slice(0, TOPE_EXAMPLE_TRUNCATE_AT)}...`;
 
   return (
     <Box
@@ -63,24 +59,26 @@ function TopeExampleBlock({ number, meta, body, lightMode }) {
       }}
     >
       <Box
-        onClick={() => isTruncatable && setExpanded(v => !v)}
+        onClick={() => setExpanded(v => !v)}
         sx={{
           fontWeight: 700,
-          marginBottom: '4px',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          cursor: isTruncatable ? 'pointer' : 'default'
+          cursor: 'pointer'
         }}
       >
-        Example {number} ({meta})
-        {isTruncatable && (
-          <Box component="span" sx={{ fontSize: '10px', fontWeight: 400, opacity: 0.6 }}>
-            [{expanded ? 'collapse' : 'expand'}]
-          </Box>
-        )}
+        Example {number}
+        <Box component="span" sx={{ fontSize: '10px', fontWeight: 400, opacity: 0.6 }}>
+          [{expanded ? 'collapse' : 'expand'}]
+        </Box>
       </Box>
-      <Box>{displayText}</Box>
+      {expanded && (
+        <Box sx={{ marginTop: '4px' }}>
+          <Box sx={{ fontStyle: 'italic', opacity: 0.75, marginBottom: '2px' }}>({meta})</Box>
+          <Box>{body}</Box>
+        </Box>
+      )}
     </Box>
   );
 }
@@ -180,12 +178,12 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
               fontSize: '11px',
               fontWeight: 700,
               color: '#fff',
-              backgroundColor: '#7C3AED',
-              boxShadow: '0 0 0 2px rgba(124, 58, 237, 0.3)',
-              '&:hover': { backgroundColor: '#6D28D9' }
+              backgroundColor: '#3D5A80',
+              boxShadow: '0 0 0 2px rgba(61, 90, 128, 0.35)',
+              '&:hover': { backgroundColor: '#2c4160' }
             }}
           >
-            🧠 {showTopePrompt ? 'Hide' : 'Thinking'}
+            {showTopePrompt ? "Hide Tope's thinking" : "View Tope's thinking"}
           </Box>
         )}
       </Box>

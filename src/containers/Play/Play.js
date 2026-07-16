@@ -1062,18 +1062,6 @@ export default function Play({ isMultiplayer = false }) {
     }
   }, [shouldTheoYell, theoYellEnabled, theoYellIsBingoMiss, setShouldTheoYell, setTheoYellPhrase]);
 
-  useEffect(() => {
-    if (topeThinking && (topeThinking.status === 'done' || topeThinking.status === 'error')) {
-      setSnackbarMessage(
-        topeThinking.status === 'error'
-          ? "Tope's move failed — click the 🧠 badge next to its name for details"
-          : "Tope finished thinking — click the 🧠 badge next to its name to see why"
-      );
-      setSnackbarSeverity(topeThinking.status === 'error' ? 'warning' : 'info');
-      setSnackbarOpen(true);
-    }
-  }, [topeThinking, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen]);
-
   return (
     <Box className={styles.container}>
       {/* Dramatic Red Background Overlay with multiple layers */}

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Modal, Box, Typography } from '@mui/material';
 
+const SERIF = '"Palatino Linotype", Georgia, serif';
+
 export default function TopeThinkingModal({ open, onClose, topeThinking }) {
   if (!topeThinking) return null;
 
@@ -13,7 +15,7 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
       aria-labelledby="tope-thinking-modal-title"
       BackdropProps={{
         sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.88)',
+          backgroundColor: 'rgba(10, 6, 4, 0.85)',
           backdropFilter: 'blur(6px)',
         },
       }}
@@ -29,11 +31,11 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 3,
+          borderRadius: 2,
           overflow: 'hidden',
-          border: '4px solid #F59E0B',
-          boxShadow: '0 0 0 6px rgba(245, 158, 11, 0.35), 0 24px 80px rgba(0, 0, 0, 0.65)',
-          bgcolor: '#111827',
+          border: '3px solid #92400E',
+          boxShadow: '0 0 0 6px rgba(217, 119, 6, 0.25), 0 24px 80px rgba(0, 0, 0, 0.65)',
+          background: 'linear-gradient(135deg, #5a1620 0%, #2a0a10 100%)',
         }}
       >
         <Box
@@ -43,8 +45,8 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
             gap: 2,
             px: 3,
             py: 2,
-            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 55%, #92400E 100%)',
-            borderBottom: '2px solid rgba(255,255,255,0.2)',
+            background: 'linear-gradient(135deg, #FDE68A 0%, #D97706 55%, #92400E 100%)',
+            borderBottom: '2px solid rgba(0,0,0,0.25)',
           }}
         >
           <img
@@ -55,11 +57,11 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               id="tope-thinking-modal-title"
-              sx={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '0.02em' }}
+              sx={{ fontFamily: SERIF, fontSize: 22, fontWeight: 700, color: '#1a0f05', lineHeight: 1.2, letterSpacing: '0.02em' }}
             >
               Tope&apos;s Thinking
             </Typography>
-            <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', mt: 0.25 }}>
+            <Typography sx={{ fontFamily: SERIF, fontSize: 13, color: '#4a2c14', mt: 0.25 }}>
               {isLoading ? 'Reasoning about this move…' : 'Full LLM prompt and response for this move'}
             </Typography>
           </Box>
@@ -67,17 +69,18 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
             component="button"
             onClick={onClose}
             sx={{
-              border: '2px solid rgba(255,255,255,0.6)',
-              borderRadius: 2,
+              border: '2px solid rgba(26, 15, 5, 0.4)',
+              borderRadius: 1.5,
               px: 2,
               py: 1,
+              fontFamily: SERIF,
               fontSize: 14,
               fontWeight: 700,
-              color: '#fff',
-              bgcolor: 'rgba(0,0,0,0.25)',
+              color: '#1a0f05',
+              bgcolor: 'rgba(255,255,255,0.25)',
               cursor: 'pointer',
               flexShrink: 0,
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.4)' },
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' },
             }}
           >
             Close
@@ -86,16 +89,16 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           <Box>
-            <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#FBBF24', mb: 1, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ fontFamily: SERIF, fontSize: 13, fontWeight: 700, color: '#FBBF24', mb: 1, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Prompt sent to LLM
             </Typography>
             <Box
               sx={{
                 p: 2,
-                borderRadius: 2,
-                bgcolor: '#0B1220',
-                border: '1px solid rgba(251, 191, 36, 0.35)',
-                color: '#E5E7EB',
+                borderRadius: 1.5,
+                bgcolor: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(251, 191, 36, 0.3)',
+                color: 'rgba(255,255,255,0.88)',
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                 fontSize: 12,
                 lineHeight: 1.55,
@@ -110,16 +113,16 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
           </Box>
 
           <Box>
-            <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#34D399', mb: 1, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ fontFamily: SERIF, fontSize: 13, fontWeight: 700, color: '#FBBF24', mb: 1, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               LLM response
             </Typography>
             <Box
               sx={{
                 p: 2,
-                borderRadius: 2,
-                bgcolor: '#0B1220',
-                border: '1px solid rgba(52, 211, 153, 0.35)',
-                color: '#E5E7EB',
+                borderRadius: 1.5,
+                bgcolor: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(251, 191, 36, 0.3)',
+                color: 'rgba(255,255,255,0.88)',
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                 fontSize: 12,
                 lineHeight: 1.55,

@@ -236,12 +236,6 @@ const Scrabble3DPlay = () => {
   const [topeThinkingModalOpen, setTopeThinkingModalOpen] = useState(false);
   const topeThinking = useGameStore(state => state.topeThinking);
 
-  useEffect(() => {
-    if (topeThinking) {
-      setTopeThinkingModalOpen(true);
-    }
-  }, [topeThinking]);
-
   // Scouting Report: custom rank input (mirrors 2D Play)
   const [customRank, setCustomRank] = useState('');
   const [customBotSelected, setCustomBotSelected] = useState(false);
@@ -2361,31 +2355,36 @@ const Scrabble3DPlay = () => {
         topeThinking={topeThinking}
       />
 
-      {topeThinking && !topeThinkingModalOpen && (
+      {topeThinking && (
         <Box
           onClick={() => setTopeThinkingModalOpen(true)}
           sx={{
             position: 'fixed',
-            bottom: 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
+            bottom: 16,
+            right: 16,
+            zIndex: 900,
             display: 'flex',
             alignItems: 'center',
-            gap: 1.25,
-            px: 2.5,
-            py: 1.25,
-            borderRadius: 999,
+            gap: 1,
+            px: 1.75,
+            py: 1,
+            borderRadius: 2,
             cursor: 'pointer',
-            color: '#111827',
-            fontWeight: 800,
-            fontSize: 15,
-            background: 'linear-gradient(180deg, #FDE68A, #F59E0B)',
-            border: '3px solid #fff',
-            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.55)',
+            color: '#FBBF24',
+            fontWeight: 700,
+            fontSize: 13,
+            fontFamily: '"Palatino Linotype", Georgia, serif',
+            background: 'linear-gradient(135deg, #2a0a10 0%, #5a1620 100%)',
+            border: '1px solid rgba(251, 191, 36, 0.5)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              border: '1px solid rgba(251, 191, 36, 0.8)',
+              boxShadow: '0 4px 20px rgba(251, 191, 36, 0.25)',
+            }
           }}
         >
-          <img src="/images/topemascot.png" alt="" style={{ width: 28, height: 28, borderRadius: 6 }} />
+          <img src="/images/topemascot.png" alt="" style={{ width: 22, height: 22, borderRadius: 4 }} />
           View Tope&apos;s thinking
         </Box>
       )}
