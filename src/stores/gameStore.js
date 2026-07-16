@@ -120,7 +120,10 @@ export const useGameStore = create((set, get) => {
     theoYellScoreThreshold: 20, // Score threshold for triggering yell
     // Bot selection
     selectedBot: { name: 'Theo', img: '/images/theomascot.png', mascotImg: '/images/theomascot.png' },
-    
+    // Tope's most recent decision: exact prompt sent to the LLM + its raw response,
+    // shown in the UI so you can see exactly what it's "thinking"
+    topeThinking: null,
+
     // Defense modal state
     showDefenseModal: false,
     defenseMove: null,
@@ -321,6 +324,7 @@ export const useGameStore = create((set, get) => {
     setTheoYellCriteria: (criteria) => set({ theoYellCriteria: criteria }),
     setTheoYellScoreThreshold: (threshold) => set({ theoYellScoreThreshold: threshold }),
     setSelectedBot: (bot) => set({ selectedBot: bot }),
+    setTopeThinking: (data) => set({ topeThinking: data }),
     
     // Actions - Defense Modal
     setShowDefenseModal: (show) => set({ showDefenseModal: show }),
@@ -1598,12 +1602,12 @@ export const useGameStore = create((set, get) => {
       document.addEventListener('mouseup', handleMouseUp);
     },
 
-    // Bot move handler
+    // Bot move handler. Use require() (not dynamic import()) so webpack HMR
+    // actually picks up botFunctions edits — dynamic import was caching a stale module.
     makeBotMove: (botMoveSound) => {
-      // Dynamic import to avoid circular dependency
-      import('../functions/play/botFunctions').then(({ makeBotMove: makeBotMoveFunction }) => {
-        makeBotMoveFunction(botMoveSound);
-      });
+      // eslint-disable-next-line global-require
+      const { makeBotMove: makeBotMoveFunction } = require('../functions/play/botFunctions');
+      return makeBotMoveFunction(botMoveSound);
     },
 
     // Defense analysis

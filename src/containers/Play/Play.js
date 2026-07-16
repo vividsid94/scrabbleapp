@@ -30,6 +30,7 @@ import { initializeSounds, updateSoundType } from '../../functions/play/soundFun
 import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
+import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
 import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
@@ -297,6 +298,11 @@ const bots = [
     name: 'Tess',
     img: '/images/tessmascot.png',
     desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!'
+  },
+  {
+    name: 'Tope',
+    img: '/images/topemascot.png',
+    desc: 'Reasons like an expert - retrieves similar positions from real annotated games and explains its thinking.'
   }
 ];
 
@@ -459,7 +465,7 @@ export default function Play({ isMultiplayer = false }) {
     makeBotMove,
     selectedBot,
     setSelectedBot,
-    
+
     // Defense modal
     showDefenseModal,
     defenseMove,
@@ -530,6 +536,11 @@ export default function Play({ isMultiplayer = false }) {
     handleExchangeMultiplayer,
   } = useGameStore();
 
+  // Dedicated selectors so Tope thinking updates always trigger a re-render
+  const topeThinking = useGameStore(state => state.topeThinking);
+  const setSnackbarMessage = useGameStore(state => state.setSnackbarMessage);
+  const setSnackbarSeverity = useGameStore(state => state.setSnackbarSeverity);
+
   // Get global color scheme - subscribe to the current value
   const color = useColorSchemeStore(state => state.color);
   const boardColor = useColorSchemeStore(state => state.boardColor);
@@ -579,6 +590,7 @@ export default function Play({ isMultiplayer = false }) {
   const skillBots = [
     { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.', icon: <img src="/images/theomascot.png" alt="Theo" width={18} height={18} style={{ borderRadius: '3px' }} /> },
     { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!', icon: <img src="/images/tessmascot.png" alt="Tess" width={18} height={18} style={{ borderRadius: '3px' }} /> },
+    { name: 'Tope', desc: 'Reasons like an expert - retrieves similar positions from real annotated games and explains its thinking.', icon: <img src="/images/topemascot.png" alt="Tope" width={18} height={18} style={{ borderRadius: '3px' }} /> },
     { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={18} color="#60A5FA" /> },
     { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={18} color="#8B7355" /> },
     { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={18} color="#3D5A80" /> },
@@ -591,6 +603,8 @@ export default function Play({ isMultiplayer = false }) {
         return <img src="/images/theomascot.png" alt="Theo" width={20} height={20} />;
       case 'Tess':
         return <img src="/images/tessmascot.png" alt="Tess" width={20} height={20} />;
+      case 'Tope':
+        return <img src="/images/topemascot.png" alt="Tope" width={20} height={20} />;
       case 'Novice':
         return <Smiley size={20} color="#60A5FA" />;
       case 'Beginner':
@@ -748,13 +762,13 @@ export default function Play({ isMultiplayer = false }) {
   // Handle keyboard shortcuts - integrated into handleKeyDownWrapper
   // Removed duplicate keydown listener to prevent double-press issues
 
-  // Update the useEffect for bot turns to use the new makeBotMove
+  // Bot turns — call botFunctions directly (not via store dynamic import, which cached stale code)
   useEffect(() => { 
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
       botMoveMadeRef.current = true;
-      makeBotMove(botMoveSound);
+      runBotMove(botMoveSound);
     }
-  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, gameStarted]);
+  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, gameStarted, botMoveSound]);
 
   // Reset bot move flag when player changes to 1
   useEffect(() => {
@@ -1047,6 +1061,18 @@ export default function Play({ isMultiplayer = false }) {
       setShouldTheoYell(false); // Reset the flag
     }
   }, [shouldTheoYell, theoYellEnabled, theoYellIsBingoMiss, setShouldTheoYell, setTheoYellPhrase]);
+
+  useEffect(() => {
+    if (topeThinking && (topeThinking.status === 'done' || topeThinking.status === 'error')) {
+      setSnackbarMessage(
+        topeThinking.status === 'error'
+          ? "Tope's move failed — click the 🧠 badge next to its name for details"
+          : "Tope finished thinking — click the 🧠 badge next to its name to see why"
+      );
+      setSnackbarSeverity(topeThinking.status === 'error' ? 'warning' : 'info');
+      setSnackbarOpen(true);
+    }
+  }, [topeThinking, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen]);
 
   return (
     <Box className={styles.container}>
@@ -2928,6 +2954,7 @@ export default function Play({ isMultiplayer = false }) {
             moveStatus={moveStatus}
             telestratorEnabled={telestratorEnabled}
             onToggleTelestrator={setTelestratorEnabled}
+            topeThinking={topeThinking}
           />
 
           {showTimeSlider && !gameStarted && (

@@ -2,6 +2,103 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
 
+// If you don't see this in the console on page load, you're on a STALE bundle — hard refresh.
+console.warn('[botFunctions] LOADED Tope picker v5 — if missing, hard-refresh (Ctrl+Shift+R)');
+
+const isTopeBot = (bot, player2Name) =>
+  (bot?.name || '').trim() === 'Tope' || (player2Name || '').trim() === 'Tope';
+
+async function pickTopeMove({
+  boardCoords,
+  player2Rack,
+  player2points,
+  player1points,
+  pool,
+  sortedMoves,
+  setTopeThinking,
+}) {
+  console.warn('=== TOPE v5: pickTopeMove CALLED ===');
+  const candidateMoves = sortedMoves.slice(0, 15);
+  console.warn('=== TOPE v5: candidates ===', candidateMoves.map((m, i) => `${i + 1}. ${m.word} @ ${m.startPosition} (${m.score} pts)`));
+
+  if (typeof setTopeThinking === 'function') {
+    setTopeThinking({
+      prompt: '(building prompt...)',
+      response: 'Tope is reasoning...',
+      status: 'loading',
+    });
+  } else {
+    console.error('=== TOPE v5: setTopeThinking is missing from store ===', setTopeThinking);
+  }
+
+  try {
+    const topeResponse = await fetch('/.netlify/functions/topeBot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        board: boardCoords,
+        rack: player2Rack,
+        ownScore: player2points,
+        opponentScore: player1points,
+        poolRemaining: pool.length,
+        candidateMoves: candidateMoves.map(m => ({
+          word: m.word,
+          startPosition: m.startPosition,
+          score: m.score,
+          leave: m.leave,
+          totalValue: m.totalValue,
+          isExchange: m.isExchange,
+        })),
+      }),
+    });
+    const topeData = await topeResponse.json();
+    if (!topeResponse.ok || topeData.error) {
+      throw new Error(topeData.error || `Tope request failed (${topeResponse.status})`);
+    }
+
+    // Always readable from console: window.__TOPE_PROMPT / window.__TOPE_RESPONSE
+    if (typeof window !== 'undefined') {
+      window.__TOPE_PROMPT = topeData.prompt;
+      window.__TOPE_RESPONSE = topeData.rawResponse;
+      window.__TOPE_CHOSEN = candidateMoves[topeData.chosenIndex] || candidateMoves[0];
+      window.__TOPE_LAST = {
+        prompt: topeData.prompt,
+        response: topeData.rawResponse,
+        chosenIndex: topeData.chosenIndex,
+        chosen: window.__TOPE_CHOSEN,
+        at: new Date().toISOString(),
+      };
+    }
+
+    console.warn('=== TOPE v5: LLM PROMPT (also window.__TOPE_PROMPT) ===');
+    console.warn(topeData.prompt);
+    console.warn('=== TOPE v5: LLM RESPONSE (also window.__TOPE_RESPONSE) ===');
+    console.warn(topeData.rawResponse);
+    console.warn('=== TOPE v5: chose move ===', candidateMoves[topeData.chosenIndex]?.word, 'index', topeData.chosenIndex);
+
+    if (typeof setTopeThinking === 'function') {
+      setTopeThinking({
+        prompt: topeData.prompt,
+        response: topeData.rawResponse,
+        status: 'done',
+      });
+    }
+    return candidateMoves[topeData.chosenIndex] || candidateMoves[0];
+  } catch (topeError) {
+    console.error('=== TOPE v5: FAILED ===', topeError);
+    if (typeof window !== 'undefined') {
+      window.__TOPE_LAST = { error: String(topeError), at: new Date().toISOString() };
+    }
+    if (typeof setTopeThinking === 'function') {
+      setTopeThinking({
+        prompt: null,
+        response: `Tope failed: ${topeError.message}`,
+        status: 'error',
+      });
+    }
+    return sortedMoves[0];
+  }
+}
 
 export const makeBotMove = async (botMoveSound) => {
   const {
@@ -43,7 +140,8 @@ export const makeBotMove = async (botMoveSound) => {
     setSimulationProgress,
     setPreviewBoard,
     setPreviewMove,
-    setMoveWithResults
+    setMoveWithResults,
+    setTopeThinking
   } = useGameStore.getState();
 
   if (!isBotMode || currentPlayer !== 2) {
@@ -164,10 +262,29 @@ export const makeBotMove = async (botMoveSound) => {
     // Sort moves by totalValue (points + leave) from the backend
     const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
     let botToUse = useGameStore.getState().selectedBot;
-    console.log('🤖 Bot selection - Selected bot:', botToUse);
+    const playingTope = isTopeBot(botToUse, player2Name);
+    console.warn('=== BOT PICK v5 ===', {
+      botName: botToUse?.name,
+      player2Name,
+      playingTope,
+      customRank: botToUse?.customRank,
+      hasSetTopeThinking: typeof setTopeThinking === 'function',
+    });
     let botMove;
-    
-    if (botToUse && botToUse.name === 'Defense Bot') {
+
+    // Tope FIRST — nothing else can intercept
+    if (playingTope) {
+      console.warn('=== BOT PICK v5: entering Tope path NOW ===');
+      botMove = await pickTopeMove({
+        boardCoords,
+        player2Rack,
+        player2points,
+        player1points,
+        pool,
+        sortedMoves,
+        setTopeThinking: setTopeThinking || useGameStore.getState().setTopeThinking,
+      });
+    } else if (botToUse && botToUse.name === 'Defense Bot') {
       // Custom Defense Bot uses opponent simulation with adjustable defense weighting
       console.log('🤖 Custom Defense Bot - STARTING CUSTOM DEFENSE BOT LOGIC');
       console.log('🤖 Custom Defense Bot - Bot config:', botToUse);
@@ -240,6 +357,7 @@ export const makeBotMove = async (botMoveSound) => {
       
       botMove = selectedMove; // Best adjusted move
     } else if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {
+      console.warn('=== BOT PICK: custom rank ===', botToUse.customRank);
       botMove = sortedMoves[botToUse.customRank - 1]; // Custom rank (1-based)
     } else if (botToUse && botToUse.name === 'Tess') {
       // Tess uses opponent simulation to evaluate moves
@@ -311,6 +429,7 @@ export const makeBotMove = async (botMoveSound) => {
     } else if (botToUse && botToUse.name === 'Intermediate' && sortedMoves.length >= 5) {
       botMove = sortedMoves[4]; // 5th best move
     } else {
+      console.warn('=== BOT PICK: default top move ===', botToUse?.name);
       botMove = sortedMoves[0]; // Best move
     }
     const bestMove = botMove;
@@ -770,7 +889,8 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
     setMoveWithResults,
     setTopMoves,
     setMoveHistory,
-    setGameStarted
+    setGameStarted,
+    setTopeThinking
   } = useGameStore.getState();
 
   // Play game start sound
@@ -780,6 +900,7 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
 
   // Clear move history first
   setMoveHistory([]);
+  setTopeThinking(null);
 
   // Reset game state - check if premiumSquares are set
   const { premiumSquares } = useGameStore.getState();

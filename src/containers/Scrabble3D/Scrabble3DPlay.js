@@ -8,6 +8,7 @@ import { ThemeContext } from '../../App';
 import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { useGameStore } from '../../stores/gameStore';
+import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import Rack from '../../components/AppContent/Board/Rack';
 import { handleKeyDown } from '../../functions/play/keyboardFunctions';
@@ -17,6 +18,7 @@ import { initializeSounds } from '../../functions/play/soundFunctions';
 import { formatTime } from '../../functions/play/timeUtils';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav';
 import Topbar from '../../components/AppContent/Topbar/Topbar';
+import TopeThinkingModal from '../../components/Modals/TopeThinkingModal';
 import {
   Smiley, Robot, UserCircle, Cube, ArrowsClockwise, CaretDown, CaretUp
 } from '@phosphor-icons/react';
@@ -110,6 +112,7 @@ preloadProtiles();
 const bots = [
   { name: 'Theo', img: '/images/theomascot.png', desc: 'Clever and quick, Theo prefers bold, aggressive moves.' },
   { name: 'Tess', img: '/images/tessmascot.png', desc: 'Calm and strategic, Tess loves defense.' },
+  { name: 'Tope', img: '/images/topemascot.png', desc: 'Reasons like an expert using similar annotated games.' },
   { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={20} color="#60A5FA" /> },
   { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={20} color="#8B7355" /> },
   { name: 'Intermediate', desc: 'A bit more challenging.', icon: <Robot size={20} color="#3D5A80" /> },
@@ -230,6 +233,14 @@ const Scrabble3DPlay = () => {
 
   // Exchange modal state
   const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [topeThinkingModalOpen, setTopeThinkingModalOpen] = useState(false);
+  const topeThinking = useGameStore(state => state.topeThinking);
+
+  useEffect(() => {
+    if (topeThinking) {
+      setTopeThinkingModalOpen(true);
+    }
+  }, [topeThinking]);
 
   // Scouting Report: custom rank input (mirrors 2D Play)
   const [customRank, setCustomRank] = useState('');
@@ -282,7 +293,7 @@ const Scrabble3DPlay = () => {
   useEffect(() => {
     if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
       botMoveMadeRef.current = true;
-      makeBotMove(botMoveSound);
+      runBotMove(botMoveSound);
     }
   }, [currentPlayer, isBotMode, isBotThinking, gameEnded, makeBotMove, botMoveSound]);
 
@@ -2343,6 +2354,41 @@ const Scrabble3DPlay = () => {
           </Box>
         </Box>
       </Modal>
+
+      <TopeThinkingModal
+        open={topeThinkingModalOpen && !!topeThinking}
+        onClose={() => setTopeThinkingModalOpen(false)}
+        topeThinking={topeThinking}
+      />
+
+      {topeThinking && !topeThinkingModalOpen && (
+        <Box
+          onClick={() => setTopeThinkingModalOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.25,
+            px: 2.5,
+            py: 1.25,
+            borderRadius: 999,
+            cursor: 'pointer',
+            color: '#111827',
+            fontWeight: 800,
+            fontSize: 15,
+            background: 'linear-gradient(180deg, #FDE68A, #F59E0B)',
+            border: '3px solid #fff',
+            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.55)',
+          }}
+        >
+          <img src="/images/topemascot.png" alt="" style={{ width: 28, height: 28, borderRadius: 6 }} />
+          View Tope&apos;s thinking
+        </Box>
+      )}
     </div>
   );
 };

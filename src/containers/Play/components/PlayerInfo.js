@@ -25,7 +25,86 @@ const actionButtonStyle = {
   justifyContent: 'center'
 };
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null }) => {
+// Splits Tope's raw prompt text into the preamble, each numbered "Example N
+// (...)" block, and everything after the "---" divider - works for any
+// number of examples, since it's just pattern matching, not hardcoded.
+function parseTopePrompt(promptText) {
+  if (!promptText) return null;
+  const exampleRegex = /Example (\d+) \(([^)]*)\):\n([\s\S]*?)(?=\n\nExample \d+ \(|\n\n---)/g;
+  const examples = [];
+  let match;
+  while ((match = exampleRegex.exec(promptText)) !== null) {
+    examples.push({ number: match[1], meta: match[2], body: match[3].trim() });
+  }
+  if (examples.length === 0) return null;
+
+  const firstIdx = promptText.indexOf('Example 1 (');
+  const preamble = firstIdx >= 0 ? promptText.slice(0, firstIdx).trim() : '';
+
+  const dividerIdx = promptText.indexOf('\n---\n');
+  const postamble = dividerIdx >= 0 ? promptText.slice(dividerIdx).trim() : '';
+
+  return { preamble, examples, postamble };
+}
+
+const TOPE_EXAMPLE_TRUNCATE_AT = 140;
+
+function TopeExampleBlock({ number, meta, body, lightMode }) {
+  const [expanded, setExpanded] = useState(false);
+  const isTruncatable = body.length > TOPE_EXAMPLE_TRUNCATE_AT;
+  const displayText = (expanded || !isTruncatable) ? body : `${body.slice(0, TOPE_EXAMPLE_TRUNCATE_AT)}...`;
+
+  return (
+    <Box
+      sx={{
+        marginBottom: '8px',
+        paddingBottom: '8px',
+        borderBottom: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)'
+      }}
+    >
+      <Box
+        onClick={() => isTruncatable && setExpanded(v => !v)}
+        sx={{
+          fontWeight: 700,
+          marginBottom: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          cursor: isTruncatable ? 'pointer' : 'default'
+        }}
+      >
+        Example {number} ({meta})
+        {isTruncatable && (
+          <Box component="span" sx={{ fontSize: '10px', fontWeight: 400, opacity: 0.6 }}>
+            [{expanded ? 'collapse' : 'expand'}]
+          </Box>
+        )}
+      </Box>
+      <Box>{displayText}</Box>
+    </Box>
+  );
+}
+
+function TopePromptView({ prompt, lightMode }) {
+  if (!prompt) {
+    return <Box sx={{ marginBottom: '8px' }}>(no prompt - Tope fell back to its default move)</Box>;
+  }
+  const parsed = parseTopePrompt(prompt);
+  if (!parsed) {
+    return <Box sx={{ marginBottom: '8px' }}>{prompt}</Box>;
+  }
+  return (
+    <Box sx={{ marginBottom: '8px' }}>
+      {parsed.preamble && <Box sx={{ marginBottom: '8px' }}>{parsed.preamble}</Box>}
+      {parsed.examples.map(ex => (
+        <TopeExampleBlock key={ex.number} number={ex.number} meta={ex.meta} body={ex.body} lightMode={lightMode} />
+      ))}
+      {parsed.postamble && <Box sx={{ marginTop: '8px' }}>{parsed.postamble}</Box>}
+    </Box>
+  );
+}
+
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt }) => {
   const panelBackground = lightMode === 'dark' 
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
     : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
@@ -86,6 +165,29 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           />
         ) : null}
         {name}
+        {isTope && topeThinking && (
+          <Box
+            component="button"
+            onClick={(e) => { e.stopPropagation(); onToggleTopePrompt && onToggleTopePrompt(); }}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#fff',
+              backgroundColor: '#7C3AED',
+              boxShadow: '0 0 0 2px rgba(124, 58, 237, 0.3)',
+              '&:hover': { backgroundColor: '#6D28D9' }
+            }}
+          >
+            🧠 {showTopePrompt ? 'Hide' : 'Thinking'}
+          </Box>
+        )}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Box 
@@ -145,6 +247,30 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
     >
       {points}
     </Box>
+    {isTope && showTopePrompt && topeThinking && (
+      <Box
+        sx={{
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          lineHeight: 1.5,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          padding: '8px',
+          marginBottom: '8px',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          borderRadius: '6px',
+          backgroundColor: lightMode === 'dark' ? 'rgba(0,0,0,0.35)' : '#F9FAFB',
+          border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E5E7EB',
+          color: lightMode === 'dark' ? 'rgba(255,255,255,0.85)' : '#374151'
+        }}
+      >
+        <Box sx={{ fontWeight: 700, marginBottom: '4px' }}>PROMPT SENT:</Box>
+        <TopePromptView prompt={topeThinking.prompt} lightMode={lightMode} />
+        <Box sx={{ fontWeight: 700, marginBottom: '4px' }}>RESPONSE:</Box>
+        <Box>{topeThinking.response}</Box>
+      </Box>
+    )}
     {rack && !isBot && (
       <Box className={styles.Rack}>
         <Rack 
@@ -209,9 +335,11 @@ export default function PlayerInfo({
   localPlayerNumber,
   opponentRackCount,
   telestratorEnabled,
-  onToggleTelestrator
+  onToggleTelestrator,
+  topeThinking
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
+  const [showTopePrompt, setShowTopePrompt] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
   const isExchangeDisabled = !gameStarted || (onExchangeClick ? false : tilesToExchange.length === 0);
 
@@ -441,6 +569,7 @@ export default function PlayerInfo({
           isBot: isBotMode,
           isThinking: isBotMode && isBotThinking,
           botImage: botImage, // Pass botImage to PlayerInfoSection
+          isTope: isBotMode && player2Name === 'Tope',
           playerNumber: 2 // Explicitly set player number
         }
       ].sort((a, b) => {
@@ -524,6 +653,10 @@ export default function PlayerInfo({
           mascotRef={player.isBot ? mascotRef : undefined}
           botImage={player.botImage}
           moveStatus={moveStatus}
+          isTope={player.isTope}
+          topeThinking={topeThinking}
+          showTopePrompt={showTopePrompt}
+          onToggleTopePrompt={() => setShowTopePrompt(v => !v)}
         />
       );
       })}

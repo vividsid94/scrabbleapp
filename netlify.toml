@@ -6,14 +6,16 @@
     include = [
         "netlify_functions/dictionary.gaddag.json",
         "netlify_functions/leaves.json",
-        "netlify_functions/twl-wordlist.json"
+        "netlify_functions/twl-wordlist.json",
+        "netlify_functions/topeRetrievalIndex.json"
     ]
 
 [functions]
     included_files = [
         "netlify_functions/leaves.json",
         "netlify_functions/dictionary.gaddag.json",
-        "netlify_functions/twl-wordlist.json"
+        "netlify_functions/twl-wordlist.json",
+        "netlify_functions/topeRetrievalIndex.json"
     ]
     node_bundler = "esbuild"
     external_node_modules = ["aws-sdk"]
@@ -24,6 +26,10 @@
 [functions.botLogic]
     timeout = 30
     memory = 3008
+
+[functions.topeBot]
+    timeout = 30
+    memory = 2048
 
 [functions.getTopMoves]
     timeout = 30

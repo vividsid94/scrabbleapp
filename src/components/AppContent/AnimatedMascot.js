@@ -12,9 +12,12 @@ const tessImages = [
   "/images/tessmascot2.png",
   "/images/tessmascot3.png"
 ];
+const topeImages = [
+  "/images/topemascot.png"
+];
 
 export default function AnimatedMascot({ about = 'theo' }) {
-  const mascotImages = about === 'tess' ? tessImages : theoImages;
+  const mascotImages = about === 'tess' ? tessImages : about === 'tope' ? topeImages : theoImages;
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState(0);
   const [crossfade, setCrossfade] = useState(false);

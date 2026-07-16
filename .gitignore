@@ -26,3 +26,11 @@ yarn-error.log*
 .netlify
 
 .env
+
+# Bot-training data artifacts (scraped games + generated datasets) - large,
+# regenerable from the scripts, and not needed at runtime. Only
+# netlify_functions/topeRetrievalIndex.json (the trimmed runtime index) is
+# actually deployed; everything here is offline data-prep tooling output.
+scripts/bot-training/raw-games/
+scripts/bot-training/*.jsonl
+scripts/bot-training/retrieval/*.jsonl
