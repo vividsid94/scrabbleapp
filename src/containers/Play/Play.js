@@ -7,6 +7,8 @@ import TimerIcon from '@mui/icons-material/Timer';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CaretDown, CaretUp, Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon, Brain } from '@phosphor-icons/react';
+import { useLocation } from 'react-router-dom';
+import { loadActiveGameSnapshot } from '../../utils/activeGamePersistence';
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
@@ -308,6 +310,7 @@ const bots = [
 
 export default function Play({ isMultiplayer = false }) {
   const { lightMode } = useContext(ThemeContext);
+  const location = useLocation();
   // Use Zustand Game Store
   const {
     // Board state
@@ -425,6 +428,7 @@ export default function Play({ isMultiplayer = false }) {
     
     // New store actions
     initializeGame,
+    restoreActiveGame,
     handleNewGame,
     startTimer,
     handleMoveSelectClick,
@@ -644,11 +648,20 @@ export default function Play({ isMultiplayer = false }) {
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
-  // Initialize game using store action
+  // Initialize game using store action - unless we arrived via the
+  // homepage's "Continue" button, in which case restore the saved
+  // single-player snapshot instead of resetting to a blank board.
   useEffect(() => {
-    if (sounds) {
-      initializeGame(origBoard, origPool, gameStartSound, botMoveSound);
+    if (!sounds) return;
+    const wantsContinue = new URLSearchParams(location.search).get('continue') === '1';
+    if (wantsContinue) {
+      const snapshot = loadActiveGameSnapshot();
+      if (snapshot) {
+        restoreActiveGame(snapshot);
+        return;
+      }
     }
+    initializeGame(origBoard, origPool, gameStartSound, botMoveSound);
   }, [sounds]);
 
   useEffect(() => {

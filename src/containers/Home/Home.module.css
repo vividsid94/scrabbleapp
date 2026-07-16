@@ -22,26 +22,10 @@
   align-items: center;
   justify-content: center;
   margin-top: 32px;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   position: relative;
   z-index: 1;
   width: 100%;
-}
-
-.mascotWrapper {
-  width: 180px;
-  max-width: 60vw;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.mascotWrapper > div {
-  width: 100%;
-  height: 100%;
 }
 
 .title {
@@ -53,6 +37,224 @@
   color: #1F2937;
   text-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 1px 0 slategray;
   margin-bottom: 0;
+}
+
+/* Theo holding two signs — he's already mid double-thumbs-up in the art, so
+   a post dropped under each fist reads as "he's holding these up." The signs
+   sit wide, up over his belly; his body fades to transparent underneath them
+   (not a lens blur - just an opacity fade into the page), and the posts run
+   down from his actual fists into the sign tops so they read as attached. */
+.signChoiceContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: min(340px, calc(100% - 32px));
+  margin: 16px auto 0;
+}
+
+.signTheoWrap {
+  position: relative;
+  width: 84%;
+  aspect-ratio: 1 / 1;
+}
+
+.signTheoImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 10px 18px rgba(120, 53, 15, 0.4));
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 90%);
+  mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 90%);
+  animation: signTheoBob 3.6s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.signPost {
+  position: absolute;
+  width: 10px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #3d2410 0%, #6b3d1e 10%, #8a4f22 55%, #5c3315 100%);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2), -1px 0 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.25);
+  z-index: 3;
+}
+
+.signPost::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 26px;
+  height: 20px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, #2a1509 0%, #3d2410 45%, rgba(61, 36, 16, 0) 78%);
+  filter: blur(2.5px);
+}
+
+.signPostLeft {
+  left: 23%;
+  top: 62%;
+  bottom: 12%;
+  transform: rotate(-7deg);
+  transform-origin: top center;
+}
+
+.signPostRight {
+  left: 87%;
+  top: 58%;
+  bottom: 12%;
+  transform: rotate(7deg);
+  transform-origin: top center;
+}
+
+.signBracket {
+  position: absolute;
+  width: 34px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #b97a3f 0%, #8a4f22 55%, #5c3315 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.signBracket::before,
+.signBracket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #2a1509;
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.signBracket::before {
+  left: 6px;
+}
+
+.signBracket::after {
+  right: 6px;
+}
+
+.signBracketLeft {
+  left: 23%;
+  top: 88%;
+  transform: translate(-50%, -50%) rotate(-7deg);
+}
+
+.signBracketRight {
+  left: 87%;
+  top: 88%;
+  transform: translate(-50%, -50%) rotate(7deg);
+}
+
+.signRow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 88%;
+  z-index: 4;
+  display: flex;
+  gap: 14px;
+}
+
+.signButton {
+  flex: 1;
+  transform-origin: top center;
+  background: linear-gradient(45deg, transparent 5%, #D97706 5%);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 10px;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+  font-size: 15px;
+  box-shadow: 5px 0 0 #B45309;
+  outline: transparent;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: signSway 4.5s ease-in-out infinite;
+}
+
+.signButtonLeft {
+  animation-delay: 0s;
+}
+
+.signButtonRight {
+  animation-delay: -2.25s;
+}
+
+.signButton:hover {
+  animation-play-state: paused;
+  transform: translateY(-2px) rotate(0deg);
+  box-shadow: 7px 2px 0 #B45309;
+}
+
+.signButton:active {
+  animation-play-state: paused;
+  transform: translateY(0) rotate(0deg);
+  box-shadow: 4px 0 0 #B45309;
+}
+
+@keyframes signTheoBob {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1deg);
+  }
+}
+
+@keyframes signSway {
+  0%, 100% {
+    transform: rotate(-1.2deg);
+  }
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signTheoImage {
+    animation: none;
+  }
+  .signButton {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .signChoiceContainer {
+    width: min(280px, calc(100% - 24px));
+  }
+
+  .signPost {
+    width: 8px;
+  }
+
+  .signButton {
+    font-size: 12px;
+    padding: 10px 6px;
+    gap: 5px;
+  }
+
+  .signBracket {
+    width: 26px;
+    height: 8px;
+  }
 }
 
 .welcomeBox {
@@ -70,7 +272,7 @@
 .lobbySection {
   width: 100%;
   max-width: 520px;
-  margin: 8px auto 0;
+  margin: 12px auto 0;
   padding: 0 20px;
   box-sizing: border-box;
 }
@@ -209,6 +411,12 @@
   width: 100%;
 }
 
+.modeButtonGrid > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  width: min(100%, 260px);
+  justify-self: center;
+}
+
 .secondaryButton {
   background: linear-gradient(45deg, transparent 5%, #D97706 5%);
   color: #fff;
@@ -269,103 +477,21 @@
 }
 
 @media (max-width: 600px) {
-  .mascotWrapper {
-    width: 120px;
-    max-width: 32vw;
-    margin-bottom: 10px;
-  }
   .title {
-    font-size: 1.75rem;
-  }
-  .tagline {
-    font-size: 0.875rem;
-    margin-bottom: 24px;
+    font-size: 1.65rem;
   }
   .heroContainer {
     margin-top: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
-  .playNowButton {
-    padding: 14px 36px;
-    font-size: 16px;
-    letter-spacing: 1.5px;
-  }
-  .howItWorksButton {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-  .primaryButtonsContainer {
-    gap: 12px;
-  }
-  .featured3DSection {
-    max-width: 360px;
-  }
-  .secondaryButtonsContainer {
-    max-width: 360px;
-  }
-
-  .modeButtonGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .secondaryButtonsContainer .secondaryButton,
-  .modeButtonGrid .secondaryButton {
-    padding: 8px 14px;
-    font-size: 14px;
-    min-height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .lobbySection {
-    margin-top: 4px;
+    margin-top: 8px;
     padding: 0 16px;
   }
-
   .continueSlot {
     padding: 9px 10px;
   }
 }
-
-.titleContainer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stencilBackground {
-  position: fixed;
-  z-index: 0;
-  opacity: 0.10;
-  filter: grayscale(1) contrast(200%) brightness(0.5);
-  pointer-events: auto;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  transform: translate(-50%, -50%);
-  animation: stencilFloat 8s ease-in-out infinite, stencilPulse 4s ease-in-out infinite;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-@keyframes stencilFloat {
-  0%, 100% { transform: translate(-50%, -50%) scale(8) translateX(0px); }
-  50% { transform: translate(-50%, -50%) scale(8) translateX(15px); }
-}
-
-@keyframes stencilPulse {
-  0%, 100% { opacity: 0.10; filter: grayscale(1) contrast(200%) brightness(0.5); }
-  50% { opacity: 0.20; filter: grayscale(1) contrast(250%) brightness(0.6); }
-}
-
-@keyframes hoverPulse {
-  0%, 100% { opacity: 0.15; filter: grayscale(1) contrast(250%) brightness(0.7); }
-  50% { opacity: 0.25; filter: grayscale(1) contrast(300%) brightness(0.8); }
-}
-
-
 
 @keyframes float {
   0%, 100% {

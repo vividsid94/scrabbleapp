@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { origPool, origBoard } from '../components/AppContent/References/staticData.js';
 import { alphabetizeRack } from '../functions/play/rackFunctions';
 import { getBoardDiff } from '../functions/play/boardUtils';
+import { saveActiveGameSnapshot, clearActiveGameSnapshot } from '../utils/activeGamePersistence';
 
 export const useGameStore = create((set, get) => {
   // Initial state
@@ -325,6 +326,31 @@ export const useGameStore = create((set, get) => {
     setTheoYellScoreThreshold: (threshold) => set({ theoYellScoreThreshold: threshold }),
     setSelectedBot: (bot) => set({ selectedBot: bot }),
     setTopeThinking: (data) => set({ topeThinking: data }),
+
+    // Restores a single-player bot game from a saved "continue" snapshot
+    // (see src/utils/activeGamePersistence.js). Anonymous, no accounts.
+    restoreActiveGame: (snapshot) => set({
+      boardCoords: snapshot.boardCoords,
+      tempBoardCoords: JSON.parse(JSON.stringify(snapshot.boardCoords)),
+      origBoardCoords: snapshot.origBoardCoords,
+      player1Rack: snapshot.player1Rack,
+      player2Rack: snapshot.player2Rack,
+      player1points: snapshot.player1points,
+      player2points: snapshot.player2points,
+      player1Name: snapshot.player1Name,
+      player2Name: snapshot.player2Name,
+      pool: snapshot.pool,
+      currentPlayer: snapshot.currentPlayer,
+      moveHistory: snapshot.moveHistory,
+      blankTiles: snapshot.blankTiles,
+      consecutivePasses: snapshot.consecutivePasses,
+      selectedBot: snapshot.selectedBot,
+      playerTurnCount: snapshot.playerTurnCount,
+      premiumSquares: snapshot.premiumSquares || [],
+      isBotMode: true,
+      gameStarted: true,
+      gameEnded: false
+    }),
     
     // Actions - Defense Modal
     setShowDefenseModal: (show) => set({ showDefenseModal: show }),
@@ -1990,4 +2016,48 @@ export const useGameStore = create((set, get) => {
       return premiumSquares;
     },
   };
-}); 
+});
+
+// Anonymous "continue last game" autosave: single-player bot games only
+// (not multiplayer, not local pass-and-play). No accounts, just localStorage -
+// one slot, so starting a new game naturally overwrites whatever was there.
+useGameStore.subscribe((state, prevState) => {
+  if (!state.isBotMode) return;
+
+  if (state.gameEnded) {
+    if (!prevState.gameEnded) clearActiveGameSnapshot();
+    return;
+  }
+  if (!state.gameStarted) return;
+
+  const relevantFieldsChanged = (
+    state.boardCoords !== prevState.boardCoords ||
+    state.player1Rack !== prevState.player1Rack ||
+    state.player2Rack !== prevState.player2Rack ||
+    state.pool !== prevState.pool ||
+    state.player1points !== prevState.player1points ||
+    state.player2points !== prevState.player2points ||
+    state.currentPlayer !== prevState.currentPlayer ||
+    state.moveHistory !== prevState.moveHistory
+  );
+  if (!relevantFieldsChanged) return;
+
+  saveActiveGameSnapshot({
+    boardCoords: state.boardCoords,
+    origBoardCoords: state.origBoardCoords,
+    player1Rack: state.player1Rack,
+    player2Rack: state.player2Rack,
+    player1points: state.player1points,
+    player2points: state.player2points,
+    player1Name: state.player1Name,
+    player2Name: state.player2Name,
+    pool: state.pool,
+    currentPlayer: state.currentPlayer,
+    moveHistory: state.moveHistory,
+    blankTiles: state.blankTiles,
+    consecutivePasses: state.consecutivePasses,
+    selectedBot: state.selectedBot,
+    playerTurnCount: state.playerTurnCount,
+    premiumSquares: state.premiumSquares
+  });
+});

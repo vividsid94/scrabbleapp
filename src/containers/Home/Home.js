@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -7,22 +7,23 @@ import MenuItem from '@mui/material/MenuItem';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import styles from './Home.module.css';
-import { Rocket, MagnifyingGlass, Trophy, X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
+import { Trophy, X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
-import AnimatedMascot from '../../components/AppContent/AnimatedMascot';
-import { useGameStore } from '../../stores/gameStore';
+import { loadActiveGameSnapshot } from '../../utils/activeGamePersistence';
+import ModeSignChoice from './ModeSignChoice';
 
 export default function Home(){
   const { lightMode } = useContext(ThemeContext);
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [toolsMenuAnchor, setToolsMenuAnchor] = useState(null);
   const toolsMenuOpen = Boolean(toolsMenuAnchor);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
 
-  // Lightweight "continue" signal: any started, not-ended game
-  const hasActiveGame = useGameStore(state => state.gameStarted && !state.gameEnded);
+  const [hasActiveGame, setHasActiveGame] = useState(false);
+  useEffect(() => {
+    setHasActiveGame(!!loadActiveGameSnapshot());
+  }, []);
 
   const handleToolsMenuClick = (event) => {
     setToolsMenuAnchor(event.currentTarget);
@@ -32,25 +33,12 @@ export default function Home(){
     setToolsMenuAnchor(null);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <>
       <Box sx={{ display: 'flex'}}>
         <Sidenav/>
         <Box className={styles.page}>
           <Box className={styles.heroContainer}>
-            <Box className={styles.mascotWrapper}>
-              <AnimatedMascot />
-            </Box>
             <Box className={styles.title}
               style={{ color: lightMode === 'dark' ? '#fff' : '#1F2937' }}
             >
@@ -68,15 +56,90 @@ export default function Home(){
               Lobby
             </Box>
           </Box>
-          <Box 
+
+          <Box className={styles.lobbySection}>
+            <Box className={styles.continueSlot}>
+              <div className={styles.continueLabel}>Continue</div>
+              {hasActiveGame ? (
+                <button
+                  type="button"
+                  className={styles.continueButton}
+                  onClick={() => navigate('/play?continue=1')}
+                >
+                  <span className={styles.secondaryButtonContent}>
+                    <GameController size={16} weight="fill" />
+                    <span>Resume last game</span>
+                  </span>
+                </button>
+              ) : (
+                <div className={styles.continueEmpty}>No active game yet</div>
+              )}
+            </Box>
+          </Box>
+
+          {/* Equivalent play modes: Theo holding up two signs */}
+          <ModeSignChoice />
+
+          <Box
+            className={styles.secondaryButtonsContainer}
+            sx={{
+              width: '100%',
+              margin: '30px auto 0',
+              padding: { xs: '0 16px', sm: '0 20px' },
+              boxSizing: 'border-box'
+            }}
+          >
+            <Box className={styles.modeButtonGrid}>
+              <Link to="/puzzle" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  <span className={styles.secondaryButtonContent}>
+                    <PuzzlePiece size={18} weight="fill" />
+                    <span>Puzzles</span>
+                  </span>
+                </button>
+              </Link>
+              <Link to="/viewer" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  <span className={styles.secondaryButtonContent}>
+                    <Eye size={18} weight="fill" />
+                    <span>Viewer</span>
+                  </span>
+                </button>
+              </Link>
+              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  <span className={styles.secondaryButtonContent}>
+                    <Trophy size={18} weight="fill" />
+                    <span>Results & rankings</span>
+                  </span>
+                </button>
+              </Link>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={handleToolsMenuClick}
+                className={styles.moreLinkButton}
+              >
+                More modes
+                <CaretDown
+                  size={12}
+                  weight="bold"
+                  style={{ marginLeft: 6, transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                />
+              </button>
+            </Box>
+          </Box>
+
+          <Box
             className={styles.welcomeBox}
-            style={{ 
+            style={{
               backgroundColor: lightMode === 'dark' ? 'rgba(55, 65, 81, 0.6)' : 'rgba(249, 250, 251, 0.9)',
               border: lightMode === 'dark' ? '1px solid rgba(217, 119, 6, 0.15)' : '1px solid rgba(217, 119, 6, 0.1)',
             }}
             sx={{
               padding: { xs: '12px 14px', sm: '16px 20px' },
-              margin: { xs: '12px auto 8px', sm: '20px auto 12px' },
+              margin: { xs: '24px auto 8px', sm: '30px auto 12px' },
               width: { xs: 'calc(100% - 40px)', sm: '450px' },
               maxWidth: { xs: 'calc(100% - 40px)', sm: '450px' },
               display: 'flex',
@@ -84,8 +147,8 @@ export default function Home(){
               boxSizing: 'border-box'
             }}
           >
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -99,28 +162,6 @@ export default function Home(){
                 flex: 1,
                 width: '100%'
               }}>
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: { xs: '36px', sm: '40px' },
-                  height: { xs: '36px', sm: '40px' },
-                  borderRadius: '10px',
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.18)' : 'rgba(217, 119, 6, 0.1)',
-                  flexShrink: 0,
-                  overflow: 'hidden'
-                }}>
-                  <img 
-                    src="/images/fox-icon.svg" 
-                    alt="Fox icon" 
-                    style={{ 
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      color: '#000000'
-                    }}
-                  />
-                </Box>
                 <Box sx={{
                   fontSize: { xs: '14px', sm: '15px' },
                   color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937',
@@ -163,112 +204,9 @@ export default function Home(){
               </button>
             </Box>
           </Box>
-          
-          {/* Simple lobby layout: Continue slot + main actions */}
-          <Box className={styles.lobbySection}>
-            <Box className={styles.continueSlot}>
-              <div className={styles.continueLabel}>Continue</div>
-              {hasActiveGame ? (
-                <button
-                  type="button"
-                  className={styles.continueButton}
-                  onClick={() => navigate('/play')}
-                >
-                  <span className={styles.secondaryButtonContent}>
-                    <GameController size={16} weight="fill" />
-                    <span>Resume last game</span>
-                  </span>
-                </button>
-              ) : (
-                <div className={styles.continueEmpty}>No active game yet</div>
-              )}
-            </Box>
-          </Box>
-
-          {/* Featured: Play in 3D (3D Play) */}
-          <Box
-            className={styles.featured3DSection}
-            sx={{
-              width: '100%',
-              maxWidth: 520,
-              margin: '12px auto 0',
-              padding: { xs: '0 16px', sm: '0 20px' },
-              boxSizing: 'border-box'
-            }}
-          >
-            <Link to="/3dplay" style={{ textDecoration: 'none', display: 'block' }}>
-              <button className={styles.featured3DButton}>
-                <span className={styles.secondaryButtonContent}>
-                  <Cube size={22} weight="fill" />
-                  <span>Play in 3D</span>
-                </span>
-                <span className={styles.featured3DTag}>Featured</span>
-              </button>
-            </Link>
-          </Box>
-
-          <Box 
-            className={styles.secondaryButtonsContainer}
-            sx={{
-              width: '100%',
-              margin: '18px auto 0',
-              padding: { xs: '0 16px', sm: '0 20px' },
-              boxSizing: 'border-box'
-            }}
-          >
-            <Box className={styles.modeButtonGrid}>
-              <Link to="/play" style={{ textDecoration: 'none' }}>
-                <button className={styles.secondaryButton}>
-                  <span className={styles.secondaryButtonContent}>
-                    <GameController size={18} weight="fill" />
-                    <span>Classic play</span>
-                  </span>
-                </button>
-              </Link>
-              <Link to="/puzzle" style={{ textDecoration: 'none' }}>
-                <button className={styles.secondaryButton}>
-                  <span className={styles.secondaryButtonContent}>
-                    <PuzzlePiece size={18} weight="fill" />
-                    <span>Puzzles</span>
-                  </span>
-                </button>
-              </Link>
-              <Link to="/viewer" style={{ textDecoration: 'none' }}>
-                <button className={styles.secondaryButton}>
-                  <span className={styles.secondaryButtonContent}>
-                    <Eye size={18} weight="fill" />
-                    <span>Viewer</span>
-                  </span>
-                </button>
-              </Link>
-              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
-                <button className={styles.secondaryButton}>
-                  <span className={styles.secondaryButtonContent}>
-                    <Trophy size={18} weight="fill" />
-                    <span>Results & rankings</span>
-                  </span>
-                </button>
-              </Link>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-              <button
-                type="button"
-                onClick={handleToolsMenuClick}
-                className={styles.moreLinkButton}
-              >
-                More modes
-                <CaretDown
-                  size={12}
-                  weight="bold"
-                  style={{ marginLeft: 6, transform: toolsMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
-                />
-              </button>
-            </Box>
-          </Box>
         </Box>
       </Box>
 
-      {/* Compact tools menu for extra modes */}
       <Menu
         anchorEl={toolsMenuAnchor}
         open={toolsMenuOpen}
@@ -342,7 +280,6 @@ export default function Home(){
         </MenuItem>
       </Menu>
 
-      {/* How It Works Modal */}
       <Modal
         open={howItWorksOpen}
         onClose={() => setHowItWorksOpen(false)}
@@ -397,7 +334,6 @@ export default function Home(){
             How It Works
           </Typography>
 
-          {/* Main Features */}
           <Typography
             sx={{
               fontWeight: '600',
@@ -413,7 +349,6 @@ export default function Home(){
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-            {/* Play */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -451,7 +386,6 @@ export default function Home(){
               </Box>
             </Box>
 
-            {/* Puzzles */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -489,7 +423,6 @@ export default function Home(){
               </Box>
             </Box>
 
-            {/* Viewer */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -528,7 +461,6 @@ export default function Home(){
             </Box>
           </Box>
 
-          {/* Extra Features */}
           <Typography
             sx={{
               fontWeight: '600',
@@ -544,7 +476,6 @@ export default function Home(){
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-            {/* Ask Theo */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -582,7 +513,6 @@ export default function Home(){
               </Box>
             </Box>
 
-            {/* 3D Viewer */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -620,7 +550,6 @@ export default function Home(){
               </Box>
             </Box>
 
-            {/* Submit Game */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
@@ -658,7 +587,6 @@ export default function Home(){
               </Box>
             </Box>
 
-            {/* Results */}
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
