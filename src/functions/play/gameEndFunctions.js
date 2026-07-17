@@ -81,18 +81,16 @@ export const handleGameEnd = async ({
     return sum + value;
   }, 0);
   
-  // Standard Scrabble endgame scoring: the player who went out gains the
-  // value of everyone else's stranded tiles, and the loser's score is
-  // reduced by the value of their own stranded tiles.
+  // Outplay bonus: the player who went out (winnerName/winnerRack) adds
+  // 2x the value of the opponent's stranded tiles to their own score.
+  // The opponent's score is left untouched.
   let finalPlayer1Score = player1points;
   let finalPlayer2Score = player2points;
 
   if (winnerName === player1Name) {
-    finalPlayer1Score = player1points + rackSum;
-    finalPlayer2Score = player2points - rackSum;
+    finalPlayer1Score = player1points + (rackSum * 2);
   } else {
-    finalPlayer2Score = player2points + rackSum;
-    finalPlayer1Score = player1points - rackSum;
+    finalPlayer2Score = player2points + (rackSum * 2);
   }
   setPlayer1points(finalPlayer1Score);
   setPlayer2points(finalPlayer2Score);
@@ -103,8 +101,11 @@ export const handleGameEnd = async ({
   // Stop the timer
   setTimerActive(false);
   
-  // Determine winner based on winnerName
-  const isPlayerWinner = winnerName === player1Name;
+  // The player who went out (winnerName) gets the 2x rack bonus above, but
+  // that does NOT make them the winner. The winner is whoever has the
+  // higher score once that bonus is applied — going out just ends the
+  // game, the opponent can still have more total points.
+  const isPlayerWinner = finalPlayer1Score >= finalPlayer2Score;
   const winner = isPlayerWinner ? 'player' : 'bot';
   setWinner(winner);
   
