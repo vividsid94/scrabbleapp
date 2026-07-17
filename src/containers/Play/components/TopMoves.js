@@ -32,13 +32,13 @@ const TopMoves = ({
   const leaveValueBgColor = lightMode === 'dark' ? 'rgba(33, 150, 243, 0.2)' : 'rgba(37, 99, 235, 0.15)';
   const panelBackground = lightMode === 'dark'
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-    : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)';
+    : '#FFFFFF';
   const panelBorder = lightMode === 'dark'
     ? '1px solid rgba(255, 255, 255, 0.1)'
-    : '1px solid #D1D5DB';
+    : '1px solid rgba(140, 130, 110, 0.28)';
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-    : '0 2px 8px rgba(0, 0, 0, 0.1)';
+    : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)';
 
   // Auto-expand when moves are loaded
   useEffect(() => {
@@ -169,7 +169,7 @@ const TopMoves = ({
           width: '100%',
           boxSizing: 'border-box',
           '&:hover': {
-            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+            boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 5px 14px rgba(100, 95, 80, 0.2)'
           },
           marginBottom: isExpanded ? '8px' : '0'
         }}

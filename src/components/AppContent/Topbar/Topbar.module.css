@@ -7,8 +7,9 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 12px 24px;
-  height: 48px;
+  box-sizing: border-box;
+  padding: 6px 20px;
+  height: 38px;
   backdrop-filter: blur(10px);
   background: rgba(31, 41, 55, 1);
 }
@@ -20,7 +21,11 @@
 }
 
 .topbar[data-light-mode="light"] {
-  background: rgba(255, 255, 255, 1);
+  /* Same treatment as the sidebar: stays dark in both themes instead of
+     flipping to a white bar, so the two pieces of chrome read as one system */
+  background: linear-gradient(180deg, #332E28 0%, #201C17 100%);
+  border-bottom: 1px solid rgba(140, 130, 110, 0.35);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
 }
 
 .topbarContent {

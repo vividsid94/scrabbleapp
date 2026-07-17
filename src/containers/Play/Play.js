@@ -115,7 +115,7 @@ const BonusSquareEditor = ({ distribution, onDistributionChange, lightMode }) =>
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D1D5DB',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 fontSize: '11px',
@@ -123,7 +123,7 @@ const BonusSquareEditor = ({ distribution, onDistributionChange, lightMode }) =>
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
                 userSelect: 'none',
                 '&:hover': {
-                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#D1D5DB'
                 }
               }}
             >
@@ -148,7 +148,7 @@ const BonusSquareEditor = ({ distribution, onDistributionChange, lightMode }) =>
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D1D5DB',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 fontSize: '11px',
@@ -156,7 +156,7 @@ const BonusSquareEditor = ({ distribution, onDistributionChange, lightMode }) =>
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
                 userSelect: 'none',
                 '&:hover': {
-                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#D1D5DB'
                 }
               }}
             >
@@ -236,7 +236,7 @@ const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D1D5DB',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 fontSize: '10px',
@@ -244,7 +244,7 @@ const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
                 userSelect: 'none',
                 '&:hover': {
-                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#D1D5DB'
                 }
               }}
             >
@@ -269,7 +269,7 @@ const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb',
+                border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D1D5DB',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 fontSize: '10px',
@@ -277,7 +277,7 @@ const VariablePoolEditor = ({ currentPool, onPoolChange, lightMode }) => {
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
                 userSelect: 'none',
                 '&:hover': {
-                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e5e7eb'
+                  backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#D1D5DB'
                 }
               }}
             >
@@ -1780,7 +1780,7 @@ export default function Play({ isMultiplayer = false }) {
                     maxWidth: { xs: '100%', sm: '500px', md: '540px' },
                     height: { xs: 'auto', sm: 'auto' },
                     maxHeight: { xs: 'min(92vh, 780px)', sm: 'min(85vh, 720px)' },
-                    backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                    backgroundColor: lightMode === 'dark' ? '#1F2937' : '#FAF9F6',
                     borderLeft: { xs: 'none', sm: lightMode === 'dark' ? '1px solid rgba(139, 115, 85, 0.1)' : '1px solid rgba(200, 180, 150, 0.2)' },
                     boxShadow: { xs: '0 -8px 32px rgba(0,0,0,0.35)', sm: '0 4px 24px rgba(0,0,0,0.12)' },
                     borderRadius: { xs: '16px 16px 0 0', sm: '12px' },
@@ -1845,7 +1845,7 @@ export default function Play({ isMultiplayer = false }) {
               display: 'flex',
               flexDirection: 'column',
                       overflow: 'hidden',
-                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#FAF9F6',
                       color: lightMode === 'dark' ? '#fff' : '#1F2937',
                       flex: 1,
                       minHeight: 0,
@@ -1872,10 +1872,10 @@ export default function Play({ isMultiplayer = false }) {
                               gap: { xs: 6, sm: 6 },
                               background: selectedBot.name === bot.name && !customBotSelected 
                                 ? 'rgba(96,165,250,0.08)' 
-                                : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                                : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
                               border: selectedBot.name === bot.name && !customBotSelected 
                                 ? '2px solid #3D5A80' 
-                                : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                                : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                               borderRadius: 4,
                               boxShadow: selectedBot.name === bot.name && !customBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
                               cursor: 'pointer',
@@ -1933,10 +1933,10 @@ export default function Play({ isMultiplayer = false }) {
                             gap: { xs: 6, sm: 6 },
                             background: customBotSelected 
                               ? 'rgba(96,165,250,0.08)' 
-                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
                             border: customBotSelected 
                               ? '2px solid #3D5A80' 
-                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                             borderRadius: 4,
                             overflow: 'hidden',
                             boxShadow: customBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
@@ -1965,11 +1965,11 @@ export default function Play({ isMultiplayer = false }) {
                                   width: 24, 
                                   fontSize: '9px', 
                                   textAlign: 'center', 
-                                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #e5e7eb', 
+                                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #D1D5DB', 
                                   borderRadius: 2, 
                                   margin: 0, 
                                   padding: '1px 2px',
-                                  background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                                  background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#FAF9F6',
                                   color: lightMode === 'dark' ? '#fff' : '#1F2937'
                                 }} 
                               />th by points + leave
@@ -2014,10 +2014,10 @@ export default function Play({ isMultiplayer = false }) {
                             gap: { xs: 6, sm: 6 },
                             background: customDefenseBotSelected 
                               ? 'rgba(96,165,250,0.08)' 
-                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
+                              : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
                             border: customDefenseBotSelected 
                               ? '2px solid #3D5A80' 
-                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                              : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                             borderRadius: 4,
                             overflow: 'hidden',
                             boxShadow: customDefenseBotSelected ? '0 2px 8px rgba(61,90,128,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
@@ -2094,7 +2094,7 @@ export default function Play({ isMultiplayer = false }) {
                         flexShrink: 0,
                         padding: { xs: '12px 16px 16px', sm: '12px 20px 16px' },
                         borderTop: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
-                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                        backgroundColor: lightMode === 'dark' ? '#1F2937' : '#FAF9F6',
                         boxSizing: 'border-box'
                       }}
                     >
@@ -2137,7 +2137,7 @@ export default function Play({ isMultiplayer = false }) {
               left: 0,
               right: 0,
               bottom: 0,
-                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                      backgroundColor: lightMode === 'dark' ? '#1F2937' : '#FAF9F6',
               transform: showTimeControls ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
@@ -2223,9 +2223,9 @@ export default function Play({ isMultiplayer = false }) {
                             fontSize: { xs: '14px', sm: '14px' },
                     fontWeight: 600,
                             color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                            backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                            backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#FAF9F6',
                     '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                              borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#D1D5DB',
                       borderWidth: '1px'
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -2255,7 +2255,7 @@ export default function Play({ isMultiplayer = false }) {
                   justifyContent: 'space-between',
                   padding: { xs: '10px 12px', sm: '9px 12px' },
                   backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
+                  border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB',
                   borderRadius: 4,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -2298,8 +2298,8 @@ export default function Play({ isMultiplayer = false }) {
                     alignItems: 'center', 
                     justifyContent: 'space-between',
                     padding: { xs: '6px 8px', sm: '5px 8px' },
-                    backgroundColor: randomizeBonusSquares ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
-                    border: randomizeBonusSquares ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    backgroundColor: randomizeBonusSquares ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
+                    border: randomizeBonusSquares ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                     borderRadius: 4,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
@@ -2366,10 +2366,10 @@ export default function Play({ isMultiplayer = false }) {
                         fontSize: { xs: '11px', sm: '10px' },
                         fontWeight: 600,
                         color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#FAF9F6',
                         marginBottom: 1,
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#D1D5DB',
                         },
                         '&:hover .MuiOutlinedInput-notchedOutline': {
                           borderColor: '#3D5A80',
@@ -2412,8 +2412,8 @@ export default function Play({ isMultiplayer = false }) {
                     alignItems: 'center', 
                     justifyContent: 'space-between',
                     padding: { xs: '6px 8px', sm: '5px 8px' },
-                    backgroundColor: twoTurnsPerPlayer ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
-                    border: twoTurnsPerPlayer ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    backgroundColor: twoTurnsPerPlayer ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
+                    border: twoTurnsPerPlayer ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                     borderRadius: 4,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
@@ -2461,8 +2461,8 @@ export default function Play({ isMultiplayer = false }) {
                     alignItems: 'center', 
                     justifyContent: 'space-between',
                     padding: { xs: '6px 8px', sm: '5px 8px' },
-                    backgroundColor: variablePool ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
-                    border: variablePool ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                    backgroundColor: variablePool ? 'rgba(61, 90, 128, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
+                    border: variablePool ? '2px solid #3D5A80' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                     borderRadius: 4,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
@@ -2526,10 +2526,10 @@ export default function Play({ isMultiplayer = false }) {
                         fontSize: { xs: '11px', sm: '10px' },
                         fontWeight: 600,
                         color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                        backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#FAF9F6',
                         marginBottom: 1,
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                          borderColor: lightMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#D1D5DB',
                         },
                         '&:hover .MuiOutlinedInput-notchedOutline': {
                           borderColor: '#3D5A80',
@@ -2587,8 +2587,8 @@ export default function Play({ isMultiplayer = false }) {
                     alignItems: 'center', 
                     justifyContent: 'space-between',
                             padding: { xs: '6px 8px', sm: '5px 8px' },
-                            backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff'),
-                            border: theoYellEnabled ? '2px solid #D97706' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb'),
+                            backgroundColor: theoYellEnabled ? 'rgba(217, 119, 6, 0.1)' : (lightMode === 'dark' ? 'rgba(255,255,255,0.05)' : '#FAF9F6'),
+                            border: theoYellEnabled ? '2px solid #D97706' : (lightMode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #D1D5DB'),
                     borderRadius: 4,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
@@ -2740,7 +2740,7 @@ export default function Play({ isMultiplayer = false }) {
                                     border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid #d1d5db',
                             borderRadius: '4px',
                                     textAlign: 'center',
-                                    background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#fff',
+                                    background: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#FAF9F6',
                                     color: lightMode === 'dark' ? '#fff' : '#1F2937'
                           }}
                         />
@@ -2795,7 +2795,7 @@ export default function Play({ isMultiplayer = false }) {
                 width: '100%',
                 padding: { xs: '12px 16px 16px', sm: '12px 20px 16px' },
                 borderTop: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
-                backgroundColor: lightMode === 'dark' ? '#1F2937' : '#ffffff',
+                backgroundColor: lightMode === 'dark' ? '#1F2937' : '#FAF9F6',
                 boxSizing: 'border-box'
               }}
             >
@@ -2963,7 +2963,7 @@ export default function Play({ isMultiplayer = false }) {
                 className={styles.timeSliderContainer}
                 style={{
                   backgroundColor: lightMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  border: lightMode === 'light' ? '1px solid #e5e7eb' : 'none'
+                  border: lightMode === 'light' ? '1px solid #D1D5DB' : 'none'
                 }}
               >
                 <Box 
@@ -3005,15 +3005,15 @@ export default function Play({ isMultiplayer = false }) {
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
                 background: lightMode === 'dark'
                   ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-                  : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
-                border: lightMode === 'dark' ? 'none' : '1px solid #D1D5DB',
+                  : '#FFFFFF',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.28)',
                 padding: '10px',
                       cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 borderRadius: '8px',
-                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)',
                 '&:hover': {
-                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 5px 14px rgba(100, 95, 80, 0.2)'
                 },
                 marginBottom: poolExpanded ? '8px' : '0'
                     }}
@@ -3071,12 +3071,13 @@ export default function Play({ isMultiplayer = false }) {
                 mt: 1.5,
                 padding: '8px 10px',
                 borderRadius: '8px',
-                background: lightMode === 'dark' 
+                background: lightMode === 'dark'
                   ? 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%)'
-                  : 'linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(243, 244, 246, 0.98) 100%)',
-                boxShadow: lightMode === 'dark' 
+                  : '#FFFFFF',
+                border: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.28)',
+                boxShadow: lightMode === 'dark'
                   ? '0 2px 8px rgba(0, 0, 0, 0.4)'
-                  : '0 2px 8px rgba(0, 0, 0, 0.08)'
+                  : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)'
               }}
             >
               <Box
@@ -3104,10 +3105,10 @@ export default function Play({ isMultiplayer = false }) {
                   outline: 'none',
                   border: lightMode === 'dark'
                     ? '1px solid rgba(156, 163, 175, 0.7)'
-                    : '1px solid rgba(209, 213, 219, 1)',
+                    : '1px solid rgba(140, 130, 110, 0.35)',
                   backgroundColor: lightMode === 'dark'
                     ? 'rgba(17, 24, 39, 0.9)'
-                    : '#F9FAFB',
+                    : '#FFFFFF',
                   color: lightMode === 'dark' ? '#F9FAFB' : '#111827',
                   '&:focus': {
                     borderColor: lightMode === 'dark' ? '#60A5FA' : '#3B82F6',

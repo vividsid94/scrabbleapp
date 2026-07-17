@@ -103,20 +103,20 @@ function TopePromptView({ prompt, lightMode }) {
 }
 
 const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt }) => {
+  // Active turn indicator: small indicator light
+  const isActive = currentPlayer === playerNumber;
+
   const panelBackground = lightMode === 'dark'
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-    : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)';
+    : 'radial-gradient(circle at 25% 0%, rgba(255, 255, 255, 0.75) 0%, transparent 55%), linear-gradient(150deg, #FFFFFF 0%, #F5F3EE 50%, #E7E3D8 100%)';
 
   const panelBorder = lightMode === 'dark'
     ? '1px solid rgba(255, 255, 255, 0.1)'
-    : '1px solid #D1D5DB';
+    : '1px solid rgba(140, 130, 110, 0.28)';
 
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
-    : '0 2px 8px rgba(0, 0, 0, 0.1)';
-
-  // Active turn indicator: small indicator light
-  const isActive = currentPlayer === playerNumber;
+    : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)';
 
   return (
   <Box 

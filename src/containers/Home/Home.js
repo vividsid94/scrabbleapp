@@ -229,7 +229,7 @@ export default function Home(){
         }}
         PaperProps={{
           sx: {
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#FFFBF5',
             border: '1px solid',
             borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)',
             borderRadius: '8px',
@@ -294,7 +294,7 @@ export default function Home(){
         <Box
           sx={{
             position: 'relative',
-            backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
+            backgroundColor: lightMode === 'dark' ? '#374151' : '#FFFBF5',
             borderRadius: '12px',
             padding: { xs: '20px', sm: '24px' },
             maxWidth: '480px',

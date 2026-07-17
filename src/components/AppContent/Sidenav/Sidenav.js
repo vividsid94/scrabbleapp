@@ -82,8 +82,13 @@ export default function MiniDrawer() {
   const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
 
   const getBackgroundColor = () => {
-    // Sidebar stays dark in both themes — its text/hover states are white-on-dark
-    return '#1F2937';
+    // Sidebar stays dark in both themes — its text/hover states are white-on-dark.
+    // Dark mode keeps the app's cool charcoal (#1F2937). Light mode used to start
+    // that same cool charcoal at the top of its gradient, which fought the warm
+    // stone palette everywhere else — it's now a fully warm dark tone instead.
+    return lightMode === 'dark'
+      ? '#1F2937'
+      : 'linear-gradient(180deg, #332E28 0%, #201C17 100%)';
   };
 
   const getTextColor = () => {
@@ -94,6 +99,8 @@ export default function MiniDrawer() {
     width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '160px' : '52px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
+    borderRight: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.35)',
+    boxShadow: lightMode === 'dark' ? 'none' : '2px 0 16px rgba(0, 0, 0, 0.18)',
     transition: 'width 0.3s ease',
     '@media (max-width: 992px)': {
       width: '100%',
