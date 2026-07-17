@@ -215,9 +215,9 @@ const Scrabble3DPlay = () => {
     setTilesToExchange,
     initializeGame,
     startBotGame,
-    handleWordSubmit,
-    handlePass,
-    handleExchange,
+    handleWordSubmitClick: submitWordGuarded,
+    handlePassClick: passGuarded,
+    handleExchangeClick: exchangeGuarded,
     makeBotMove,
     handleKeyDownWrapper,
     updatePreviewScore,
@@ -1628,12 +1628,16 @@ const Scrabble3DPlay = () => {
   // Action button handlers
   const handleSubmit = () => {
     if (selectedTiles?.length > 0) {
-      handleWordSubmit(playerMoveSound);
+      // Guarded: blocks a second action (pass/exchange/resubmit) from firing
+      // while this word's validation is still in flight, which previously
+      // let the turn race ahead of a slow validation call and corrupt whose
+      // turn/rack/score the eventual result got attributed to.
+      submitWordGuarded(playerMoveSound);
     }
   };
 
   const handlePassClick = () => {
-    handlePass();
+    passGuarded();
   };
 
   const handleExchangeClick = () => {
@@ -1655,7 +1659,7 @@ const Scrabble3DPlay = () => {
   // Confirm exchange
   const handleExchangeConfirm = () => {
     if (tilesToExchange.length > 0) {
-      handleExchange();
+      exchangeGuarded();
       setShowExchangeModal(false);
     }
   };

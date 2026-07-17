@@ -621,56 +621,7 @@ export const useGameStore = create((set, get) => {
         startBotGameFunction({ ...params, origPool: poolToUse });
       });
     },
-    
-    // Victory celebration actions
-    handleVictory: async (winnerRack, winnerName, loserRack, loserPoints) => {
-      const { 
-        setGameEnded, 
-        setWinner, 
-        setFinalPlayer1Score, 
-        setFinalPlayer2Score, 
-        setShowConfetti, 
-        setShowVictoryOverlay,
-        player1Name,
-        player1points,
-        player2points,
-        isBotMode
-      } = get();
-      
-      setGameEnded(true);
-      
-      // Determine winner based on winnerName
-      const isPlayerWinner = winnerName === player1Name;
-      const winner = isPlayerWinner ? 'player' : 'bot';
-      setWinner(winner);
-      
-      // Set final scores
-      setFinalPlayer1Score(player1points);
-      setFinalPlayer2Score(player2points);
-      
-      // Update user stats if in bot mode and user is logged in
-      if (isBotMode) {
-        try {
-          // Dynamically import to avoid circular dependencies
-          const { updateUserStats } = await import('../utils/stats');
-          const { supabase } = await import('../utils/supabase');
-          
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const won = winner === 'player';
-            await updateUserStats(user.id, won, player1points);
-          }
-        } catch (error) {
-          console.error('Error updating user stats:', error);
-          // Don't block victory celebration if stats update fails
-        }
-      }
-      
-      // Trigger victory celebration
-      setShowConfetti(true);
-      setShowVictoryOverlay(true);
-    },
-    
+
     handleNewGame: () => {
       const { 
         setShowVictoryOverlay, 
@@ -1145,19 +1096,31 @@ export const useGameStore = create((set, get) => {
     },
 
     handleWordSubmitClick: (playerMoveSound) => {
-      const { handleWordSubmit } = get();
-      handleWordSubmit(playerMoveSound);
+      const { gameEnded, isPlayerThinking, handleWordSubmit, setIsPlayerThinking } = get();
+      if (gameEnded || isPlayerThinking) return Promise.resolve();
+      // Word validation can hit the network (dictionary API fallback) and take a
+      // variable amount of time. Without this guard, a player could click Pass/
+      // Exchange/Submit again while validation was still pending — that second
+      // action would switch turns and mutate racks/scores out from under the
+      // still-in-flight submission, which was holding a stale snapshot of whose
+      // turn it was. That race is what caused the winner to be misreported in
+      // some games: the stale submission would resolve after the turn had
+      // already moved on and finish writing its (now wrong) result.
+      setIsPlayerThinking(true);
+      return handleWordSubmit(playerMoveSound).finally(() => {
+        setIsPlayerThinking(false);
+      });
     },
 
     handlePassClick: () => {
-      const { gameEnded, handlePass } = get();
-      if (gameEnded) return; // Don't allow passes after game has ended
+      const { gameEnded, isPlayerThinking, handlePass } = get();
+      if (gameEnded || isPlayerThinking) return; // Don't allow passes while a move is in flight or after game end
       handlePass();
     },
 
     handleExchangeClick: () => {
-      const { gameEnded, handleExchange } = get();
-      if (gameEnded) return; // Don't allow exchanges after game has ended
+      const { gameEnded, isPlayerThinking, handleExchange } = get();
+      if (gameEnded || isPlayerThinking) return; // Don't allow exchanges while a move is in flight or after game end
       handleExchange();
     },
 

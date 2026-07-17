@@ -699,8 +699,10 @@ export const handlePlayTopMove = async () => {
           loserPoints: currentPlayer === 1 ? player2points : player1points,
           player1Rack: player1Rack,
           player2Rack: player2Rack,
-          player1points: player1points,
-          player2points: player2points,
+          // Use the freshly computed total for whoever just moved — player1points/
+          // player2points here are still the pre-move values (state hasn't flushed yet)
+          player1points: currentPlayer === 1 ? stateUpdates.runningTotal : player1points,
+          player2points: currentPlayer === 2 ? stateUpdates.runningTotal : player2points,
           player1Name: player1Name,
           player2Name: player2Name,
           autoPlayBest: false, // We don't have access to autoPlayBest here, but it's not critical

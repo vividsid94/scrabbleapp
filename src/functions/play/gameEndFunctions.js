@@ -81,19 +81,21 @@ export const handleGameEnd = async ({
     return sum + value;
   }, 0);
   
-  // Add remaining tiles to loser's score
+  // Standard Scrabble endgame scoring: the player who went out gains the
+  // value of everyone else's stranded tiles, and the loser's score is
+  // reduced by the value of their own stranded tiles.
   let finalPlayer1Score = player1points;
   let finalPlayer2Score = player2points;
-  
+
   if (winnerName === player1Name) {
-    // Player 1 is the winner, so add remaining tiles to Player 2's score
-    finalPlayer2Score = loserPoints + rackSum;
-    setPlayer2points(finalPlayer2Score);
+    finalPlayer1Score = player1points + rackSum;
+    finalPlayer2Score = player2points - rackSum;
   } else {
-    // Player 2 is the winner, so add remaining tiles to Player 1's score
-    finalPlayer1Score = loserPoints + rackSum;
-    setPlayer1points(finalPlayer1Score);
+    finalPlayer2Score = player2points + rackSum;
+    finalPlayer1Score = player1points - rackSum;
   }
+  setPlayer1points(finalPlayer1Score);
+  setPlayer2points(finalPlayer2Score);
   
   // Set game as ended
   setGameEnded(true);

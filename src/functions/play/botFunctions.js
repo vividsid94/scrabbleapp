@@ -565,7 +565,9 @@ export const makeBotMove = async (botMoveSound) => {
         player1Rack: player1Rack,
         player2Rack: player2Rack,
         player1points: player1points,
-        player2points: player2points,
+        // Use the freshly computed total — player2points here is still the
+        // pre-move value (state hasn't flushed yet)
+        player2points: botRunningTotal,
         player1Name: player1Name,
         player2Name: player2Name,
         autoPlayBest: autoPlayBest,
@@ -734,7 +736,9 @@ export const makeBotMove = async (botMoveSound) => {
             player1Rack: player1Rack,
             player2Rack: player2Rack,
             player1points: player1points,
-            player2points: player2points,
+            // Use the freshly computed total — player2points here is still the
+            // pre-move value (state hasn't flushed yet)
+            player2points: botRunningTotal,
             player1Name: player1Name,
             player2Name: player2Name,
             autoPlayBest: autoPlayBest,
