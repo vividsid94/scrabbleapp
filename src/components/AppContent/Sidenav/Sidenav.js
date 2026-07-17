@@ -82,12 +82,12 @@ export default function MiniDrawer() {
   const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
 
   const getBackgroundColor = () => {
-    // Dark mode: deep gray; Light mode: slightly lighter gray
-    return lightMode === 'dark' ? '#1F2937' : '#9CA3AF';
+    // Sidebar stays dark in both themes — its text/hover states are white-on-dark
+    return '#1F2937';
   };
 
   const getTextColor = () => {
-    return lightMode === 'dark' ? '#fff' : '#f5f5f5';
+    return '#fff';
   };
 
   const drawerMixin = () => ({

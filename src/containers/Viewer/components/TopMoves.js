@@ -361,13 +361,13 @@ const TopMoves = ({
           }
         }}
       >
-        <Box className={styles.topMoveRank} style={{ color: secondaryTextColor }}>{index + 1}</Box>
-        <Box className={styles.topMoveLocation} style={{ color: mutedTextColor }}>{location || ''}</Box>
+        <Box className={styles.topMoveRank} style={{ color: secondaryTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>{index + 1}</Box>
+        <Box className={styles.topMoveLocation} style={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>{location || ''}</Box>
         <Box className={styles.topMoveWord} style={{ color: textColor }}>{move.word}</Box>
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
           <Tooltip title="Leave">
-            <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+            <Box className={styles.topMoveLeaveValue} sx={{ color: textColor, background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
               {Math.round(leaveValue)} ({leaveString})
             </Box>
           </Tooltip>
@@ -519,11 +519,11 @@ const TopMoves = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
           {topMoves && topMoves.length > 0 ? (
             <>
-              <Box className={styles.topMoveRank} style={{ color: secondaryTextColor }}>
+              <Box className={styles.topMoveRank} style={{ color: secondaryTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>
                 1
               </Box>
               {formatLocation(topMoves[0]) && (
-                <Box className={styles.topMoveLocation} style={{ color: mutedTextColor }}>
+                <Box className={styles.topMoveLocation} style={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>
                   {formatLocation(topMoves[0])}
                 </Box>
               )}
@@ -534,7 +534,7 @@ const TopMoves = ({
                 <Box className={styles.topMoveScore}>{topScore}</Box>
                 {topMoves[0].leaveValue !== undefined && (
                   <Tooltip title="Leave">
-                    <Box className={styles.topMoveLeaveValue} sx={{ background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+                    <Box className={styles.topMoveLeaveValue} sx={{ color: textColor, background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
                       {Math.round(topMoves[0].leaveValue || 0)} ({topMoves[0].leave || ''})
                     </Box>
                   </Tooltip>

@@ -117,7 +117,7 @@ const LatestMove = ({
         >
           {turnNumber}
         </Box>
-        <Box className={styles.moveHistoryLocation} sx={{ color: mutedTextColor }}>{location || ''}</Box>
+        <Box className={styles.moveHistoryLocation} sx={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>{location || ''}</Box>
         <Box className={styles.moveHistoryWord} sx={{ color: textColor }}>{processedWord || 'Pass'}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore} sx={{ color: textColor, background: scoreBgColor, border: `1px solid ${borderColor}` }}>{score || 0}</Box>
@@ -174,12 +174,12 @@ const LatestMove = ({
               e.stopPropagation();
               if (onTurnClick) onTurnClick(currentMoveIndex);
             }}
-            style={{ color: secondaryTextColor }}
+            style={{ color: secondaryTextColor, background: bgColor, border: `1px solid ${borderColor}` }}
           >
             {turnNumber}
           </Box>
           {location && (
-            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor }}>
+            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>
               {location}
             </Box>
           )}

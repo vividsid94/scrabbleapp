@@ -135,7 +135,7 @@ export default function Home(){
             className={styles.welcomeBox}
             style={{
               backgroundColor: lightMode === 'dark' ? 'rgba(55, 65, 81, 0.6)' : 'rgba(249, 250, 251, 0.9)',
-              border: lightMode === 'dark' ? '1px solid rgba(217, 119, 6, 0.15)' : '1px solid rgba(217, 119, 6, 0.1)',
+              border: lightMode === 'dark' ? '1px solid rgba(217, 119, 6, 0.15)' : '1px solid rgba(217, 119, 6, 0.25)',
             }}
             sx={{
               padding: { xs: '12px 14px', sm: '16px 20px' },
@@ -192,7 +192,7 @@ export default function Home(){
                   flexShrink: 0
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)';
+                  e.target.style.backgroundColor = lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.18)';
                   e.target.style.borderColor = '#B45309';
                 }}
                 onMouseLeave={(e) => {
@@ -231,7 +231,7 @@ export default function Home(){
           sx: {
             backgroundColor: lightMode === 'dark' ? '#374151' : '#ffffff',
             border: '1px solid',
-            borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)',
             borderRadius: '8px',
             boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
             minWidth: '160px',
@@ -246,7 +246,7 @@ export default function Home(){
             fontSize: '14px',
             padding: '10px 16px',
             '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
             }
           }}
         >
@@ -259,7 +259,7 @@ export default function Home(){
             fontSize: '14px',
             padding: '10px 16px',
             '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
             }
           }}
         >
@@ -272,7 +272,7 @@ export default function Home(){
             fontSize: '14px',
             padding: '10px 16px',
             '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
             }
           }}
         >
@@ -303,7 +303,7 @@ export default function Home(){
             overflow: 'auto',
             outline: 'none',
             boxShadow: lightMode === 'dark' ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.2)',
-            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
+            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.18)'
           }}
         >
           <IconButton
@@ -340,7 +340,7 @@ export default function Home(){
               fontSize: '12px',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#9CA3AF',
+              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
               marginBottom: '12px',
               marginTop: '4px'
             }}
@@ -352,7 +352,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.25)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -389,7 +389,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.25)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -426,7 +426,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.1)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.25)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -467,7 +467,7 @@ export default function Home(){
               fontSize: '12px',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#9CA3AF',
+              color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
               marginBottom: '12px',
               marginTop: '4px'
             }}
@@ -479,7 +479,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.18)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -516,7 +516,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.18)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -553,7 +553,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.18)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',
@@ -590,7 +590,7 @@ export default function Home(){
             <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <Box
                 sx={{
-                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.08)',
+                  backgroundColor: lightMode === 'dark' ? 'rgba(217, 119, 6, 0.15)' : 'rgba(217, 119, 6, 0.18)',
                   borderRadius: '6px',
                   padding: '8px',
                   display: 'flex',

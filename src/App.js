@@ -265,6 +265,12 @@ function App() {
     document.documentElement.style.setProperty('--tile-color', tileColor.current);
   }, [boardColor.current, tileColor.current]);
 
+  // Match body background to the active theme so macOS overscroll bounce
+  // reveals the correct color instead of the browser's default white
+  useEffect(() => {
+    document.body.style.backgroundColor = lightMode === 'dark' ? '#1F2937' : '#ffffff';
+  }, [lightMode]);
+
   return (
     <ThemeContext.Provider value={{ lightMode, setLightMode }}>
       <AuthProvider>

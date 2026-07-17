@@ -4,8 +4,9 @@ export default function CellType(type, lightenedCell, lightMode = 'dark', premiu
     let result;
     const boxShadowColor = lightMode === 'dark'
         ? 'rgba(0, 0, 0, 0.35)'
-        : 'rgb(185, 174, 166)';
-    let regBoxShadow = 'inset 0.15px 0.15px ' + boxShadowColor + ', inset -0.15px -0.15px ' + boxShadowColor;
+        : 'rgba(120, 108, 96, 0.65)';
+    const boxShadowOffset = lightMode === 'dark' ? '0.15px' : '1px';
+    let regBoxShadow = 'inset ' + boxShadowOffset + ' ' + boxShadowOffset + ' ' + boxShadowColor + ', inset -' + boxShadowOffset + ' -' + boxShadowOffset + ' ' + boxShadowColor;
     
     const colors = getCellColors(lightMode);
 

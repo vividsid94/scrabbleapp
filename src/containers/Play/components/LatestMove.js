@@ -96,13 +96,14 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
   const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
   const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
-  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)';
-  const panelBackground = lightMode === 'dark' 
+  const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)';
+  const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+  const panelBackground = lightMode === 'dark'
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
-  const panelBorder = lightMode === 'dark' 
-    ? '1px solid rgba(255, 255, 255, 0.1)' 
-    : '1px solid rgba(0, 0, 0, 0.12)';
+    : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)';
+  const panelBorder = lightMode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid #D1D5DB';
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
     : '0 2px 8px rgba(0, 0, 0, 0.1)';
@@ -136,9 +137,9 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
 
     return (
       <Box key={index} className={styles.moveHistoryItem} sx={{ borderBottom: `1px solid ${borderColor}` }}>
-        <Box className={styles.moveHistoryTurnNumber}>{turnNumber}</Box>
-        <Box className={styles.moveHistoryLocation}>{location || ''}</Box>
-        <Box className={styles.moveHistoryWord}>{displayWord}</Box>
+        <Box className={styles.moveHistoryTurnNumber} style={{ color: secondaryTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>{turnNumber}</Box>
+        <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>{location || ''}</Box>
+        <Box className={styles.moveHistoryWord} style={{ color: textColor }}>{displayWord}</Box>
         <Box className={styles.moveHistoryDetails}>
           <Box className={styles.moveHistoryScore}>{score || 0}</Box>
           <Box className={styles.moveHistoryPlayer}>{getPlayerIcon(player)}</Box>
@@ -203,11 +204,11 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-          <Box className={styles.moveHistoryTurnNumber} style={{ color: secondaryTextColor }}>
+          <Box className={styles.moveHistoryTurnNumber} style={{ color: secondaryTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>
             {turnNumber}
           </Box>
           {location && (
-            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor }}>
+            <Box className={styles.moveHistoryLocation} style={{ color: mutedTextColor, background: bgColor, border: `1px solid ${borderColor}` }}>
               {location}
             </Box>
           )}
@@ -233,7 +234,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
                 padding: '4px 8px',
                 borderRadius: '4px',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-                border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+                border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
                 fontFamily: 'monospace',
                 letterSpacing: '0.5px',
                 display: 'flex',

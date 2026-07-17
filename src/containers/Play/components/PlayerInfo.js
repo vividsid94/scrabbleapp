@@ -103,14 +103,14 @@ function TopePromptView({ prompt, lightMode }) {
 }
 
 const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt }) => {
-  const panelBackground = lightMode === 'dark' 
+  const panelBackground = lightMode === 'dark'
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)';
-  
-  const panelBorder = lightMode === 'dark' 
-    ? '1px solid rgba(255, 255, 255, 0.1)' 
-    : '1px solid rgba(0, 0, 0, 0.12)';
-  
+    : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)';
+
+  const panelBorder = lightMode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid #D1D5DB';
+
   const panelShadow = lightMode === 'dark'
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
     : '0 2px 8px rgba(0, 0, 0, 0.1)';
@@ -192,7 +192,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           className={styles.timer}
           sx={{
             backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
             padding: '2px 6px',
             fontSize: '12px',
             color: lightMode === 'dark' ? '#fff' : '#1F2937',
@@ -214,7 +214,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           <Box 
             sx={{
               backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-              border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.12)',
+              border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
               padding: '2px 6px',
               fontSize: '12px',
               color: lightMode === 'dark' ? '#fff' : '#1F2937',
@@ -259,7 +259,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
           overflowY: 'auto',
           borderRadius: '6px',
           backgroundColor: lightMode === 'dark' ? 'rgba(0,0,0,0.35)' : '#F9FAFB',
-          border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E5E7EB',
+          border: lightMode === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid #D1D5DB',
           color: lightMode === 'dark' ? 'rgba(255,255,255,0.85)' : '#374151'
         }}
       >
@@ -439,12 +439,12 @@ export default function PlayerInfo({
       </Box>
 
       <Collapse in={showBestMove}>
-        <Box className={styles.bestMoveSection} sx={{ 
-          display: 'flex', 
-          gap: '50px', 
+        <Box className={styles.bestMoveSection} sx={{
+          display: 'flex',
+          gap: '50px',
           padding: '8px 0',
-          backgroundColor: lightMode === 'dark' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-          border: lightMode === 'dark' ? 'none' : '1px solid rgba(0, 0, 0, 0.06)',
+          backgroundColor: lightMode === 'dark' ? 'rgba(0, 0, 0, 0.05)' : '#F3F4F6',
+          border: lightMode === 'dark' ? 'none' : '1px solid #D1D5DB',
           borderRadius: '8px',
           marginTop: '8px'
         }}>

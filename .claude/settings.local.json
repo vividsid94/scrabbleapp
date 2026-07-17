@@ -17,7 +17,10 @@
       "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build16.txt)",
       "Bash(sed -n '/Scrabble3DPlay.js$/,/^$/p' /tmp/build16.txt)",
       "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build17.txt)",
-      "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build18.txt)"
+      "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build18.txt)",
+      "Bash(timeout 60 bash -c 'until curl -sf http://localhost:3000 >/dev/null 2>&1; do sleep 2; done')",
+      "Bash(tail -50 /tmp/cra-dev.log)",
+      "Read(//private/tmp/**)"
     ]
   }
 }

@@ -3003,9 +3003,10 @@ export default function Play({ isMultiplayer = false }) {
               className={styles.poolBox} 
               sx={{
                 color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                background: lightMode === 'dark' 
+                background: lightMode === 'dark'
                   ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
+                  : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
+                border: lightMode === 'dark' ? 'none' : '1px solid #D1D5DB',
                 padding: '10px',
                       cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -3048,8 +3049,8 @@ export default function Play({ isMultiplayer = false }) {
               {/* Pool Content */}
               {poolExpanded && (
                 <Collapse in={poolExpanded}>
-                  <Box sx={{ 
-                    borderTop: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.12)',
+                  <Box sx={{
+                    borderTop: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.18)',
                     paddingTop: '8px'
                   }}>
                     <PlayPool 
