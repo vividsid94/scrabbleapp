@@ -11,7 +11,6 @@ import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
 import Changelog from "./containers/Changelog/Changelog";
-import Study from "./containers/Study/Study";
 import Boggle from "./containers/Boggle/Boggle";
 import Puzzle from "./containers/Puzzle/Puzzle";
 import Sandbox from "./containers/Sandbox/Sandbox";
@@ -26,7 +25,6 @@ import TestTheoShake from "./containers/Home/TestTheoShake";
 import TestMindBlow from "./containers/Home/TestMindBlow";
 import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
-import Snakes from "./containers/Snakes/Snakes";
 import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
 import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
@@ -35,8 +33,6 @@ import CameraScan from "./containers/CameraScan/CameraScan";
 import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
 import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
 import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
-import WordStorm from "./containers/WordStorm/WordStorm";
-import ScrabbleDash from "./containers/ScrabbleDash/ScrabbleDash";
 import { useColorSchemeStore, getDefaultTileColor, LEGACY_TILE_DEFAULTS } from "./stores/colorSchemeStore";
 import { useGameStore } from "./stores/gameStore";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -95,7 +91,6 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/playground" element={<Play/>}/>
             <Route path="/play" element={<Play/>}/>
             <Route path="/changelog" element={<Changelog/>}/>
-            <Route path="/study" element={<Study/>}/>
             <Route path="/boggle" element={<Boggle/>}/>
             <Route path="/puzzle" element={<Puzzle/>}/>
             <Route path="/sandbox" element={<Sandbox/>}/>
@@ -108,7 +103,6 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/test-mind-blow" element={<TestMindBlow />} />
             <Route path="/jigsaw" element={<Jigsaw />} />
             <Route path="/test-jigsaw" element={<Jigsaw />} />
-            <Route path="/snakes" element={<Snakes />} />
             <Route path="/player/:playerId" element={<PlayerProfile />} />
             <Route path="/tournament/:tournamentId" element={<Tournament />} />
             <Route path="/tournaments" element={<Tournaments />} />
@@ -118,8 +112,6 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/multiplayer" element={<MultiplayerLobby />} />
             <Route path="/multiplayer/:gameCode" element={<MultiplayerGame />} />
             <Route path="/escape-room" element={<EscapeRoom />} />
-            <Route path="/word-storm" element={<WordStorm />} />
-            <Route path="/scrabble-dash" element={<ScrabbleDash />} />
           </Routes>
         </header>
       ) : (
