@@ -1,307 +1,239 @@
-// Utility functions for generating .gcg (Game Control Protocol) files
+// Generates .gcg (Game Chronology / "GCG") files from this app's internal
+// move history, for interop with external Scrabble tools (Quackle, Zyzzyva,
+// Woogles, cross-tables.com, etc).
+//
+// The previous version of this file tried to reconstruct each move's board
+// position/direction and full word from heuristics on the isolated boardDiff
+// of that one move (span-shape guessing, dot-counting on the word string).
+// That's fundamentally unreliable - most plays are 1-2 new tiles hooking
+// onto existing ones, which those heuristics can't disambiguate - and it
+// produced malformed/incorrect .gcg files.
+//
+// This version instead replays the whole move history in order against an
+// incrementally-built 15x15 board model, so at the moment each move is
+// processed we know exactly what was already on the board (to find the
+// move's true extent and correctly emit "." for pre-existing letters) and
+// exactly where each of THIS move's new tiles sit (to know its real
+// direction, not a guess).
+
+const BOARD_SIZE = 15;
+
+// Standard Scrabble letter values, used only for the end-of-game remaining-
+// tile adjustment.
+const LETTER_VALUES = {
+  A: 1, E: 1, I: 1, O: 1, U: 1, L: 1, N: 1, S: 1, T: 1, R: 1,
+  D: 2, G: 2,
+  B: 3, C: 3, M: 3, P: 3,
+  F: 4, H: 4, V: 4, W: 4, Y: 4,
+  K: 5,
+  J: 8, X: 8,
+  Q: 10, Z: 10,
+};
+
+const tileValue = (letter) => (letter === '?' || letter === '*' ? 0 : (LETTER_VALUES[letter] || 0));
+const rackValue = (rack) => (rack || []).reduce((sum, t) => sum + tileValue(t), 0);
 
 /**
- * Formats a move location from board coordinates to .gcg format
- * @param {Array} boardDiff - Array of tile changes
- * @param {string} word - The word being played (to check if it starts with a dot)
- * @param {Array} boardState - The current board state to check for existing tiles
- * @returns {string} Location in .gcg format (e.g., "8G", "A7")
+ * Formats a player name for .gcg format (nickname field can't contain
+ * spaces).
  */
-export const formatGCGLocation = (boardDiff, word = '', boardState = null) => {
-  if (!boardDiff || boardDiff.length === 0) {
-    return '';
-  }
+export const formatPlayerName = (playerName) => (playerName || '').replace(/\s+/g, '_');
 
-  // Find the first changed tile
-  const firstTile = boardDiff[0];
-  let firstRow = firstTile.row;
-  let firstCol = firstTile.col;
-  
-  // Determine direction by analyzing the pattern of placed tiles
-  let isHorizontal = false;
-  
-  if (boardDiff.length > 1) {
-    // Multiple tiles placed - check if they're in the same row or column
-    const allSameRow = boardDiff.every(tile => tile.row === firstRow);
-    const allSameCol = boardDiff.every(tile => tile.col === firstCol);
-    
-    if (allSameRow && !allSameCol) {
-      isHorizontal = true;
-    } else if (allSameCol && !allSameRow) {
-      isHorizontal = false;
-    } else {
-      // Mixed placement - need to analyze further
-      const rowSpan = Math.max(...boardDiff.map(t => t.row)) - Math.min(...boardDiff.map(t => t.row));
-      const colSpan = Math.max(...boardDiff.map(t => t.col)) - Math.min(...boardDiff.map(t => t.col));
-      
-      // If tiles span more columns than rows, it's likely horizontal
-      isHorizontal = colSpan > rowSpan;
-    }
+const colLetter = (col) => String.fromCharCode(65 + col);
+const emptyBoard = () => Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
+const isOnBoard = (row, col) => row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+
+// True if (row, col) is filled either on the board-as-of-before-this-move,
+// or by one of this move's own newly-placed tiles.
+const isOccupied = (board, newPositions, row, col) =>
+  isOnBoard(row, col) && (board[row][col] !== null || newPositions.has(`${row},${col}`));
+
+// Starting from a span [start, end] along one axis, expand outward through
+// any occupied (pre-existing or newly-placed) squares to find the play's
+// true full extent - not just the span of the newly-placed tiles.
+function extendSpan(board, newPositions, fixedRow, fixedCol, horizontal, start, end) {
+  if (horizontal) {
+    while (start > 0 && isOccupied(board, newPositions, fixedRow, start - 1)) start--;
+    while (end < BOARD_SIZE - 1 && isOccupied(board, newPositions, fixedRow, end + 1)) end++;
   } else {
-    // Single tile - analyze word structure and boardDiff to determine direction
-    const dotPositions = [];
-    for (let i = 0; i < word.length; i++) {
-      if (word[i] === '.') {
-        dotPositions.push(i);
-      }
-    }
-    
-    // If the word starts with dots, we need to look at the boardDiff more carefully
-    if (word && word.startsWith('.')) {
-      // For words starting with dots, check if the new tile is placed in a way that suggests direction
-      // Look at the position of the new tile relative to existing tiles
-      
-      // If we have a single tile placed and the word starts with dots,
-      // we need to determine if it's extending horizontally or vertically
-      
-      // For now, let's use a heuristic: if the word has more dots than letters, it's likely vertical
-      // because vertical words often connect to existing horizontal words
-      const newTileCount = word.length - dotPositions.length;
-      if (newTileCount === 1 && dotPositions.length > 0) {
-        // Single new tile with existing tiles - likely vertical (connecting to horizontal word)
-        isHorizontal = false;
-      } else {
-        // Default to horizontal for other cases
-        isHorizontal = true;
-      }
+    while (start > 0 && isOccupied(board, newPositions, start - 1, fixedCol)) start--;
+    while (end < BOARD_SIZE - 1 && isOccupied(board, newPositions, end + 1, fixedCol)) end++;
+  }
+  return { start, end };
+}
+
+/**
+ * Given the tiles newly placed this move and the board as it existed
+ * immediately BEFORE this move, reconstructs the full played word (with "."
+ * for any pre-existing letters it passes through/off) and its .gcg position
+ * notation ("8H" for horizontal, "H8" for vertical).
+ */
+function resolvePlacement(boardDiff, boardBefore, blankSet) {
+  if (!boardDiff || boardDiff.length === 0) return null;
+
+  const newPositions = new Set(boardDiff.map((t) => `${t.row},${t.col}`));
+  const letterAt = new Map(boardDiff.map((t) => [`${t.row},${t.col}`, t.value]));
+
+  const rows = boardDiff.map((t) => t.row);
+  const cols = boardDiff.map((t) => t.col);
+  const minRow = Math.min(...rows);
+  const maxRow = Math.max(...rows);
+  const minCol = Math.min(...cols);
+  const maxCol = Math.max(...cols);
+
+  let isHorizontal;
+  if (boardDiff.length > 1) {
+    // A legal play's newly-placed tiles are always in a single row or
+    // single column.
+    isHorizontal = minRow === maxRow;
+  } else {
+    // A single new tile: direction is ambiguous from the tile alone, so
+    // check which direction it actually extends into on the board. If it
+    // extends both ways (forms a word in both directions), .gcg records the
+    // longer one as the primary play; horizontal wins ties.
+    const row = rows[0];
+    const col = cols[0];
+    const hSpan = extendSpan(boardBefore, newPositions, row, col, true, col, col);
+    const vSpan = extendSpan(boardBefore, newPositions, row, col, false, row, row);
+    const hLen = hSpan.end - hSpan.start + 1;
+    const vLen = vSpan.end - vSpan.start + 1;
+    isHorizontal = hLen >= vLen;
+  }
+
+  const span = isHorizontal
+    ? extendSpan(boardBefore, newPositions, minRow, minCol, true, minCol, maxCol)
+    : extendSpan(boardBefore, newPositions, minRow, minCol, false, minRow, maxRow);
+
+  let word = '';
+  for (let i = span.start; i <= span.end; i++) {
+    const r = isHorizontal ? minRow : i;
+    const c = isHorizontal ? i : minCol;
+    const key = `${r},${c}`;
+    if (newPositions.has(key)) {
+      const letter = letterAt.get(key);
+      word += blankSet.has(key) ? String(letter).toLowerCase() : letter;
     } else {
-      // No dots at start - can't determine direction from this alone
-      isHorizontal = true; // Default assumption
+      word += '.';
     }
   }
-  
-  // If the word starts with dots (existing letters), check both possible positions
-  if (word && word.startsWith('.')) {
-    // Count the number of leading dots
-    const leadingDots = word.match(/^\.+/)[0].length;
-    
-    if (isHorizontal) {
-      // For horizontal words, check if there's a tile one column back
-      if (boardState && firstCol > 0) {
-        const hasTileOneBack = boardState[firstRow] && boardState[firstRow][firstCol - 1] && 
-                              typeof boardState[firstRow][firstCol - 1] === 'string';
-        if (hasTileOneBack) {
-          // There's a tile one column back, so adjust the position
-          firstCol = Math.max(0, firstCol - leadingDots);
-        }
-        // If no tile one back, keep the original position
-      } else {
-        // No board state available, assume adjustment is needed
-        firstCol = Math.max(0, firstCol - leadingDots);
-      }
-    } else {
-      // For vertical words, check if there's a tile one row back
-      if (boardState && firstRow > 0) {
-        const hasTileOneBack = boardState[firstRow - 1] && boardState[firstRow - 1][firstCol] && 
-                              typeof boardState[firstRow - 1][firstCol] === 'string';
-        if (hasTileOneBack) {
-          // There's a tile one row back, so adjust the position
-          firstRow = Math.max(0, firstRow - leadingDots);
-        }
-        // If no tile one back, keep the original position
-      } else {
-        // No board state available, assume adjustment is needed
-        firstRow = Math.max(0, firstRow - leadingDots);
-      }
-    }
-  }
-  
-  // Format the position (convert 0-14 to 1-15 for rows, 0-14 to A-O for columns)
-  const row = firstRow + 1;
-  const col = String.fromCharCode(65 + firstCol);
-  
-  // For horizontal words: row + column (e.g., "1A", "8H")
-  // For vertical words: column + row (e.g., "A1", "H8")
-  const position = isHorizontal ? `${row}${col}` : `${col}${row}`;
-  
-  return position;
-};
+
+  const startRow = isHorizontal ? minRow : span.start;
+  const startCol = isHorizontal ? span.start : minCol;
+  const position = isHorizontal
+    ? `${startRow + 1}${colLetter(startCol)}`
+    : `${colLetter(startCol)}${startRow + 1}`;
+
+  return { word, position };
+}
+
+const rackString = (rack) => (Array.isArray(rack) ? rack.join('') : (rack || ''));
 
 /**
- * Extracts the word played from boardDiff
- * @param {Array} boardDiff - Array of tile changes
- * @returns {string} The word played
+ * Generates .gcg content from this game's move history.
+ *
+ * @param {Array} moveHistory - Moves in play order. Each entry is either a
+ *   play ({boardDiff, player, score, rack, word}), a pass ({player, score:
+ *   0, rack, word: 'Pass'}), or an exchange ({player, score: 0, rack,
+ *   tilesExchanged, word: 'Exchange'}). `rack` in every case is the rack
+ *   the player held BEFORE the move.
+ * @param {string} player1Name
+ * @param {string} player2Name
+ * @param {Array} blankTiles - [{row, col}] for every blank tile currently on
+ *   the board (cumulative, current game state - used to lowercase blanks in
+ *   the exported word).
+ * @param {Array} player1Rack - Player 1's current rack (for the end-of-game
+ *   remaining-tile adjustment).
+ * @param {Array} player2Rack - Player 2's current rack.
+ * @param {Array} pool - Current tile pool (empty pool + one empty rack means
+ *   that player went out).
+ * @returns {string} .gcg file content.
  */
-export const extractWordFromBoardDiff = (boardDiff) => {
-  if (!boardDiff || boardDiff.length === 0) {
-    return '';
-  }
+export const generateGCGContent = (
+  moveHistory,
+  player1Name,
+  player2Name,
+  blankTiles = [],
+  player1Rack = [],
+  player2Rack = [],
+  pool = []
+) => {
+  const lines = [
+    '#character-encoding UTF-8',
+    `#player1 ${formatPlayerName(player1Name)} ${player1Name}`,
+    `#player2 ${formatPlayerName(player2Name)} ${player2Name}`,
+  ];
 
-  // Sort tiles by position to reconstruct the word
-  const sortedTiles = [...boardDiff].sort((a, b) => {
-    if (a.row !== b.row) {
-      return a.row - b.row; // Sort by row first
-    }
-    return a.col - b.col; // Then by column
-  });
+  const board = emptyBoard();
+  const blankSet = new Set((blankTiles || []).map((t) => `${t.row},${t.col}`));
 
-  // Extract the letters and join them - use 'value' property
-  return sortedTiles.map(tile => tile.value).join('');
-};
-
-/**
- * Converts a word with parentheses to .gcg format with dots
- * @param {string} word - The word (e.g., "VINE(G)AR")
- * @returns {string} The word in .gcg format (e.g., "VINE.AR")
- */
-export const convertWordToGCGFormat = (word) => {
-  if (!word) return '';
-  
-  // Replace parentheses with dots for .gcg format
-  // Example: "VINE(G)AR" becomes "VINE.AR"
-  return word.replace(/\([A-Z]\)/g, '.');
-};
-
-/**
- * Formats a player name for .gcg format (replace spaces with underscores)
- * @param {string} playerName - The player name
- * @returns {string} Formatted player name
- */
-export const formatPlayerName = (playerName) => {
-  return playerName.replace(/\s+/g, '_');
-};
-
-/**
- * Generates .gcg content from game data
- * @param {Array} moveHistory - Array of moves in the game
- * @param {string} player1Name - Name of player 1
- * @param {string} player2Name - Name of player 2
- * @param {Array} boardState - The current board state to check for existing tiles
- * @param {Array} player1Rack - Player 1's current rack
- * @param {Array} player2Rack - Player 2's current rack
- * @param {Array} pool - Current tile pool
- * @returns {string} .gcg file content
- */
-export const generateGCGContent = (moveHistory, player1Name, player2Name, boardState = null, player1Rack = [], player2Rack = [], pool = []) => {
-  let gcgContent = '#character-encoding UTF-8\n';
-  
-  // Add player information
-  gcgContent += `#player1 ${formatPlayerName(player1Name)} ${player1Name}\n`;
-  gcgContent += `#player2 ${formatPlayerName(player2Name)} ${player2Name}\n`;
-  
   let player1Total = 0;
   let player2Total = 0;
-  
-  // Process each move
-  moveHistory.forEach((move, index) => {
-    const { score, player, word, boardDiff, rack } = move;
-    
-    // Determine which player made the move
-    const isPlayer1 = player === player1Name;
-    const playerName = formatPlayerName(player);
-    
-    // Handle special cases
-    let displayWord = word;
-    let displayScore = score;
-    
-    if (!displayWord && boardDiff) {
-      try {
-        displayWord = extractWordFromBoardDiff(boardDiff);
-      } catch (error) {
-        displayWord = 'Error';
-      }
+
+  (moveHistory || []).forEach((move) => {
+    const isPlayer1 = move.player === player1Name;
+    const nick = formatPlayerName(move.player);
+    const rack = rackString(move.rack);
+
+    if (move.word === 'Pass') {
+      const cumul = isPlayer1 ? player1Total : player2Total;
+      lines.push(`>${nick}: ${rack} - +0 ${cumul}`);
+      return;
     }
-    
-    if (score === 0 && player && player.includes('exchanged')) {
-      displayWord = 'Exchange';
-    } else if (score === 0 && (!displayWord || displayWord === '')) {
-      displayWord = 'Pass';
+
+    if (move.word === 'Exchange') {
+      const exchanged = rackString(move.tilesExchanged);
+      const cumul = isPlayer1 ? player1Total : player2Total;
+      lines.push(`>${nick}: ${rack} -${exchanged} +0 ${cumul}`);
+      return;
     }
-    
-    // Convert word to .gcg format (replace parentheses with dots)
-    displayWord = convertWordToGCGFormat(displayWord);
-    
-    // Get location
-    const location = formatGCGLocation(boardDiff, displayWord, boardState);
-    
-    // Check if this move caused the player to go out (rack is empty)
-    const isGoingOut = rack && rack.length === 0;
-    
-    // If player is going out, we need to handle the opponent's remaining tiles
-    if (isGoingOut) {
-      // Find the opponent's rack from the next move or calculate it
-      // For now, we'll assume the opponent's rack is available in the move data
-      // This might need to be enhanced based on how the move history is structured
-      
-      // If this is the last move and the player went out, we need to show opponent's tiles
-      if (index === moveHistory.length - 1) {
-        // This is the final move where someone went out
-        // We need to show the opponent's remaining tiles in parentheses
-        // For now, we'll add a placeholder - this would need to be calculated from the game state
-        displayWord = displayWord || 'OUT';
-      }
-    }
-    
-    // Update running totals
-    if (isPlayer1) {
-      player1Total += displayScore;
+
+    // Regular play.
+    const boardBefore = board.map((r) => [...r]);
+    const placement = resolvePlacement(move.boardDiff, boardBefore, blankSet);
+
+    // Apply this move's tiles so later moves see them as pre-existing.
+    (move.boardDiff || []).forEach((t) => { board[t.row][t.col] = t.value; });
+
+    const score = move.score || 0;
+    if (isPlayer1) player1Total += score; else player2Total += score;
+    const cumul = isPlayer1 ? player1Total : player2Total;
+
+    if (placement) {
+      lines.push(`>${nick}: ${rack} ${placement.position} ${placement.word} +${score} ${cumul}`);
     } else {
-      player2Total += displayScore;
-    }
-    
-    // Format the move line
-    // Format: >PlayerName: RACK LOCATION WORD +SCORE TOTAL
-    const rackDisplay = rack || '';
-    const locationDisplay = location || '';
-    const wordDisplay = displayWord || '';
-    const scoreDisplay = displayScore > 0 ? `+${displayScore}` : displayScore.toString();
-    const totalDisplay = isPlayer1 ? player1Total : player2Total;
-    
-    gcgContent += `>${playerName}: ${rackDisplay} ${locationDisplay} ${wordDisplay} ${scoreDisplay} ${totalDisplay}\n`;
-    
-    // If this move caused the player to go out, add the opponent's remaining tiles
-    if (isGoingOut && index === moveHistory.length - 1) {
-      // This is the final move where someone went out
-      // Calculate opponent's remaining tiles and their value
-      const opponentRack = isPlayer1 ? player2Rack : player1Rack;
-      const opponentName = isPlayer1 ? player2Name : player1Name;
-      const opponentPlayerName = formatPlayerName(opponentName);
-      
-      if (opponentRack && opponentRack.length > 0) {
-        // Calculate the value of opponent's remaining tiles
-        const tileValue = calculateTileValue(opponentRack);
-        
-        // Add the tile value to the opponent's score
-        if (isPlayer1) {
-          player2Total += tileValue;
-        } else {
-          player1Total += tileValue;
-        }
-        
-        // Format: >OpponentName: (REMAINING_TILES) +TILE_VALUE FINAL_TOTAL
-        const remainingTiles = opponentRack.join('');
-        gcgContent += `>${opponentPlayerName}: (${remainingTiles}) +${tileValue} ${isPlayer1 ? player2Total : player1Total}\n`;
-      }
+      // No boardDiff on a "real" play shouldn't happen, but never silently
+      // drop a scored move from the export.
+      lines.push(`>${nick}: ${rack} - - +${score} ${cumul}`);
     }
   });
-  
-  return gcgContent;
+
+  // End-of-game remaining-tile adjustment for the "someone played their last
+  // tile and the pool is empty" ending: the player who went out gets the
+  // sum of the OTHER player's remaining tile values added to their score.
+  //
+  // NOTE: this does not detect the other standard ending (six consecutive
+  // scoreless turns, where instead EACH player's own remaining tiles are
+  // deducted from their own score) - moveHistory doesn't currently carry an
+  // explicit end-reason, so that case is left unhandled rather than guessed.
+  const player1Empty = player1Rack.length === 0;
+  const player2Empty = player2Rack.length === 0;
+  if (pool.length === 0 && player1Empty !== player2Empty) {
+    const outIsPlayer1 = player1Empty;
+    const opponentRack = outIsPlayer1 ? player2Rack : player1Rack;
+    const value = rackValue(opponentRack);
+    if (value > 0) {
+      const outNick = formatPlayerName(outIsPlayer1 ? player1Name : player2Name);
+      if (outIsPlayer1) player1Total += value; else player2Total += value;
+      const cumul = outIsPlayer1 ? player1Total : player2Total;
+      lines.push(`>${outNick}: (${rackString(opponentRack)}) +${value} ${cumul}`);
+    }
+  }
+
+  return lines.join('\n') + '\n';
 };
 
 /**
- * Calculates the total value of tiles in a rack
- * @param {Array} rack - Array of tile letters
- * @returns {number} Total value of the tiles
- */
-const calculateTileValue = (rack) => {
-  return rack.reduce((sum, tile) => {
-    const value = tile === '?' || tile === '*' ? 0 : 
-      tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
-      tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
-      tile === 'D' || tile === 'G' ? 2 :
-      tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
-      tile === 'F' || tile === 'H' || tile === 'V' || tile === 'W' || tile === 'Y' ? 4 :
-      tile === 'K' ? 5 :
-      tile === 'J' || tile === 'X' ? 8 :
-      tile === 'Q' || tile === 'Z' ? 10 : 0;
-    return sum + value;
-  }, 0);
-};
-
-/**
- * Downloads a .gcg file
- * @param {string} content - The .gcg file content
- * @param {string} filename - The filename for the download
+ * Downloads a .gcg file.
  */
 export const downloadGCGFile = (content, filename = 'scrabble_game.gcg') => {
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -313,4 +245,4 @@ export const downloadGCGFile = (content, filename = 'scrabble_game.gcg') => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}; 
+};

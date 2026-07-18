@@ -1063,6 +1063,7 @@ export default function Play({ isMultiplayer = false }) {
             onOpenMetrics2Modal={() => setShowMetrics2Modal(true)}
             simulatingMove={simulatingMove}
             boardCoords={boardCoords}
+            blankTiles={blankTiles}
             pool={pool}
             icons={{
               settings: <Gear size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />,

@@ -475,15 +475,18 @@ export const makeBotMove = async (botMoveSound) => {
       setPool(newPool);
       
       // Create move history entry for exchange
+      // NOTE: rack is the PRE-exchange rack (botRack), not newRack (post-draw)
+      // - GCG export needs the former.
       const moveHistoryEntry = {
         boardDiff: [],
         player: player2Name,
         score: 0,
-        rack: alphabetizeRack(newRack).join(''),
+        rack: alphabetizeRack(botRack).join(''),
+        tilesExchanged: tilesToExchange.join(''),
         total: player2points,
         word: 'Exchange'
       };
-      
+
       // Add move to history
       const currentHistory = useGameStore.getState().moveHistory || [];
       setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
@@ -665,24 +668,27 @@ export const makeBotMove = async (botMoveSound) => {
           newPool.push(...tilesToExchange);
           setPlayer2Rack(alphabetizeRack(newRack));
           setPool(newPool);
-          
+
           // Create move history entry for exchange
+          // NOTE: rack is the PRE-exchange rack (botRack), not newRack
+          // (post-draw) - GCG export needs the former.
           const moveHistoryEntry = {
             boardDiff: [],
             player: player2Name,
             score: 0,
-            rack: alphabetizeRack(newRack).join(''),
+            rack: alphabetizeRack(botRack).join(''),
+            tilesExchanged: tilesToExchange.join(''),
             total: player2points,
             word: 'Exchange'
           };
-          
+
           // Add move to history
           const currentHistory = useGameStore.getState().moveHistory || [];
           setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
         } else {
           // Handle regular move
           const tilesToRemove = [];
-          
+
           for (const tile of bestMove.tiles) {
             if (tile.isNew) {
               newBoard[tile.row][tile.col] = tile.letter;
@@ -802,11 +808,14 @@ export const makeBotMove = async (botMoveSound) => {
         setPool([...pool, ...tilesToExchange]);
         
         // Add exchange to move history
+        // NOTE: rack is the PRE-exchange rack (player2Rack), not newRack
+        // (post-draw) - GCG export needs the former.
         const moveHistoryEntry = {
           boardDiff: [],
           player: player2Name,
           score: 0,
-          rack: newRack.join(''),
+          rack: player2Rack.join(''),
+          tilesExchanged: tilesToExchange.join(''),
           total: player2points,
           word: 'Exchange'
         };

@@ -122,13 +122,16 @@ export const handleExchange = () => {
   switchToNextPlayer();
 
   // Add exchange move to history
+  // NOTE: rack is the PRE-exchange rack (what the player held when choosing
+  // to exchange), not newRack (post-draw) - GCG export needs the former.
   const currentHistory = useGameStore.getState().moveHistory || [];
   setMoveHistory([...currentHistory, {
     beforeBoard: JSON.parse(JSON.stringify(boardCoords)),
     afterBoard: JSON.parse(JSON.stringify(boardCoords)), // Same board state for exchange
     player: currentPlayer === 1 ? player1Name : player2Name,
     score: 0,
-    rack: newRack.join(''),
+    rack: currentRack.join(''),
+    tilesExchanged: exchangedTileLetters.join(''),
     total: currentPlayer === 1 ? player1points : player2points,
     word: 'Exchange'
   }]);

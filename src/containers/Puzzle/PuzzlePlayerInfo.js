@@ -18,6 +18,7 @@ const MemoizedLatestMove = React.memo(() => {
   const boardCoords = usePuzzleStore(state => state.boardCoords);
   const player1Rack = usePuzzleStore(state => state.player1Rack);
   const player2Rack = usePuzzleStore(state => state.player2Rack);
+  const blankTiles = usePuzzleStore(state => state.blankTiles);
   const pool = usePuzzleStore(state => state.pool);
 
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
@@ -31,6 +32,7 @@ const MemoizedLatestMove = React.memo(() => {
       boardCoords={boardCoords}
       player1Rack={player1Rack}
       player2Rack={player2Rack}
+      blankTiles={blankTiles}
       pool={pool}
       lightMode={lightMode}
     />

@@ -323,6 +323,7 @@ export default function PlayerInfo({
   onOpenMetrics2Modal,
   simulatingMove,
   boardCoords,
+  blankTiles,
   pool,
   icons,
   mascotRef,
@@ -659,12 +660,15 @@ export default function PlayerInfo({
       );
       })}
 
-      <LatestMove 
-        latestMove={latestMove} 
-        player1Name={player1Name} 
+      <LatestMove
+        latestMove={latestMove}
+        player1Name={player1Name}
         player2Name={player2Name}
         allMoves={moveHistory}
         boardCoords={boardCoords}
+        player1Rack={player1Rack}
+        player2Rack={player2Rack}
+        blankTiles={blankTiles}
         pool={pool}
         lightMode={lightMode}
       />
