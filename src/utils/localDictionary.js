@@ -166,6 +166,27 @@ export function isValidWordsBatchLocal(words) {
 }
 
 /**
+ * Find front and back hooks for a word - single letters that can be
+ * prepended or appended to form another valid word one letter longer.
+ * @param {string} word - Word to find hooks for
+ * @returns {{front: string[], back: string[]}|null} - null if dictionary not loaded
+ */
+export function getHooksLocal(word) {
+  if (!dictionarySet) {
+    return null;
+  }
+  const upper = word.toUpperCase();
+  const front = [];
+  const back = [];
+  for (let i = 0; i < 26; i++) {
+    const letter = String.fromCharCode(65 + i);
+    if (dictionarySet.has(letter + upper)) front.push(letter);
+    if (dictionarySet.has(upper + letter)) back.push(letter);
+  }
+  return { front, back };
+}
+
+/**
  * Initialize dictionary (loads in background)
  * @returns {Promise<void>}
  */

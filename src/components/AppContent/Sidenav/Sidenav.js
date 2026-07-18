@@ -185,6 +185,7 @@ export default function MiniDrawer() {
     if (path === '/memory') return 'Memory';
     if (path === '/words') return 'Words';
     if (path === '/series') return 'Series';
+    if (path === '/snakes') return 'Snakes';
     if (path === '/boggle') return 'Boggle';
     return 'Home';
   };

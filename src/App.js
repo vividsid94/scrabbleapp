@@ -25,6 +25,7 @@ import TestTheoShake from "./containers/Home/TestTheoShake";
 import TestMindBlow from "./containers/Home/TestMindBlow";
 import Jigsaw from "./containers/Home/Jigsaw";
 import Minigames from "./containers/Minigames/Minigames";
+import Snakes from "./containers/Snakes/Snakes";
 import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
 import Tournament from "./containers/Tournament/Tournament";
 import Tournaments from "./containers/Tournaments/Tournaments";
@@ -112,6 +113,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
             <Route path="/multiplayer" element={<MultiplayerLobby />} />
             <Route path="/multiplayer/:gameCode" element={<MultiplayerGame />} />
             <Route path="/escape-room" element={<EscapeRoom />} />
+            <Route path="/snakes" element={<Snakes />} />
           </Routes>
         </header>
       ) : (
