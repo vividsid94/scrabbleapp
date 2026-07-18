@@ -347,6 +347,8 @@ export const useGameStore = create((set, get) => {
       selectedBot: snapshot.selectedBot,
       playerTurnCount: snapshot.playerTurnCount,
       premiumSquares: snapshot.premiumSquares || [],
+      player1Time: snapshot.player1Time,
+      player2Time: snapshot.player2Time,
       isBotMode: true,
       gameStarted: true,
       gameEnded: false
@@ -2021,6 +2023,8 @@ useGameStore.subscribe((state, prevState) => {
     consecutivePasses: state.consecutivePasses,
     selectedBot: state.selectedBot,
     playerTurnCount: state.playerTurnCount,
-    premiumSquares: state.premiumSquares
+    premiumSquares: state.premiumSquares,
+    player1Time: state.player1Time,
+    player2Time: state.player2Time
   });
 });

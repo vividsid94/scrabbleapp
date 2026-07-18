@@ -344,6 +344,12 @@ export default function Play({ isMultiplayer = false }) {
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
 
+  // Set once we've restored a snapshot, so the board-initialization effect
+  // below (which also runs whenever premiumSquares changes) knows to skip
+  // the very next pass instead of wiping the just-restored board back to
+  // blank.
+  const restoredFromSnapshotRef = useRef(false);
+
   // Initialize game using store action - unless we arrived via the
   // homepage's "Continue" button, in which case restore the saved
   // single-player snapshot instead of resetting to a blank board.
@@ -353,6 +359,7 @@ export default function Play({ isMultiplayer = false }) {
     if (wantsContinue) {
       const snapshot = loadActiveGameSnapshot();
       if (snapshot) {
+        restoredFromSnapshotRef.current = true;
         restoreActiveGame(snapshot);
         return;
       }
@@ -370,7 +377,26 @@ export default function Play({ isMultiplayer = false }) {
     if (isMultiplayerMode) {
       return;
     }
-    
+    // Skip entirely when arriving via "Resume last game" - the effect above
+    // owns board setup for that flow (restoring the snapshot, or falling
+    // back to initializeGame if none is found). This runs on every fresh
+    // mount regardless of what actually changed, so without this check it
+    // would blank the board an instant before the restore reads it back -
+    // and briefly having isBotMode/gameStarted true with a blank board is
+    // enough for the snapshot subscriber below to persist that blank board,
+    // corrupting the very save Resume depends on.
+    const wantsContinue = new URLSearchParams(location.search).get('continue') === '1';
+    if (wantsContinue) {
+      return;
+    }
+    // Also skip the one pass immediately after a restore actually completes -
+    // restoring sets premiumSquares too, which would otherwise re-trigger
+    // this effect and wipe the tiles we just put back on the board.
+    if (restoredFromSnapshotRef.current) {
+      restoredFromSnapshotRef.current = false;
+      return;
+    }
+
     // Initialize board - if premiumSquares are set, use empty board (all zeros)
     // Otherwise use the standard board layout
     let parsedOrigBoardCoords;
@@ -670,10 +696,15 @@ export default function Play({ isMultiplayer = false }) {
   useEffect(() => {
     return () => {
       // Clear all state
-      setBoardCoords([]);
-      setTempBoardCoords([]);
-      setOrigBoardCoords([]);
-      setMoveHistory([]);
+      // NOTE: deliberately NOT clearing boardCoords/tempBoardCoords/
+      // origBoardCoords/moveHistory here. Those are watched by the
+      // "active game" snapshot subscriber in gameStore.js - blanking them
+      // on unmount (while isBotMode/gameStarted are still true, since
+      // nothing resets those on the way out) was overwriting the saved
+      // snapshot with a blank board every time this page was left, which
+      // is what "Resume last game" reads from. They're already freshly
+      // reset on the next arrival anyway (via initializeGame or
+      // restoreActiveGame), so nothing needs to happen here.
       setTopMoves([]);
       setSimulatingMove(null);
       setSimulationResult(null);
