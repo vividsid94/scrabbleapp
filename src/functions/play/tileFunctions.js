@@ -1,4 +1,4 @@
-// Utility functions for tile interactions in Play/Sandbox/Puzzle.
+// Utility functions for tile interactions in Play/Puzzle.
 // Note: drag-and-drop has been removed; this module only handles
 // click-based rack interactions (play vs. exchange selection).
 
