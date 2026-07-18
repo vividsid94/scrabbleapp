@@ -1,6 +1,4 @@
 const { normalizeBoard } = require('./normalizeBoard');
-const loadDictionary = require('./loadDictionary');
-const { generateMoves } = require('./generateMoves');
 
 // Helper function to count open playable squares
 const countOpenSquares = (board) => {

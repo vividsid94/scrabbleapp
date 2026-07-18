@@ -136,10 +136,7 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null) {
               // Check if Go service returned valid moves with words
               const validMoves = result.moves ? result.moves.filter(move => move.word && move.word.length > 0) : [];
               if (validMoves.length === 0 && result.moves && result.moves.length > 0) {
-                console.log('⚠️ Go service returned moves with empty words, falling back to JavaScript implementation');
-                // Fall back to JavaScript implementation
-                const { generateMoves } = require('./generateMoves');
-                resolve(generateMoves(board, letters));
+                reject(new Error('Go service returned moves with empty words'));
                 return;
               }
               
@@ -283,12 +280,7 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null) {
     
   } catch (error) {
     console.error('❌ FAILED to call Go service:', error.message);
-    console.log('🔄 FALLING BACK to JavaScript implementation...');
-    console.log('⚠️ This means the Go service is not available or failed.');
-    
-    // Fall back to JavaScript implementation
-    const { generateMoves } = require('./generateMoves');
-    return generateMoves(board, letters);
+    throw new Error(`Move generation service unavailable: ${error.message}`);
   }
 }
 

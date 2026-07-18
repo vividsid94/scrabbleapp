@@ -4,8 +4,7 @@
  * This function provides a unified interface to the deployed Railway service
  * for word validation, anagram search, and subanagram search.
  * 
- * Used by: gameLogic.js, botLogic.js, getBoardControl.js, getTopMoves.js, 
- * generateMoves.js, studyLogic.js, Boggle.js
+ * Used by: gameLogic.js, getTopMoves.js
  */
 
 const axios = require('axios');
