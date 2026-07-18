@@ -189,6 +189,7 @@ const Scrabble3DPlay = () => {
     player1Time,
     player2Time,
     gameStarted,
+    setGameStarted,
     gameEnded,
     isBotMode,
     selectedTiles,
@@ -273,6 +274,15 @@ const Scrabble3DPlay = () => {
   }, []);
 
   const { gameStartSound, playerMoveSound, botMoveSound } = sounds || {};
+
+  // Arriving here fresh (e.g. the homepage's "3D Play" button) should always
+  // land on the setup screen, even if the in-memory store still has
+  // gameStarted from a game left in progress elsewhere (2D or a prior 3D
+  // session) — there's no "resume" flow into this page today.
+  useEffect(() => {
+    setGameStarted(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initialize game if not started
   useEffect(() => {

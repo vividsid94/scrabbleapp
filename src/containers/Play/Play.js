@@ -66,6 +66,7 @@ export default function Play({ isMultiplayer = false }) {
     // Game state
     pool,
     gameStarted,
+    setGameStarted,
     gameEnded,
     isBotMode,
     setGameEnded,
@@ -356,6 +357,11 @@ export default function Play({ isMultiplayer = false }) {
         return;
       }
     }
+    // Arriving here any other way (e.g. the homepage's Classic/3D Play
+    // buttons) should always land on the setup screen, even if the in-memory
+    // store still has gameStarted from a game left in progress elsewhere —
+    // only the "Resume last game" flow (continue=1) should drop back in.
+    setGameStarted(false);
     initializeGame(origBoard, origPool, gameStartSound, botMoveSound);
   }, [sounds]);
 

@@ -308,27 +308,46 @@
 
 .continueButton {
   border-radius: 999px;
-  border: 1px solid #D97706;
-  background: linear-gradient(45deg, transparent 5%, #D97706 5%);
-  color: #fff;
+  border: 1px solid rgba(107, 114, 128, 0.4);
+  background: transparent;
+  color: #6B7280;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 4px 0 0 #B45309;
   outline: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .continueButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 6px 2px 0 #B45309;
-  opacity: 0.98;
+  background: rgba(107, 114, 128, 0.08);
+  border-color: rgba(107, 114, 128, 0.7);
 }
 
 .continueButton:active {
-  transform: translateY(0);
-  box-shadow: 4px 0 0 #B45309;
+  background: rgba(107, 114, 128, 0.14);
+}
+
+.clearButton {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9CA3AF;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.clearButton:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+}
+
+.clearButton:active {
+  background: rgba(239, 68, 68, 0.14);
 }
 
 
@@ -405,14 +424,14 @@
 
 .secondaryButtonsContainer {
   max-width: 520px;
-  margin: 24px auto 0;
+  margin: 20px auto 0;
   width: 100%;
 }
 
 .modeButtonGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 13px;
   width: 100%;
 }
 

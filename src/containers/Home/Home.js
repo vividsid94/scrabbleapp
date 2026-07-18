@@ -10,7 +10,7 @@ import styles from './Home.module.css';
 import { Trophy, X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
-import { loadActiveGameSnapshot } from '../../utils/activeGamePersistence';
+import { loadActiveGameSnapshot, clearActiveGameSnapshot } from '../../utils/activeGamePersistence';
 import ModeSignChoice from './ModeSignChoice';
 
 export default function Home(){
@@ -61,16 +61,25 @@ export default function Home(){
             <Box className={styles.continueSlot}>
               <div className={styles.continueLabel}>Continue</div>
               {hasActiveGame ? (
-                <button
-                  type="button"
-                  className={styles.continueButton}
-                  onClick={() => navigate('/play?continue=1')}
-                >
-                  <span className={styles.secondaryButtonContent}>
-                    <GameController size={16} weight="fill" />
-                    <span>Resume last game</span>
-                  </span>
-                </button>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={styles.continueButton}
+                    onClick={() => navigate('/play?continue=1')}
+                  >
+                    Resume last game
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.clearButton}
+                    onClick={() => {
+                      clearActiveGameSnapshot();
+                      setHasActiveGame(false);
+                    }}
+                  >
+                    Clear
+                  </button>
+                </Box>
               ) : (
                 <div className={styles.continueEmpty}>No active game yet</div>
               )}
@@ -84,7 +93,7 @@ export default function Home(){
             className={styles.secondaryButtonsContainer}
             sx={{
               width: '100%',
-              margin: '30px auto 0',
+              margin: '20px auto 0',
               padding: { xs: '0 16px', sm: '0 20px' },
               boxSizing: 'border-box'
             }}
