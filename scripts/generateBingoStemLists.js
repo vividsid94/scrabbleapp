@@ -29,9 +29,10 @@
  * counts; the divide-by-C(100,k) is applied for display only.
  *
  * Run: node scripts/generateBingoStemLists.js
- * Writes: public/files/sevens_2024.txt, public/files/eights_2024.txt
- * (new filenames deliberately, for review before replacing the files the
- * app actually reads).
+ * Reads: public/files/nwl2023.txt
+ * Writes: public/files/nwl2023sevens_new.txt, public/files/nwl2023eights_new.txt
+ * (staged under a "_new" suffix deliberately, for review before renaming
+ * over the files the app actually reads: nwl2023sevens.txt / nwl2023eights.txt).
  */
 
 const fs = require('fs');
@@ -139,13 +140,13 @@ function buildList(words, k) {
 }
 
 function main() {
-  const dictPath = path.join(__dirname, '..', 'public', 'nwl2023.txt');
+  const dictPath = path.join(__dirname, '..', 'public', 'files', 'nwl2023.txt');
   const allWords = fs.readFileSync(dictPath, 'utf8')
     .split('\n')
     .map((w) => w.trim().toUpperCase())
     .filter(Boolean);
 
-  for (const [k, label] of [[7, 'sevens'], [8, 'eights']]) {
+  for (const [k, label] of [[7, 'nwl2023sevens'], [8, 'nwl2023eights']]) {
     const words = allWords.filter((w) => w.length === k);
     console.log(`${label}: ${words.length} words from nwl2023.txt`);
 
@@ -157,7 +158,7 @@ function main() {
       for (const word of entry.words) lines.push(word);
     }
 
-    const outPath = path.join(__dirname, '..', 'public', 'files', `${label}_2024.txt`);
+    const outPath = path.join(__dirname, '..', 'public', 'files', `${label}_new.txt`);
     fs.writeFileSync(outPath, lines.join('\n') + '\n');
     console.log(`Wrote ${outPath} (${lines.length} lines)`);
 

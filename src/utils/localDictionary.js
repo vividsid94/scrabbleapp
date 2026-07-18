@@ -28,21 +28,23 @@ async function loadDictionary() {
   // Start loading
   isLoading = true;
   loadPromise = (async () => {
-    // Try to load from public text file first (nwl2023.txt or nwl23.txt)
-    console.log('📖 Attempting to load dictionary from /nwl2023.txt...');
+    // Try to load from public text file first (nwl2023.txt, falling back to
+    // an alternate filename below if the server returns HTML instead - e.g.
+    // a static-hosting misconfiguration serving index.html for a missing file)
+    console.log('📖 Attempting to load dictionary from /files/nwl2023.txt...');
     try {
-      const response = await fetch('/nwl2023.txt');
+      const response = await fetch('/files/nwl2023.txt');
       console.log('📖 Response status:', response.status, response.statusText);
       if (response.ok) {
         const text = await response.text();
         console.log('📖 File loaded, text length:', text.length, 'characters');
-        
+
         // Check if we got HTML instead of the text file (routing issue)
         if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
           console.warn('⚠️ Got HTML instead of dictionary file - trying nwl23.txt...');
           // Try alternative filename
           try {
-            const altResponse = await fetch('/nwl23.txt');
+            const altResponse = await fetch('/files/nwl23.txt');
             if (altResponse.ok) {
               const altText = await altResponse.text();
               if (!altText.trim().startsWith('<!DOCTYPE') && !altText.trim().startsWith('<html')) {
@@ -73,7 +75,7 @@ async function loadDictionary() {
         console.log('📖 Parsed words:', words.length);
         if (words.length > 0) {
           dictionarySet = new Set(words);
-          console.log(`✅ Local dictionary loaded from nwl2023.txt: ${dictionarySet.size} words`);
+          console.log(`✅ Local dictionary loaded from /files/nwl2023.txt: ${dictionarySet.size} words`);
           // Log a sample of words to verify
           const sampleWords = Array.from(dictionarySet).slice(0, 5);
           console.log('📖 Sample words:', sampleWords);
@@ -85,7 +87,7 @@ async function loadDictionary() {
         console.warn(`⚠️ nwl2023.txt not found (status: ${response.status})`);
       }
     } catch (error) {
-      console.warn('❌ Failed to load dictionary from nwl2023.txt:', error);
+      console.warn('❌ Failed to load dictionary from /files/nwl2023.txt:', error);
     }
 
     // Fallback: try to load from Netlify function

@@ -66,8 +66,8 @@ export async function loadSnakesData() {
 
   loadPromise = (async () => {
     const [sevens, eights] = await Promise.all([
-      fetchLines('/files/sevens.txt'),
-      fetchLines('/files/eights.txt'),
+      fetchLines('/files/nwl2023sevens.txt'),
+      fetchLines('/files/nwl2023eights.txt'),
     ]);
 
     const sevenAlphagramToWords = buildAlphagramMap(sevens);
