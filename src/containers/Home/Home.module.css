@@ -81,6 +81,11 @@
   background: linear-gradient(180deg, #3d2410 0%, #6b3d1e 10%, #8a4f22 55%, #5c3315 100%);
   box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2), -1px 0 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.25);
   z-index: 3;
+  /* Hard cutoff right at the hand-grip anchor (matches ::before's position)
+     so the post doesn't poke out above/in front of Theo's fist — it should
+     read as disappearing behind his hand, not fading into it. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 18px, black 18px, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 18px, black 18px, black 100%);
 }
 
 .signPost::before {
