@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { origPool, origBoard } from '../components/AppContent/References/staticData.js';
 import { alphabetizeRack } from '../functions/play/rackFunctions';
 import { getBoardDiff } from '../functions/play/boardUtils';
+import { markBlanksLowercase } from '../functions/play/boardApiUtils';
 import { saveActiveGameSnapshot, clearActiveGameSnapshot } from '../utils/activeGamePersistence';
 
 export const useGameStore = create((set, get) => {
@@ -739,10 +740,11 @@ export const useGameStore = create((set, get) => {
         currentPlayer, 
         player1Rack, 
         player2Rack, 
-        tempBoardCoords, 
-        boardCoords, 
+        tempBoardCoords,
+        boardCoords,
         selectedTiles,
         leaveValues,
+        blankTiles,
         setPlayer1Rack,
         setPlayer2Rack,
         setTempBoardCoords,
@@ -800,10 +802,10 @@ export const useGameStore = create((set, get) => {
           const { premiumSquares } = get();
           
           const requestBody = {
-            board: boardCoords,
+            board: markBlanksLowercase(boardCoords, blankTiles),
             letters: apiRack
           };
-          
+
           // Add premiumSquares if available
           if (premiumSquares && premiumSquares.length > 0) {
             requestBody.premiumSquares = premiumSquares;

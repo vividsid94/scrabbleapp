@@ -4,12 +4,14 @@ import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { createRack } from '../../../functions/rackFunctions.js';
+import { markBlanksLowercase } from '../../../functions/play/boardApiUtils';
 import { ThemeContext } from '../../../App';
 import styles from '../Viewer.module.css';
 import sidenavStyles from '../../../components/AppContent/Sidenav/Sidenav.module.css';
 
-const TopMoves = ({ 
+const TopMoves = ({
   boardCoords,
+  blankTiles,
 
   currentMoveRef,
   parsedMoves,
@@ -128,7 +130,7 @@ const TopMoves = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            board: boardCoords,
+            board: markBlanksLowercase(boardCoords, blankTiles),
             letters: apiRack
           }),
           signal: controller.signal

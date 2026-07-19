@@ -1,6 +1,7 @@
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
+import { markBlanksLowercase } from './boardApiUtils';
 
 // If you don't see this in the console on page load, you're on a STALE bundle — hard refresh.
 console.warn('[botFunctions] LOADED Tope picker v5 — if missing, hard-refresh (Ctrl+Shift+R)');
@@ -154,8 +155,10 @@ export const makeBotMove = async (botMoveSound) => {
     // Removed artificial thinking delay — might add it back later
   }
 
-  // Create a deep copy of the board and rack (moved outside try block for retry access)
-  const boardCopy = JSON.parse(JSON.stringify(boardCoords));
+  // Create a deep copy of the board and rack (moved outside try block for retry access).
+  // Blank positions are lowercased for the request so the move-generation
+  // service can tell a previously-placed blank apart from a real tile.
+  const boardCopy = markBlanksLowercase(JSON.parse(JSON.stringify(boardCoords)), blankTiles);
   const rackCopy = [...player2Rack];
   
   // Convert any '?' in the rack to '*' for the API

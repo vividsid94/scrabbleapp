@@ -886,6 +886,7 @@ export default function Viewer({ onChange }){
             />
             <TopMoves
               boardCoords={boardCoords}
+              blankTiles={blankTiles}
               currentMoveRef={currentMoveRef}
               parsedMoves={parsedMoves}
               pool={getCurrentPool()}

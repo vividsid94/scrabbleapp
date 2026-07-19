@@ -3,6 +3,7 @@ import { fetchLeaveValues } from './leaveFunctions';
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
+import { markBlanksLowercase } from './boardApiUtils';
 
 /**
  * Generates all possible combinations of tiles for exchange
@@ -117,6 +118,7 @@ export const handleGetTopMoves = async ({
   selectedTiles,
   pool,
   leaveValues,
+  blankTiles,
   setPlayer1Rack,
   setPlayer2Rack,
   setTempBoardCoords,
@@ -176,10 +178,10 @@ export const handleGetTopMoves = async ({
     let response;
     try {
       const requestBody = {
-        board: boardCoords,
+        board: markBlanksLowercase(boardCoords, blankTiles),
         letters: apiRack
       };
-      
+
       // Add premiumSquares if available
       if (premiumSquares && premiumSquares.length > 0) {
         requestBody.premiumSquares = premiumSquares;
@@ -469,15 +471,15 @@ export const handlePlayTopMove = async () => {
     let response;
     try {
       const requestBody = {
-        board: boardCoords,
+        board: markBlanksLowercase(boardCoords, blankTiles),
         letters: apiRack
       };
-      
+
       // Add premiumSquares if available
       if (premiumSquares && premiumSquares.length > 0) {
         requestBody.premiumSquares = premiumSquares;
       }
-      
+
       response = await fetch('/.netlify/functions/getTopMoves', {
         method: 'POST',
         headers: {
