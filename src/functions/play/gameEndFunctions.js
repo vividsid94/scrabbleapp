@@ -69,8 +69,8 @@ export const handleGameEnd = async ({
 
   // Calculate sum of loser's remaining tiles
   const rackSum = (loserRack || []).reduce((sum, tile) => {
-    const value = tile === '?' || tile === '*' ? 0 : 
-      tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' || 
+    const value = tile === '?' || tile === '*' ? 0 :
+      tile === 'A' || tile === 'E' || tile === 'I' || tile === 'O' || tile === 'U' ||
       tile === 'L' || tile === 'N' || tile === 'S' || tile === 'T' || tile === 'R' ? 1 :
       tile === 'D' || tile === 'G' ? 2 :
       tile === 'B' || tile === 'C' || tile === 'M' || tile === 'P' ? 3 :
@@ -80,17 +80,36 @@ export const handleGameEnd = async ({
       tile === 'Q' || tile === 'Z' ? 10 : 0;
     return sum + value;
   }, 0);
-  
+
+  // Compute each player's TRUE score by summing every recorded move's score
+  // directly from moveHistory, instead of trusting the incrementally-tracked
+  // player1points/player2points passed in. That incremental total is built
+  // as "previous + this move's score" on every single play, using whatever
+  // player1points/player2points happened to be captured (often at the top of
+  // an async handler, before an awaited validation call) - if any one update
+  // along the way is ever built from a stale snapshot, the running total
+  // silently drops that move's points forever, and every total after it
+  // stays wrong too. moveHistory itself doesn't have this problem (each
+  // entry is appended with a fresh useGameStore.getState() read right before
+  // the write), so summing it fresh here can't drift the same way.
+  let player1Total = 0;
+  let player2Total = 0;
+  (moveHistory || []).forEach((move) => {
+    const score = move.score || 0;
+    if (move.player === player1Name) player1Total += score;
+    else if (move.player === player2Name) player2Total += score;
+  });
+
   // Outplay bonus: the player who went out (winnerName/winnerRack) adds
   // 2x the value of the opponent's stranded tiles to their own score.
   // The opponent's score is left untouched.
-  let finalPlayer1Score = player1points;
-  let finalPlayer2Score = player2points;
+  let finalPlayer1Score = player1Total;
+  let finalPlayer2Score = player2Total;
 
   if (winnerName === player1Name) {
-    finalPlayer1Score = player1points + (rackSum * 2);
+    finalPlayer1Score = player1Total + (rackSum * 2);
   } else {
-    finalPlayer2Score = player2points + (rackSum * 2);
+    finalPlayer2Score = player2Total + (rackSum * 2);
   }
   setPlayer1points(finalPlayer1Score);
   setPlayer2points(finalPlayer2Score);

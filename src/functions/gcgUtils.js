@@ -208,8 +208,9 @@ export const generateGCGContent = (
   });
 
   // End-of-game remaining-tile adjustment for the "someone played their last
-  // tile and the pool is empty" ending: the player who went out gets the
-  // sum of the OTHER player's remaining tile values added to their score.
+  // tile and the pool is empty" ending: the player who went out gets DOUBLE
+  // the opponent's remaining tile value added to their own score; the
+  // opponent's score is untouched.
   //
   // NOTE: this does not detect the other standard ending (six consecutive
   // scoreless turns, where instead EACH player's own remaining tiles are
@@ -220,7 +221,7 @@ export const generateGCGContent = (
   if (pool.length === 0 && player1Empty !== player2Empty) {
     const outIsPlayer1 = player1Empty;
     const opponentRack = outIsPlayer1 ? player2Rack : player1Rack;
-    const value = rackValue(opponentRack);
+    const value = rackValue(opponentRack) * 2;
     if (value > 0) {
       const outNick = formatPlayerName(outIsPlayer1 ? player1Name : player2Name);
       if (outIsPlayer1) player1Total += value; else player2Total += value;
