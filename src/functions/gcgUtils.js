@@ -157,33 +157,43 @@ export const generateGCGContent = (
   player2Rack = [],
   pool = []
 ) => {
+  // This app's "player1"/"player2" are fixed identities (You are always
+  // player1, the bot is always player2), but .gcg's #player1/#player2
+  // convention is positional - #player1 is whoever actually moves FIRST in
+  // this particular game. Since this app supports the bot going first (a
+  // coin flip at game start), those two things frequently disagree. Reader
+  // tools like Quackle expect the header order to match the move sequence,
+  // so get that from moveHistory itself rather than the app's fixed labels.
+  const firstMoverName = (moveHistory && moveHistory.length > 0)
+    ? moveHistory[0].player
+    : player1Name;
+  const secondMoverName = firstMoverName === player1Name ? player2Name : player1Name;
+
   const lines = [
     '#character-encoding UTF-8',
-    `#player1 ${formatPlayerName(player1Name)} ${player1Name}`,
-    `#player2 ${formatPlayerName(player2Name)} ${player2Name}`,
+    `#player1 ${formatPlayerName(firstMoverName)} ${firstMoverName}`,
+    `#player2 ${formatPlayerName(secondMoverName)} ${secondMoverName}`,
   ];
 
   const board = emptyBoard();
   const blankSet = new Set((blankTiles || []).map((t) => `${t.row},${t.col}`));
 
-  let player1Total = 0;
-  let player2Total = 0;
+  // Track running totals by name, not by a "player1/player2" slot - avoids
+  // needing to know which slot is which anywhere below.
+  const totals = { [player1Name]: 0, [player2Name]: 0 };
 
   (moveHistory || []).forEach((move) => {
-    const isPlayer1 = move.player === player1Name;
     const nick = formatPlayerName(move.player);
     const rack = rackString(move.rack);
 
     if (move.word === 'Pass') {
-      const cumul = isPlayer1 ? player1Total : player2Total;
-      lines.push(`>${nick}: ${rack} - +0 ${cumul}`);
+      lines.push(`>${nick}: ${rack} - +0 ${totals[move.player] || 0}`);
       return;
     }
 
     if (move.word === 'Exchange') {
       const exchanged = rackString(move.tilesExchanged);
-      const cumul = isPlayer1 ? player1Total : player2Total;
-      lines.push(`>${nick}: ${rack} -${exchanged} +0 ${cumul}`);
+      lines.push(`>${nick}: ${rack} -${exchanged} +0 ${totals[move.player] || 0}`);
       return;
     }
 
@@ -195,15 +205,14 @@ export const generateGCGContent = (
     (move.boardDiff || []).forEach((t) => { board[t.row][t.col] = t.value; });
 
     const score = move.score || 0;
-    if (isPlayer1) player1Total += score; else player2Total += score;
-    const cumul = isPlayer1 ? player1Total : player2Total;
+    totals[move.player] = (totals[move.player] || 0) + score;
 
     if (placement) {
-      lines.push(`>${nick}: ${rack} ${placement.position} ${placement.word} +${score} ${cumul}`);
+      lines.push(`>${nick}: ${rack} ${placement.position} ${placement.word} +${score} ${totals[move.player]}`);
     } else {
       // No boardDiff on a "real" play shouldn't happen, but never silently
       // drop a scored move from the export.
-      lines.push(`>${nick}: ${rack} - - +${score} ${cumul}`);
+      lines.push(`>${nick}: ${rack} - - +${score} ${totals[move.player]}`);
     }
   });
 
@@ -219,14 +228,12 @@ export const generateGCGContent = (
   const player1Empty = player1Rack.length === 0;
   const player2Empty = player2Rack.length === 0;
   if (pool.length === 0 && player1Empty !== player2Empty) {
-    const outIsPlayer1 = player1Empty;
-    const opponentRack = outIsPlayer1 ? player2Rack : player1Rack;
+    const outName = player1Empty ? player1Name : player2Name;
+    const opponentRack = player1Empty ? player2Rack : player1Rack;
     const value = rackValue(opponentRack) * 2;
     if (value > 0) {
-      const outNick = formatPlayerName(outIsPlayer1 ? player1Name : player2Name);
-      if (outIsPlayer1) player1Total += value; else player2Total += value;
-      const cumul = outIsPlayer1 ? player1Total : player2Total;
-      lines.push(`>${outNick}: (${rackString(opponentRack)}) +${value} ${cumul}`);
+      totals[outName] = (totals[outName] || 0) + value;
+      lines.push(`>${formatPlayerName(outName)}: (${rackString(opponentRack)}) +${value} ${totals[outName]}`);
     }
   }
 
