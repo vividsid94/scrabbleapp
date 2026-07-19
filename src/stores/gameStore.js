@@ -975,10 +975,11 @@ export const useGameStore = create((set, get) => {
         boardCoords,
         tempBoardCoords,
         selectedBoardPosition,
+        blankTiles,
         setPreviewScore,
         setPreviewScorePosition
       } = get();
-      
+
       if (selectedTiles.length === 0) {
         setPreviewScore(null);
         setPreviewScorePosition(null);
@@ -992,15 +993,15 @@ export const useGameStore = create((set, get) => {
       ]).then(([{ calculateScore, premiumSquaresToBoardMultipliers }, { origBoard }]) => {
         const { premiumSquares } = get();
         let boardMultipliers;
-        
+
         // Use premiumSquares if available, otherwise use standard board
         if (premiumSquares && premiumSquares.length > 0) {
           boardMultipliers = premiumSquaresToBoardMultipliers(premiumSquares);
         } else {
           boardMultipliers = JSON.parse(origBoard);
         }
-        
-        const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers);
+
+        const score = calculateScore(boardCoords, tempBoardCoords, boardMultipliers, blankTiles);
         setPreviewScore(score);
         
         // Calculate position for score preview
@@ -1392,7 +1393,7 @@ export const useGameStore = create((set, get) => {
             boardMultipliers = JSON.parse(origBoard);
           }
           
-          const score = calculateScore(get().boardCoords, tempBoardCoords, boardMultipliers);
+          const score = calculateScore(get().boardCoords, tempBoardCoords, boardMultipliers, get().blankTiles);
           setPreviewScore(score);
           
           // Calculate position for score preview

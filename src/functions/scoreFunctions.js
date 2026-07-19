@@ -38,7 +38,7 @@ export function premiumSquaresToBoardMultipliers(premiumSquares) {
 }
 
 // Helper function to get word score
-function getWordScore(wordTiles, placedTiles, boardMultipliers) {
+function getWordScore(wordTiles, placedTiles, boardMultipliers, blankSet) {
   let wordScore = 0;
   let wordMultiplier = 1;
   const usedPremiumSquares = new Set();
@@ -47,7 +47,11 @@ function getWordScore(wordTiles, placedTiles, boardMultipliers) {
     const letter = tile.letter;
     const row = tile.row;
     const col = tile.col;
-    const letterScore = letterScores[letter];
+    // A blank tile is always worth 0, regardless of which letter it's
+    // displaying - whether it was placed on the board this move or on a
+    // previous one. The board array only stores the displayed letter, so
+    // blank-ness has to come from blankSet (the store's blankTiles list).
+    const letterScore = blankSet && blankSet.has(`${row},${col}`) ? 0 : letterScores[letter];
     let letterMultiplier = 1;
 
     const isNewTile = placedTiles.some(pt => pt.row === row && pt.col === col);
@@ -118,10 +122,11 @@ function findWord(board, startRow, startCol, direction) {
 }
 
 // Main function to calculate score
-export function calculateScore(beforeBoard, afterBoard, boardMultipliers) {
+export function calculateScore(beforeBoard, afterBoard, boardMultipliers, blankTiles = []) {
   let totalScore = 0;
   const formedWords = new Set();
   const placedTiles = [];
+  const blankSet = new Set((blankTiles || []).map(t => `${t.row},${t.col}`));
 
   // Find placed tiles
   for (let r = 0; r < 15; r++) {
@@ -145,7 +150,7 @@ export function calculateScore(beforeBoard, afterBoard, boardMultipliers) {
     if (horizontalWord.length > 0) {
       const wordString = horizontalWord.map(t => t.letter).join('');
       if (!formedWords.has(wordString)) {
-        totalScore += getWordScore(horizontalWord, placedTiles, boardMultipliers);
+        totalScore += getWordScore(horizontalWord, placedTiles, boardMultipliers, blankSet);
         formedWords.add(wordString);
       }
     }
@@ -155,7 +160,7 @@ export function calculateScore(beforeBoard, afterBoard, boardMultipliers) {
     if (verticalWord.length > 0) {
       const wordString = verticalWord.map(t => t.letter).join('');
       if (!formedWords.has(wordString)) {
-        totalScore += getWordScore(verticalWord, placedTiles, boardMultipliers);
+        totalScore += getWordScore(verticalWord, placedTiles, boardMultipliers, blankSet);
         formedWords.add(wordString);
       }
     }
