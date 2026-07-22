@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import styles from '../Play.module.css';
 import Rack from '../../../components/AppContent/Board/Rack.js';
@@ -15,7 +15,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
-import { UserCircle, DotsThree, ScribbleLoop } from '@phosphor-icons/react';
+import { UserCircle, DotsThree, ScribbleLoop, Clock } from '@phosphor-icons/react';
 
 const actionButtonStyle = {
   width: '24px',
@@ -102,8 +102,67 @@ function TopePromptView({ prompt, lightMode }) {
   );
 }
 
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt }) => {
-  // Active turn indicator: small indicator light
+// Reads the existing "MM:SS" display string as clock hands instead of
+// digits. Both hands sweep CLOCKWISE as real time passes - the display
+// value is a countdown (it decreases), so that takes inverting it against
+// its own cycle length rather than mapping the raw remaining value straight
+// to an angle (which would sweep backwards).
+//   - Long hand: one sweep per minute, self-contained (just needs the
+//     seconds-within-the-minute), always lands back on 12 at each whole
+//     minute.
+//   - Short hand ("the minute hand"): one sweep across the WHOLE clock, so
+//     it starts pointing straight up. Since this component only gets the
+//     current remaining time (not the clock's starting total), it captures
+//     the first value it sees as "full" via a ref and sweeps clockwise
+//     toward 12 again as that runs out - naturally resets if the clock
+//     ever jumps back up (new game).
+function AnalogClockFace({ time, size = 26, faceColor, handColor }) {
+  const [minutesStr, secondsStr] = (time || '00:00').split(':');
+  const minutes = parseInt(minutesStr, 10) || 0;
+  const seconds = parseInt(secondsStr, 10) || 0;
+  const totalSeconds = minutes * 60 + seconds;
+
+  // A new game's total isn't necessarily bigger than the last one's (a
+  // shorter game after a longer one), so "reset" is detected as time going
+  // UP versus the immediately preceding tick, not versus a running max.
+  const prevTotalSecondsRef = useRef(null);
+  const startTotalSecondsRef = useRef(totalSeconds || 1);
+  if (prevTotalSecondsRef.current === null || totalSeconds > prevTotalSecondsRef.current) {
+    startTotalSecondsRef.current = totalSeconds || 1;
+  }
+  prevTotalSecondsRef.current = totalSeconds;
+  const elapsedFraction = 1 - (totalSeconds / startTotalSecondsRef.current);
+
+  const elapsedSecondsInMinute = (60 - seconds) % 60;
+  const longHandAngle = (elapsedSecondsInMinute / 60) * 360;
+  const shortHandAngle = elapsedFraction * 360;
+
+  const center = size / 2;
+  const longHandLength = size * 0.4;
+  const shortHandLength = size * 0.26;
+
+  const handPoint = (angleDeg, length) => {
+    const angleRad = (angleDeg - 90) * (Math.PI / 180);
+    return {
+      x: center + length * Math.cos(angleRad),
+      y: center + length * Math.sin(angleRad)
+    };
+  };
+
+  const longHandEnd = handPoint(longHandAngle, longHandLength);
+  const shortHandEnd = handPoint(shortHandAngle, shortHandLength);
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+      <circle cx={center} cy={center} r={center - 1} fill={faceColor} stroke={handColor} strokeWidth="1" strokeOpacity="0.5" />
+      <line x1={center} y1={center} x2={shortHandEnd.x} y2={shortHandEnd.y} stroke={handColor} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1={center} y1={center} x2={longHandEnd.x} y2={longHandEnd.y} stroke={handColor} strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx={center} cy={center} r="1.2" fill={handColor} />
+    </svg>
+  );
+}
+
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt, analogClock = false, onToggleAnalogClock }) => {
   const isActive = currentPlayer === playerNumber;
 
   const panelBackground = lightMode === 'dark'
@@ -118,9 +177,13 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
     ? '0 2px 8px rgba(0, 0, 0, 0.2)'
     : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)';
 
+  // Active turn: leave the card itself alone entirely (no shadow, lift,
+  // border, or background change - that whole direction read as arbitrary
+  // decoration). Instead, put the emphasis on the two pieces of the panel
+  // that actually mean "it's your turn": the name and the running clock.
   return (
-  <Box 
-    className={styles.playerPanel} 
+  <Box
+    className={styles.playerPanel}
     sx={{
       ...sx,
       background: panelBackground,
@@ -130,38 +193,34 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
     }}
   >
     <Box className={styles.playerInfo}>
-      <Box 
-        className={styles.playerName} 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+      <Box
+        className={styles.playerName}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
           gap: 8,
           color: lightMode === 'dark' ? '#fff' : '#1F2937'
         }}
       >
-        {isActive ? (
+        {isActive && (
           <Box
-            key={`active-indicator-${playerNumber}-${currentPlayer}`}
             sx={{
-              width: '8px',
-              height: '8px',
+              width: '7px',
+              height: '7px',
               borderRadius: '50%',
-              backgroundColor: '#D97706',
-              boxShadow: '0 0 8px rgba(217, 119, 6, 0.8), 0 0 12px rgba(217, 119, 6, 0.5)',
-              animation: 'pulse 2s ease-in-out infinite',
-              '@keyframes pulse': {
-                '0%, 100%': {
-                  opacity: 1,
-                  transform: 'scale(1)'
-                },
-                '50%': {
-                  opacity: 0.7,
-                  transform: 'scale(1.1)'
-                }
+              flexShrink: 0,
+              backgroundColor: lightMode === 'dark' ? '#F9FAFB' : '#374151',
+              boxShadow: lightMode === 'dark'
+                ? '0 0 6px rgba(249, 250, 251, 0.9), 0 0 12px rgba(249, 250, 251, 0.5)'
+                : '0 0 6px rgba(55, 65, 81, 0.7), 0 0 12px rgba(55, 65, 81, 0.35)',
+              animation: 'clockPulse 1.8s ease-in-out infinite',
+              '@keyframes clockPulse': {
+                '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                '50%': { opacity: 0.55, transform: 'scale(1.3)' }
               }
             }}
           />
-        ) : null}
+        )}
         {name}
         {isTope && topeThinking && (
           <Box
@@ -188,27 +247,60 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
         )}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Box 
+        <Box
           className={styles.timer}
           sx={{
-            backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-            border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
-            padding: '2px 6px',
-            fontSize: '12px',
-            color: lightMode === 'dark' ? '#fff' : '#1F2937',
-            fontFamily: 'monospace',
-            boxShadow: lightMode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
-            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            backgroundColor: '#141210',
+            border: '1px solid rgba(201, 191, 174, 0.35)',
+            borderRadius: '5px',
+            padding: '3px 8px',
+            fontSize: '13px',
+            letterSpacing: '1px',
+            fontVariantNumeric: 'tabular-nums',
+            color: '#D6CCB8',
+            fontFamily: '"Courier New", monospace',
+            fontWeight: 700,
+            textShadow: '0 0 5px rgba(214, 204, 184, 0.55), 0 0 10px rgba(214, 204, 184, 0.25)',
+            boxShadow: 'inset 0 2px 3px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.3)',
             transition: 'all 0.3s ease',
             '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-              borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
-              transform: 'translateY(-1px)',
-              boxShadow: lightMode === 'dark' ? '0 4px 8px rgba(0, 0, 0, 0.15)' : '0 2px 6px rgba(0, 0, 0, 0.12)'
+              borderColor: 'rgba(201, 191, 174, 0.55)'
             }
           }}
         >
-          {time}
+          {analogClock ? (
+            <AnalogClockFace time={time} size={22} faceColor="#141210" handColor="#D6CCB8" />
+          ) : (
+            time
+          )}
+        </Box>
+        <Box
+          component="button"
+          onClick={onToggleAnalogClock}
+          title={analogClock ? 'Switch to digital clock' : 'Switch to analog clock'}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '20px',
+            height: '20px',
+            padding: 0,
+            border: 'none',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            backgroundColor: 'transparent',
+            color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+              color: lightMode === 'dark' ? '#fff' : '#1F2937'
+            }
+          }}
+        >
+          <Clock size={13} weight={analogClock ? 'fill' : 'regular'} />
         </Box>
         {moveStatus && currentPlayer === playerNumber && (
           <Box 
@@ -339,6 +431,7 @@ export default function PlayerInfo({
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const [showTopePrompt, setShowTopePrompt] = useState(false);
+  const [analogClock, setAnalogClock] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
   const isExchangeDisabled = !gameStarted || (onExchangeClick ? false : tilesToExchange.length === 0);
 
@@ -550,37 +643,49 @@ export default function PlayerInfo({
         </Box>
       </Collapse>
 
-      {gameStarted && [
-        {
-          name: player1Name,
-          time: player1Time,
-          points: player1Points,
-          rack: player1Rack,
-          isBot: false,
-          isThinking: currentPlayer === 1 && isPlayerThinking,
-          playerNumber: 1 // Explicitly set player number
-        },
-        {
-          name: player2Name,
-          time: player2Time,
-          points: player2Points,
-          rack: isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack,
-          isBot: isBotMode,
-          isThinking: isBotMode && isBotThinking,
-          botImage: botImage, // Pass botImage to PlayerInfoSection
-          isTope: isBotMode && player2Name === 'Tope',
-          playerNumber: 2 // Explicitly set player number
-        }
-      ].sort((a, b) => {
-        // If currentPlayer is 2, bot should be first
-        return currentPlayer === 2 ? (a.isBot ? -1 : 1) : (a.isBot ? 1 : -1);
-      }).map((player, index) => {
+      {gameStarted && (() => {
+        const players = [
+          {
+            name: player1Name,
+            time: player1Time,
+            points: player1Points,
+            rack: player1Rack,
+            isBot: false,
+            isThinking: currentPlayer === 1 && isPlayerThinking,
+            playerNumber: 1 // Explicitly set player number
+          },
+          {
+            name: player2Name,
+            time: player2Time,
+            points: player2Points,
+            rack: isBotMode ? ['🤖', '👾', '🤖', '👾', '🤖', '👾', '🤖'] : player2Rack,
+            isBot: isBotMode,
+            isThinking: isBotMode && isBotThinking,
+            botImage: botImage, // Pass botImage to PlayerInfoSection
+            isTope: isBotMode && player2Name === 'Tope',
+            playerNumber: 2 // Explicitly set player number
+          }
+        ];
+
+        // Whoever went first stays on top for the entire game - don't
+        // reorder by whose turn it currently is (that used to swap the two
+        // panels' positions every single turn). moveHistory[0] is
+        // authoritative once a move has been played; before that, the
+        // starting currentPlayer hasn't changed yet, so it's equivalent.
+        const player1WentFirst = moveHistory && moveHistory.length > 0
+          ? moveHistory[0].player === player1Name
+          : currentPlayer === 1;
+
+        return player1WentFirst ? players : [players[1], players[0]];
+      })().map((player) => {
         // Use the explicitly set playerNumber from the player object
         const playerNumber = player.playerNumber;
         return (
         <PlayerInfoSection
           key={`player-${playerNumber}-${currentPlayer}`}
           playerNumber={playerNumber}
+          analogClock={analogClock}
+          onToggleAnalogClock={() => setAnalogClock((v) => !v)}
           name={player.isThinking ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {player.name}
