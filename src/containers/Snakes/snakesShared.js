@@ -72,35 +72,47 @@ export function Protile({ letter, color, size }) {
 
 // Toggle + conditional percent slider for the Dead Racks difficulty option
 // (shared by Lith and Zyz mode's setup screens - state stays local to each
-// mode, this is just the reusable control). Plain native inputs styled via
-// accent-color, matching this feature's existing no-MUI convention. `hint`
-// is mode-specific (the two modes resolve a fake differently), so it's
-// passed in by the caller rather than hardcoded here.
+// mode, this is just the reusable control). A custom track/thumb switch and
+// a gradient-filled range input, rather than bare native controls, so this
+// reads as a real settings module and not an afterthought. `hint` is
+// mode-specific (the two modes resolve a fake differently), so it's passed
+// in by the caller rather than hardcoded here.
 export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentChange, hint }) {
   return (
-    <div>
+    <div className={styles.deadRacksBox}>
       <label className={styles.toggleRow}>
-        <input
-          type="checkbox"
-          className={styles.toggleInput}
-          checked={enabled}
-          onChange={(e) => onToggleChange(e.target.checked)}
-        />
-        <span className={styles.toggleLabel}>Dead racks</span>
+        <span className={styles.toggleLabel}>💀 Dead racks</span>
+        <span className={styles.toggleSwitch}>
+          <input
+            type="checkbox"
+            className={styles.toggleInput}
+            checked={enabled}
+            onChange={(e) => onToggleChange(e.target.checked)}
+          />
+          <span className={styles.toggleTrack}>
+            <span className={styles.toggleThumb} />
+          </span>
+        </span>
       </label>
       {hint && <div className={styles.deadRacksHint}>{hint}</div>}
       {enabled && (
-        <div className={styles.sliderRow}>
-          <input
-            type="range"
-            className={styles.percentSlider}
-            min={0}
-            max={100}
-            value={percent}
-            onChange={(e) => onPercentChange(Number(e.target.value))}
-          />
-          <span className={styles.sliderValue}>{percent}%</span>
-        </div>
+        <>
+          <div className={styles.deadRacksHint}>
+            <strong>Disclaimer:</strong> fakes replace real alphagrams rather than adding to them, so raising the percentage doesn't make the session longer.
+          </div>
+          <div className={styles.sliderRow}>
+            <input
+              type="range"
+              className={styles.percentSlider}
+              min={0}
+              max={100}
+              value={percent}
+              onChange={(e) => onPercentChange(Number(e.target.value))}
+              style={{ background: `linear-gradient(to right, var(--amber) ${percent}%, var(--border) ${percent}%)` }}
+            />
+            <span className={styles.sliderValue}>{percent}%</span>
+          </div>
+        </>
       )}
     </div>
   );

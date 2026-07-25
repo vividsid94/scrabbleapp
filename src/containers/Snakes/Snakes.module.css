@@ -221,54 +221,160 @@
 
 /* ---- Dead Racks setting (toggle + slider) ---- */
 
+.deadRacksBox {
+  background: var(--amber-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
 .toggleRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  width: fit-content;
-}
-
-.toggleInput {
-  width: 34px;
-  height: 20px;
-  accent-color: var(--amber);
+  justify-content: space-between;
+  gap: 12px;
   cursor: pointer;
 }
 
 .toggleLabel {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text);
 }
 
+/* Custom track/thumb switch - a native checkbox sits on top, invisible but
+   still handles click/keyboard/focus, while these two spans render the
+   visual switch and react to its :checked state via sibling selectors. */
+.toggleSwitch {
+  position: relative;
+  display: inline-flex;
+  width: 44px;
+  height: 25px;
+  flex-shrink: 0;
+}
+
+.toggleInput {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.toggleTrack {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.toggleInput:checked + .toggleTrack {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+
+.toggleInput:focus-visible + .toggleTrack {
+  box-shadow: 0 0 0 3px var(--amber-soft);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggleInput:checked + .toggleTrack .toggleThumb {
+  transform: translateX(19px);
+}
+
 .deadRacksHint {
-  margin-top: 4px;
-  font-size: 11px;
-  line-height: 1.4;
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
 .sliderRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .percentSlider {
   flex: 1;
   min-width: 0;
-  accent-color: var(--amber);
+  height: 6px;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.percentSlider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+}
+
+.percentSlider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.percentSlider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--amber);
+}
+
+.percentSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--amber);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.percentSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.percentSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--amber);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
 }
 
 .sliderValue {
   flex-shrink: 0;
-  min-width: 34px;
-  text-align: right;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--amber);
+  min-width: 44px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--amber);
+  border-radius: 999px;
+  padding: 3px 9px;
 }
 
 .primaryButton {
