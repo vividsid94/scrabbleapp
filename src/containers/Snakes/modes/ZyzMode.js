@@ -5,6 +5,12 @@ import { initializeDictionary } from '../../../utils/localDictionary';
 import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
+function formatElapsed(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 // Mode 2 - "Zyz Mode". Exactly Classic mode's one-at-a-time round UI (type
 // every word for an alphagram, hint, reveal, continue), but over a single
 // list chosen up front (sevens OR eights, like Lith mode's setup) instead
@@ -37,6 +43,16 @@ export default function ZyzMode({ tileColor }) {
   const [guessInput, setGuessInput] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [hint, setHint] = useState(null); // { word, revealedCount } | null
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Session stopwatch - ticks while a drill is actually in progress, reset
+  // fresh each time handleStart runs.
+  useEffect(() => {
+    if (stage !== 'quiz') return;
+    const intervalId = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(intervalId);
+  }, [stage]);
 
   // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
   // background as soon as the toggle goes on, so it's likely already
@@ -138,19 +154,27 @@ export default function ZyzMode({ tileColor }) {
       }
     }
 
-    const usedDead = new Set();
-    const cells = shuffled.map((alpha) => {
-      if (deadPool && Math.random() * 100 < deadRacksPercent) {
+    // Dead racks are ADDED on top of the real set, not substituted in for
+    // some of it - every real alphagram in the range still gets drilled,
+    // so raising the percentage makes the session longer instead of
+    // leaving gaps in what got studied.
+    const realCells = shuffled.map((alpha) => ({ alpha, isDead: false }));
+    let cells = realCells;
+    if (deadPool) {
+      const targetDeadCount = Math.round(shuffled.length * (deadRacksPercent / 100));
+      const usedDead = new Set();
+      const deadCells = [];
+      for (let i = 0; i < targetDeadCount; i++) {
         const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
-        if (dead) {
-          usedDead.add(dead.alpha);
-          const rank = estimateRank(listKind, data, deadPool, dead.favorable);
-          return { alpha: dead.alpha, isDead: true, fakeRank: rank };
-        }
+        if (!dead) break; // pool exhausted for this range - stop rather than loop forever
+        usedDead.add(dead.alpha);
+        const rank = estimateRank(listKind, data, deadPool, dead.favorable);
+        deadCells.push({ alpha: dead.alpha, isDead: true, fakeRank: rank });
       }
-      return { alpha, isDead: false };
-    });
+      cells = shuffle([...realCells, ...deadCells]);
+    }
 
+    setElapsedSeconds(0);
     setTotalCount(cells.length);
     setStats({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
     const [first, ...rest] = cells;
@@ -201,6 +225,8 @@ export default function ZyzMode({ tileColor }) {
     if (remaining.length === 0) return;
     setHint({ word: remaining[0].word, revealedCount: 1 });
   };
+
+  const handleGiveUp = () => setStage('complete');
 
   const advanceRound = () => {
     setStats((s) => ({ ...s, stemsCompleted: s.stemsCompleted + 1 }));
@@ -328,6 +354,7 @@ export default function ZyzMode({ tileColor }) {
         <div className={styles.card}>
           <div className={styles.progressRow}>
             <span>Stem {Math.min(stats.stemsCompleted + 1, totalCount)} / {totalCount}</span>
+            <span>{formatElapsed(elapsedSeconds)}</span>
           </div>
           <div className={styles.progressTrack}>
             <div
@@ -403,6 +430,9 @@ export default function ZyzMode({ tileColor }) {
                 <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
                   Reveal remaining
                 </button>
+                <button type="button" className={styles.secondaryButton} onClick={handleGiveUp}>
+                  Give up
+                </button>
               </div>
             </>
           ) : (
@@ -442,6 +472,10 @@ export default function ZyzMode({ tileColor }) {
                   : 0}%
               </div>
               <div className={styles.statLabel}>Accuracy</div>
+            </div>
+            <div className={styles.statTile}>
+              <div className={styles.statValue}>{formatElapsed(elapsedSeconds)}</div>
+              <div className={styles.statLabel}>Time</div>
             </div>
             {deadRacksEnabled && (
               <>

@@ -20,6 +20,12 @@ function chunk(arr, size) {
   return out;
 }
 
+function formatElapsed(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 // Picks the most columns (up to 5) whose resulting column width can still
 // fit every tile of a word at a legible size - never a fixed column count,
 // since a fixed count can't promise every tile stays visible at every
@@ -70,6 +76,16 @@ export default function LithMode({ tileColor }) {
 
   const [guessInput, setGuessInput] = useState('');
   const [feedback, setFeedback] = useState(null);
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Session stopwatch - ticks while a drill is actually in progress, reset
+  // fresh each time handleStart runs.
+  useEffect(() => {
+    if (stage !== 'grid') return;
+    const intervalId = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(intervalId);
+  }, [stage]);
 
   // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
   // background as soon as the toggle goes on, so it's likely already
@@ -162,21 +178,29 @@ export default function LithMode({ tileColor }) {
       }
     }
 
-    const usedDead = new Set();
-    const cells = shuffled.map((alpha) => {
-      if (deadPool && Math.random() * 100 < deadRacksPercent) {
+    // Dead racks are ADDED on top of the real set, not substituted in for
+    // some of it - every real alphagram in the range still gets drilled,
+    // so raising the percentage makes the session longer instead of
+    // leaving gaps in what got studied.
+    const realCells = shuffled.map((alpha) => ({ alpha, isDead: false }));
+    let cells = realCells;
+    if (deadPool) {
+      const targetDeadCount = Math.round(shuffled.length * (deadRacksPercent / 100));
+      const usedDead = new Set();
+      const deadCells = [];
+      for (let i = 0; i < targetDeadCount; i++) {
         const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
-        if (dead) {
-          usedDead.add(dead.alpha);
-          // Every dead rack's badge is just a fixed 1, matching the most
-          // common real solution-count - the grid never shows a rank, so
-          // there's nothing else here to estimate.
-          return { alpha: dead.alpha, isDead: true, fakeCount: 1 };
-        }
+        if (!dead) break; // pool exhausted for this range - stop rather than loop forever
+        usedDead.add(dead.alpha);
+        // Every dead rack's badge is just a fixed 1, matching the most
+        // common real solution-count - the grid never shows a rank, so
+        // there's nothing else here to estimate.
+        deadCells.push({ alpha: dead.alpha, isDead: true, fakeCount: 1 });
       }
-      return { alpha, isDead: false };
-    });
+      cells = shuffle([...realCells, ...deadCells]);
+    }
 
+    setElapsedSeconds(0);
     setPages(chunk(cells, PAGE_SIZE));
     setPageIndex(0);
     setFoundWords(new Set());
@@ -187,9 +211,19 @@ export default function LithMode({ tileColor }) {
     setStage('grid');
   };
 
-  const handleCellDoubleClick = (cell) => {
-    if (isResolved(cell)) return;
-    if (cell.isDead) {
+  const handleGiveUp = () => setStage('complete');
+
+  // Flagging a fake is done by typing its on-page number followed by F
+  // (e.g. "12F") into the same textbox real guesses go in, rather than a
+  // double-click - nothing on the grid itself used to hint that a cell was
+  // even clickable, let alone that double-clicking was the gesture.
+  const handleFakeFlag = (index) => {
+    const cell = currentPageCells[index];
+    if (!cell) {
+      setFeedback({ type: 'wrong', message: `No alphagram #${index + 1} on this page.` });
+    } else if (isResolved(cell)) {
+      setFeedback({ type: 'repeat', message: 'That one’s already resolved.' });
+    } else if (cell.isDead) {
       setEliminatedDead((prev) => new Set(prev).add(cell.alpha));
       setStats((s) => ({ ...s, solved: s.solved + 1, deadSpotted: s.deadSpotted + 1 }));
       setFeedback({ type: 'correct', message: 'Dead rack eliminated!' });
@@ -205,15 +239,27 @@ export default function LithMode({ tileColor }) {
     setGuessInput('');
     if (!guess) return;
 
+    // Words are letters only, so "<digits>F" can never collide with an
+    // actual word guess - safe to check unconditionally before the normal
+    // alphagram-matching logic below.
+    const fakeFlagMatch = guess.match(/^(\d+)F$/);
+    if (fakeFlagMatch) {
+      handleFakeFlag(parseInt(fakeFlagMatch[1], 10) - 1);
+      inputRef.current?.focus();
+      return;
+    }
+
     const alpha = alphagram(guess);
     const cell = currentPageCells.find((c) => c.alpha === alpha && !c.isDead);
     const entries = cell ? (alphaMap.get(alpha) || []) : [];
     const isRealSolution = entries.some((en) => en.word === guess);
 
-    if (!cell || !isRealSolution) {
-      setFeedback({ type: 'wrong', message: 'Not a match on this page — try again.' });
-    } else if (foundWords.has(guess)) {
+    if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
+    } else if (!cell) {
+      setFeedback({ type: 'wrong', message: 'No alphagram on this page uses those letters — try again.' });
+    } else if (!isRealSolution) {
+      setFeedback({ type: 'wrong', message: 'Not a valid word for that alphagram — try again.' });
     } else {
       const nextFound = new Set(foundWords).add(guess);
       setFoundWords(nextFound);
@@ -309,7 +355,7 @@ export default function LithMode({ tileColor }) {
             percent={deadRacksPercent}
             onToggleChange={handleToggleDeadRacks}
             onPercentChange={setDeadRacksPercent}
-            hint="Some alphagrams on the grid will be fakes with no real word. Double-click one you think is fake to eliminate it — double-clicking a real one counts as a miss."
+            hint="Some alphagrams on the grid will be fakes with no real word. Each one has a number — type its number followed by F (e.g. “12F”) if you think it's fake. Flagging a real one counts as a miss."
           />
 
           <div className={styles.presetRow}>
@@ -337,6 +383,7 @@ export default function LithMode({ tileColor }) {
         <div className={styles.cardBlend} style={{ maxWidth: 1080 }}>
           <div className={styles.progressRow}>
             <span>Page {pageIndex + 1} / {pages.length}</span>
+            <span>{formatElapsed(elapsedSeconds)}</span>
             <span>{currentPageCells.filter(isResolved).length} / {currentPageCells.length} solved</span>
           </div>
           <div className={styles.progressTrack}>
@@ -351,15 +398,15 @@ export default function LithMode({ tileColor }) {
             className={gridColumns === 1 ? `${styles.lithGrid} ${styles.lithGridScroll}` : styles.lithGrid}
             style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
           >
-            {currentPageCells.map((cell) => {
+            {currentPageCells.map((cell, index) => {
               const resolved = isResolved(cell);
               const badgeNumber = cell.isDead ? cell.fakeCount : remainingCount(cell.alpha);
               return (
                 <div
                   key={cell.alpha}
                   className={resolved ? styles.lithCellSolved : styles.lithCell}
-                  onDoubleClick={() => handleCellDoubleClick(cell)}
                 >
+                  <span className={styles.lithIndex}>{index + 1}</span>
                   <span
                     className={styles.lithBadge}
                     style={resolved ? undefined : { background: badgeColorForCount(badgeNumber) }}
@@ -396,6 +443,9 @@ export default function LithMode({ tileColor }) {
                 ◂ Previous page
               </button>
             )}
+            <button type="button" className={styles.secondaryButton} onClick={handleGiveUp}>
+              Give up
+            </button>
             <button type="button" className={styles.primaryButton} onClick={goNextPage} disabled={!pageComplete}>
               {isLastPage ? 'Finish ▸' : 'Next page ▸'}
             </button>
@@ -414,6 +464,10 @@ export default function LithMode({ tileColor }) {
             <div className={styles.statTile}>
               <div className={styles.statValue}>{stats.correct}</div>
               <div className={styles.statLabel}>Words found</div>
+            </div>
+            <div className={styles.statTile}>
+              <div className={styles.statValue}>{formatElapsed(elapsedSeconds)}</div>
+              <div className={styles.statLabel}>Time</div>
             </div>
             {deadRacksEnabled && (
               <>

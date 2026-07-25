@@ -98,7 +98,7 @@ export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentCh
       {enabled && (
         <>
           <div className={styles.deadRacksHint}>
-            <strong>Disclaimer:</strong> fakes replace real alphagrams rather than adding to them, so raising the percentage doesn't make the session longer.
+            <strong>Disclaimer:</strong> fakes are added on top of the real alphagrams in your range rather than replacing any of them, so every real one still gets drilled — raising the percentage makes the session longer instead.
           </div>
           <div className={styles.sliderRow}>
             <input

@@ -748,6 +748,19 @@
   opacity: 0.5;
 }
 
+/* Each alphagram's on-page number, typed (with an F suffix) into the guess
+   box to flag it as fake instead of clicking anything directly on the
+   grid - kept small/muted so it doesn't compete with the badge next to it. */
+.lithIndex {
+  flex-shrink: 0;
+  min-width: 14px;
+  text-align: right;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .lithBadge {
   flex-shrink: 0;
   width: 20px;
