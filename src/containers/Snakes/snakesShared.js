@@ -10,6 +10,28 @@ export const PRESETS = [
   { label: 'Rare', min: 15000, max: 25000 },
 ];
 
+// One distinct, legible-with-white-text color per remaining-solutions
+// count, so a badge's color visibly changes (not just its number) when a
+// word is knocked off a multi-solution alphagram - e.g. spotting "that one
+// went from 5 to 4" at a glance instead of having to re-read the digit.
+// Green is reserved for the fully-solved state, so it's deliberately not
+// in this list; counts past the palette's length cycle back around.
+const BADGE_COLORS = [
+  '#3D5A80', // 1 - blue
+  '#7C5295', // 2 - purple
+  '#0F766E', // 3 - teal
+  '#A8527A', // 4 - rose
+  '#4338CA', // 5 - indigo
+  '#B45309', // 6 - burnt orange
+  '#475569', // 7 - slate
+  '#9D174D', // 8 - wine
+];
+
+export function badgeColorForCount(count) {
+  if (!count || count < 1) return BADGE_COLORS[0];
+  return BADGE_COLORS[(count - 1) % BADGE_COLORS.length];
+}
+
 export function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {

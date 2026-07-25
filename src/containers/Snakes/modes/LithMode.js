@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSnakesData, alphagram } from '../snakesData';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile } from '../snakesShared';
+import { PRESETS, shuffle, Protile, badgeColorForCount } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 const PAGE_SIZE = 50;
@@ -288,7 +288,12 @@ export default function LithMode({ tileColor }) {
               const solved = remaining === 0;
               return (
                 <div key={alpha} className={solved ? styles.lithCellSolved : styles.lithCell}>
-                  <span className={styles.lithBadge}>{solved ? '✓' : remaining}</span>
+                  <span
+                    className={styles.lithBadge}
+                    style={solved ? undefined : { background: badgeColorForCount(remaining) }}
+                  >
+                    {solved ? '✓' : remaining}
+                  </span>
                   <span className={styles.lithTiles}>
                     {alpha.split('').map((l, i) => (
                       <Protile key={i} letter={l} color={tileColor.current} size={gridTileSize} />
