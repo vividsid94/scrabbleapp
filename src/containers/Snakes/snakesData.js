@@ -22,6 +22,16 @@ async function fetchLines(path) {
   return text.split('\n').map((line) => line.trim()).filter(Boolean);
 }
 
+// Parses the "ALPHA,FAVORABLE" CSV files the Dead Racks feature reads
+// (see scripts/generateDeadRacks.js) into {alpha, favorable}[].
+async function fetchAlphaFavorablePairs(path) {
+  const lines = await fetchLines(path);
+  return lines.map((line) => {
+    const commaIndex = line.indexOf(',');
+    return { alpha: line.slice(0, commaIndex), favorable: Number(line.slice(commaIndex + 1)) };
+  });
+}
+
 // Builds alphagram -> [{word, rank}] from a probability-ordered word list
 // (rank is the 1-indexed line number, matching quiz.py's "probs" display).
 function buildAlphagramMap(words) {
@@ -85,6 +95,39 @@ export async function loadSnakesData() {
   })();
 
   return loadPromise;
+}
+
+// Dead Racks data (fake, wordless alphagrams for the optional difficulty
+// toggle) is loaded separately from - and lazily after - the main word
+// lists, since the eights dead-rack pool alone is ~13MB: fetching it
+// unconditionally on every visit to Lith/Zyz mode would penalize the (most
+// likely majority of) users who never turn the toggle on. Call this only
+// once the user actually starts a session with Dead Racks enabled.
+let deadCache = null;
+let deadLoadPromise = null;
+
+export async function loadDeadRackData() {
+  if (deadCache) return deadCache;
+  if (deadLoadPromise) return deadLoadPromise;
+
+  deadLoadPromise = (async () => {
+    const [sevenAlphaFavorablePairs, eightAlphaFavorablePairs, sevenDead, eightDead] = await Promise.all([
+      fetchAlphaFavorablePairs('/files/nwl2023sevens_alpha_favorable.txt'),
+      fetchAlphaFavorablePairs('/files/nwl2023eights_alpha_favorable.txt'),
+      fetchAlphaFavorablePairs('/files/nwl2023sevens_dead.txt'),
+      fetchAlphaFavorablePairs('/files/nwl2023eights_dead.txt'),
+    ]);
+
+    deadCache = {
+      sevenAlphaFavorable: new Map(sevenAlphaFavorablePairs.map((p) => [p.alpha, p.favorable])),
+      eightAlphaFavorable: new Map(eightAlphaFavorablePairs.map((p) => [p.alpha, p.favorable])),
+      sevenDead,
+      eightDead,
+    };
+    return deadCache;
+  })();
+
+  return deadLoadPromise;
 }
 
 export { alphagram };

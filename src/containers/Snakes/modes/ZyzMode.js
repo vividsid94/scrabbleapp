@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { loadSnakesData, alphagram } from '../snakesData';
+import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
+import { pickDeadRack, estimateRankAndCount } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, WordChip } from '../snakesShared';
+import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 // Mode 2 - "Zyz Mode". Exactly Classic mode's one-at-a-time round UI (type
@@ -21,17 +22,33 @@ export default function ZyzMode({ tileColor }) {
   const [rangeMax, setRangeMax] = useState('100');
   const [rangeError, setRangeError] = useState('');
 
-  const [queue, setQueue] = useState([]);
+  const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
+  const [deadRacksPercent, setDeadRacksPercent] = useState(20);
+
+  const [queue, setQueue] = useState([]); // {alpha, isDead, fakeRank?, fakeCount?}[]
   const [totalCount, setTotalCount] = useState(0);
-  const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0 });
+  const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
 
   const [currentAlpha, setCurrentAlpha] = useState('');
+  const [currentIsDead, setCurrentIsDead] = useState(false);
+  const [currentFakeRank, setCurrentFakeRank] = useState(null);
+  const [currentFakeCount, setCurrentFakeCount] = useState(1);
+  const [deadSolved, setDeadSolved] = useState(false);
   const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}]
   const [foundWords, setFoundWords] = useState(new Set());
   const [revealedWords, setRevealedWords] = useState(new Set());
   const [guessInput, setGuessInput] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [hint, setHint] = useState(null); // { word, revealedCount } | null
+
+  // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
+  // background as soon as the toggle goes on, so it's likely already
+  // cached by the time "Start drilling" is clicked - handleStart still
+  // awaits it itself as a safety net for a same-instant toggle+start.
+  const handleToggleDeadRacks = (checked) => {
+    setDeadRacksEnabled(checked);
+    if (checked) loadDeadRackData().catch(() => {});
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -56,13 +73,19 @@ export default function ZyzMode({ tileColor }) {
   const currentList = data ? (listKind === 'seven' ? data.sevens : data.eights) : null;
 
   const promptRank = useMemo(() => {
+    if (currentIsDead) return currentFakeRank;
     if (!alphaMap || !currentAlpha) return null;
     const entries = alphaMap.get(currentAlpha);
     if (!entries || entries.length === 0) return null;
     return Math.min(...entries.map((e) => e.rank));
-  }, [alphaMap, currentAlpha]);
+  }, [alphaMap, currentAlpha, currentIsDead, currentFakeRank]);
 
-  const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
+  // A dead round has no real words to find, so it can't use the
+  // found/total comparison a real round resolves with - it resolves the
+  // instant "DEAD" is typed correctly instead.
+  const roundActive = currentIsDead
+    ? !deadSolved
+    : (foundWords.size + revealedWords.size) < roundEntries.length;
 
   // Letter-by-letter hint reveal - identical timing/behavior to Classic mode.
   useEffect(() => {
@@ -81,9 +104,13 @@ export default function ZyzMode({ tileColor }) {
     return () => clearTimeout(timeoutId);
   }, [hint, foundWords]);
 
-  const startRound = (alpha) => {
-    const entries = alphaMap.get(alpha) || [];
-    setCurrentAlpha(alpha);
+  const startRound = (cell) => {
+    const entries = cell.isDead ? [] : (alphaMap.get(cell.alpha) || []);
+    setCurrentAlpha(cell.alpha);
+    setCurrentIsDead(cell.isDead);
+    setCurrentFakeRank(cell.isDead ? cell.fakeRank : null);
+    setCurrentFakeCount(cell.isDead ? cell.fakeCount : 1);
+    setDeadSolved(false);
     setRoundEntries(entries);
     setFoundWords(new Set());
     setRevealedWords(new Set());
@@ -92,7 +119,7 @@ export default function ZyzMode({ tileColor }) {
     setHint(null);
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     const min = parseInt(rangeMin, 10);
     const max = parseInt(rangeMax, 10);
     const upperBound = currentList.length;
@@ -104,9 +131,34 @@ export default function ZyzMode({ tileColor }) {
     const raw = currentList.slice(min - 1, max);
     const distinct = Array.from(new Set(raw.map(alphagram)));
     const shuffled = shuffle(distinct);
-    setTotalCount(shuffled.length);
-    setStats({ stemsCompleted: 0, correct: 0, revealed: 0 });
-    const [first, ...rest] = shuffled;
+
+    // Falls back to an all-real session (rather than blocking start) if the
+    // dead-rack data fails to load - e.g. a flaky network on first fetch.
+    let deadPool = null;
+    if (deadRacksEnabled) {
+      try {
+        deadPool = await loadDeadRackData();
+      } catch (err) {
+        deadPool = null;
+      }
+    }
+
+    const usedDead = new Set();
+    const cells = shuffled.map((alpha) => {
+      if (deadPool && Math.random() * 100 < deadRacksPercent) {
+        const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
+        if (dead) {
+          usedDead.add(dead.alpha);
+          const { rank, count } = estimateRankAndCount(listKind, data, deadPool, dead.favorable);
+          return { alpha: dead.alpha, isDead: true, fakeRank: rank, fakeCount: count };
+        }
+      }
+      return { alpha, isDead: false };
+    });
+
+    setTotalCount(cells.length);
+    setStats({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
+    const [first, ...rest] = cells;
     setQueue(rest);
     startRound(first);
     setStage('quiz');
@@ -116,6 +168,34 @@ export default function ZyzMode({ tileColor }) {
     e.preventDefault();
     const guess = guessInput.trim().toUpperCase();
     if (!guess) return;
+
+    // "DEAD" is handled the same way regardless of which branch it's typed
+    // in - correct only if the round genuinely has no valid word; wrongly
+    // declaring a REAL round dead is the mistake (mirrors Lith mode's
+    // "double-clicked a real cell" miss), while trying ordinary word
+    // guesses on an actually-dead round isn't punished - probing a few
+    // plausible words before concluding "dead" is normal play.
+    if (guess === 'DEAD') {
+      if (currentIsDead) {
+        setDeadSolved(true);
+        setStats((s) => ({ ...s, deadSpotted: s.deadSpotted + 1 }));
+        setFeedback({ type: 'correct', message: 'Correct!' });
+      } else {
+        setStats((s) => ({ ...s, mistakes: s.mistakes + 1 }));
+        setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
+      }
+      setGuessInput('');
+      inputRef.current?.focus();
+      return;
+    }
+
+    if (currentIsDead) {
+      setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
+      setGuessInput('');
+      inputRef.current?.focus();
+      return;
+    }
+
     if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
     } else if (roundEntries.some((entry) => entry.word === guess)) {
@@ -225,6 +305,14 @@ export default function ZyzMode({ tileColor }) {
             </div>
           </div>
 
+          <DeadRacksSetting
+            enabled={deadRacksEnabled}
+            percent={deadRacksPercent}
+            onToggleChange={handleToggleDeadRacks}
+            onPercentChange={setDeadRacksPercent}
+            hint="Some rounds will be fakes with no real word. Type DEAD if you think this one is — typing it on a real round counts as a miss."
+          />
+
           <div className={styles.presetRow}>
             {PRESETS.map((p) => (
               <button
@@ -271,7 +359,9 @@ export default function ZyzMode({ tileColor }) {
           )}
 
           <div className={styles.answerCount}>
-            {foundWords.size + revealedWords.size} / {roundEntries.length} found
+            {currentIsDead
+              ? `${deadSolved ? currentFakeCount : 0} / ${currentFakeCount} found`
+              : `${foundWords.size + revealedWords.size} / ${roundEntries.length} found`}
           </div>
 
           {roundActive ? (
@@ -306,14 +396,16 @@ export default function ZyzMode({ tileColor }) {
                   <WordChip key={entry.word} entry={entry} variant="found" hookCache={hookCache} />
                 ))}
               </div>
-              <div className={styles.footerRow}>
-                <button type="button" className={styles.secondaryButton} onClick={handleHint} disabled={!!hint}>
-                  Hint
-                </button>
-                <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
-                  Reveal remaining
-                </button>
-              </div>
+              {!currentIsDead && (
+                <div className={styles.footerRow}>
+                  <button type="button" className={styles.secondaryButton} onClick={handleHint} disabled={!!hint}>
+                    Hint
+                  </button>
+                  <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
+                    Reveal remaining
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -357,6 +449,18 @@ export default function ZyzMode({ tileColor }) {
               </div>
               <div className={styles.statLabel}>Accuracy</div>
             </div>
+            {deadRacksEnabled && (
+              <>
+                <div className={styles.statTile}>
+                  <div className={styles.statValue}>{stats.deadSpotted}</div>
+                  <div className={styles.statLabel}>Dead spotted</div>
+                </div>
+                <div className={styles.statTile}>
+                  <div className={styles.statValue}>{stats.mistakes}</div>
+                  <div className={styles.statLabel}>Mistakes</div>
+                </div>
+              </>
+            )}
           </div>
           <div className={styles.footerRow}>
             <button type="button" className={styles.secondaryButton} onClick={() => setStage('setup')}>

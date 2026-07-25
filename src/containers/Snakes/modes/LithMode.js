@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { loadSnakesData, alphagram } from '../snakesData';
+import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
+import { pickDeadRack, estimateRankAndCount } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, badgeColorForCount } from '../snakesShared';
+import { PRESETS, shuffle, Protile, badgeColorForCount, DeadRacksSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 const PAGE_SIZE = 50;
@@ -58,13 +59,26 @@ export default function LithMode({ tileColor }) {
   const [rangeMax, setRangeMax] = useState('100');
   const [rangeError, setRangeError] = useState('');
 
-  const [pages, setPages] = useState([]);
+  const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
+  const [deadRacksPercent, setDeadRacksPercent] = useState(20);
+
+  const [pages, setPages] = useState([]); // {alpha, isDead, fakeCount?}[][]
   const [pageIndex, setPageIndex] = useState(0);
   const [foundWords, setFoundWords] = useState(new Set());
-  const [stats, setStats] = useState({ solved: 0, correct: 0 });
+  const [eliminatedDead, setEliminatedDead] = useState(new Set());
+  const [stats, setStats] = useState({ solved: 0, correct: 0, deadSpotted: 0, mistakes: 0 });
 
   const [guessInput, setGuessInput] = useState('');
   const [feedback, setFeedback] = useState(null);
+
+  // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
+  // background as soon as the toggle goes on, so it's likely already
+  // cached by the time "Start drilling" is clicked - handleStart still
+  // awaits it itself as a safety net for a same-instant toggle+start.
+  const handleToggleDeadRacks = (checked) => {
+    setDeadRacksEnabled(checked);
+    if (checked) loadDeadRackData().catch(() => {});
+  };
 
   // Measures the grid's actual rendered width so column count and tile
   // size can be derived from real available space instead of guessed
@@ -103,7 +117,7 @@ export default function LithMode({ tileColor }) {
   }, [data, listKind]);
 
   const currentList = data ? (listKind === 'seven' ? data.sevens : data.eights) : null;
-  const currentPageAlphas = pages[pageIndex] || [];
+  const currentPageCells = pages[pageIndex] || [];
 
   const { columns: gridColumns, tileSize: gridTileSize } = useMemo(
     () => computeGridLayout(containerWidth, listKind === 'eight' ? 8 : 7),
@@ -115,10 +129,16 @@ export default function LithMode({ tileColor }) {
     return entries.filter((en) => !foundWords.has(en.word)).length;
   };
 
-  const pageComplete = currentPageAlphas.length > 0 && currentPageAlphas.every((a) => remainingCount(a) === 0);
+  // A dead cell resolves by elimination (double-click), a real one by
+  // typing every solution - they can't share the remainingCount() check
+  // (a dead alpha isn't in alphaMap at all, so that would read as
+  // "0 remaining" - i.e. solved - the instant the page loads).
+  const isResolved = (cell) => (cell.isDead ? eliminatedDead.has(cell.alpha) : remainingCount(cell.alpha) === 0);
+
+  const pageComplete = currentPageCells.length > 0 && currentPageCells.every(isResolved);
   const isLastPage = pageIndex === pages.length - 1;
 
-  const handleStart = () => {
+  const handleStart = async () => {
     const min = parseInt(rangeMin, 10);
     const max = parseInt(rangeMax, 10);
     const upperBound = currentList.length;
@@ -130,13 +150,51 @@ export default function LithMode({ tileColor }) {
     const raw = currentList.slice(min - 1, max);
     const distinct = Array.from(new Set(raw.map(alphagram)));
     const shuffled = shuffle(distinct);
-    setPages(chunk(shuffled, PAGE_SIZE));
+
+    // Falls back to an all-real session (rather than blocking start) if the
+    // dead-rack data fails to load - e.g. a flaky network on first fetch.
+    let deadPool = null;
+    if (deadRacksEnabled) {
+      try {
+        deadPool = await loadDeadRackData();
+      } catch (err) {
+        deadPool = null;
+      }
+    }
+
+    const usedDead = new Set();
+    const cells = shuffled.map((alpha) => {
+      if (deadPool && Math.random() * 100 < deadRacksPercent) {
+        const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
+        if (dead) {
+          usedDead.add(dead.alpha);
+          const { count } = estimateRankAndCount(listKind, data, deadPool, dead.favorable);
+          return { alpha: dead.alpha, isDead: true, fakeCount: count };
+        }
+      }
+      return { alpha, isDead: false };
+    });
+
+    setPages(chunk(cells, PAGE_SIZE));
     setPageIndex(0);
     setFoundWords(new Set());
-    setStats({ solved: 0, correct: 0 });
+    setEliminatedDead(new Set());
+    setStats({ solved: 0, correct: 0, deadSpotted: 0, mistakes: 0 });
     setFeedback(null);
     setGuessInput('');
     setStage('grid');
+  };
+
+  const handleCellDoubleClick = (cell) => {
+    if (isResolved(cell)) return;
+    if (cell.isDead) {
+      setEliminatedDead((prev) => new Set(prev).add(cell.alpha));
+      setStats((s) => ({ ...s, solved: s.solved + 1, deadSpotted: s.deadSpotted + 1 }));
+      setFeedback({ type: 'correct', message: 'Dead rack eliminated!' });
+    } else {
+      setStats((s) => ({ ...s, mistakes: s.mistakes + 1 }));
+      setFeedback({ type: 'wrong', message: "That one's real — type its word(s) instead." });
+    }
   };
 
   const handleGuessSubmit = (e) => {
@@ -146,11 +204,11 @@ export default function LithMode({ tileColor }) {
     if (!guess) return;
 
     const alpha = alphagram(guess);
-    const onCurrentPage = currentPageAlphas.includes(alpha);
-    const entries = onCurrentPage ? (alphaMap.get(alpha) || []) : [];
+    const cell = currentPageCells.find((c) => c.alpha === alpha && !c.isDead);
+    const entries = cell ? (alphaMap.get(alpha) || []) : [];
     const isRealSolution = entries.some((en) => en.word === guess);
 
-    if (!onCurrentPage || !isRealSolution) {
+    if (!cell || !isRealSolution) {
       setFeedback({ type: 'wrong', message: 'Not a match on this page — try again.' });
     } else if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
@@ -244,6 +302,14 @@ export default function LithMode({ tileColor }) {
             </div>
           </div>
 
+          <DeadRacksSetting
+            enabled={deadRacksEnabled}
+            percent={deadRacksPercent}
+            onToggleChange={handleToggleDeadRacks}
+            onPercentChange={setDeadRacksPercent}
+            hint="Some alphagrams on the grid will be fakes with no real word. Double-click one you think is fake to eliminate it — double-clicking a real one counts as a miss."
+          />
+
           <div className={styles.presetRow}>
             {PRESETS.map((p) => (
               <button
@@ -269,12 +335,12 @@ export default function LithMode({ tileColor }) {
         <div className={styles.cardBlend} style={{ maxWidth: 1080 }}>
           <div className={styles.progressRow}>
             <span>Page {pageIndex + 1} / {pages.length}</span>
-            <span>{currentPageAlphas.filter((a) => remainingCount(a) === 0).length} / {currentPageAlphas.length} solved</span>
+            <span>{currentPageCells.filter(isResolved).length} / {currentPageCells.length} solved</span>
           </div>
           <div className={styles.progressTrack}>
             <div
               className={styles.progressFill}
-              style={{ width: `${currentPageAlphas.length ? (currentPageAlphas.filter((a) => remainingCount(a) === 0).length / currentPageAlphas.length) * 100 : 0}%` }}
+              style={{ width: `${currentPageCells.length ? (currentPageCells.filter(isResolved).length / currentPageCells.length) * 100 : 0}%` }}
             />
           </div>
 
@@ -283,19 +349,23 @@ export default function LithMode({ tileColor }) {
             className={gridColumns === 1 ? `${styles.lithGrid} ${styles.lithGridScroll}` : styles.lithGrid}
             style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
           >
-            {currentPageAlphas.map((alpha) => {
-              const remaining = remainingCount(alpha);
-              const solved = remaining === 0;
+            {currentPageCells.map((cell) => {
+              const resolved = isResolved(cell);
+              const badgeNumber = cell.isDead ? cell.fakeCount : remainingCount(cell.alpha);
               return (
-                <div key={alpha} className={solved ? styles.lithCellSolved : styles.lithCell}>
+                <div
+                  key={cell.alpha}
+                  className={resolved ? styles.lithCellSolved : styles.lithCell}
+                  onDoubleClick={() => handleCellDoubleClick(cell)}
+                >
                   <span
                     className={styles.lithBadge}
-                    style={solved ? undefined : { background: badgeColorForCount(remaining) }}
+                    style={resolved ? undefined : { background: badgeColorForCount(badgeNumber) }}
                   >
-                    {solved ? '✓' : remaining}
+                    {resolved ? '✓' : badgeNumber}
                   </span>
                   <span className={styles.lithTiles}>
-                    {alpha.split('').map((l, i) => (
+                    {cell.alpha.split('').map((l, i) => (
                       <Protile key={i} letter={l} color={tileColor.current} size={gridTileSize} />
                     ))}
                   </span>
@@ -343,6 +413,18 @@ export default function LithMode({ tileColor }) {
               <div className={styles.statValue}>{stats.correct}</div>
               <div className={styles.statLabel}>Words found</div>
             </div>
+            {deadRacksEnabled && (
+              <>
+                <div className={styles.statTile}>
+                  <div className={styles.statValue}>{stats.deadSpotted}</div>
+                  <div className={styles.statLabel}>Dead spotted</div>
+                </div>
+                <div className={styles.statTile}>
+                  <div className={styles.statValue}>{stats.mistakes}</div>
+                  <div className={styles.statLabel}>Mistakes</div>
+                </div>
+              </>
+            )}
           </div>
           <div className={styles.footerRow}>
             <button type="button" className={styles.secondaryButton} onClick={() => setStage('setup')}>
