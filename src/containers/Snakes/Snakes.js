@@ -3,13 +3,13 @@ import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import { ThemeContext } from '../../App';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import LithMode from './modes/LithMode';
-import ComingSoonMode from './modes/ComingSoonMode';
+import ZyzMode from './modes/ZyzMode';
 import ClassicMode from './modes/ClassicMode';
 import styles from './Snakes.module.css';
 
 const TABS = [
   { id: 1, label: 'Lith Mode' },
-  { id: 2, label: 'Mode 2', disabled: true },
+  { id: 2, label: 'Zyz Mode' },
   { id: 3, label: 'Classic' },
 ];
 
@@ -43,7 +43,7 @@ export default function Snakes() {
         </div>
 
         {mode === 1 && <LithMode tileColor={tileColor} />}
-        {mode === 2 && <ComingSoonMode />}
+        {mode === 2 && <ZyzMode tileColor={tileColor} />}
         {mode === 3 && <ClassicMode tileColor={tileColor} />}
       </div>
     </div>
