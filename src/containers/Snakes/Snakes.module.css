@@ -741,16 +741,11 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 8px;
-  transition: opacity 0.15s ease, border-color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .lithCellSolved {
   opacity: 0.5;
-  border-color: var(--green-soft);
 }
 
 .lithBadge {
