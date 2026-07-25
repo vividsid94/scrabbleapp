@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import styles from '../Play.module.css';
 import Rack from '../../../components/AppContent/Board/Rack.js';
@@ -15,7 +15,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
-import { UserCircle, DotsThree, ScribbleLoop, Clock } from '@phosphor-icons/react';
+import { UserCircle, DotsThree, ScribbleLoop } from '@phosphor-icons/react';
 
 const actionButtonStyle = {
   width: '24px',
@@ -102,67 +102,7 @@ function TopePromptView({ prompt, lightMode }) {
   );
 }
 
-// Reads the existing "MM:SS" display string as clock hands instead of
-// digits. Both hands sweep CLOCKWISE as real time passes - the display
-// value is a countdown (it decreases), so that takes inverting it against
-// its own cycle length rather than mapping the raw remaining value straight
-// to an angle (which would sweep backwards).
-//   - Long hand: one sweep per minute, self-contained (just needs the
-//     seconds-within-the-minute), always lands back on 12 at each whole
-//     minute.
-//   - Short hand ("the minute hand"): one sweep across the WHOLE clock, so
-//     it starts pointing straight up. Since this component only gets the
-//     current remaining time (not the clock's starting total), it captures
-//     the first value it sees as "full" via a ref and sweeps clockwise
-//     toward 12 again as that runs out - naturally resets if the clock
-//     ever jumps back up (new game).
-function AnalogClockFace({ time, size = 26, faceColor, handColor }) {
-  const [minutesStr, secondsStr] = (time || '00:00').split(':');
-  const minutes = parseInt(minutesStr, 10) || 0;
-  const seconds = parseInt(secondsStr, 10) || 0;
-  const totalSeconds = minutes * 60 + seconds;
-
-  // A new game's total isn't necessarily bigger than the last one's (a
-  // shorter game after a longer one), so "reset" is detected as time going
-  // UP versus the immediately preceding tick, not versus a running max.
-  const prevTotalSecondsRef = useRef(null);
-  const startTotalSecondsRef = useRef(totalSeconds || 1);
-  if (prevTotalSecondsRef.current === null || totalSeconds > prevTotalSecondsRef.current) {
-    startTotalSecondsRef.current = totalSeconds || 1;
-  }
-  prevTotalSecondsRef.current = totalSeconds;
-  const elapsedFraction = 1 - (totalSeconds / startTotalSecondsRef.current);
-
-  const elapsedSecondsInMinute = (60 - seconds) % 60;
-  const longHandAngle = (elapsedSecondsInMinute / 60) * 360;
-  const shortHandAngle = elapsedFraction * 360;
-
-  const center = size / 2;
-  const longHandLength = size * 0.4;
-  const shortHandLength = size * 0.26;
-
-  const handPoint = (angleDeg, length) => {
-    const angleRad = (angleDeg - 90) * (Math.PI / 180);
-    return {
-      x: center + length * Math.cos(angleRad),
-      y: center + length * Math.sin(angleRad)
-    };
-  };
-
-  const longHandEnd = handPoint(longHandAngle, longHandLength);
-  const shortHandEnd = handPoint(shortHandAngle, shortHandLength);
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-      <circle cx={center} cy={center} r={center - 1} fill={faceColor} stroke={handColor} strokeWidth="1" strokeOpacity="0.5" />
-      <line x1={center} y1={center} x2={shortHandEnd.x} y2={shortHandEnd.y} stroke={handColor} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1={center} y1={center} x2={longHandEnd.x} y2={longHandEnd.y} stroke={handColor} strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx={center} cy={center} r="1.2" fill={handColor} />
-    </svg>
-  );
-}
-
-const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt, analogClock = false, onToggleAnalogClock }) => {
+const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selectedTiles, isBot, currentPlayer, playerNumber, sx, mascotRef, botImage, lightMode = 'dark', moveStatus = null, isTope = false, topeThinking, showTopePrompt, onToggleTopePrompt }) => {
   const isActive = currentPlayer === playerNumber;
 
   const panelBackground = lightMode === 'dark'
@@ -271,36 +211,7 @@ const PlayerInfoSection = ({ name, time, points, rack, color, onTileClick, selec
             }
           }}
         >
-          {analogClock ? (
-            <AnalogClockFace time={time} size={22} faceColor="#141210" handColor="#D6CCB8" />
-          ) : (
-            time
-          )}
-        </Box>
-        <Box
-          component="button"
-          onClick={onToggleAnalogClock}
-          title={analogClock ? 'Switch to digital clock' : 'Switch to analog clock'}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '20px',
-            height: '20px',
-            padding: 0,
-            border: 'none',
-            borderRadius: '50%',
-            cursor: 'pointer',
-            backgroundColor: 'transparent',
-            color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-              color: lightMode === 'dark' ? '#fff' : '#1F2937'
-            }
-          }}
-        >
-          <Clock size={13} weight={analogClock ? 'fill' : 'regular'} />
+          {time}
         </Box>
         {moveStatus && currentPlayer === playerNumber && (
           <Box 
@@ -431,7 +342,6 @@ export default function PlayerInfo({
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const [showTopePrompt, setShowTopePrompt] = useState(false);
-  const [analogClock, setAnalogClock] = useState(false);
   const isSubmitDisabled = !gameStarted || !selectedBoardPosition || selectedTiles.length === 0;
   const isExchangeDisabled = !gameStarted || (onExchangeClick ? false : tilesToExchange.length === 0);
 
@@ -684,8 +594,6 @@ export default function PlayerInfo({
         <PlayerInfoSection
           key={`player-${playerNumber}-${currentPlayer}`}
           playerNumber={playerNumber}
-          analogClock={analogClock}
-          onToggleAnalogClock={() => setAnalogClock((v) => !v)}
           name={player.isThinking ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {player.name}
