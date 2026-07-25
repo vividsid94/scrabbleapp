@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
-import { pickDeadRack, estimateRankAndCount } from '../deadRacks';
+import { pickDeadRack } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
 import { PRESETS, shuffle, Protile, badgeColorForCount, DeadRacksSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
@@ -168,8 +168,10 @@ export default function LithMode({ tileColor }) {
         const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
         if (dead) {
           usedDead.add(dead.alpha);
-          const { count } = estimateRankAndCount(listKind, data, deadPool, dead.favorable);
-          return { alpha: dead.alpha, isDead: true, fakeCount: count };
+          // Every dead rack's badge is just a fixed 1, matching the most
+          // common real solution-count - the grid never shows a rank, so
+          // there's nothing else here to estimate.
+          return { alpha: dead.alpha, isDead: true, fakeCount: 1 };
         }
       }
       return { alpha, isDead: false };

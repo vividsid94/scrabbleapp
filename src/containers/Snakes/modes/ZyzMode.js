@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
-import { pickDeadRack, estimateRankAndCount } from '../deadRacks';
+import { pickDeadRack, estimateRank } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
 import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
@@ -25,16 +25,13 @@ export default function ZyzMode({ tileColor }) {
   const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
   const [deadRacksPercent, setDeadRacksPercent] = useState(20);
 
-  const [queue, setQueue] = useState([]); // {alpha, isDead, fakeRank?, fakeCount?}[]
+  const [queue, setQueue] = useState([]); // {alpha, isDead, fakeRank?}[]
   const [totalCount, setTotalCount] = useState(0);
   const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
 
   const [currentAlpha, setCurrentAlpha] = useState('');
   const [currentIsDead, setCurrentIsDead] = useState(false);
-  const [currentFakeRank, setCurrentFakeRank] = useState(null);
-  const [currentFakeCount, setCurrentFakeCount] = useState(1);
-  const [deadSolved, setDeadSolved] = useState(false);
-  const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}]
+  const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}] - a dead round's is [{word: 'DEAD', rank: fakeRank}]
   const [foundWords, setFoundWords] = useState(new Set());
   const [revealedWords, setRevealedWords] = useState(new Set());
   const [guessInput, setGuessInput] = useState('');
@@ -72,28 +69,26 @@ export default function ZyzMode({ tileColor }) {
 
   const currentList = data ? (listKind === 'seven' ? data.sevens : data.eights) : null;
 
-  const promptRank = useMemo(() => {
-    if (currentIsDead) return currentFakeRank;
-    if (!alphaMap || !currentAlpha) return null;
-    const entries = alphaMap.get(currentAlpha);
-    if (!entries || entries.length === 0) return null;
-    return Math.min(...entries.map((e) => e.rank));
-  }, [alphaMap, currentAlpha, currentIsDead, currentFakeRank]);
+  // A dead round's roundEntries is a single synthetic {word: 'DEAD', rank}
+  // entry (see startRound), so this - and roundActive, and hint/reveal
+  // below - all work identically for dead and real rounds with no special
+  // casing. That's deliberate: special-casing dead rounds out of the
+  // regular found/total flow is what made Hint/Reveal need to disappear
+  // for them before, which was itself a tell that a round was fake.
+  const promptRank = roundEntries.length > 0 ? Math.min(...roundEntries.map((e) => e.rank)) : null;
 
-  // A dead round has no real words to find, so it can't use the
-  // found/total comparison a real round resolves with - it resolves the
-  // instant "DEAD" is typed correctly instead.
-  const roundActive = currentIsDead
-    ? !deadSolved
-    : (foundWords.size + revealedWords.size) < roundEntries.length;
+  const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
 
-  // Letter-by-letter hint reveal - identical timing/behavior to Classic mode.
+  // Letter-by-letter hint reveal - identical timing/behavior to Classic
+  // mode. For a dead round, "DEAD" is the word being hinted at, so this
+  // needs no special casing either - it just attributes the stat
+  // differently once fully revealed (deadSpotted, not correct).
   useEffect(() => {
     if (!hint) return;
     if (hint.revealedCount >= hint.word.length) {
       if (!foundWords.has(hint.word)) {
         setFoundWords((prev) => new Set(prev).add(hint.word));
-        setStats((s) => ({ ...s, correct: s.correct + 1 }));
+        setStats((s) => (currentIsDead ? { ...s, deadSpotted: s.deadSpotted + 1 } : { ...s, correct: s.correct + 1 }));
       }
       setHint(null);
       return;
@@ -102,15 +97,15 @@ export default function ZyzMode({ tileColor }) {
       setHint((h) => (h ? { ...h, revealedCount: h.revealedCount + 1 } : null));
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [hint, foundWords]);
+  }, [hint, foundWords, currentIsDead]);
 
   const startRound = (cell) => {
-    const entries = cell.isDead ? [] : (alphaMap.get(cell.alpha) || []);
+    // A dead round's "word" is the literal string DEAD - that's what makes
+    // it resolve through the exact same found/hint/reveal machinery as a
+    // real round instead of needing its own parallel path.
+    const entries = cell.isDead ? [{ word: 'DEAD', rank: cell.fakeRank }] : (alphaMap.get(cell.alpha) || []);
     setCurrentAlpha(cell.alpha);
     setCurrentIsDead(cell.isDead);
-    setCurrentFakeRank(cell.isDead ? cell.fakeRank : null);
-    setCurrentFakeCount(cell.isDead ? cell.fakeCount : 1);
-    setDeadSolved(false);
     setRoundEntries(entries);
     setFoundWords(new Set());
     setRevealedWords(new Set());
@@ -149,8 +144,8 @@ export default function ZyzMode({ tileColor }) {
         const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
         if (dead) {
           usedDead.add(dead.alpha);
-          const { rank, count } = estimateRankAndCount(listKind, data, deadPool, dead.favorable);
-          return { alpha: dead.alpha, isDead: true, fakeRank: rank, fakeCount: count };
+          const rank = estimateRank(listKind, data, deadPool, dead.favorable);
+          return { alpha: dead.alpha, isDead: true, fakeRank: rank };
         }
       }
       return { alpha, isDead: false };
@@ -169,40 +164,24 @@ export default function ZyzMode({ tileColor }) {
     const guess = guessInput.trim().toUpperCase();
     if (!guess) return;
 
-    // "DEAD" is handled the same way regardless of which branch it's typed
-    // in - correct only if the round genuinely has no valid word; wrongly
-    // declaring a REAL round dead is the mistake (mirrors Lith mode's
-    // "double-clicked a real cell" miss), while trying ordinary word
-    // guesses on an actually-dead round isn't punished - probing a few
-    // plausible words before concluding "dead" is normal play.
-    if (guess === 'DEAD') {
-      if (currentIsDead) {
-        setDeadSolved(true);
-        setStats((s) => ({ ...s, deadSpotted: s.deadSpotted + 1 }));
-        setFeedback({ type: 'correct', message: 'Correct!' });
-      } else {
-        setStats((s) => ({ ...s, mistakes: s.mistakes + 1 }));
-        setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
-      }
-      setGuessInput('');
-      inputRef.current?.focus();
-      return;
-    }
-
-    if (currentIsDead) {
-      setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
-      setGuessInput('');
-      inputRef.current?.focus();
-      return;
-    }
-
+    // Same match-against-roundEntries logic for dead and real rounds - a
+    // dead round's roundEntries is just [{word: 'DEAD', ...}] (see
+    // startRound), so "guessing right" naturally means typing DEAD there
+    // and nothing else. The one extra case: typing DEAD on a REAL round
+    // doesn't match anything in ITS roundEntries either, so it already
+    // falls through to the generic wrong-guess branch below - this just
+    // additionally flags that specific miss (mirrors Lith mode's
+    // "double-clicked a real cell" mistake).
     if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
     } else if (roundEntries.some((entry) => entry.word === guess)) {
       setFoundWords((prev) => new Set(prev).add(guess));
-      setStats((s) => ({ ...s, correct: s.correct + 1 }));
+      setStats((s) => (currentIsDead ? { ...s, deadSpotted: s.deadSpotted + 1 } : { ...s, correct: s.correct + 1 }));
       setFeedback({ type: 'correct', message: 'Correct!' });
     } else {
+      if (guess === 'DEAD' && !currentIsDead) {
+        setStats((s) => ({ ...s, mistakes: s.mistakes + 1 }));
+      }
       setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
     }
     setGuessInput('');
@@ -244,6 +223,17 @@ export default function ZyzMode({ tileColor }) {
 
   const foundEntries = roundEntries.filter((entry) => foundWords.has(entry.word));
   const revealedEntries = roundEntries.filter((entry) => revealedWords.has(entry.word));
+
+  // DEAD isn't a real word being drilled - showing its dictionary hooks or
+  // probability rank alongside it (which WordChip does for every other
+  // entry) would be meaningless, so it gets its own plain chip instead.
+  const renderEntryChip = (entry, variant) => {
+    if (currentIsDead) {
+      const chipClass = variant === 'found' ? styles.foundChip : styles.revealedChip;
+      return <span key={entry.word} className={chipClass}>💀 {entry.word}</span>;
+    }
+    return <WordChip key={entry.word} entry={entry} variant={variant} hookCache={hookCache} />;
+  };
 
   return (
     <>
@@ -359,9 +349,7 @@ export default function ZyzMode({ tileColor }) {
           )}
 
           <div className={styles.answerCount}>
-            {currentIsDead
-              ? `${deadSolved ? currentFakeCount : 0} / ${currentFakeCount} found`
-              : `${foundWords.size + revealedWords.size} / ${roundEntries.length} found`}
+            {foundWords.size + revealedWords.size} / {roundEntries.length} found
           </div>
 
           {roundActive ? (
@@ -380,42 +368,48 @@ export default function ZyzMode({ tileColor }) {
               </form>
               {feedback && <div className={feedbackClass}>{feedback.message}</div>}
               {hint && (
-                <div className={styles.hintDisplay}>
-                  {hint.word.split('').map((ch, i) => (
+                currentIsDead ? (
+                  <div className={styles.deadHintReveal}>
                     <span
-                      key={i}
-                      className={i < hint.revealedCount ? styles.hintLetterRevealed : styles.hintLetterBlank}
+                      className={styles.deadHintSkull}
+                      style={{
+                        opacity: hint.revealedCount / hint.word.length,
+                        transform: `scale(${0.5 + 0.5 * (hint.revealedCount / hint.word.length)})`,
+                      }}
                     >
-                      {i < hint.revealedCount ? ch : ''}
+                      💀
                     </span>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className={styles.hintDisplay}>
+                    {hint.word.split('').map((ch, i) => (
+                      <span
+                        key={i}
+                        className={i < hint.revealedCount ? styles.hintLetterRevealed : styles.hintLetterBlank}
+                      >
+                        {i < hint.revealedCount ? ch : ''}
+                      </span>
+                    ))}
+                  </div>
+                )
               )}
               <div className={styles.foundList}>
-                {foundEntries.map((entry) => (
-                  <WordChip key={entry.word} entry={entry} variant="found" hookCache={hookCache} />
-                ))}
+                {foundEntries.map((entry) => renderEntryChip(entry, 'found'))}
               </div>
-              {!currentIsDead && (
-                <div className={styles.footerRow}>
-                  <button type="button" className={styles.secondaryButton} onClick={handleHint} disabled={!!hint}>
-                    Hint
-                  </button>
-                  <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
-                    Reveal remaining
-                  </button>
-                </div>
-              )}
+              <div className={styles.footerRow}>
+                <button type="button" className={styles.secondaryButton} onClick={handleHint} disabled={!!hint}>
+                  Hint
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
+                  Reveal remaining
+                </button>
+              </div>
             </>
           ) : (
             <>
               <div className={styles.foundList}>
-                {foundEntries.map((entry) => (
-                  <WordChip key={entry.word} entry={entry} variant="found" hookCache={hookCache} />
-                ))}
-                {revealedEntries.map((entry) => (
-                  <WordChip key={entry.word} entry={entry} variant="revealed" hookCache={hookCache} />
-                ))}
+                {foundEntries.map((entry) => renderEntryChip(entry, 'found'))}
+                {revealedEntries.map((entry) => renderEntryChip(entry, 'revealed'))}
               </div>
               <button type="button" className={styles.primaryButton} autoFocus onClick={advanceRound}>
                 Continue ▸

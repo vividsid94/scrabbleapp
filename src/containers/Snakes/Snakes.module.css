@@ -461,6 +461,18 @@
   to { transform: scale(1); }
 }
 
+.deadHintReveal {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.deadHintSkull {
+  font-size: 64px;
+  line-height: 1;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
 /* ---- quiz stage ---- */
 
 .progressRow {
