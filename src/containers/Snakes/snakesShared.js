@@ -105,10 +105,10 @@ export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentCh
               type="range"
               className={styles.percentSlider}
               min={0}
-              max={100}
+              max={50}
               value={percent}
               onChange={(e) => onPercentChange(Number(e.target.value))}
-              style={{ background: `linear-gradient(to right, var(--amber) ${percent}%, var(--border) ${percent}%)` }}
+              style={{ background: `linear-gradient(to right, var(--amber) ${percent * 2}%, var(--border) ${percent * 2}%)` }}
             />
             <span className={styles.sliderValue}>{percent}%</span>
           </div>

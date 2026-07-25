@@ -94,11 +94,20 @@ export function pickDeadRack(kind, snakesData, deadData, minRank, maxRank, exclu
   return null;
 }
 
+// How many real alphagrams on either side of the estimated rank to sample
+// the fake solution-count from - see the comment in estimateRankAndCount
+// for why this can't just be the single nearest neighbor.
+const COUNT_SAMPLE_WINDOW = 25;
+
 // For display only: finds where a dead rack's favorable count would slot
-// into the real, rank-ordered list, and borrows the count of real words at
-// that neighboring alphagram to use as a plausible fake solution-count -
-// so a dead rack's badge/rank looks like an ordinary real one instead of a
-// giveaway "0" or an artificially constant placeholder.
+// into the real, rank-ordered list (for the fake "Prob #"), and samples a
+// plausible fake solution-count from a WINDOW of nearby real alphagrams -
+// not just the single nearest one. ~85% of real alphagrams have exactly
+// one solution, so always borrowing the closest neighbor's count made a
+// fake's badge read "1" almost every time; any badge above 1 was then a
+// reliable tell that it was real. Sampling across a window reproduces the
+// true local mix of counts (mostly 1, but sometimes 2, 3+) instead, so a
+// higher badge no longer gives the fake away.
 export function estimateRankAndCount(kind, snakesData, deadData, favorable) {
   const list = kind === 'seven' ? snakesData.sevens : snakesData.eights;
   const alphagramToWords = kind === 'seven' ? snakesData.sevenAlphagramToWords : snakesData.eightAlphagramToWords;
@@ -120,11 +129,14 @@ export function estimateRankAndCount(kind, snakesData, deadData, favorable) {
     }
   }
 
-  const neighborIndex = Math.min(insertionIndex, list.length - 1);
-  const neighborEntries = alphagramToWords.get(alphagram(list[neighborIndex])) || [];
+  const clampedIndex = Math.min(insertionIndex, list.length - 1);
+  const windowStart = Math.max(0, clampedIndex - COUNT_SAMPLE_WINDOW);
+  const windowEnd = Math.min(list.length, clampedIndex + COUNT_SAMPLE_WINDOW + 1); // exclusive
+  const sampleIndex = windowStart + Math.floor(Math.random() * (windowEnd - windowStart));
+  const sampledEntries = alphagramToWords.get(alphagram(list[sampleIndex])) || [];
 
   return {
     rank: insertionIndex + 1,
-    count: neighborEntries.length || 1,
+    count: sampledEntries.length || 1,
   };
 }
