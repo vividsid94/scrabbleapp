@@ -65,6 +65,46 @@
   max-width: 420px;
 }
 
+/* ---- mode tabs ---- */
+
+.tabBar {
+  display: flex;
+  gap: 6px;
+  background: var(--amber-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 5px;
+  margin-bottom: 20px;
+}
+
+.tabButton,
+.tabButtonActive {
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tabButton:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.tabButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.tabButtonActive {
+  background: var(--surface-raised);
+  color: var(--amber);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
 /* ---- shared card ---- */
 
 .card {
@@ -85,6 +125,16 @@
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Lith mode, once a drill is running: same layout as .card, but with no
+   surface/border/shadow of its own, so it sits flush against the page
+   background instead of reading as a floating box. */
+.cardBlend {
+  composes: card;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .loadingCard {
@@ -492,6 +542,64 @@
   margin-top: 2px;
 }
 
+/* ---- Lith mode puzzle grid ---- */
+
+.lithGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px 10px;
+}
+
+.lithCell,
+.lithCellSolved {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.lithCellSolved {
+  opacity: 0.5;
+  border-color: var(--green-soft);
+}
+
+.lithBadge {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 50%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.lithCellSolved .lithBadge {
+  background: var(--green);
+}
+
+.lithTiles {
+  display: flex;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Column count and tile size are computed in JS from the grid's actual
+   measured width (see computeGridLayout in LithMode.js) and applied as an
+   inline style, so every tile is guaranteed to fit at every width - no
+   fixed breakpoint can promise that on its own. */
+
 @media (max-width: 600px) {
   .main {
     padding: 20px 12px 48px;
@@ -505,13 +613,9 @@
   .tileRow {
     gap: 4px;
   }
-  .protileBox {
-    width: 30px;
-    height: 30px;
-  }
-  .protileInner {
-    transform: scale(1); /* native Cell size - no room to scale up on small screens */
-  }
+  /* Protiles deliberately stay full 52px size here too (no shrink below
+     600px) - .tileRow already scrolls horizontally if a word's tiles don't
+     fit the viewport, so there's no need to make them tiny on phones. */
   .tilePlus {
     font-size: 18px;
     margin: 0 1px;
