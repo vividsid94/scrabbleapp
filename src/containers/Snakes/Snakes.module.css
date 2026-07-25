@@ -20,6 +20,7 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 20px rgba(0, 0, 0, 0.08);
 
   flex: 1;
+  min-width: 0;
   min-height: 100vh;
   box-sizing: border-box;
   padding: 32px 20px 60px;
@@ -27,6 +28,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow-x: hidden;
 }
 
 .main[data-theme='dark'] {
@@ -109,6 +111,7 @@
 
 .card {
   width: 100%;
+  min-width: 0;
   max-width: 660px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -340,6 +343,7 @@
   justify-content: center;
   gap: 16px;
   flex-wrap: nowrap;
+  min-width: 0;
   overflow-x: auto;
   padding: 10px 4px;
 }
@@ -550,6 +554,17 @@
   gap: 8px 10px;
 }
 
+/* Single-column layout (small screens/narrow windows): the grid scrolls
+   internally instead of stretching the whole page, with the list fading
+   out at the top/bottom edges instead of hard-clipping mid-row. */
+.lithGridScroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 2px;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+}
+
 .lithCell,
 .lithCellSolved {
   display: flex;
@@ -593,6 +608,28 @@
   gap: 1px;
   min-width: 0;
   overflow: hidden;
+}
+
+.miniProtileBox {
+  width: calc(var(--mini-tile-size) * 1px);
+  height: calc(var(--mini-tile-size) * 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.miniProtileInner {
+  transform: scale(calc(var(--mini-tile-size) / 30));
+}
+
+/* Matches Cell.module.css's own breakpoint where its native tile size
+   jumps 30px -> 40px, so the scale stays correct instead of the tile
+   suddenly rendering 33% too big at 1920px+. */
+@media screen and (min-width: 1920px) {
+  .miniProtileInner {
+    transform: scale(calc(var(--mini-tile-size) / 40));
+  }
 }
 
 /* Column count and tile size are computed in JS from the grid's actual

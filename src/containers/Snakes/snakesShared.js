@@ -25,10 +25,15 @@ export function shuffle(arr) {
 // small tiles); omit it for the standard 52px (30px on mobile) size.
 export function Protile({ letter, color, size }) {
   if (size) {
-    const scale = size / 30;
+    // Cell.js's own native render size jumps 30px -> 40px at a 1920px
+    // viewport breakpoint (Cell.module.css) - the scale has to be computed
+    // against whichever native size is actually in effect, or the tile
+    // ends up 33% too big above 1920px (a fixed size/30 scale keeps
+    // assuming 30px). Driven by a CSS var + media query, not JS, so it
+    // can't drift out of sync with Cell.module.css's own breakpoint.
     return (
-      <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <div style={{ transform: `scale(${scale})` }}>
+      <div className={styles.miniProtileBox} style={{ '--mini-tile-size': size }}>
+        <div className={styles.miniProtileInner}>
           <Cell type="rack" bonus={{ value: letter }} color={color} />
         </div>
       </div>

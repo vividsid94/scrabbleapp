@@ -280,11 +280,8 @@ export default function LithMode({ tileColor }) {
 
           <div
             ref={gridContainerRef}
-            className={styles.lithGrid}
-            style={{
-              gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-              ...(gridColumns === 1 ? { maxHeight: '60vh', overflowY: 'auto' } : {})
-            }}
+            className={gridColumns === 1 ? `${styles.lithGrid} ${styles.lithGridScroll}` : styles.lithGrid}
+            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
           >
             {currentPageAlphas.map((alpha) => {
               const remaining = remainingCount(alpha);
@@ -309,7 +306,7 @@ export default function LithMode({ tileColor }) {
               className={styles.guessInput}
               value={guessInput}
               onChange={(e) => setGuessInput(e.target.value)}
-              placeholder="Type any word on this page…"
+              placeholder="Type a word…"
               autoComplete="off"
               autoCapitalize="characters"
             />
