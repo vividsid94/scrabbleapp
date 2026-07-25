@@ -820,11 +820,32 @@
   .tileRow {
     gap: 4px;
   }
-  /* Protiles deliberately stay full 52px size here too (no shrink below
-     600px) - .tileRow already scrolls horizontally if a word's tiles don't
-     fit the viewport, so there's no need to make them tiny on phones. */
+  /* Protiles deliberately stay full 52px size here too (down to 480px,
+     where the block below takes over) - .tileRow already scrolls
+     horizontally if a word's tiles don't fit the viewport, so there's no
+     need to make them tiny just for that. */
   .tilePlus {
     font-size: 18px;
     margin: 0 1px;
+  }
+}
+
+/* Cell.js's own native tile size (Cell.module.css) shrinks to 20px at this
+   exact breakpoint. .protileInner's scale is left at its base 1.7333 (no
+   override here) - that's what was already rendering at this width, at
+   20px native x 1.7333 = ~35px effective, which is the size already found
+   acceptable. The actual bug was .protileBox staying a fixed 52px
+   regardless, leaving a wide ring of empty space inside its own box around
+   that ~35px tile, which no amount of gap tweaking between boxes could
+   close. Shrinking the box to match the ~35px the tile already renders at
+   (not the 20px native size, which would shrink the tile itself too) is
+   the actual fix. */
+@media (max-width: 480px) {
+  .tileRow {
+    gap: 3px;
+  }
+  .protileBox {
+    width: 35px;
+    height: 35px;
   }
 }
