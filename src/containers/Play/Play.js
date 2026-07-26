@@ -677,10 +677,12 @@ export default function Play({ isMultiplayer = false }) {
   // Ghost-tile overlay for Analysis Mode's move preview - built from the
   // current step's simulated frame, never from real board state, so it can
   // never leak into boardCoords/tempBoardCoords or the active-game snapshot.
-  // Gated on the "preview" layer specifically so switching to another layer
-  // doesn't leave stale ghost tiles showing alongside its overlay.
+  // Gated on preview/heatmap specifically so switching to Opponent Responses
+  // doesn't leave stale ghost tiles showing alongside its own layer. Heat Map
+  // only ever has a single baseline "selected" frame (no plies of its own),
+  // so this doubles as showing our committed move on the board there too.
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'preview' || !analysis.frames || analysis.frames.length === 0) {
+    if (!analysis.active || (analysis.layer !== 'preview' && analysis.layer !== 'heatmap') || !analysis.frames || analysis.frames.length === 0) {
       return null;
     }
     return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
@@ -1015,8 +1017,9 @@ export default function Play({ isMultiplayer = false }) {
             animate={false}
             enableTelestrator={telestratorEnabled}
             analysisGhostGrid={analysisGhostGrid}
+            analysisGhostDashedBorder={analysis.layer === 'preview'}
             analysisHeatGrid={analysisHeatGrid}
-            analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
+            analysisHeatMaxCount={analysis.heatMap?.maxCount}
             analysisIterationLabel={analysisIterationLabel}
             showSlip={false}
             showDictionary={false}
@@ -1112,7 +1115,7 @@ export default function Play({ isMultiplayer = false }) {
             analysisState={analysis}
             onAnalysisSelectMove={runAnalysisMovePreview}
             onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
-            onAnalysisSetLayer={(layer) => setAnalysisState({ layer })}
+            onAnalysisSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
             onAnalysisStep={(stepIndex) => setAnalysisState({ stepIndex })}
             onAnalysisRunHeatMap={runAnalysisHeatMap}
             onAnalysisRunOpponentResponses={runAnalysisOpponentResponses}

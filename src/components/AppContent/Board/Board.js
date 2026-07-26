@@ -29,8 +29,9 @@ export default function Board({
     showNoCommentaryLabel = true,
     enableTelestrator = false,
     analysisGhostGrid = null,
+    analysisGhostDashedBorder = true,
     analysisHeatGrid = null,
-    analysisHeatMaxSimulations = 5,
+    analysisHeatMaxCount = 1,
     analysisIterationLabel = null
 }) {
     const { lightMode } = useContext(ThemeContext);
@@ -533,7 +534,7 @@ export default function Board({
                                             {analysisHeatGrid && (
                                                 <div
                                                     className={styles.analysisHeatTile}
-                                                    style={{ backgroundColor: getHeatColor(analysisHeatGrid[rowIndex]?.[colIndex], analysisHeatMaxSimulations) }}
+                                                    style={{ backgroundColor: getHeatColor(analysisHeatGrid[rowIndex]?.[colIndex], analysisHeatMaxCount) }}
                                                 />
                                             )}
                                             {analysisGhostGrid?.[rowIndex]?.[colIndex] && (() => {
@@ -542,7 +543,7 @@ export default function Board({
                                                 return (
                                                     <div
                                                         className={styles.analysisGhostTile}
-                                                        style={{ backgroundColor: bg, color: textColor }}
+                                                        style={{ backgroundColor: bg, color: textColor, border: analysisGhostDashedBorder ? undefined : 'none' }}
                                                     >
                                                         {ghost.letter.toUpperCase()}
                                                     </div>

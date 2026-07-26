@@ -142,23 +142,39 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
 // coloring is intentionally "underheated" until the last step, which lines up
 // with the true final intensities.
 export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations = 200 }, setAnalysisState) => {
-  setAnalysisState({ isRunning: true, error: null, selectedMove: move });
-
-  try {
-    const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
-    boardCoords.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        if (typeof cell === 'string' && cell !== '') {
-          baseBoard[rowIndex][colIndex] = cell;
-        }
-      });
-    });
-    move.tiles.forEach(tile => {
-      if (tile.isNew) {
-        baseBoard[tile.row][tile.col] = tile.letter;
+  const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
+  boardCoords.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (typeof cell === 'string' && cell !== '') {
+        baseBoard[rowIndex][colIndex] = cell;
       }
     });
+  });
+  move.tiles.forEach(tile => {
+    if (tile.isNew) {
+      baseBoard[tile.row][tile.col] = tile.letter;
+    }
+  });
 
+  // Same silver/grey "selected" ghost frame Preview uses for our committed
+  // move, so it shows on the board here too instead of only the heat tint.
+  const baselineOwnership = baseBoard.map((row, rowIndex) =>
+    row.map((cell, colIndex) => {
+      if (typeof cell !== 'string' || cell === '') return null;
+      const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
+      return isOurMove ? 'selected' : 'existing';
+    })
+  );
+
+  setAnalysisState({
+    isRunning: true,
+    error: null,
+    selectedMove: move,
+    frames: [{ board: baseBoard, tileOwnership: baselineOwnership, move: 'selected', iteration: null }],
+    stepIndex: 0
+  });
+
+  try {
     const tilePoolString = [...pool].join('');
 
     const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
@@ -173,6 +189,25 @@ export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations
 
     const data = await response.json();
     const iterationDetails = data.iterationDetails || [];
+
+    // Normalize color intensity against the hottest cell actually seen in this
+    // run, not the raw iteration count - opponent replies scatter across dozens
+    // of distinct valid positions, so no single cell realistically gets
+    // touched anywhere near `numSimulations` times, which left every cell
+    // bunched in the low end of the color scale and looking uniformly pink.
+    // Computed once up front (not updated mid-animation) so the reveal below
+    // still warms up smoothly toward the correct final colors, instead of the
+    // hottest cell jumping straight to red before the rest has caught up.
+    const finalGrid = Array(15).fill(null).map(() => Array(15).fill(0));
+    iterationDetails.forEach(detail => {
+      if (!detail?.opponentMove) return;
+      detail.opponentMove.tiles.forEach(tile => {
+        if (tile.isNew) {
+          finalGrid[tile.row][tile.col]++;
+        }
+      });
+    });
+    const maxCount = Math.max(1, ...finalGrid.map(row => Math.max(...row)));
 
     const heatMapGrid = Array(15).fill(null).map(() => Array(15).fill(0));
     const totalSteps = Math.max(1, Math.min(25, iterationDetails.length));
@@ -191,7 +226,7 @@ export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations
         });
       }
 
-      setAnalysisState({ heatMap: { grid: heatMapGrid.map(row => [...row]), maxSimulations: numSimulations } });
+      setAnalysisState({ heatMap: { grid: heatMapGrid.map(row => [...row]), maxCount } });
 
       if (step < totalSteps - 1) {
         await new Promise(resolve => setTimeout(resolve, 100));

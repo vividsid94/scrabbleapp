@@ -423,7 +423,7 @@ export default function Viewer({ onChange }){
   }, [currentMoveRef.current]);
 
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'preview' || !analysis.frames?.length) return null;
+    if (!analysis.active || (analysis.layer !== 'preview' && analysis.layer !== 'heatmap') || !analysis.frames?.length) return null;
     return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
   }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
 
@@ -512,8 +512,9 @@ export default function Viewer({ onChange }){
                 animate={false}
                 enableTelestrator={telestratorEnabled}
                 analysisGhostGrid={analysisGhostGrid}
+                analysisGhostDashedBorder={analysis.layer === 'preview'}
                 analysisHeatGrid={analysisHeatGrid}
-                analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
+                analysisHeatMaxCount={analysis.heatMap?.maxCount}
                 analysisIterationLabel={analysisIterationLabel}
               />
             </Box>
@@ -937,7 +938,7 @@ export default function Viewer({ onChange }){
                   analysisState={analysis}
                   onSelectMove={runAnalysisMovePreview}
                   onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
-                  onSetLayer={(layer) => setAnalysisState({ layer })}
+                  onSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
                   onStep={(stepIndex) => setAnalysisState({ stepIndex })}
                   onRunHeatMap={runAnalysisHeatMap}
                   onRunOpponentResponses={runAnalysisOpponentResponses}

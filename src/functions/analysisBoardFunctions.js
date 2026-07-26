@@ -14,22 +14,41 @@ export const getOwnershipColor = (ownership) => {
   return { bg: 'rgba(255, 255, 255, 1)', textColor: '#333' }; // White for tiles that already existed on the board
 };
 
-// Ported from the old SimulationModal's heat map color gradient: ice-cold blue
-// (never landed on) through purple to red-hot (landed on almost every
-// iteration), normalized against how many iterations were run.
-export const getHeatColor = (heatValue, maxSimulations) => {
-  const denominator = maxSimulations || 5;
+// Ice-cold blue (never landed on) through purple to red-hot (landed on
+// almost as often as the hottest cell in this run), normalized against
+// whichever cell got touched the most. A single continuous 3-stop
+// interpolation, so intensity=0 falls out of the formula naturally instead of
+// being a separate hardcoded case - the old version had a special-cased
+// intensity===0 color that didn't match what the general formula produced
+// for any intensity just barely above 0, causing a visible jump straight to
+// vivid pink for every touched cell instead of a smooth ramp from blue.
+const HEAT_COLOR_STOPS = [
+  { at: 0, r: 140, g: 180, b: 255 },   // cold - never landed on
+  { at: 0.5, r: 180, g: 100, b: 220 }, // purple - landed on sometimes
+  { at: 1, r: 255, g: 40, b: 40 }      // red-hot - landed on almost as often as the hottest cell
+];
+
+export const getHeatColor = (heatValue, maxCount) => {
+  const denominator = maxCount || 1;
   const intensity = Math.min((heatValue || 0) / denominator, 1);
 
-  if (intensity === 0) {
-    return 'rgba(140, 180, 255, 0.8)';
+  let lower = HEAT_COLOR_STOPS[0];
+  let upper = HEAT_COLOR_STOPS[HEAT_COLOR_STOPS.length - 1];
+  for (let i = 0; i < HEAT_COLOR_STOPS.length - 1; i++) {
+    if (intensity >= HEAT_COLOR_STOPS[i].at && intensity <= HEAT_COLOR_STOPS[i + 1].at) {
+      lower = HEAT_COLOR_STOPS[i];
+      upper = HEAT_COLOR_STOPS[i + 1];
+      break;
+    }
   }
-  if (intensity < 0.5) {
-    const blueIntensity = 1 - (intensity * 2);
-    return `rgba(${150 + blueIntensity * 105}, ${200 - blueIntensity * 100}, 255, ${0.3 + intensity * 0.4})`;
-  }
-  const redIntensity = (intensity - 0.5) * 2;
-  return `rgba(255, ${100 - redIntensity * 100}, ${100 - redIntensity * 100}, ${0.7 + redIntensity * 0.3})`;
+
+  const t = (intensity - lower.at) / (upper.at - lower.at);
+  const r = Math.round(lower.r + (upper.r - lower.r) * t);
+  const g = Math.round(lower.g + (upper.g - lower.g) * t);
+  const b = Math.round(lower.b + (upper.b - lower.b) * t);
+  const alpha = (0.5 + intensity * 0.5).toFixed(2);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
 // Builds a 15x15 grid of ghost tiles to overlay on the real board for a given
@@ -41,7 +60,7 @@ export const buildGhostOverlayGrid = (frame, boardCoords) => {
 
   return frame.board.map((row, rowIndex) =>
     row.map((cell, colIndex) => {
-      if (typeof cell !== 'string') return null;
+      if (typeof cell !== 'string' || cell === '') return null;
       const alreadyCommitted = typeof boardCoords[rowIndex]?.[colIndex] === 'string';
       if (alreadyCommitted) return null;
 
