@@ -116,13 +116,13 @@
 
 .key {
   flex: 1;
-  max-width: 30px;
+  max-width: 34px;
   min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  font-size: 15px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -133,45 +133,55 @@
   font-family: 'Syne', system-ui, sans-serif;
 }
 
+/* The taller a flat keycap gets, the more it reads as a stretched slab
+   rather than a compact key - a thicker bottom "edge" (the 0 3px 0 shadow,
+   up from 1px) plus a soft inset shadow banding just the lower slice of the
+   face (not the whole key) breaks the height up into a believable
+   face+skirt the way a real mechanical keycap looks, instead of one flat
+   tall rectangle. */
 .keyDark {
   color: #1f2937;
-  background: linear-gradient(180deg, #f8edd4 0%, #e8d5b5 55%, #d4bc8e 100%);
-  border: 1px solid rgba(120, 90, 40, 0.22);
+  background: linear-gradient(180deg, #f8edd4 0%, #e8d5b5 45%, #d4bc8e 100%);
+  border: 1px solid rgba(120, 90, 40, 0.25);
   box-shadow:
-    0 1px 0 rgba(120, 90, 40, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 3px 0 rgba(120, 90, 40, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -7px 8px -6px rgba(120, 90, 40, 0.3);
 }
 
 .keyLight {
   color: #1f2937;
-  background: linear-gradient(180deg, #fffdf8 0%, #f5e6c8 55%, #e8d5b5 100%);
-  border: 1px solid rgba(120, 90, 40, 0.18);
+  background: linear-gradient(180deg, #fffdf8 0%, #f5e6c8 45%, #e8d5b5 100%);
+  border: 1px solid rgba(120, 90, 40, 0.2);
   box-shadow:
-    0 1px 0 rgba(120, 90, 40, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    0 3px 0 rgba(120, 90, 40, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -7px 8px -6px rgba(120, 90, 40, 0.2);
 }
 
 .keyDark:active,
 .keyLight:active,
 .key.keyPressed {
-  transform: translateY(1px);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .keyPrimary {
   flex: 0 0 auto;
-  width: 42px;
-  min-width: 42px;
-  max-width: 42px;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
   min-height: 52px;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 1px 0 rgba(4, 120, 87, 0.45);
+  background: linear-gradient(180deg, #10b981 0%, #059669 55%, #047857 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 3px 0 rgba(4, 120, 87, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .keyPrimary:active,
