@@ -126,27 +126,56 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
   }
 };
 
-export const runHeatMapEngine = async ({ move, boardCoords, rack, pool, numSimulations = 20 }, setAnalysisState) => {
+// Heat Map shows only where the opponent's simulated replies land - never our
+// own selected move or the pre-existing board, since those cells are occupied
+// in every single iteration and would otherwise saturate at max heat
+// regardless of anything opponent-related, drowning out the actual signal.
+// Backed by the same bulk-move-gen includeMoveDetails call as Preview, but
+// only the opponentMove half of each iteration is used - ourReply is
+// discarded entirely (heat map has no "our next move" concept).
+export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations = 20 }, setAnalysisState) => {
   setAnalysisState({ isRunning: true, error: null, selectedMove: move });
 
-  const gameState = { boardCoords, currentPlayer: 1, player1Rack: rack, player2Rack: [], player1points: 0, player2points: 0, pool };
-  const shouldStopRef = { current: false };
-
   try {
-    const { runHeatMapSimulation } = await import('./simulationFunctions');
-    await runHeatMapSimulation(
-      move,
-      gameState,
-      { numSimulations, turnsPerSim: 1 },
-      {
-        onHeatMapUpdate: (heatMapGrid) => {
-          setAnalysisState({ heatMap: { grid: heatMapGrid, maxSimulations: numSimulations } });
-        },
-        onError: (message) => setAnalysisState({ isRunning: false, error: message }),
-        onComplete: () => setAnalysisState({ isRunning: false }),
-        shouldStopRef
+    const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
+    boardCoords.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (typeof cell === 'string' && cell !== '') {
+          baseBoard[rowIndex][colIndex] = cell;
+        }
+      });
+    });
+    move.tiles.forEach(tile => {
+      if (tile.isNew) {
+        baseBoard[tile.row][tile.col] = tile.letter;
       }
-    );
+    });
+
+    const tilePoolString = [...pool].join('');
+
+    const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ board: baseBoard, tilePool: tilePoolString, iterations: numSimulations, includeMoveDetails: true })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const heatMapGrid = Array(15).fill(null).map(() => Array(15).fill(0));
+    (data.iterationDetails || []).forEach(detail => {
+      if (!detail.opponentMove) return;
+      detail.opponentMove.tiles.forEach(tile => {
+        if (tile.isNew) {
+          heatMapGrid[tile.row][tile.col]++;
+        }
+      });
+    });
+
+    setAnalysisState({ heatMap: { grid: heatMapGrid, maxSimulations: numSimulations }, isRunning: false });
   } catch (error) {
     console.error('Error running analysis heat map:', error);
     setAnalysisState({ isRunning: false, error: error.message });

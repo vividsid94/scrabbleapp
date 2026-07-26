@@ -1029,9 +1029,8 @@ export const useGameStore = create((set, get) => {
     },
 
     runAnalysisHeatMap: async (move, numSimulations = 20) => {
-      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, pool } = get();
-      const rack = currentPlayer === 1 ? player1Rack : player2Rack;
-      await runHeatMapEngine({ move, boardCoords, rack, pool, numSimulations }, setAnalysisState);
+      const { setAnalysisState, boardCoords, pool } = get();
+      await runHeatMapEngine({ move, boardCoords, pool, numSimulations }, setAnalysisState);
     },
 
     runAnalysisOpponentResponses: async (moves, iterations = 20) => {

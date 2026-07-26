@@ -875,10 +875,9 @@ export const useViewerStore = create((set, get) => {
     },
 
     runAnalysisHeatMap: async (move, numSimulations = 20) => {
-      const { boardCoords, currentMoveRef, parsedMoves, setAnalysisState } = get();
-      const rack = createRack(currentMoveRef.current + 1, parsedMoves);
+      const { boardCoords, setAnalysisState } = get();
       const pool = calculatePoolFromBoard(boardCoords, origPool);
-      await runHeatMapEngine({ move, boardCoords, rack, pool, numSimulations }, setAnalysisState);
+      await runHeatMapEngine({ move, boardCoords, pool, numSimulations }, setAnalysisState);
     },
 
     runAnalysisOpponentResponses: async (moves, iterations = 20) => {
