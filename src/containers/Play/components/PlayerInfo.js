@@ -447,17 +447,23 @@ export default function PlayerInfo({
             <DotsThree size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
           </Box>
         </Tooltip>
-        {canUseAnalysisMode && (
-          <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : "Analysis Mode"}>
+        {canUseAnalysisMode && (() => {
+          // Only ever block *entering* - once active, always let the user exit
+          // regardless of whose turn it is. Blocks entering mid-bot-turn so the
+          // analysis engine never ends up using the bot's own live rack as
+          // "our" rack (currentPlayer === 1 ? player1Rack : player2Rack).
+          const analysisToggleDisabled = !gameStarted || (!analysisModeActive && (currentPlayer !== 1 || isBotThinking));
+          return (
+          <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : (analysisToggleDisabled ? "Available on your turn" : "Analysis Mode")}>
             <Box
               onClick={() => {
-                if (!gameStarted) return;
+                if (analysisToggleDisabled) return;
                 onToggleAnalysisMode();
               }}
               sx={{
-                opacity: !gameStarted ? 0.3 : 1,
-                cursor: !gameStarted ? 'not-allowed' : 'pointer',
-                pointerEvents: !gameStarted ? 'none' : 'auto',
+                opacity: analysisToggleDisabled ? 0.3 : 1,
+                cursor: analysisToggleDisabled ? 'not-allowed' : 'pointer',
+                pointerEvents: analysisToggleDisabled ? 'none' : 'auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -474,7 +480,8 @@ export default function PlayerInfo({
               />
             </Box>
           </Tooltip>
-        )}
+          );
+        })()}
       </Box>
 
       {analysisModeActive ? (
