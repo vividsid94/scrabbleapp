@@ -24,7 +24,17 @@ const MAX_TILE_SIZE_NORMAL = 19;
 const MAX_TILE_SIZE_WIDE = 28;
 const WIDE_SCREEN_BREAKPOINT = 1200;
 const MIN_TILE_SIZE = 12;
-const GRID_GAP = 10;
+// 2 columns needs at least this to be accepted (see computeGridLayout) -
+// well above MIN_TILE_SIZE, which is the bare-legible floor, not a size
+// that looks intentional sitting alone in a wide mobile column.
+const COMFORTABLE_TWO_COLUMN_TILE_SIZE = 20;
+const GRID_GAP_NORMAL = 10;
+// Used at 1-2 columns instead - MUST be the actual gap applied in the JSX
+// below (not just a separately-tweaked CSS value), or the tileSize math
+// here assumes a bigger gap than what's really rendered, so the real
+// column ends up wider than computed and leaves unaccounted slack (this is
+// exactly what was still happening before this got tied to one value).
+const GRID_GAP_TIGHT = 6;
 // Per-cell width used by everything except the letter tiles themselves:
 // the badge, the badge<->tiles gap, the cell's own left/right padding, and
 // the small gaps between tiles (one less than the letter count).
@@ -46,13 +56,25 @@ function formatElapsed(totalSeconds) {
 // fit every tile of a word at a legible size - never a fixed column count,
 // since a fixed count can't promise every tile stays visible at every
 // window width. Falls back to fewer columns (down to 1) rather than ever
-// shrinking tiles below MIN_TILE_SIZE.
+// shrinking tiles below MIN_TILE_SIZE. Returns the gap it assumed too, so
+// the caller can apply that SAME value rather than risk a second,
+// independently-chosen gap drifting out of sync with this math.
 function computeGridLayout(containerWidth, maxLetters, maxTileSize) {
-  if (!containerWidth) return { columns: 1, tileSize: maxTileSize };
+  if (!containerWidth) return { columns: 1, tileSize: maxTileSize, gap: GRID_GAP_NORMAL };
   for (let columns = 5; columns >= 1; columns--) {
-    const columnWidth = (containerWidth - (columns - 1) * GRID_GAP) / columns;
+    const gap = columns <= 2 ? GRID_GAP_TIGHT : GRID_GAP_NORMAL;
+    const columnWidth = (containerWidth - (columns - 1) * gap) / columns;
     const tileSize = Math.floor((columnWidth - CELL_OVERHEAD) / maxLetters);
-    if (tileSize >= MIN_TILE_SIZE || columns === 1) {
+    // 2 columns is only accepted at a genuinely comfortable tile size, not
+    // just the bare-legible MIN_TILE_SIZE floor - the mathematical "slack"
+    // between columns is always small by construction, but a 12-15px tile
+    // sitting in a much wider column just LOOKS sparse/gappy at that size,
+    // even with near-zero measured slack. 1 column with a properly sized
+    // tile reads far better than 2 columns of undersized ones (this is
+    // scoped to exactly 2 columns - 3/4/5 column desktop/tablet layouts,
+    // which nobody's flagged, are intentionally left exactly as they were).
+    const requiredMin = columns === 2 ? COMFORTABLE_TWO_COLUMN_TILE_SIZE : MIN_TILE_SIZE;
+    if (tileSize >= requiredMin || columns === 1) {
       // Falling back to 1-2 columns only happens when the container is
       // narrow relative to the word length, which means each of those few
       // columns is naturally WIDE - clamping to the same cap used at 5
@@ -61,10 +83,10 @@ function computeGridLayout(containerWidth, maxLetters, maxTileSize) {
       // read as "huge gaps" between columns. Fewer columns can afford a
       // bigger tile, so let them use it instead of wasting the room.
       const effectiveMax = columns <= 2 ? Math.max(maxTileSize, MAX_TILE_SIZE_WIDE) : maxTileSize;
-      return { columns, tileSize: Math.max(MIN_TILE_SIZE, Math.min(tileSize, effectiveMax)) };
+      return { columns, tileSize: Math.max(MIN_TILE_SIZE, Math.min(tileSize, effectiveMax)), gap };
     }
   }
-  return { columns: 1, tileSize: MIN_TILE_SIZE };
+  return { columns: 1, tileSize: MIN_TILE_SIZE, gap: GRID_GAP_TIGHT };
 }
 
 // Mode 1 - "Lith Mode". Same probability-range setup as the classic drill,
@@ -226,7 +248,7 @@ export default function LithMode({ tileColor }) {
   const currentList = data ? (listKind === 'seven' ? data.sevens : data.eights) : null;
   const currentPageCells = pages[pageIndex] || [];
 
-  const { columns: gridColumns, tileSize: gridTileSize } = useMemo(
+  const { columns: gridColumns, tileSize: gridTileSize, gap: lithGridGap } = useMemo(
     () => computeGridLayout(
       containerWidth,
       listKind === 'eight' ? 8 : 7,
@@ -241,10 +263,6 @@ export default function LithMode({ tileColor }) {
   // circle would visually dominate a row of much smaller tiles.
   const lithBadgeSize = gridTileSize >= 16 ? 20 : Math.max(13, Math.round(gridTileSize * 0.9));
   const lithBadgeFontSize = lithBadgeSize >= 18 ? 9.5 : lithBadgeSize >= 15 ? 8.5 : 7.5;
-  // Same idea for the gap between grid cells - only tightened once the
-  // layout has dropped to 1-2 columns (cramped mobile widths); 3+ columns
-  // keep the existing gap untouched.
-  const lithGridGap = gridColumns <= 2 ? '6px 6px' : undefined;
 
   const remainingCount = (alpha) => {
     const entries = (alphaMap && alphaMap.get(alpha)) || [];
@@ -542,7 +560,7 @@ export default function LithMode({ tileColor }) {
           <div
             ref={gridContainerRef}
             className={gridColumns === 1 ? `${styles.lithGrid} ${styles.lithGridScroll}` : styles.lithGrid}
-            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: lithGridGap }}
+            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, columnGap: lithGridGap }}
           >
             {currentPageCells.map((cell, index) => {
               const resolved = isResolved(cell);
