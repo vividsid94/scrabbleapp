@@ -236,7 +236,14 @@ const TopMoves = ({
       };
       generateCombos([], 0, rack);
     }
-    return combinations.slice(0, 20); // Limit to 20 exchange options
+    // No slice here - combos are generated size-ascending (all 1-tile combos,
+    // then all 2-tile, etc.), so an early cap made larger exchanges (e.g.
+    // exchanging 5-6 tiles to keep just 1-2 good ones) unreachable no matter
+    // how good they'd score. A 7-tile rack has at most 127 combos total
+    // (2^7 - 1), cheap enough to keep in full - matches Play's own
+    // generateExchangeCombinations (src/functions/play/moveFunctions.js),
+    // which never had this cap.
+    return combinations;
   };
 
   // Helper function to calculate exchange leave
