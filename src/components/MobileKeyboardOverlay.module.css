@@ -111,18 +111,18 @@
 .row {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .key {
   flex: 1;
-  max-width: 30px;
-  min-height: 34px;
+  max-width: 42px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -159,12 +159,12 @@
 
 .keyPrimary {
   flex: 0 0 auto;
-  width: 42px;
-  min-width: 42px;
-  max-width: 42px;
-  min-height: 34px;
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
+  min-height: 48px;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
