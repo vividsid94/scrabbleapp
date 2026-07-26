@@ -17,7 +17,8 @@ import {
   ArrowsLeftRight,
   CaretDown,
   CaretUp,
-  Cube
+  Cube,
+  ScribbleLoop
 } from '@phosphor-icons/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -56,6 +57,7 @@ export default function Viewer({ onChange }){
   const [showSubmittedGamesModal, setShowSubmittedGamesModal] = useState(false);
   const [hoveredIcon, setHoveredIcon] = useState(null);
   const [poolExpanded, setPoolExpanded] = useState(false);
+  const [telestratorEnabled, setTelestratorEnabled] = useState(false);
 
   // Helper function to render icons with hover state
   const renderIcon = (iconConfig, hoverId) => {
@@ -503,7 +505,7 @@ export default function Viewer({ onChange }){
                 commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
                 lightMode={lightMode}
                 animate={false}
-                enableTelestrator={true}
+                enableTelestrator={telestratorEnabled}
                 analysisGhostGrid={analysisGhostGrid}
                 analysisHeatGrid={analysisHeatGrid}
                 analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
@@ -554,14 +556,26 @@ export default function Viewer({ onChange }){
                 {iconList.map((icon, index) => {
                   // Insert Cube icon after the forward icon (CaretRight, index 2)
                   const isAfterForward = index === 2;
+                  // Indices 0-2 are the three move-navigation icons (beginning
+                  // of game, back, forward) - freeze them while analyzing so
+                  // the position being analyzed can't shift out from under you.
+                  const isNavDisabledForAnalysis = analysisModeActive;
                   return (
                     <React.Fragment key={`icon-${index}`}>
-                      <Tooltip title={icon.toolTip}>
+                      <Tooltip title={isNavDisabledForAnalysis ? "Exit Analysis Mode to navigate" : icon.toolTip}>
                         <Box
                           className={styles.Arrows}
-                          onClick={icon.onClick}
+                          onClick={() => {
+                            if (isNavDisabledForAnalysis) return;
+                            icon.onClick();
+                          }}
                           onMouseEnter={() => setHoveredIcon(`nav-${index}`)}
                           onMouseLeave={() => setHoveredIcon(null)}
+                          sx={{
+                            opacity: isNavDisabledForAnalysis ? 0.3 : 1,
+                            cursor: isNavDisabledForAnalysis ? 'not-allowed' : 'pointer',
+                            pointerEvents: isNavDisabledForAnalysis ? 'none' : 'auto'
+                          }}
                         >
                           <icon.icon
                             size={icon.size}
@@ -586,7 +600,30 @@ export default function Viewer({ onChange }){
                     </React.Fragment>
                   );
                 })}
-                
+
+                <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginLeft: '2px',
+                      marginRight: '4px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setTelestratorEnabled(!telestratorEnabled)}
+                  >
+                    <ScribbleLoop
+                      size={20}
+                      color={telestratorEnabled
+                        ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                        : (lightMode === 'dark' ? '#ffffff' : '#1F2937')
+                      }
+                      weight={telestratorEnabled ? 'fill' : 'regular'}
+                    />
+                  </Box>
+                </Tooltip>
+
                 {/* Collapsible options button */}
                 <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>
                   <Box
