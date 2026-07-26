@@ -858,6 +858,22 @@
 
 /* ---- Lith mode puzzle grid ---- */
 
+/* Below 1200px this matches the old fixed 1080px cap exactly (unchanged on
+   "regular" desktop widths) - past that, wide monitors get real extra room
+   instead of the grid staying pinned to 1080px while everything around it
+   goes to waste. computeGridLayout (LithMode.js) is what actually turns
+   that extra measured width into bigger tiles, up to its own MAX_TILE_SIZE. */
+.lithGridContainer {
+  width: 100%;
+  max-width: 1080px;
+}
+
+@media screen and (min-width: 1200px) {
+  .lithGridContainer {
+    max-width: 1600px;
+  }
+}
+
 .lithGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

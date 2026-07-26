@@ -15,7 +15,14 @@ const PAGE_SIZE = 50;
 const TIME_LIMIT_MIN = 30;
 const TIME_LIMIT_MAX = 600;
 const TIME_LIMIT_STEP = 30;
-const MAX_TILE_SIZE = 19;
+// Two tiers, not one constant: below WIDE_SCREEN_BREAKPOINT this is 19,
+// byte-for-byte the same cap "regular" desktop always had. At/above it -
+// paired with .lithGridContainer's own 1200px media query widening the
+// container itself - tiles are allowed to actually grow on wide monitors
+// instead of staying pinned to a size calibrated for ~1080px-wide screens.
+const MAX_TILE_SIZE_NORMAL = 19;
+const MAX_TILE_SIZE_WIDE = 28;
+const WIDE_SCREEN_BREAKPOINT = 1200;
 const MIN_TILE_SIZE = 12;
 const GRID_GAP = 10;
 // Per-cell width used by everything except the letter tiles themselves:
@@ -40,13 +47,21 @@ function formatElapsed(totalSeconds) {
 // since a fixed count can't promise every tile stays visible at every
 // window width. Falls back to fewer columns (down to 1) rather than ever
 // shrinking tiles below MIN_TILE_SIZE.
-function computeGridLayout(containerWidth, maxLetters) {
-  if (!containerWidth) return { columns: 1, tileSize: MAX_TILE_SIZE };
+function computeGridLayout(containerWidth, maxLetters, maxTileSize) {
+  if (!containerWidth) return { columns: 1, tileSize: maxTileSize };
   for (let columns = 5; columns >= 1; columns--) {
     const columnWidth = (containerWidth - (columns - 1) * GRID_GAP) / columns;
     const tileSize = Math.floor((columnWidth - CELL_OVERHEAD) / maxLetters);
     if (tileSize >= MIN_TILE_SIZE || columns === 1) {
-      return { columns, tileSize: Math.max(MIN_TILE_SIZE, Math.min(tileSize, MAX_TILE_SIZE)) };
+      // Falling back to 1-2 columns only happens when the container is
+      // narrow relative to the word length, which means each of those few
+      // columns is naturally WIDE - clamping to the same cap used at 5
+      // columns left a real gap of unused space inside each column (the
+      // tile rendered smaller than the column actually was), which is what
+      // read as "huge gaps" between columns. Fewer columns can afford a
+      // bigger tile, so let them use it instead of wasting the room.
+      const effectiveMax = columns <= 2 ? Math.max(maxTileSize, MAX_TILE_SIZE_WIDE) : maxTileSize;
+      return { columns, tileSize: Math.max(MIN_TILE_SIZE, Math.min(tileSize, effectiveMax)) };
     }
   }
   return { columns: 1, tileSize: MIN_TILE_SIZE };
@@ -64,6 +79,18 @@ export default function LithMode({ tileColor }) {
   const inputRef = useRef(null);
   const gridContainerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
+
+  // Gates the wider grid container + bigger tile cap (see
+  // MAX_TILE_SIZE_WIDE/.lithGridContainer's own media query, same 1200px
+  // breakpoint) - anything narrower renders with the exact same sizing
+  // "regular" desktop always had.
+  const [isWideScreen, setIsWideScreen] = useState(false);
+  useEffect(() => {
+    const checkWide = () => setIsWideScreen(window.innerWidth >= WIDE_SCREEN_BREAKPOINT);
+    checkWide();
+    window.addEventListener('resize', checkWide);
+    return () => window.removeEventListener('resize', checkWide);
+  }, []);
 
   // On mobile, the guess input is readOnly (see below) so tapping it never
   // summons the native keyboard - this on-screen one replaces it instead.
@@ -200,9 +227,24 @@ export default function LithMode({ tileColor }) {
   const currentPageCells = pages[pageIndex] || [];
 
   const { columns: gridColumns, tileSize: gridTileSize } = useMemo(
-    () => computeGridLayout(containerWidth, listKind === 'eight' ? 8 : 7),
-    [containerWidth, listKind]
+    () => computeGridLayout(
+      containerWidth,
+      listKind === 'eight' ? 8 : 7,
+      isWideScreen ? MAX_TILE_SIZE_WIDE : MAX_TILE_SIZE_NORMAL
+    ),
+    [containerWidth, listKind, isWideScreen]
   );
+
+  // The badge stays its normal 20px at every tile size this already looked
+  // fine at - it only shrinks once tiles themselves have shrunk enough
+  // (narrow/mobile widths, typically the 1-2 column case) that a full-size
+  // circle would visually dominate a row of much smaller tiles.
+  const lithBadgeSize = gridTileSize >= 16 ? 20 : Math.max(13, Math.round(gridTileSize * 0.9));
+  const lithBadgeFontSize = lithBadgeSize >= 18 ? 9.5 : lithBadgeSize >= 15 ? 8.5 : 7.5;
+  // Same idea for the gap between grid cells - only tightened once the
+  // layout has dropped to 1-2 columns (cramped mobile widths); 3+ columns
+  // keep the existing gap untouched.
+  const lithGridGap = gridColumns <= 2 ? '6px 6px' : undefined;
 
   const remainingCount = (alpha) => {
     const entries = (alphaMap && alphaMap.get(alpha)) || [];
@@ -478,7 +520,7 @@ export default function LithMode({ tileColor }) {
 
       {stage === 'grid' && (
         <>
-        <div className={styles.cardBlend} style={{ maxWidth: 1080 }}>
+        <div className={`${styles.cardBlend} ${styles.lithGridContainer}`}>
           <div className={styles.progressRow}>
             <span>Page {pageIndex + 1} / {pages.length}</span>
             {timeLimitEnabled ? (
@@ -500,7 +542,7 @@ export default function LithMode({ tileColor }) {
           <div
             ref={gridContainerRef}
             className={gridColumns === 1 ? `${styles.lithGrid} ${styles.lithGridScroll}` : styles.lithGrid}
-            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: lithGridGap }}
           >
             {currentPageCells.map((cell, index) => {
               const resolved = isResolved(cell);
@@ -513,7 +555,12 @@ export default function LithMode({ tileColor }) {
                   <span className={styles.lithIndex}>{index + 1}</span>
                   <span
                     className={styles.lithBadge}
-                    style={resolved ? undefined : { background: badgeColorForCount(badgeNumber) }}
+                    style={{
+                      width: lithBadgeSize,
+                      height: lithBadgeSize,
+                      fontSize: lithBadgeFontSize,
+                      background: resolved ? undefined : badgeColorForCount(badgeNumber),
+                    }}
                   >
                     {resolved ? '✓' : badgeNumber}
                   </span>
@@ -611,6 +658,7 @@ export default function LithMode({ tileColor }) {
           visible={isMobile && keyboardOpen && !pageEnded}
           onKeyPress={handleOverlayKeyPress}
           onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
+          label={guessInput}
         />
         </>
       )}
