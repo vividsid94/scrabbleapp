@@ -4,6 +4,8 @@
 // state and forwards a `setAnalysisState` callback here; none of this file
 // touches zustand directly, so it has no idea which store is calling it.
 
+import { calculateLeave } from './play/leaveFunctions';
+
 // Analysis Mode: a single self-contained slice rather than flat top-level
 // fields, so exiting/resetting is one assignment and nothing here can leak
 // into the real board/rack/timer state it's meant to preview alongside.
@@ -11,7 +13,7 @@ export const DEFAULT_ANALYSIS_STATE = {
   active: false,
   layer: 'preview', // 'preview' | 'heatmap' | 'opponentResponses'
   selectedMove: null,
-  frames: [], // array of {board, tileOwnership, move} snapshots from simulateMove's onProgress callback
+  frames: [], // array of {board, tileOwnership, move, iteration} snapshots, one per preview ply
   stepIndex: 0,
   isRunning: false,
   error: null,
@@ -19,53 +21,104 @@ export const DEFAULT_ANALYSIS_STATE = {
   opponentResponses: null // opponent responses layer's per-move {avgScore, bingoPercent, ...} map
 };
 
-// simulateMove/runHeatMapSimulation only ever read "our" rack from
-// gameState.player1Rack (since currentPlayer is fixed to 1 below) - the
-// opponent's rack/score are never actually used, a fresh random rack is
-// always generated for them internally. So any caller only needs to supply
-// the rack of whoever's move is being analyzed, not a full two-player state.
-//
 // Preview shows exactly 2 plies per run (opponent's reply, then our reply),
-// repeated over `numSimulations` independent random continuations - each
-// repetition draws a fresh random opponent rack, so it's a genuinely
-// different look each time, not the same two plies shown 5x. The very first
-// "selected" frame (our chosen move, freshly applied to the real board) is
-// identical across every repetition, so it's kept just once as a shared
-// baseline instead of being repeated per iteration. Every later frame is
-// tagged with which 0-indexed repetition it belongs to, so the UI can badge
-// tiles with "iteration 1", "iteration 2", etc.
-export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numSimulations = 5, turnsPerSim = 2 }, setAnalysisState) => {
+// repeated over `numSimulations` independent random continuations. Backed by
+// a single call to the Railway bulk-move-gen endpoint's includeMoveDetails
+// mode, which returns per-iteration {opponentMove, ourReply} detail instead
+// of just the aggregate stats the other layers use - one network round trip
+// for all repetitions, rather than 2*numSimulations sequential getTopMoves
+// calls. The very first "selected" frame (our chosen move, freshly applied to
+// the real board) is identical across every repetition, so it's kept just
+// once as a shared baseline instead of being repeated per iteration. Every
+// later frame is tagged with which 0-indexed repetition it belongs to, so the
+// UI can badge tiles with "iteration 1", "iteration 2", etc. Tile ownership
+// is sticky/cumulative (once a tile is marked 'player' or 'opponent' it stays
+// that color in later frames of the same iteration) rather than only marking
+// whichever tiles were placed in that exact ply, since a run only ever shows
+// 2 plies and the earlier ply's tiles staying visible as "ours"/"theirs" is
+// clearer than having them fade back to neutral one step later.
+//
+// Our reply's rack isn't fully random - we know our own leave (whatever's
+// left in `rack` after playing `move`), so it's pinned via `ourLeave` and the
+// server only randomizes the rest. Those leave tiles are stripped out of the
+// tilePool sent up front, so the same physical tile can never simultaneously
+// be drawn for the opponent's random rack and be sitting in ours.
+export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numSimulations = 5 }, setAnalysisState) => {
   setAnalysisState({ isRunning: true, error: null });
 
-  const frames = [];
-  let iteration = 0;
-  let selectedFrameShown = false;
-
-  const onProgress = (progress, previewData) => {
-    if (!previewData) return;
-
-    if (previewData.move === 'selected') {
-      if (!selectedFrameShown) {
-        frames.push({ ...previewData, iteration: null });
-        selectedFrameShown = true;
-      } else {
-        // A later "selected" frame marks the start of the next repetition.
-        iteration += 1;
+  try {
+    const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
+    boardCoords.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (typeof cell === 'string' && cell !== '') {
+          baseBoard[rowIndex][colIndex] = cell;
+        }
+      });
+    });
+    move.tiles.forEach(tile => {
+      if (tile.isNew) {
+        baseBoard[tile.row][tile.col] = tile.letter;
       }
-      return;
+    });
+
+    // pool arrives as an Array from gameStore (after the first move) or a
+    // string from viewerStore (always recomputed via calculatePoolFromBoard) -
+    // spreading works for both, .join('') alone would throw on a plain string.
+    const fullTilePoolString = [...pool].join('');
+
+    const ourLeave = calculateLeave(move, rack);
+    let tilePoolString = fullTilePoolString;
+    for (const letter of ourLeave) {
+      tilePoolString = tilePoolString.replace(letter, '');
     }
 
-    frames.push({ ...previewData, iteration });
-  };
+    const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ board: baseBoard, tilePool: tilePoolString, iterations: numSimulations, includeMoveDetails: true, ourLeave })
+    });
 
-  try {
-    const { simulateMove } = await import('./simulationFunctions');
-    await simulateMove(
-      move,
-      { boardCoords, currentPlayer: 1, player1Rack: rack, player2Rack: [], player1points: 0, player2points: 0, pool },
-      onProgress,
-      { numSimulations, turnsPerSim }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const baselineOwnership = baseBoard.map((row, rowIndex) =>
+      row.map((cell, colIndex) => {
+        if (typeof cell !== 'string' || cell === '') return null;
+        const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
+        return isOurMove ? 'player' : 'existing';
+      })
     );
+
+    const frames = [{ board: baseBoard, tileOwnership: baselineOwnership, move: 'selected', iteration: null }];
+
+    (data.iterationDetails || []).forEach((detail, iterationIndex) => {
+      const iterBoard = baseBoard.map(row => [...row]);
+      const iterOwnership = baselineOwnership.map(row => [...row]);
+
+      if (detail.opponentMove) {
+        detail.opponentMove.tiles.forEach(tile => {
+          if (tile.isNew) {
+            iterBoard[tile.row][tile.col] = tile.letter;
+            iterOwnership[tile.row][tile.col] = 'opponent';
+          }
+        });
+        frames.push({ board: iterBoard.map(row => [...row]), tileOwnership: iterOwnership.map(row => [...row]), move: 'opponent', iteration: iterationIndex });
+      }
+
+      if (detail.ourReply) {
+        detail.ourReply.tiles.forEach(tile => {
+          if (tile.isNew) {
+            iterBoard[tile.row][tile.col] = tile.letter;
+            iterOwnership[tile.row][tile.col] = 'player';
+          }
+        });
+        frames.push({ board: iterBoard.map(row => [...row]), tileOwnership: iterOwnership.map(row => [...row]), move: 'player', iteration: iterationIndex });
+      }
+    });
+
     setAnalysisState({ selectedMove: move, frames, stepIndex: 0, isRunning: false });
   } catch (error) {
     console.error('Error running analysis move preview:', error);
