@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MobileKeyboardOverlay from '../../../components/MobileKeyboardOverlay';
-import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
-import { pickDeadRack, estimateRank } from '../deadRacks';
+import { loadSnakesData, alphagram } from '../snakesData';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, presetMax, presetLabel, shuffle, Protile, WordChip, DeadRacksSetting, TimeLimitSetting, useIsMobile } from '../snakesShared';
+import { PRESETS, presetMax, presetLabel, shuffle, Protile, WordChip, TimeLimitSetting, useIsMobile } from '../snakesShared';
 import { resolveTypedKey } from '../keyboardCorrection';
 import styles from '../Snakes.module.css';
 
@@ -11,17 +10,23 @@ const TIME_LIMIT_MIN = 10;
 const TIME_LIMIT_MAX = 60;
 const TIME_LIMIT_STEP = 5;
 
-function formatElapsed(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+// The letters left over in an eight-letter alphagram once a seven's letters
+// are removed one-for-one (multiset difference, not a naive character set
+// diff, so duplicate letters are handled correctly).
+function extraLetters(eightAlpha, sevenAlpha) {
+  let remaining = eightAlpha;
+  for (const ch of sevenAlpha) {
+    const idx = remaining.indexOf(ch);
+    if (idx !== -1) remaining = remaining.slice(0, idx) + remaining.slice(idx + 1);
+  }
+  return remaining;
 }
 
-// Mode 2 - "Zyz Mode". Exactly Wind Up mode's one-at-a-time round UI (type
-// every word for an alphagram, hint, reveal, continue), but over a single
-// list chosen up front (sevens OR eights, like Lith mode's setup) instead
-// of always sevens with automatic eight-letter extensions chained in.
-export default function ZyzMode({ tileColor }) {
+// Mode 3 - "Wind Up": the original bingo-stem drill: probability-ranked
+// sevens, type every word for each alphagram, then every eight-letter
+// extension. (Rewind mode is this same drill run in reverse - eight-letter
+// stems, looking for the sevens hiding inside them.)
+export default function WindUpMode({ tileColor }) {
   const inputRef = useRef(null);
   const hookCache = useRef(new Map());
 
@@ -34,13 +39,9 @@ export default function ZyzMode({ tileColor }) {
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
-  const [listKind, setListKind] = useState('seven');
   const [rangeMin, setRangeMin] = useState('1');
   const [rangeMax, setRangeMax] = useState('1000');
   const [rangeError, setRangeError] = useState('');
-
-  const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
-  const [deadRacksPercent, setDeadRacksPercent] = useState(20);
 
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(30);
@@ -48,13 +49,16 @@ export default function ZyzMode({ tileColor }) {
   const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [roundKey, setRoundKey] = useState(0);
 
-  const [queue, setQueue] = useState([]); // {alpha, isDead, fakeRank?}[]
+  const [queue, setQueue] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
+  const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0 });
 
-  const [currentAlpha, setCurrentAlpha] = useState('');
-  const [currentIsDead, setCurrentIsDead] = useState(false);
-  const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}] - a dead round's is [{word: 'DEAD', rank: fakeRank}]
+  const [roundKind, setRoundKind] = useState('seven');
+  const [currentSevenAlpha, setCurrentSevenAlpha] = useState('');
+  const [currentEightAlpha, setCurrentEightAlpha] = useState(null);
+  const [eightQueue, setEightQueue] = useState([]);
+  const [eightProgress, setEightProgress] = useState({ index: 0, total: 0 });
+  const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}]
   const [foundWords, setFoundWords] = useState(new Set());
   const [revealedWords, setRevealedWords] = useState(new Set());
   const [guessInput, setGuessInput] = useState('');
@@ -65,25 +69,6 @@ export default function ZyzMode({ tileColor }) {
   const [correctedFlags, setCorrectedFlags] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [hint, setHint] = useState(null); // { word, revealedCount } | null
-
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-
-  // Session stopwatch - ticks while a drill is actually in progress, reset
-  // fresh each time handleStart runs.
-  useEffect(() => {
-    if (stage !== 'quiz') return;
-    const intervalId = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
-    return () => clearInterval(intervalId);
-  }, [stage]);
-
-  // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
-  // background as soon as the toggle goes on, so it's likely already
-  // cached by the time "Start drilling" is clicked - handleStart still
-  // awaits it itself as a safety net for a same-instant toggle+start.
-  const handleToggleDeadRacks = (checked) => {
-    setDeadRacksEnabled(checked);
-    if (checked) loadDeadRackData().catch(() => {});
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -100,20 +85,19 @@ export default function ZyzMode({ tileColor }) {
     return () => { cancelled = true; };
   }, []);
 
-  const alphaMap = useMemo(() => {
+  const extraLettersForCurrentEight = useMemo(() => {
+    if (roundKind !== 'eight' || !currentEightAlpha) return '';
+    return extraLetters(currentEightAlpha, currentSevenAlpha);
+  }, [roundKind, currentEightAlpha, currentSevenAlpha]);
+
+  const promptRank = useMemo(() => {
     if (!data) return null;
-    return listKind === 'seven' ? data.sevenAlphagramToWords : data.eightAlphagramToWords;
-  }, [data, listKind]);
-
-  const currentList = data ? (listKind === 'seven' ? data.sevens : data.eights) : null;
-
-  // A dead round's roundEntries is a single synthetic {word: 'DEAD', rank}
-  // entry (see startRound), so this - and roundActive, and hint/reveal
-  // below - all work identically for dead and real rounds with no special
-  // casing. That's deliberate: special-casing dead rounds out of the
-  // regular found/total flow is what made Hint/Reveal need to disappear
-  // for them before, which was itself a tell that a round was fake.
-  const promptRank = roundEntries.length > 0 ? Math.min(...roundEntries.map((e) => e.rank)) : null;
+    const map = roundKind === 'seven' ? data.sevenAlphagramToWords : data.eightAlphagramToWords;
+    const alpha = roundKind === 'seven' ? currentSevenAlpha : currentEightAlpha;
+    const entries = map.get(alpha);
+    if (!entries || entries.length === 0) return null;
+    return Math.min(...entries.map((e) => e.rank));
+  }, [data, roundKind, currentSevenAlpha, currentEightAlpha]);
 
   const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
 
@@ -129,26 +113,6 @@ export default function ZyzMode({ tileColor }) {
   foundWordsRef.current = foundWords;
   const roundEntriesRef = useRef(roundEntries);
   roundEntriesRef.current = roundEntries;
-
-  // Letter-by-letter hint reveal - identical timing/behavior to Wind Up
-  // mode. For a dead round, "DEAD" is the word being hinted at, so this
-  // needs no special casing either - it just attributes the stat
-  // differently once fully revealed (deadSpotted, not correct).
-  useEffect(() => {
-    if (!hint) return;
-    if (hint.revealedCount >= hint.word.length) {
-      if (!foundWords.has(hint.word)) {
-        setFoundWords((prev) => new Set(prev).add(hint.word));
-        setStats((s) => (currentIsDead ? { ...s, deadSpotted: s.deadSpotted + 1 } : { ...s, correct: s.correct + 1 }));
-      }
-      setHint(null);
-      return;
-    }
-    const timeoutId = setTimeout(() => {
-      setHint((h) => (h ? { ...h, revealedCount: h.revealedCount + 1 } : null));
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [hint, foundWords, currentIsDead]);
 
   // Reveals whatever's left in the round, exactly like the old manual
   // "Reveal remaining" button did - now also the target of both the new
@@ -200,13 +164,33 @@ export default function ZyzMode({ tileColor }) {
     return () => clearInterval(intervalId);
   }, [timeLimitEnabled, stage, roundActive, roundKey, timeResetTrigger, timeLimitSeconds]);
 
-  const startRound = (cell) => {
-    // A dead round's "word" is the literal string DEAD - that's what makes
-    // it resolve through the exact same found/hint/reveal machinery as a
-    // real round instead of needing its own parallel path.
-    const entries = cell.isDead ? [{ word: 'DEAD', rank: cell.fakeRank }] : (alphaMap.get(cell.alpha) || []);
-    setCurrentAlpha(cell.alpha);
-    setCurrentIsDead(cell.isDead);
+  // Letter-by-letter hint reveal. Ticks revealedCount up on a timer; once it
+  // reaches the target word's length, counts the word as found (unless the
+  // player already guessed it correctly mid-animation, in which case it's
+  // already found and this just clears the hint state).
+  useEffect(() => {
+    if (!hint) return;
+    if (hint.revealedCount >= hint.word.length) {
+      if (!foundWords.has(hint.word)) {
+        setFoundWords((prev) => new Set(prev).add(hint.word));
+        setStats((s) => ({ ...s, correct: s.correct + 1 }));
+      }
+      setHint(null);
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      setHint((h) => (h ? { ...h, revealedCount: h.revealedCount + 1 } : null));
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [hint, foundWords]);
+
+  const startSevenRound = (sevenAlpha) => {
+    const entries = data.sevenAlphagramToWords.get(sevenAlpha) || [];
+    setCurrentSevenAlpha(sevenAlpha);
+    setCurrentEightAlpha(null);
+    setEightQueue([]);
+    setEightProgress({ index: 0, total: 0 });
+    setRoundKind('seven');
     setRoundEntries(entries);
     setFoundWords(new Set());
     setRevealedWords(new Set());
@@ -222,86 +206,63 @@ export default function ZyzMode({ tileColor }) {
     setKeyboardOpen(true);
   };
 
-  const handleStart = async () => {
+  const startEightRound = (eightAlpha) => {
+    const entries = data.eightAlphagramToWords.get(eightAlpha) || [];
+    setCurrentEightAlpha(eightAlpha);
+    setRoundKind('eight');
+    setRoundEntries(entries);
+    setFoundWords(new Set());
+    setRevealedWords(new Set());
+    setGuessInput('');
+    setCorrectedFlags([]);
+    setFeedback(null);
+    setHint(null);
+    setRoundKey((k) => k + 1);
+    setKeyboardOpen(true);
+  };
+
+  const finishStemAndAdvance = (remainingQueue) => {
+    setStats((s) => ({ ...s, stemsCompleted: s.stemsCompleted + 1 }));
+    if (remainingQueue.length === 0) {
+      setStage('complete');
+      return;
+    }
+    const [next, ...rest] = remainingQueue;
+    setQueue(rest);
+    startSevenRound(next);
+  };
+
+  const handleStart = () => {
     const min = parseInt(rangeMin, 10);
     const max = parseInt(rangeMax, 10);
-    const upperBound = currentList.length;
+    const upperBound = data.sevens.length;
     if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max > upperBound || min > max) {
       setRangeError(`Enter a range between 1 and ${upperBound.toLocaleString()}, min ≤ max.`);
       return;
     }
     setRangeError('');
-    const raw = currentList.slice(min - 1, max);
+    const raw = data.sevens.slice(min - 1, max);
     const distinct = Array.from(new Set(raw.map(alphagram)));
     const shuffled = shuffle(distinct);
-
-    // Falls back to an all-real session (rather than blocking start) if the
-    // dead-rack data fails to load - e.g. a flaky network on first fetch.
-    let deadPool = null;
-    if (deadRacksEnabled) {
-      try {
-        deadPool = await loadDeadRackData();
-      } catch (err) {
-        deadPool = null;
-      }
-    }
-
-    // Dead racks are ADDED on top of the real set, not substituted in for
-    // some of it - every real alphagram in the range still gets drilled,
-    // so raising the percentage makes the session longer instead of
-    // leaving gaps in what got studied.
-    const realCells = shuffled.map((alpha) => ({ alpha, isDead: false }));
-    let cells = realCells;
-    if (deadPool) {
-      const targetDeadCount = Math.round(shuffled.length * (deadRacksPercent / 100));
-      const usedDead = new Set();
-      const deadCells = [];
-      for (let i = 0; i < targetDeadCount; i++) {
-        const dead = pickDeadRack(listKind, data, deadPool, min, max, usedDead);
-        if (!dead) break; // pool exhausted for this range - stop rather than loop forever
-        usedDead.add(dead.alpha);
-        const rank = estimateRank(listKind, data, deadPool, dead.favorable);
-        deadCells.push({ alpha: dead.alpha, isDead: true, fakeRank: rank });
-      }
-      cells = shuffle([...realCells, ...deadCells]);
-    }
-
-    setElapsedSeconds(0);
-    setTotalCount(cells.length);
-    setStats({ stemsCompleted: 0, correct: 0, revealed: 0, deadSpotted: 0, mistakes: 0 });
-    const [first, ...rest] = cells;
+    setTotalCount(shuffled.length);
+    setStats({ stemsCompleted: 0, correct: 0, revealed: 0 });
+    const [first, ...rest] = shuffled;
     setQueue(rest);
-    startRound(first);
+    startSevenRound(first);
     setStage('quiz');
   };
 
-  // overrideGuess lets the on-screen keyboard's skull key submit "DEAD"
-  // immediately (see handleOverlayKeyPress) without a stale-state round trip
-  // through guessInput - setGuessInput('DEAD') then reading guessInput in
-  // the same tick would still see the value from before that update.
-  const handleGuessSubmit = (e, overrideGuess) => {
+  const handleGuessSubmit = (e) => {
     e.preventDefault();
-    const guess = (overrideGuess ?? guessInput).trim().toUpperCase();
+    const guess = guessInput.trim().toUpperCase();
     if (!guess) return;
-
-    // Same match-against-roundEntries logic for dead and real rounds - a
-    // dead round's roundEntries is just [{word: 'DEAD', ...}] (see
-    // startRound), so "guessing right" naturally means typing DEAD there
-    // and nothing else. The one extra case: typing DEAD on a REAL round
-    // doesn't match anything in ITS roundEntries either, so it already
-    // falls through to the generic wrong-guess branch below - this just
-    // additionally flags that specific miss (mirrors Lith mode's
-    // "double-clicked a real cell" mistake).
     if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
     } else if (roundEntries.some((entry) => entry.word === guess)) {
       setFoundWords((prev) => new Set(prev).add(guess));
-      setStats((s) => (currentIsDead ? { ...s, deadSpotted: s.deadSpotted + 1 } : { ...s, correct: s.correct + 1 }));
+      setStats((s) => ({ ...s, correct: s.correct + 1 }));
       setFeedback({ type: 'correct', message: 'Correct!' });
     } else {
-      if (guess === 'DEAD' && !currentIsDead) {
-        setStats((s) => ({ ...s, mistakes: s.mistakes + 1 }));
-      }
       setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
     }
     setGuessInput('');
@@ -312,16 +273,15 @@ export default function ZyzMode({ tileColor }) {
   // Mirrors what typing on a physical keyboard would do to the same
   // controlled guessInput/handleGuessSubmit pair, since the on-screen
   // keyboard is the only way to type at all once the real input is
-  // readOnly on mobile. 'Dead' (the skull key) submits DEAD immediately.
-  // Letter keys go through resolveTypedKey first - see keyboardCorrection.js.
+  // readOnly on mobile. No skull/dead key here - Wind Up has no dead-rack
+  // rounds at all, unlike Zyz. Letter keys go through resolveTypedKey first
+  // - see keyboardCorrection.js.
   const handleOverlayKeyPress = (key) => {
     if (key === 'Backspace') {
       setGuessInput((v) => v.slice(0, -1));
       setCorrectedFlags((f) => f.slice(0, -1));
     } else if (key === 'Enter') {
       handleGuessSubmit({ preventDefault: () => {} });
-    } else if (key === 'Dead') {
-      handleGuessSubmit({ preventDefault: () => {} }, 'DEAD');
     } else {
       const candidateWords = roundEntries
         .filter((entry) => !foundWords.has(entry.word) && !revealedWords.has(entry.word))
@@ -336,20 +296,33 @@ export default function ZyzMode({ tileColor }) {
     if (hint) return; // already animating one
     const remaining = roundEntries.filter((entry) => !foundWords.has(entry.word));
     if (remaining.length === 0) return;
+    // If there are multiple still-unguessed words, just pick one (the first,
+    // which is alphabetically first since roundEntries is sorted that way).
     setHint({ word: remaining[0].word, revealedCount: 1 });
   };
 
   const handleEndQuiz = () => setStage('complete');
 
   const advanceRound = () => {
-    setStats((s) => ({ ...s, stemsCompleted: s.stemsCompleted + 1 }));
-    if (queue.length === 0) {
-      setStage('complete');
-      return;
+    if (roundKind === 'seven') {
+      const eightAlphas = data.sevenAlphagramToEightAlphagrams.get(currentSevenAlpha) || [];
+      if (eightAlphas.length > 0) {
+        const [next, ...rest] = eightAlphas;
+        setEightQueue(rest);
+        setEightProgress({ index: 1, total: eightAlphas.length });
+        startEightRound(next);
+        return;
+      }
+    } else if (roundKind === 'eight') {
+      if (eightQueue.length > 0) {
+        const [next, ...rest] = eightQueue;
+        setEightQueue(rest);
+        setEightProgress((p) => ({ ...p, index: p.index + 1 }));
+        startEightRound(next);
+        return;
+      }
     }
-    const [next, ...rest] = queue;
-    setQueue(rest);
-    startRound(next);
+    finishStemAndAdvance(queue);
   };
 
   const feedbackClass = feedback
@@ -363,17 +336,6 @@ export default function ZyzMode({ tileColor }) {
   const foundEntries = roundEntries.filter((entry) => foundWords.has(entry.word));
   const revealedEntries = roundEntries.filter((entry) => revealedWords.has(entry.word));
 
-  // DEAD isn't a real word being drilled - showing its dictionary hooks or
-  // probability rank alongside it (which WordChip does for every other
-  // entry) would be meaningless, so it gets its own plain chip instead.
-  const renderEntryChip = (entry, variant) => {
-    if (currentIsDead) {
-      const chipClass = variant === 'found' ? styles.foundChip : styles.revealedChip;
-      return <span key={entry.word} className={chipClass}>💀 {entry.word}</span>;
-    }
-    return <WordChip key={entry.word} entry={entry} variant={variant} hookCache={hookCache} />;
-  };
-
   return (
     <>
       {stage === 'loading' && (
@@ -385,35 +347,13 @@ export default function ZyzMode({ tileColor }) {
       {stage === 'setup' && data && (
         <div className={styles.card}>
           <div>
-            <div className={styles.sectionLabel}>Word length</div>
-            <div className={styles.presetRow} style={{ marginTop: 8 }}>
-              <button
-                type="button"
-                className={styles.presetPill}
-                style={listKind === 'seven' ? { background: 'var(--amber)', color: '#fff', borderColor: 'var(--amber)' } : undefined}
-                onClick={() => setListKind('seven')}
-              >
-                Sevens
-              </button>
-              <button
-                type="button"
-                className={styles.presetPill}
-                style={listKind === 'eight' ? { background: 'var(--amber)', color: '#fff', borderColor: 'var(--amber)' } : undefined}
-                onClick={() => setListKind('eight')}
-              >
-                Eights
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <div className={styles.sectionLabel}>Probability range</div>
+            <div className={styles.sectionLabel}>Probability range (sevens)</div>
             <div className={styles.rangeRow} style={{ marginTop: 8 }}>
               <input
                 className={styles.rangeInput}
                 type="number"
                 min={1}
-                max={currentList.length}
+                max={data.sevens.length}
                 value={rangeMin}
                 onChange={(e) => setRangeMin(e.target.value)}
                 placeholder="1"
@@ -423,24 +363,16 @@ export default function ZyzMode({ tileColor }) {
                 className={styles.rangeInput}
                 type="number"
                 min={1}
-                max={currentList.length}
+                max={data.sevens.length}
                 value={rangeMax}
                 onChange={(e) => setRangeMax(e.target.value)}
                 placeholder="1000"
               />
             </div>
             <div className={styles.rangeHint} style={{ marginTop: 6 }}>
-              1 – {currentList.length.toLocaleString()}, most probable first
+              1 – {data.sevens.length.toLocaleString()}, most probable first
             </div>
           </div>
-
-          <DeadRacksSetting
-            enabled={deadRacksEnabled}
-            percent={deadRacksPercent}
-            onToggleChange={handleToggleDeadRacks}
-            onPercentChange={setDeadRacksPercent}
-            hint="Some rounds will be fakes with no real word. Type DEAD if you think this one is — typing it on a real round counts as a miss."
-          />
 
           <TimeLimitSetting
             enabled={timeLimitEnabled}
@@ -462,9 +394,9 @@ export default function ZyzMode({ tileColor }) {
                 key={p.label}
                 type="button"
                 className={styles.presetPill}
-                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, currentList.length))); }}
+                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, data.sevens.length))); }}
               >
-                {presetLabel(p, currentList.length)}
+                {presetLabel(p, data.sevens.length)}
               </button>
             ))}
           </div>
@@ -486,7 +418,11 @@ export default function ZyzMode({ tileColor }) {
                 {remainingSeconds ?? timeLimitSeconds}s
               </span>
             )}
-            <span className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</span>
+            <span>
+              {roundKind === 'seven'
+                ? 'Sevens'
+                : `Eights ${eightProgress.index} / ${eightProgress.total}`}
+            </span>
           </div>
           <div className={styles.progressTrack}>
             <div
@@ -496,9 +432,17 @@ export default function ZyzMode({ tileColor }) {
           </div>
 
           <div className={styles.tileRow}>
-            {currentAlpha.split('').map((l, i) => (
-              <Protile key={i} letter={l} color={tileColor.current} />
+            {currentSevenAlpha.split('').map((l, i) => (
+              <Protile key={`base${i}`} letter={l} color={tileColor.current} />
             ))}
+            {roundKind === 'eight' && (
+              <>
+                <span className={styles.tilePlus}>+</span>
+                {extraLettersForCurrentEight.split('').map((l, i) => (
+                  <Protile key={`extra${i}`} letter={l} color={tileColor.current} />
+                ))}
+              </>
+            )}
           </div>
 
           {promptRank !== null && (
@@ -541,33 +485,21 @@ export default function ZyzMode({ tileColor }) {
               </form>
               {feedback && <div className={feedbackClass}>{feedback.message}</div>}
               {hint && (
-                currentIsDead ? (
-                  <div className={styles.deadHintReveal}>
+                <div className={styles.hintDisplay}>
+                  {hint.word.split('').map((ch, i) => (
                     <span
-                      className={styles.deadHintSkull}
-                      style={{
-                        opacity: hint.revealedCount / hint.word.length,
-                        transform: `scale(${0.5 + 0.5 * (hint.revealedCount / hint.word.length)})`,
-                      }}
+                      key={i}
+                      className={i < hint.revealedCount ? styles.hintLetterRevealed : styles.hintLetterBlank}
                     >
-                      💀
+                      {i < hint.revealedCount ? ch : ''}
                     </span>
-                  </div>
-                ) : (
-                  <div className={styles.hintDisplay}>
-                    {hint.word.split('').map((ch, i) => (
-                      <span
-                        key={i}
-                        className={i < hint.revealedCount ? styles.hintLetterRevealed : styles.hintLetterBlank}
-                      >
-                        {i < hint.revealedCount ? ch : ''}
-                      </span>
-                    ))}
-                  </div>
-                )
+                  ))}
+                </div>
               )}
               <div className={styles.foundList}>
-                {foundEntries.map((entry) => renderEntryChip(entry, 'found'))}
+                {foundEntries.map((entry) => (
+                  <WordChip key={entry.word} entry={entry} variant="found" hookCache={hookCache} />
+                ))}
               </div>
               <div className={styles.footerRow}>
                 <button type="button" className={styles.secondaryButton} onClick={handleHint} disabled={!!hint}>
@@ -584,8 +516,12 @@ export default function ZyzMode({ tileColor }) {
           ) : (
             <>
               <div className={styles.foundList}>
-                {foundEntries.map((entry) => renderEntryChip(entry, 'found'))}
-                {revealedEntries.map((entry) => renderEntryChip(entry, 'revealed'))}
+                {foundEntries.map((entry) => (
+                  <WordChip key={entry.word} entry={entry} variant="found" hookCache={hookCache} />
+                ))}
+                {revealedEntries.map((entry) => (
+                  <WordChip key={entry.word} entry={entry} variant="revealed" hookCache={hookCache} />
+                ))}
               </div>
               <button type="button" className={styles.primaryButton} autoFocus onClick={advanceRound}>
                 Continue ▸
@@ -597,7 +533,6 @@ export default function ZyzMode({ tileColor }) {
             visible={isMobile && keyboardOpen && roundActive}
             onKeyPress={handleOverlayKeyPress}
             onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
-            deadKey={deadRacksEnabled}
           />
         </div>
       )}
@@ -626,22 +561,6 @@ export default function ZyzMode({ tileColor }) {
               </div>
               <div className={styles.statLabel}>Accuracy</div>
             </div>
-            <div className={styles.statTile}>
-              <div className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</div>
-              <div className={styles.statLabel}>Time</div>
-            </div>
-            {deadRacksEnabled && (
-              <>
-                <div className={styles.statTile}>
-                  <div className={styles.statValue}>{stats.deadSpotted}</div>
-                  <div className={styles.statLabel}>Dead spotted</div>
-                </div>
-                <div className={styles.statTile}>
-                  <div className={styles.statValue}>{stats.mistakes}</div>
-                  <div className={styles.statLabel}>Mistakes</div>
-                </div>
-              </>
-            )}
           </div>
           <div className={styles.footerRow}>
             <button type="button" className={styles.secondaryButton} onClick={() => setStage('setup')}>

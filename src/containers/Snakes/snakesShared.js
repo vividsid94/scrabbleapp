@@ -153,7 +153,7 @@ export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentCh
 // Toggle + conditional countdown-duration slider for the optional Time
 // Limit setting - shared by all three modes' setup screens the same way
 // DeadRacksSetting is. `unit`/`onUnitChange` are only passed by modes where
-// a "round" can hold multiple words (Zyz/Classic), to expose the
+// a "round" can hold multiple words (Zyz/Wind Up), to expose the
 // per-word-vs-per-alphagram choice; Lith mode (one timer per page, no
 // per-word concept) omits them and gets just the toggle + slider.
 export function TimeLimitSetting({ enabled, onToggleChange, seconds, onSecondsChange, min, max, step, formatValue, hint, unit, onUnitChange }) {

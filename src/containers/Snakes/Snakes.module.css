@@ -642,7 +642,7 @@
   box-shadow: 0 0 0 2px var(--amber-soft);
 }
 
-/* On mobile in Zyz/Classic, the on-screen keyboard writes into this
+/* On mobile in Zyz/Wind Up, the on-screen keyboard writes into this
    instead of a real <input> - a plain input can't render individual
    characters in different colors, which is what showing a fat-finger
    correction needs. Composes .guessInput so it's pixel-identical otherwise. */

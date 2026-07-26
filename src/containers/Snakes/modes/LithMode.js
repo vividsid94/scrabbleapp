@@ -89,7 +89,7 @@ function computeGridLayout(containerWidth, maxLetters, maxTileSize) {
   return { columns: 1, tileSize: MIN_TILE_SIZE, gap: GRID_GAP_TIGHT };
 }
 
-// Mode 1 - "Lith Mode". Same probability-range setup as the classic drill,
+// Mode 1 - "Lith Mode". Same probability-range setup as the Wind Up drill,
 // but over a single list (sevens OR eights, no seven->eight chaining), and
 // presented as pages of 50 alphagram puzzles at a time (5 columns x 10).
 // There's no per-puzzle round - one textbox below the whole grid takes any

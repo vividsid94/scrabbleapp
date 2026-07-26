@@ -70,6 +70,25 @@ function buildExtensionMap(eightAlphagramToWords) {
   return map;
 }
 
+// Rewind mode's core operation: given ONE eight-letter alphagram, its
+// length-7 sub-multisets (remove one letter at a time, deduped - the same
+// per-eight computation buildExtensionMap above does for every eight up
+// front, just done on demand for a single stem instead of the whole list).
+// Rewind looks each of these up directly in sevenAlphagramToWords rather
+// than adding a tile and checking eight-letter solutions the way Wind Up
+// does - fundamentally the reverse direction, not just a relabeled copy.
+export function sevenSubAlphagramsOf(eightAlpha) {
+  const seen = new Set();
+  const result = [];
+  for (let i = 0; i < eightAlpha.length; i++) {
+    const sevenAlpha = eightAlpha.slice(0, i) + eightAlpha.slice(i + 1);
+    if (seen.has(sevenAlpha)) continue;
+    seen.add(sevenAlpha);
+    result.push(sevenAlpha);
+  }
+  return result;
+}
+
 export async function loadSnakesData() {
   if (cache) return cache;
   if (loadPromise) return loadPromise;

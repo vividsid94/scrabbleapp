@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MobileKeyboardOverlay from '../../../components/MobileKeyboardOverlay';
-import { loadSnakesData, alphagram } from '../snakesData';
+import { loadSnakesData, alphagram, sevenSubAlphagramsOf } from '../snakesData';
 import { initializeDictionary } from '../../../utils/localDictionary';
 import { PRESETS, presetMax, presetLabel, shuffle, Protile, WordChip, TimeLimitSetting, useIsMobile } from '../snakesShared';
 import { resolveTypedKey } from '../keyboardCorrection';
@@ -10,9 +10,9 @@ const TIME_LIMIT_MIN = 10;
 const TIME_LIMIT_MAX = 60;
 const TIME_LIMIT_STEP = 5;
 
-// The letters left over in an eight-letter alphagram once a seven's letters
-// are removed one-for-one (multiset difference, not a naive character set
-// diff, so duplicate letters are handled correctly).
+// The one letter left over in an eight-letter alphagram once a seven's
+// letters are removed one-for-one (multiset difference, not a naive
+// character set diff, so duplicate letters are handled correctly).
 function extraLetters(eightAlpha, sevenAlpha) {
   let remaining = eightAlpha;
   for (const ch of sevenAlpha) {
@@ -22,9 +22,18 @@ function extraLetters(eightAlpha, sevenAlpha) {
   return remaining;
 }
 
-// Mode 3 - the original bingo-stem drill: probability-ranked sevens, type
-// every word for each alphagram, then every eight-letter extension.
-export default function ClassicMode({ tileColor }) {
+// Mode 4 - "Rewind": Wind Up's exact structure, run in reverse. Wind Up's
+// BASE round is a seven (find its word(s)), then it CHAINS into each
+// reachable eight one at a time (add a letter, check real eight-letter
+// solutions). Rewind's BASE round is an eight instead (find its word(s) -
+// there's usually one, occasionally more), and only once that's fully
+// solved does it CHAIN into each sub-seven one at a time - not by adding a
+// tile and checking solutions, but by deleting one letter at a time from
+// the eight (deduped) and looking up whichever of those sub-alphagrams
+// have real seven-letter words. Same two-phase-per-stem shape as Wind Up,
+// same one-at-a-time prompting, just seven and eight swapped and the
+// chaining direction reversed.
+export default function RewindMode({ tileColor }) {
   const inputRef = useRef(null);
   const hookCache = useRef(new Map());
 
@@ -47,15 +56,18 @@ export default function ClassicMode({ tileColor }) {
   const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [roundKey, setRoundKey] = useState(0);
 
-  const [queue, setQueue] = useState([]);
+  const [queue, setQueue] = useState([]); // remaining eight-stems
   const [totalCount, setTotalCount] = useState(0);
   const [stats, setStats] = useState({ stemsCompleted: 0, correct: 0, revealed: 0 });
 
-  const [roundKind, setRoundKind] = useState('seven');
-  const [currentSevenAlpha, setCurrentSevenAlpha] = useState('');
-  const [currentEightAlpha, setCurrentEightAlpha] = useState(null);
-  const [eightQueue, setEightQueue] = useState([]);
-  const [eightProgress, setEightProgress] = useState({ index: 0, total: 0 });
+  // roundKind: 'eight' is the BASE round for this stem (find the eight's own
+  // word(s)); 'seven' is a CHAINED round (one of the eight's sub-sevens) -
+  // exactly Wind Up's roundKind, just with the two swapped.
+  const [roundKind, setRoundKind] = useState('eight');
+  const [currentEightAlpha, setCurrentEightAlpha] = useState('');
+  const [currentSevenAlpha, setCurrentSevenAlpha] = useState(null);
+  const [sevenQueue, setSevenQueue] = useState([]); // remaining sub-sevens for THIS eight
+  const [sevenProgress, setSevenProgress] = useState({ index: 0, total: 0 });
   const [roundEntries, setRoundEntries] = useState([]); // [{word, rank}]
   const [foundWords, setFoundWords] = useState(new Set());
   const [revealedWords, setRevealedWords] = useState(new Set());
@@ -83,19 +95,21 @@ export default function ClassicMode({ tileColor }) {
     return () => { cancelled = true; };
   }, []);
 
-  const extraLettersForCurrentEight = useMemo(() => {
-    if (roundKind !== 'eight' || !currentEightAlpha) return '';
+  // Only meaningful during a chained seven-round - the one letter excluded
+  // from the full eight to get to this particular sub-seven.
+  const extraLetterForCurrentSeven = useMemo(() => {
+    if (roundKind !== 'seven' || !currentSevenAlpha) return '';
     return extraLetters(currentEightAlpha, currentSevenAlpha);
   }, [roundKind, currentEightAlpha, currentSevenAlpha]);
 
   const promptRank = useMemo(() => {
     if (!data) return null;
-    const map = roundKind === 'seven' ? data.sevenAlphagramToWords : data.eightAlphagramToWords;
-    const alpha = roundKind === 'seven' ? currentSevenAlpha : currentEightAlpha;
+    const map = roundKind === 'eight' ? data.eightAlphagramToWords : data.sevenAlphagramToWords;
+    const alpha = roundKind === 'eight' ? currentEightAlpha : currentSevenAlpha;
     const entries = map.get(alpha);
     if (!entries || entries.length === 0) return null;
     return Math.min(...entries.map((e) => e.rank));
-  }, [data, roundKind, currentSevenAlpha, currentEightAlpha]);
+  }, [data, roundKind, currentEightAlpha, currentSevenAlpha]);
 
   const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
 
@@ -113,7 +127,7 @@ export default function ClassicMode({ tileColor }) {
   roundEntriesRef.current = roundEntries;
 
   // Reveals whatever's left in the round, exactly like the old manual
-  // "Reveal remaining" button did - now also the target of both the new
+  // "Reveal remaining" button did - now also the target of both the
   // per-question Give Up button AND an expired time limit, so both just
   // call this directly instead of pausing and waiting on the user. Reads
   // via the refs above (not the foundWords/roundEntries closed over by this
@@ -182,13 +196,15 @@ export default function ClassicMode({ tileColor }) {
     return () => clearTimeout(timeoutId);
   }, [hint, foundWords]);
 
-  const startSevenRound = (sevenAlpha) => {
-    const entries = data.sevenAlphagramToWords.get(sevenAlpha) || [];
-    setCurrentSevenAlpha(sevenAlpha);
-    setCurrentEightAlpha(null);
-    setEightQueue([]);
-    setEightProgress({ index: 0, total: 0 });
-    setRoundKind('seven');
+  // BASE round for a stem: find the eight's own word(s) - direct
+  // counterpart of Wind Up's startSevenRound.
+  const startEightRound = (eightAlpha) => {
+    const entries = data.eightAlphagramToWords.get(eightAlpha) || [];
+    setCurrentEightAlpha(eightAlpha);
+    setCurrentSevenAlpha(null);
+    setSevenQueue([]);
+    setSevenProgress({ index: 0, total: 0 });
+    setRoundKind('eight');
     setRoundEntries(entries);
     setFoundWords(new Set());
     setRevealedWords(new Set());
@@ -204,10 +220,12 @@ export default function ClassicMode({ tileColor }) {
     setKeyboardOpen(true);
   };
 
-  const startEightRound = (eightAlpha) => {
-    const entries = data.eightAlphagramToWords.get(eightAlpha) || [];
-    setCurrentEightAlpha(eightAlpha);
-    setRoundKind('eight');
+  // CHAINED round: one specific sub-seven of the current eight - direct
+  // counterpart of Wind Up's startEightRound.
+  const startSevenRound = (sevenAlpha) => {
+    const entries = data.sevenAlphagramToWords.get(sevenAlpha) || [];
+    setCurrentSevenAlpha(sevenAlpha);
+    setRoundKind('seven');
     setRoundEntries(entries);
     setFoundWords(new Set());
     setRevealedWords(new Set());
@@ -227,26 +245,26 @@ export default function ClassicMode({ tileColor }) {
     }
     const [next, ...rest] = remainingQueue;
     setQueue(rest);
-    startSevenRound(next);
+    startEightRound(next);
   };
 
   const handleStart = () => {
     const min = parseInt(rangeMin, 10);
     const max = parseInt(rangeMax, 10);
-    const upperBound = data.sevens.length;
+    const upperBound = data.eights.length;
     if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max > upperBound || min > max) {
       setRangeError(`Enter a range between 1 and ${upperBound.toLocaleString()}, min ≤ max.`);
       return;
     }
     setRangeError('');
-    const raw = data.sevens.slice(min - 1, max);
+    const raw = data.eights.slice(min - 1, max);
     const distinct = Array.from(new Set(raw.map(alphagram)));
     const shuffled = shuffle(distinct);
     setTotalCount(shuffled.length);
     setStats({ stemsCompleted: 0, correct: 0, revealed: 0 });
     const [first, ...rest] = shuffled;
     setQueue(rest);
-    startSevenRound(first);
+    startEightRound(first);
     setStage('quiz');
   };
 
@@ -271,7 +289,7 @@ export default function ClassicMode({ tileColor }) {
   // Mirrors what typing on a physical keyboard would do to the same
   // controlled guessInput/handleGuessSubmit pair, since the on-screen
   // keyboard is the only way to type at all once the real input is
-  // readOnly on mobile. No skull/dead key here - Classic has no dead-rack
+  // readOnly on mobile. No skull/dead key here - Rewind has no dead-rack
   // rounds at all, unlike Zyz. Letter keys go through resolveTypedKey first
   // - see keyboardCorrection.js.
   const handleOverlayKeyPress = (key) => {
@@ -301,22 +319,29 @@ export default function ClassicMode({ tileColor }) {
 
   const handleEndQuiz = () => setStage('complete');
 
+  // Direct counterpart of Wind Up's advanceRound. The core difference is
+  // right here: Wind Up looks up its next chained round from a precomputed
+  // ADD-a-letter map (sevenAlphagramToEightAlphagrams); this instead
+  // computes the REMOVE-a-letter sub-alphagrams of the current eight on the
+  // spot and filters to the ones with real words - there's no tile added
+  // and re-checked, just a direct lookup per sub-alphagram.
   const advanceRound = () => {
-    if (roundKind === 'seven') {
-      const eightAlphas = data.sevenAlphagramToEightAlphagrams.get(currentSevenAlpha) || [];
-      if (eightAlphas.length > 0) {
-        const [next, ...rest] = eightAlphas;
-        setEightQueue(rest);
-        setEightProgress({ index: 1, total: eightAlphas.length });
-        startEightRound(next);
+    if (roundKind === 'eight') {
+      const validSubs = sevenSubAlphagramsOf(currentEightAlpha)
+        .filter((sub) => (data.sevenAlphagramToWords.get(sub) || []).length > 0);
+      if (validSubs.length > 0) {
+        const [next, ...rest] = validSubs;
+        setSevenQueue(rest);
+        setSevenProgress({ index: 1, total: validSubs.length });
+        startSevenRound(next);
         return;
       }
-    } else if (roundKind === 'eight') {
-      if (eightQueue.length > 0) {
-        const [next, ...rest] = eightQueue;
-        setEightQueue(rest);
-        setEightProgress((p) => ({ ...p, index: p.index + 1 }));
-        startEightRound(next);
+    } else if (roundKind === 'seven') {
+      if (sevenQueue.length > 0) {
+        const [next, ...rest] = sevenQueue;
+        setSevenQueue(rest);
+        setSevenProgress((p) => ({ ...p, index: p.index + 1 }));
+        startSevenRound(next);
         return;
       }
     }
@@ -345,13 +370,13 @@ export default function ClassicMode({ tileColor }) {
       {stage === 'setup' && data && (
         <div className={styles.card}>
           <div>
-            <div className={styles.sectionLabel}>Probability range (sevens)</div>
+            <div className={styles.sectionLabel}>Probability range (eights)</div>
             <div className={styles.rangeRow} style={{ marginTop: 8 }}>
               <input
                 className={styles.rangeInput}
                 type="number"
                 min={1}
-                max={data.sevens.length}
+                max={data.eights.length}
                 value={rangeMin}
                 onChange={(e) => setRangeMin(e.target.value)}
                 placeholder="1"
@@ -361,14 +386,14 @@ export default function ClassicMode({ tileColor }) {
                 className={styles.rangeInput}
                 type="number"
                 min={1}
-                max={data.sevens.length}
+                max={data.eights.length}
                 value={rangeMax}
                 onChange={(e) => setRangeMax(e.target.value)}
                 placeholder="1000"
               />
             </div>
             <div className={styles.rangeHint} style={{ marginTop: 6 }}>
-              1 – {data.sevens.length.toLocaleString()}, most probable first
+              1 – {data.eights.length.toLocaleString()}, most probable first
             </div>
           </div>
 
@@ -392,9 +417,9 @@ export default function ClassicMode({ tileColor }) {
                 key={p.label}
                 type="button"
                 className={styles.presetPill}
-                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, data.sevens.length))); }}
+                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, data.eights.length))); }}
               >
-                {presetLabel(p, data.sevens.length)}
+                {presetLabel(p, data.eights.length)}
               </button>
             ))}
           </div>
@@ -417,9 +442,9 @@ export default function ClassicMode({ tileColor }) {
               </span>
             )}
             <span>
-              {roundKind === 'seven'
-                ? 'Sevens'
-                : `Eights ${eightProgress.index} / ${eightProgress.total}`}
+              {roundKind === 'eight'
+                ? 'Eights'
+                : `Sevens ${sevenProgress.index} / ${sevenProgress.total}`}
             </span>
           </div>
           <div className={styles.progressTrack}>
@@ -430,14 +455,14 @@ export default function ClassicMode({ tileColor }) {
           </div>
 
           <div className={styles.tileRow}>
-            {currentSevenAlpha.split('').map((l, i) => (
+            {currentEightAlpha.split('').map((l, i) => (
               <Protile key={`base${i}`} letter={l} color={tileColor.current} />
             ))}
-            {roundKind === 'eight' && (
+            {roundKind === 'seven' && (
               <>
-                <span className={styles.tilePlus}>+</span>
-                {extraLettersForCurrentEight.split('').map((l, i) => (
-                  <Protile key={`extra${i}`} letter={l} color={tileColor.current} />
+                <span className={styles.tilePlus}>−</span>
+                {extraLetterForCurrentSeven.split('').map((l, i) => (
+                  <Protile key={`removed${i}`} letter={l} color={tileColor.current} />
                 ))}
               </>
             )}

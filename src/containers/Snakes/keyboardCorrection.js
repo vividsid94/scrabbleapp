@@ -1,6 +1,7 @@
 /**
- * "Fat-finger" typo correction for the on-screen mobile keyboard in Zyz and
- * Classic mode ONLY (not Lith - see LithMode.js, which never imports this).
+ * "Fat-finger" typo correction for the on-screen mobile keyboard in Zyz,
+ * Wind Up, and Rewind mode ONLY (not Lith - see LithMode.js, which never
+ * imports this).
  *
  * The on-screen keyboard has no real per-pixel dead zones (see
  * MobileKeyboardOverlay's row-level hit testing), but a finger can still
