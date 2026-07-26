@@ -89,6 +89,13 @@
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 }
 
+.deadBtn {
+  color: #ede9fe;
+  background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 1px 0 rgba(76, 29, 149, 0.5);
+}
+
 .exitBtnDark {
   color: rgba(252, 165, 165, 0.95);
   background: rgba(255, 255, 255, 0.06);

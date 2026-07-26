@@ -32,8 +32,12 @@
 }
 
 .main[data-theme='dark'] {
-  --surface: #2A3A4A;
-  --surface-raised: #32455A;
+  /* #1F2937 is the app's actual dark-mode page background (set in
+     App.js) - matching it here makes the card's interior blend into the
+     page instead of reading as a distinct floating block; only its
+     border (below) still marks its edge. */
+  --surface: #1F2937;
+  --surface-raised: #29323D;
   --border: rgba(255, 255, 255, 0.1);
   --text: #FFFFFF;
   --text-muted: rgba(255, 255, 255, 0.65);
@@ -114,15 +118,22 @@
   min-width: 0;
   max-width: 660px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
   padding: 24px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 18px;
   animation: fadeSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The card's interior now matches the page background exactly (see
+   --surface above), so this border is the only thing marking its edge -
+   a goldish amber tint instead of plain translucent white. */
+.main[data-theme='dark'] .card {
+  border-color: rgba(217, 119, 6, 0.35);
 }
 
 @keyframes fadeSlideIn {
@@ -379,21 +390,21 @@
 
 .primaryButton {
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--amber);
   color: #fff;
-  padding: 12px 16px;
-  font-size: 15px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.1s ease;
 }
 
-.primaryButton:hover {
+.primaryButton:hover:not(:disabled) {
   filter: brightness(1.05);
 }
 
-.primaryButton:active {
+.primaryButton:active:not(:disabled) {
   transform: scale(0.98);
 }
 
@@ -404,18 +415,19 @@
 
 .secondaryButton {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .secondaryButton:hover {
   background: var(--amber-soft);
+  border-color: var(--amber);
 }
 
 .secondaryButton:disabled {

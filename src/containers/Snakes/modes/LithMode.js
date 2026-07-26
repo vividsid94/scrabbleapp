@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ClockCountdown } from '@phosphor-icons/react';
+import MobileKeyboardOverlay from '../../../components/MobileKeyboardOverlay';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
 import { pickDeadRack } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, badgeColorForCount, DeadRacksSetting, TimeLimitSetting } from '../snakesShared';
+import { PRESETS, presetMax, presetLabel, shuffle, Protile, badgeColorForCount, DeadRacksSetting, TimeLimitSetting, useIsMobile } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 const PAGE_SIZE = 50;
@@ -64,13 +65,18 @@ export default function LithMode({ tileColor }) {
   const gridContainerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
+  // On mobile, the guess input is readOnly (see below) so tapping it never
+  // summons the native keyboard - this on-screen one replaces it instead.
+  const isMobile = useIsMobile();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
   const [stage, setStage] = useState('loading');
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
   const [listKind, setListKind] = useState('seven');
   const [rangeMin, setRangeMin] = useState('1');
-  const [rangeMax, setRangeMax] = useState('100');
+  const [rangeMax, setRangeMax] = useState('1000');
   const [rangeError, setRangeError] = useState('');
 
   const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
@@ -338,6 +344,20 @@ export default function LithMode({ tileColor }) {
     inputRef.current?.focus();
   };
 
+  // Mirrors what typing on a physical keyboard would do to the same
+  // controlled guessInput/handleGuessSubmit pair, since the on-screen
+  // keyboard is the only way to type at all once the real input is
+  // readOnly on mobile.
+  const handleOverlayKeyPress = (key) => {
+    if (key === 'Backspace') {
+      setGuessInput((v) => v.slice(0, -1));
+    } else if (key === 'Enter') {
+      handleGuessSubmit({ preventDefault: () => {} });
+    } else {
+      setGuessInput((v) => v + key);
+    }
+  };
+
   const goNextPage = () => {
     if (isLastPage) {
       setStage('complete');
@@ -407,7 +427,7 @@ export default function LithMode({ tileColor }) {
                 max={currentList.length}
                 value={rangeMax}
                 onChange={(e) => setRangeMax(e.target.value)}
-                placeholder="100"
+                placeholder="1000"
               />
             </div>
             <div className={styles.rangeHint} style={{ marginTop: 6 }}>
@@ -441,9 +461,9 @@ export default function LithMode({ tileColor }) {
                 key={p.label}
                 type="button"
                 className={styles.presetPill}
-                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(p.max)); }}
+                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, currentList.length))); }}
               >
-                {p.label}
+                {presetLabel(p, currentList.length)}
               </button>
             ))}
           </div>
@@ -510,10 +530,13 @@ export default function LithMode({ tileColor }) {
               className={styles.guessInput}
               value={guessInput}
               onChange={(e) => setGuessInput(e.target.value)}
+              onFocus={() => isMobile && setKeyboardOpen(true)}
               placeholder="Type a word…"
               autoComplete="off"
               autoCapitalize="characters"
               disabled={pageEnded}
+              readOnly={isMobile}
+              inputMode={isMobile ? 'none' : undefined}
             />
           </form>
           {feedback && <div className={feedbackClass}>{feedback.message}</div>}
@@ -579,6 +602,12 @@ export default function LithMode({ tileColor }) {
             </div>
           </div>
         )}
+
+        <MobileKeyboardOverlay
+          visible={isMobile && keyboardOpen && !pageEnded}
+          onKeyPress={handleOverlayKeyPress}
+          onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
+        />
         </>
       )}
 

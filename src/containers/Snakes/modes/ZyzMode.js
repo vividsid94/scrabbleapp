@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import MobileKeyboardOverlay from '../../../components/MobileKeyboardOverlay';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
 import { pickDeadRack, estimateRank } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting, TimeLimitSetting } from '../snakesShared';
+import { PRESETS, presetMax, presetLabel, shuffle, Protile, WordChip, DeadRacksSetting, TimeLimitSetting, useIsMobile } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 const TIME_LIMIT_MIN = 10;
@@ -23,13 +24,18 @@ export default function ZyzMode({ tileColor }) {
   const inputRef = useRef(null);
   const hookCache = useRef(new Map());
 
+  // On mobile, the guess input is readOnly (see below) so tapping it never
+  // summons the native keyboard - this on-screen one replaces it instead.
+  const isMobile = useIsMobile();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
   const [stage, setStage] = useState('loading');
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
   const [listKind, setListKind] = useState('seven');
   const [rangeMin, setRangeMin] = useState('1');
-  const [rangeMax, setRangeMax] = useState('100');
+  const [rangeMax, setRangeMax] = useState('1000');
   const [rangeError, setRangeError] = useState('');
 
   const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
@@ -257,9 +263,13 @@ export default function ZyzMode({ tileColor }) {
     setStage('quiz');
   };
 
-  const handleGuessSubmit = (e) => {
+  // overrideGuess lets the on-screen keyboard's skull key submit "DEAD"
+  // immediately (see handleOverlayKeyPress) without a stale-state round trip
+  // through guessInput - setGuessInput('DEAD') then reading guessInput in
+  // the same tick would still see the value from before that update.
+  const handleGuessSubmit = (e, overrideGuess) => {
     e.preventDefault();
-    const guess = guessInput.trim().toUpperCase();
+    const guess = (overrideGuess ?? guessInput).trim().toUpperCase();
     if (!guess) return;
 
     // Same match-against-roundEntries logic for dead and real rounds - a
@@ -284,6 +294,22 @@ export default function ZyzMode({ tileColor }) {
     }
     setGuessInput('');
     inputRef.current?.focus();
+  };
+
+  // Mirrors what typing on a physical keyboard would do to the same
+  // controlled guessInput/handleGuessSubmit pair, since the on-screen
+  // keyboard is the only way to type at all once the real input is
+  // readOnly on mobile. 'Dead' (the skull key) submits DEAD immediately.
+  const handleOverlayKeyPress = (key) => {
+    if (key === 'Backspace') {
+      setGuessInput((v) => v.slice(0, -1));
+    } else if (key === 'Enter') {
+      handleGuessSubmit({ preventDefault: () => {} });
+    } else if (key === 'Dead') {
+      handleGuessSubmit({ preventDefault: () => {} }, 'DEAD');
+    } else {
+      setGuessInput((v) => v + key);
+    }
   };
 
   const handleHint = () => {
@@ -380,7 +406,7 @@ export default function ZyzMode({ tileColor }) {
                 max={currentList.length}
                 value={rangeMax}
                 onChange={(e) => setRangeMax(e.target.value)}
-                placeholder="100"
+                placeholder="1000"
               />
             </div>
             <div className={styles.rangeHint} style={{ marginTop: 6 }}>
@@ -416,9 +442,9 @@ export default function ZyzMode({ tileColor }) {
                 key={p.label}
                 type="button"
                 className={styles.presetPill}
-                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(p.max)); }}
+                onClick={() => { setRangeMin(String(p.min)); setRangeMax(String(presetMax(p, currentList.length))); }}
               >
-                {p.label}
+                {presetLabel(p, currentList.length)}
               </button>
             ))}
           </div>
@@ -472,9 +498,12 @@ export default function ZyzMode({ tileColor }) {
                   className={styles.guessInput}
                   value={guessInput}
                   onChange={(e) => setGuessInput(e.target.value)}
+                  onFocus={() => isMobile && setKeyboardOpen(true)}
                   placeholder="Type a word…"
                   autoComplete="off"
                   autoCapitalize="characters"
+                  readOnly={isMobile}
+                  inputMode={isMobile ? 'none' : undefined}
                 />
               </form>
               {feedback && <div className={feedbackClass}>{feedback.message}</div>}
@@ -530,6 +559,13 @@ export default function ZyzMode({ tileColor }) {
               </button>
             </>
           )}
+
+          <MobileKeyboardOverlay
+            visible={isMobile && keyboardOpen && roundActive}
+            onKeyPress={handleOverlayKeyPress}
+            onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
+            deadKey
+          />
         </div>
       )}
 

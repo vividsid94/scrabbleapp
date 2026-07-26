@@ -8,11 +8,14 @@ import styles from './MobileKeyboardOverlay.module.css';
  *
  * Props:
  * - visible: boolean – whether to render the overlay
- * - onKeyPress: (key: string) => void – called with letter / 'Backspace' / 'Enter'
+ * - onKeyPress: (key: string) => void – called with letter / 'Backspace' / 'Enter' / 'Dead'
  * - onClose?: () => void – dismiss the keyboard overlay
  * - label?: string – optional label text above keyboard (e.g. mode or hint)
+ * - deadKey?: boolean – adds a 💀 header button that calls onKeyPress('Dead')
+ *   (Snakes' Zyz/Classic modes use it as an instant "guess DEAD" shortcut).
+ *   Omitted everywhere else, so existing callers (e.g. Play.js) are unaffected.
  */
-export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, label }) {
+export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, label, deadKey }) {
   const { lightMode } = useContext(ThemeContext);
 
   if (!visible) return null;
@@ -32,6 +35,15 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, la
         {label && (
           <Box className={`${styles.label} ${isDark ? styles.labelDark : styles.labelLight}`}>
             {label}
+          </Box>
+        )}
+        {deadKey && (
+          <Box
+            className={`${styles.headerBtn} ${styles.deadBtn}`}
+            onClick={() => onKeyPress && onKeyPress('Dead')}
+            aria-label="Guess dead"
+          >
+            💀
           </Box>
         )}
         <Box

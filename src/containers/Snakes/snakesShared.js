@@ -1,15 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ClockCountdown } from '@phosphor-icons/react';
 import Cell from '../../components/AppContent/Board/Cell.js';
 import { getHooksLocal } from '../../utils/localDictionary';
 import styles from './Snakes.module.css';
 
+// Same breakpoint/pattern Play.js uses to decide when to show its on-screen
+// keyboard instead of the native one - kept here so all three modes agree
+// on what counts as "mobile" without each re-implementing the listener.
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  return isMobile;
+}
+
+// 'Rare' runs to the end of whichever list is active rather than a fixed
+// number - Lith/Zyz can be sevens OR eights (very different list lengths),
+// so its upper bound can't be hardcoded here; `max: null` is a sentinel
+// callers resolve via presetMax/presetLabel below, passing in the current
+// list's length. The 1-number overlap with Low Probability's own max
+// (20,000) is intentional - not worth chasing off by one just for this.
 export const PRESETS = [
   { label: 'High Probability', min: 1, max: 1000 },
-  { label: 'Midrange', min: 1000, max: 6000 },
-  { label: 'Low Probability', min: 6000, max: 15000 },
-  { label: 'Rare', min: 15000, max: 25000 },
+  { label: 'Midrange', min: 2000, max: 10000 },
+  { label: 'Low Probability', min: 10000, max: 20000 },
+  { label: 'Rare', min: 20000, max: null },
 ];
+
+export function presetMax(preset, listLength) {
+  return preset.max == null ? listLength : preset.max;
+}
+
+// Only 'Rare' needs its end number spelled out - it's the one preset whose
+// upper bound isn't implied by its name/fixed range.
+export function presetLabel(preset, listLength) {
+  if (preset.max != null) return preset.label;
+  return `${preset.label} (${preset.min.toLocaleString()}–${listLength.toLocaleString()})`;
+}
 
 // One distinct, legible-with-white-text color per remaining-solutions
 // count, so a badge's color visibly changes (not just its number) when a
