@@ -481,9 +481,13 @@ export default function LithMode({ tileColor }) {
         <div className={styles.cardBlend} style={{ maxWidth: 1080 }}>
           <div className={styles.progressRow}>
             <span>Page {pageIndex + 1} / {pages.length}</span>
-            <span style={timeLimitEnabled && remainingSeconds != null && remainingSeconds <= 10 ? { color: '#DC2626' } : undefined}>
-              {timeLimitEnabled ? formatElapsed(remainingSeconds ?? timeLimitSeconds) : formatElapsed(elapsedSeconds)}
-            </span>
+            {timeLimitEnabled ? (
+              <span className={remainingSeconds != null && remainingSeconds <= 10 ? styles.clockChipLow : styles.clockChipCountdown}>
+                {formatElapsed(remainingSeconds ?? timeLimitSeconds)}
+              </span>
+            ) : (
+              <span className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</span>
+            )}
             <span>{currentPageCells.filter(isResolved).length} / {currentPageCells.length} solved</span>
           </div>
           <div className={styles.progressTrack}>
@@ -624,7 +628,7 @@ export default function LithMode({ tileColor }) {
               <div className={styles.statLabel}>Words found</div>
             </div>
             <div className={styles.statTile}>
-              <div className={styles.statValue}>{formatElapsed(elapsedSeconds)}</div>
+              <div className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</div>
               <div className={styles.statLabel}>Time</div>
             </div>
             {deadRacksEnabled && (

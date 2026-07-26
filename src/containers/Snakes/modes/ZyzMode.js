@@ -482,11 +482,11 @@ export default function ZyzMode({ tileColor }) {
           <div className={styles.progressRow}>
             <span>Stem {Math.min(stats.stemsCompleted + 1, totalCount)} / {totalCount}</span>
             {timeLimitEnabled && roundActive && (
-              <span style={remainingSeconds != null && remainingSeconds <= 5 ? { color: '#DC2626' } : undefined}>
+              <span className={remainingSeconds != null && remainingSeconds <= 5 ? styles.clockChipLow : styles.clockChipCountdown}>
                 {remainingSeconds ?? timeLimitSeconds}s
               </span>
             )}
-            <span>{formatElapsed(elapsedSeconds)}</span>
+            <span className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</span>
           </div>
           <div className={styles.progressTrack}>
             <div
@@ -627,7 +627,7 @@ export default function ZyzMode({ tileColor }) {
               <div className={styles.statLabel}>Accuracy</div>
             </div>
             <div className={styles.statTile}>
-              <div className={styles.statValue}>{formatElapsed(elapsedSeconds)}</div>
+              <div className={styles.clockChip}>{formatElapsed(elapsedSeconds)}</div>
               <div className={styles.statLabel}>Time</div>
             </div>
             {deadRacksEnabled && (

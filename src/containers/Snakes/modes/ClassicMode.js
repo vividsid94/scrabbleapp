@@ -412,7 +412,7 @@ export default function ClassicMode({ tileColor }) {
           <div className={styles.progressRow}>
             <span>Stem {Math.min(stats.stemsCompleted + 1, totalCount)} / {totalCount}</span>
             {timeLimitEnabled && roundActive && (
-              <span style={remainingSeconds != null && remainingSeconds <= 5 ? { color: '#DC2626' } : undefined}>
+              <span className={remainingSeconds != null && remainingSeconds <= 5 ? styles.clockChipLow : styles.clockChipCountdown}>
                 {remainingSeconds ?? timeLimitSeconds}s
               </span>
             )}

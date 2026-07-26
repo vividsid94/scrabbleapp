@@ -510,6 +510,44 @@
   transition: width 0.25s ease;
 }
 
+/* ---- LCD clock chip - matches Play.js's PlayerInfo timer exactly (same
+   screen color, Courier New, tabular nums, inset "recessed glass" shadow),
+   just recolored per variant instead of always beige. ---- */
+.clockChip {
+  display: inline-flex;
+  align-items: center;
+  background: #141210;
+  border: 1px solid rgba(201, 191, 174, 0.35);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: #D6CCB8;
+  text-shadow: 0 0 5px rgba(214, 204, 184, 0.55), 0 0 10px rgba(214, 204, 184, 0.25);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.3s ease;
+}
+
+/* Countdown: same LCD screen, green digits while there's still time left... */
+.clockChipCountdown {
+  composes: clockChip;
+  color: #34D399;
+  text-shadow: 0 0 5px rgba(52, 211, 153, 0.55), 0 0 10px rgba(52, 211, 153, 0.25);
+}
+
+/* ...red once it's running low (each mode decides its own "low" threshold). */
+.clockChipLow {
+  composes: clockChip;
+  color: #F87171;
+  text-shadow: 0 0 5px rgba(248, 113, 113, 0.6), 0 0 10px rgba(248, 113, 113, 0.3);
+}
+
 .roundKind {
   font-size: 11px;
   font-weight: 700;
