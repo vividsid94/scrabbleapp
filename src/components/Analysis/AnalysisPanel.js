@@ -30,7 +30,9 @@ export default function AnalysisPanel({
   onStep,
   onRunHeatMap,
   onRunOpponentResponses,
+  onGetTopMoves,
   topMoves,
+  isLoadingTopMoves,
   lightMode = 'dark'
 }) {
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
@@ -70,9 +72,26 @@ export default function AnalysisPanel({
   const renderMoveList = () => (
     <Box sx={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '10px' }}>
       {(!topMoves || topMoves.length === 0) && (
-        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
-          No candidate moves available.
-        </Box>
+        isLoadingTopMoves ? (
+          <Box className={styles.thinkingDots} sx={{ padding: '8px 0' }}>
+            <div></div>
+            <div></div>
+            <div></div>
+          </Box>
+        ) : (
+          <Box
+            onClick={() => onGetTopMoves && onGetTopMoves()}
+            sx={{
+              fontSize: '12px',
+              color: secondaryTextColor,
+              padding: '8px 0',
+              cursor: onGetTopMoves ? 'pointer' : 'default',
+              textDecoration: onGetTopMoves ? 'underline' : 'none'
+            }}
+          >
+            Ask Theo for candidates.
+          </Box>
+        )
       )}
       {topMoves && topMoves.map((move, index) => {
         const isSelected = selectedMove && selectedMove.word === move.word && selectedMove.score === move.score;
@@ -282,9 +301,24 @@ export default function AnalysisPanel({
 
   const renderOpponentResponsesLayer = () => {
     if (!topMoves || topMoves.length === 0) {
-      return (
-        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
-          No candidate moves available.
+      return isLoadingTopMoves ? (
+        <Box className={styles.thinkingDots} sx={{ padding: '8px 0' }}>
+          <div></div>
+          <div></div>
+          <div></div>
+        </Box>
+      ) : (
+        <Box
+          onClick={() => onGetTopMoves && onGetTopMoves()}
+          sx={{
+            fontSize: '12px',
+            color: secondaryTextColor,
+            padding: '8px 0',
+            cursor: onGetTopMoves ? 'pointer' : 'default',
+            textDecoration: onGetTopMoves ? 'underline' : 'none'
+          }}
+        >
+          Ask Theo for candidates.
         </Box>
       );
     }

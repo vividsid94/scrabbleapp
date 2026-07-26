@@ -493,7 +493,9 @@ export default function PlayerInfo({
           onStep={onAnalysisStep}
           onRunHeatMap={onAnalysisRunHeatMap}
           onRunOpponentResponses={onAnalysisRunOpponentResponses}
+          onGetTopMoves={onGetTopMoves}
           topMoves={topMoves}
+          isLoadingTopMoves={isLoadingTopMoves}
           lightMode={lightMode}
         />
       ) : (

@@ -116,6 +116,7 @@ export default function Viewer({ onChange }){
     // Analysis Mode
     analysis,
     analysisTopMoves,
+    isLoadingAnalysisTopMoves,
     setAnalysisState,
     enterAnalysisMode,
     exitAnalysisMode,
@@ -123,6 +124,7 @@ export default function Viewer({ onChange }){
     runAnalysisHeatMap,
     runAnalysisOpponentResponses,
     fetchAnalysisTopMoves,
+    resetAnalysisTopMoves,
 
     // Functions
     handleClose,
@@ -397,8 +399,9 @@ export default function Viewer({ onChange }){
   // State for Cube icon hover
   const [is3DHovered, setIs3DHovered] = useState(false);
 
-  // Analysis Mode - toggle, and re-fetch/reset whenever the viewed position
-  // changes so nothing from a previous position lingers on screen.
+  // Analysis Mode - toggle, and reset whenever the viewed position changes so
+  // nothing from a previous position lingers. Matches Play: entering Analysis
+  // Mode never auto-fetches candidates - the user has to explicitly ask Theo.
   const analysisModeActive = analysis.active;
 
   const handleToggleAnalysisMode = () => {
@@ -406,14 +409,13 @@ export default function Viewer({ onChange }){
       exitAnalysisMode();
     } else {
       enterAnalysisMode();
-      fetchAnalysisTopMoves();
     }
   };
 
   useEffect(() => {
     if (analysis.active) {
       setAnalysisState({ frames: [], stepIndex: 0, heatMap: null, opponentResponses: null, selectedMove: null });
-      fetchAnalysisTopMoves();
+      resetAnalysisTopMoves();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMoveRef.current]);
@@ -896,7 +898,9 @@ export default function Viewer({ onChange }){
                   onStep={(stepIndex) => setAnalysisState({ stepIndex })}
                   onRunHeatMap={runAnalysisHeatMap}
                   onRunOpponentResponses={runAnalysisOpponentResponses}
+                  onGetTopMoves={fetchAnalysisTopMoves}
                   topMoves={analysisTopMoves}
+                  isLoadingTopMoves={isLoadingAnalysisTopMoves}
                   lightMode={lightMode}
                 />
               ) : (

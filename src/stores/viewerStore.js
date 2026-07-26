@@ -854,6 +854,12 @@ export const useViewerStore = create((set, get) => {
 
     exitAnalysisMode: () => set({ analysis: { ...DEFAULT_ANALYSIS_STATE }, analysisTopMoves: [], isLoadingAnalysisTopMoves: false }),
 
+    // Clears the candidate list without fetching a new one - used when the
+    // viewed position changes, so a stale list isn't shown for the new
+    // position, but the user still has to explicitly ask Theo again (matching
+    // Play, where entering Analysis Mode never auto-fetches either).
+    resetAnalysisTopMoves: () => set({ analysisTopMoves: [], isLoadingAnalysisTopMoves: false }),
+
     runAnalysisMovePreview: async (move) => {
       const { boardCoords, currentMoveRef, parsedMoves, setAnalysisState } = get();
       const rack = createRack(currentMoveRef.current + 1, parsedMoves);
