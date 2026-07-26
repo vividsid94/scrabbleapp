@@ -46,6 +46,8 @@ import ViewedGamesList from './components/ViewedGamesList';
 import SubmittedGamesModal from './components/SubmittedGamesModal';
 import Typography from '@mui/material/Typography';
 import BrowsePlayersModal from './components/BrowsePlayersModal';
+import AnalysisPanel from '../../components/Analysis/AnalysisPanel';
+import { buildGhostOverlayGrid } from '../../functions/analysisBoardFunctions';
 
 export default function Viewer({ onChange }){ 
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -110,7 +112,18 @@ export default function Viewer({ onChange }){
     wooglesMode, setWooglesMode,
     currentWooglesGame, setCurrentWooglesGame,
     parsedMoves,
-    
+
+    // Analysis Mode
+    analysis,
+    analysisTopMoves,
+    setAnalysisState,
+    enterAnalysisMode,
+    exitAnalysisMode,
+    runAnalysisMovePreview,
+    runAnalysisHeatMap,
+    runAnalysisOpponentResponses,
+    fetchAnalysisTopMoves,
+
     // Functions
     handleClose,
     switchValue,
@@ -384,6 +397,37 @@ export default function Viewer({ onChange }){
   // State for Cube icon hover
   const [is3DHovered, setIs3DHovered] = useState(false);
 
+  // Analysis Mode - toggle, and re-fetch/reset whenever the viewed position
+  // changes so nothing from a previous position lingers on screen.
+  const analysisModeActive = analysis.active;
+
+  const handleToggleAnalysisMode = () => {
+    if (analysisModeActive) {
+      exitAnalysisMode();
+    } else {
+      enterAnalysisMode();
+      fetchAnalysisTopMoves();
+    }
+  };
+
+  useEffect(() => {
+    if (analysis.active) {
+      setAnalysisState({ frames: [], stepIndex: 0, heatMap: null, opponentResponses: null, selectedMove: null });
+      fetchAnalysisTopMoves();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMoveRef.current]);
+
+  const analysisGhostGrid = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'preview' || !analysis.frames?.length) return null;
+    return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
+
+  const analysisHeatGrid = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'heatmap' || !analysis.heatMap) return null;
+    return analysis.heatMap.grid;
+  }, [analysis.active, analysis.layer, analysis.heatMap]);
+
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -458,6 +502,9 @@ export default function Viewer({ onChange }){
                 lightMode={lightMode}
                 animate={false}
                 enableTelestrator={true}
+                analysisGhostGrid={analysisGhostGrid}
+                analysisHeatGrid={analysisHeatGrid}
+                analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
               />
             </Box>
           </Box>
@@ -565,6 +612,32 @@ export default function Viewer({ onChange }){
                     />
                   </Box>
                 </Tooltip>
+
+                {parsedMoves && parsedMoves.length > 0 && (
+                  <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : "Analysis Mode"}>
+                    <Box
+                      className={styles.keyBtn}
+                      onClick={handleToggleAnalysisMode}
+                      sx={{
+                        ...actionButtonStyle,
+                        width: '20px',
+                        height: '20px',
+                        minWidth: '20px',
+                        minHeight: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginLeft: '4px'
+                      }}
+                    >
+                      <Brain
+                        size={20}
+                        weight={analysisModeActive ? 'fill' : 'regular'}
+                        color={analysisModeActive ? '#10B981' : '#fff'}
+                      />
+                    </Box>
+                  </Tooltip>
+                )}
               </Box>
 
               {/* Collapsible options section */}
@@ -814,6 +887,20 @@ export default function Viewer({ onChange }){
                   </Box>
                 </Box>
               </Collapse>
+              {analysisModeActive ? (
+                <AnalysisPanel
+                  analysisState={analysis}
+                  onSelectMove={runAnalysisMovePreview}
+                  onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
+                  onSetLayer={(layer) => setAnalysisState({ layer })}
+                  onStep={(stepIndex) => setAnalysisState({ stepIndex })}
+                  onRunHeatMap={runAnalysisHeatMap}
+                  onRunOpponentResponses={runAnalysisOpponentResponses}
+                  topMoves={analysisTopMoves}
+                  lightMode={lightMode}
+                />
+              ) : (
+              <>
               <PlayerInfo
               mode={mode}
               name1={name1}
@@ -906,6 +993,8 @@ export default function Viewer({ onChange }){
               }}
               simulatingMove={null}
             />
+              </>
+              )}
             {/* Collapsible Pool Section */}
             <Box 
               className={styles.poolBox} 

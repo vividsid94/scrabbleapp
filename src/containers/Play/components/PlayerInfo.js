@@ -16,7 +16,7 @@ import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
 import { UserCircle, DotsThree, ScribbleLoop, Brain } from '@phosphor-icons/react';
-import AnalysisPanel from './AnalysisPanel';
+import AnalysisPanel from '../../../components/Analysis/AnalysisPanel';
 
 const actionButtonStyle = {
   width: '24px',
@@ -487,7 +487,6 @@ export default function PlayerInfo({
           onRunHeatMap={onAnalysisRunHeatMap}
           onRunOpponentResponses={onAnalysisRunOpponentResponses}
           topMoves={topMoves}
-          currentPlayer={currentPlayer}
           lightMode={lightMode}
         />
       ) : (

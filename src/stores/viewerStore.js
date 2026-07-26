@@ -4,6 +4,100 @@ import { origPool, origBoard } from '../components/AppContent/References/staticD
 import { getMoveSet, getRecentGameInfo, getGameInfo, getCustomPlayerGameInfo } from '../axios/api';
 import { parseGCG } from '../utils/gcgParser';
 import { getRandomWooglesGame } from '../components/AppContent/References/wooglesGames';
+import { createRack } from '../functions/rackFunctions';
+import { calculatePoolFromBoard } from '../functions/poolFunctions';
+import { markBlanksLowercase } from '../functions/play/boardApiUtils';
+import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine } from '../functions/analysisEngine';
+
+// --- Analysis Mode's own move-list fetch (deliberately a separate copy from
+// Viewer/components/TopMoves.js's internal fetch, which owns its own local
+// state and must not be touched/refactored) ---
+
+const generateExchangeCombinations = (rack) => {
+  const combinations = [];
+  for (let i = 1; i <= Math.min(rack.length, 7); i++) {
+    const generateCombos = (current, start, remaining) => {
+      if (current.length === i) {
+        combinations.push([...current]);
+        return;
+      }
+      for (let j = start; j < remaining.length; j++) {
+        current.push(remaining[j]);
+        generateCombos(current, j + 1, remaining);
+        current.pop();
+      }
+    };
+    generateCombos([], 0, rack);
+  }
+  return combinations.slice(0, 20);
+};
+
+const calculateExchangeLeave = (rack, tilesToExchange) => {
+  const tilesToRemove = tilesToExchange.map(tile => tile === '*' ? '?' : tile);
+  const remainingTiles = rack.filter(tile => {
+    const index = tilesToRemove.indexOf(tile);
+    if (index !== -1) {
+      tilesToRemove.splice(index, 1);
+      return false;
+    }
+    return true;
+  });
+  return remainingTiles.sort().join('');
+};
+
+const calculateLeave = (move, currentRack) => {
+  if (move.isExchange) {
+    return move.leave;
+  }
+  const rackCopy = [...currentRack];
+  for (const tile of move.tiles) {
+    if (tile.isNew) {
+      if (tile.isBlank) {
+        const blankIndex = rackCopy.indexOf('?') !== -1 ? rackCopy.indexOf('?') : rackCopy.indexOf('*');
+        if (blankIndex !== -1) {
+          rackCopy.splice(blankIndex, 1);
+        }
+      } else {
+        const tileIndex = rackCopy.indexOf(tile.letter);
+        if (tileIndex !== -1) {
+          rackCopy.splice(tileIndex, 1);
+        }
+      }
+    }
+  }
+  return rackCopy.map(tile => tile === '*' ? '?' : tile).sort().join('');
+};
+
+const fetchLeaveValuesForAnalysis = async (moves) => {
+  try {
+    const leavesToFetch = new Map();
+    const leavesArray = [];
+    for (const move of moves) {
+      const leaveStr = move.isExchange ? move.leave : calculateLeave(move, move.currentRack);
+      move.leave = leaveStr;
+      if (!leavesToFetch.has(leaveStr)) {
+        leavesToFetch.set(leaveStr, true);
+        leavesArray.push(leaveStr);
+      }
+    }
+    if (leavesToFetch.size > 0) {
+      const response = await fetch('/.netlify/functions/getLeaveValues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leaves: leavesArray })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch leave values');
+      }
+      const data = await response.json();
+      return data.leaveValues || {};
+    }
+    return {};
+  } catch (error) {
+    console.error('Error fetching leave values for analysis:', error);
+    return {};
+  }
+};
 
 export const useViewerStore = create((set, get) => {
   // Initial state
@@ -55,6 +149,11 @@ export const useViewerStore = create((set, get) => {
     wooglesMode: false,
     currentWooglesGame: null,
     parsedMoves: [],
+
+    // Analysis Mode (board-based, shared engine with gameStore.js)
+    analysis: DEFAULT_ANALYSIS_STATE,
+    analysisTopMoves: [],
+    isLoadingAnalysisTopMoves: false,
   };
 
   return {
@@ -740,6 +839,123 @@ export const useViewerStore = create((set, get) => {
       } catch (error) {
         console.error('Error loading saved game:', error);
         get().randomizeGame();
+      }
+    },
+
+    // --- Analysis Mode (board-based, shared engine with gameStore.js) ---
+
+    setAnalysisState: (partial) => set(state => ({ analysis: { ...state.analysis, ...partial } })),
+
+    enterAnalysisMode: () => {
+      const { parsedMoves } = get();
+      if (!parsedMoves || parsedMoves.length === 0) return;
+      set({ analysis: { ...DEFAULT_ANALYSIS_STATE, active: true } });
+    },
+
+    exitAnalysisMode: () => set({ analysis: { ...DEFAULT_ANALYSIS_STATE }, analysisTopMoves: [], isLoadingAnalysisTopMoves: false }),
+
+    runAnalysisMovePreview: async (move) => {
+      const { boardCoords, currentMoveRef, parsedMoves, setAnalysisState } = get();
+      const rack = createRack(currentMoveRef.current + 1, parsedMoves);
+      const pool = calculatePoolFromBoard(boardCoords, origPool);
+      await runMovePreviewEngine({ move, boardCoords, rack, pool }, setAnalysisState);
+    },
+
+    runAnalysisHeatMap: async (move, numSimulations = 20) => {
+      const { boardCoords, currentMoveRef, parsedMoves, setAnalysisState } = get();
+      const rack = createRack(currentMoveRef.current + 1, parsedMoves);
+      const pool = calculatePoolFromBoard(boardCoords, origPool);
+      await runHeatMapEngine({ move, boardCoords, rack, pool, numSimulations }, setAnalysisState);
+    },
+
+    runAnalysisOpponentResponses: async (moves, iterations = 20) => {
+      const { boardCoords, setAnalysisState } = get();
+      const pool = calculatePoolFromBoard(boardCoords, origPool);
+      await runOpponentResponsesEngine({ moves, boardCoords, pool, iterations }, setAnalysisState);
+    },
+
+    // A scoped port of Viewer/components/TopMoves.js's own getTopMoves fetch -
+    // deliberately independent of it so Analysis Mode never touches that
+    // component's internal state.
+    fetchAnalysisTopMoves: async () => {
+      const { boardCoords, blankTiles, currentMoveRef, parsedMoves, isLoadingAnalysisTopMoves } = get();
+      if (isLoadingAnalysisTopMoves) return;
+
+      set({ isLoadingAnalysisTopMoves: true });
+      try {
+        const pool = calculatePoolFromBoard(boardCoords, origPool);
+        const currentRack = createRack(currentMoveRef.current + 1, parsedMoves);
+        const apiRack = currentRack.map(tile => tile === '?' ? '*' : tile);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        let response;
+        try {
+          response = await fetch('/.netlify/functions/getTopMoves', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              board: markBlanksLowercase(boardCoords, blankTiles),
+              letters: apiRack
+            }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            throw new Error('Move calculation timed out. Please try again.');
+          }
+          throw fetchError;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.message && data.message.includes('Loading dictionary')) {
+          setTimeout(() => get().fetchAnalysisTopMoves(), 1000);
+          return;
+        }
+
+        if (data.moves) {
+          data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
+        }
+
+        const exchangeMoves = (pool && pool.length >= 7) ? generateExchangeCombinations(currentRack).map(tiles => {
+          const leave = calculateExchangeLeave(currentRack, tiles);
+          return {
+            word: `Exchange ${tiles.join('')}`,
+            score: 0,
+            tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
+            direction: 'exchange',
+            startPosition: 'Exchange',
+            leave,
+            isExchange: true,
+            currentRack
+          };
+        }) : [];
+
+        const allMoves = [...data.moves.map(move => ({ ...move, currentRack })), ...exchangeMoves];
+        const leaveValues = await fetchLeaveValuesForAnalysis(allMoves);
+
+        const movesWithValues = allMoves
+          .map(move => {
+            const leaveValue = leaveValues[move.leave] || 0;
+            const totalValue = move.isExchange ? leaveValue : (move.score + leaveValue);
+            return { ...move, totalValue, leaveValue };
+          })
+          .sort((a, b) => b.totalValue - a.totalValue)
+          .slice(0, 15);
+
+        set({ analysisTopMoves: movesWithValues });
+      } catch (error) {
+        console.error('Error fetching analysis top moves:', error);
+      } finally {
+        set({ isLoadingAnalysisTopMoves: false });
       }
     }
   };

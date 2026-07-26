@@ -4,21 +4,7 @@ import { alphabetizeRack } from '../functions/play/rackFunctions';
 import { getBoardDiff } from '../functions/play/boardUtils';
 import { markBlanksLowercase } from '../functions/play/boardApiUtils';
 import { saveActiveGameSnapshot, clearActiveGameSnapshot } from '../utils/activeGamePersistence';
-
-// Analysis Mode: a single self-contained slice rather than flat top-level
-// fields, so exiting/resetting is one assignment and nothing here can leak
-// into the real board/rack/timer state it's meant to preview alongside.
-const DEFAULT_ANALYSIS_STATE = {
-  active: false,
-  layer: 'preview', // 'preview' | 'heatmap' | 'opponentResponses'
-  selectedMove: null,
-  frames: [], // array of {board, tileOwnership, move} snapshots from simulateMove's onProgress callback
-  stepIndex: 0,
-  isRunning: false,
-  error: null,
-  heatMap: null, // heat map layer's occupancy grid
-  opponentResponses: null // opponent responses layer's per-move {avgScore, bingoPercent, ...} map
-};
+import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine } from '../functions/analysisEngine';
 
 export const useGameStore = create((set, get) => {
   // Initial state
@@ -1037,116 +1023,20 @@ export const useGameStore = create((set, get) => {
     exitAnalysisMode: () => set({ analysis: { ...DEFAULT_ANALYSIS_STATE } }),
 
     runAnalysisMovePreview: async (move) => {
-      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool } = get();
-      setAnalysisState({ isRunning: true, error: null });
-
-      const frames = [];
-      const onProgress = (progress, previewData) => {
-        if (previewData) {
-          frames.push(previewData);
-        }
-      };
-
-      try {
-        const { simulateMove: simulateMoveFn } = await import('../functions/simulationFunctions');
-        await simulateMoveFn(
-          move,
-          { boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool },
-          onProgress,
-          { numSimulations: 1, turnsPerSim: 3 }
-        );
-        setAnalysisState({ selectedMove: move, frames, stepIndex: 0, isRunning: false });
-      } catch (error) {
-        console.error('Error running analysis move preview:', error);
-        setAnalysisState({ isRunning: false, error: error.message });
-      }
+      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, pool } = get();
+      const rack = currentPlayer === 1 ? player1Rack : player2Rack;
+      await runMovePreviewEngine({ move, boardCoords, rack, pool }, setAnalysisState);
     },
 
     runAnalysisHeatMap: async (move, numSimulations = 20) => {
-      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool } = get();
-      setAnalysisState({ isRunning: true, error: null, selectedMove: move });
-
-      const gameState = { boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool };
-      const shouldStopRef = { current: false };
-
-      try {
-        const { runHeatMapSimulation } = await import('../functions/simulationFunctions');
-        await runHeatMapSimulation(
-          move,
-          gameState,
-          { numSimulations, turnsPerSim: 1 },
-          {
-            onHeatMapUpdate: (heatMapGrid) => {
-              setAnalysisState({ heatMap: { grid: heatMapGrid, maxSimulations: numSimulations } });
-            },
-            onError: (message) => setAnalysisState({ isRunning: false, error: message }),
-            onComplete: () => setAnalysisState({ isRunning: false }),
-            shouldStopRef
-          }
-        );
-      } catch (error) {
-        console.error('Error running analysis heat map:', error);
-        setAnalysisState({ isRunning: false, error: error.message });
-      }
+      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, pool } = get();
+      const rack = currentPlayer === 1 ? player1Rack : player2Rack;
+      await runHeatMapEngine({ move, boardCoords, rack, pool, numSimulations }, setAnalysisState);
     },
 
-    // Opponent Responses: bulk per-move stats (avg score / bingo %) from the
-    // Railway bulk-move-gen endpoint - one server-side call per move, run in
-    // parallel, instead of the ply-by-ply client-driven simulation the other
-    // layers use. Ported from the old Metrics2Modal's analyzeAllMoves.
     runAnalysisOpponentResponses: async (moves, iterations = 20) => {
       const { setAnalysisState, boardCoords, pool } = get();
-      if (!moves || moves.length === 0) return;
-
-      setAnalysisState({ isRunning: true, error: null });
-
-      const movesToAnalyze = moves.slice(0, 10);
-      const tilePoolString = pool.join('');
-
-      try {
-        const results = await Promise.all(movesToAnalyze.map(async (move) => {
-          try {
-            const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
-            boardCoords.forEach((row, rowIndex) => {
-              row.forEach((cell, colIndex) => {
-                if (typeof cell === 'string' && cell !== '') {
-                  cleanBoard[rowIndex][colIndex] = cell;
-                }
-              });
-            });
-            move.tiles.forEach(tile => {
-              if (tile.isNew) {
-                cleanBoard[tile.row][tile.col] = tile.letter;
-              }
-            });
-
-            const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ board: cleanBoard, tilePool: tilePoolString, iterations })
-            });
-
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return { word: move.word, data };
-          } catch (error) {
-            return { word: move.word, error: error.message };
-          }
-        }));
-
-        const resultsMap = {};
-        results.forEach(({ word, data, error }) => {
-          resultsMap[word] = { data, error };
-        });
-
-        setAnalysisState({ opponentResponses: resultsMap, isRunning: false });
-      } catch (error) {
-        console.error('Error running opponent response analysis:', error);
-        setAnalysisState({ isRunning: false, error: error.message });
-      }
+      await runOpponentResponsesEngine({ moves, boardCoords, pool, iterations }, setAnalysisState);
     },
 
     handleGetTopMovesForExpandable: () => {

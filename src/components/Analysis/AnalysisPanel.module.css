@@ -1,0 +1,127 @@
+.playerPanel {
+  height: auto;
+  padding: 10px 0px;
+  border: 0;
+  color: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.topMoveItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Syne', sans-serif;
+}
+
+.topMoveItem:last-child {
+  border-bottom: none;
+}
+
+.topMoveRank {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: 'Syne', sans-serif;
+  margin-right: 6px;
+}
+
+.topMoveLocation {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 30px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topMoveWord {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  min-width: 80px;
+  max-width: 100px;
+}
+
+.topMoveDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topMoveScore {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #D97706;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  width: 22px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.thinkingDots {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.thinkingDots > div {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: thinking 1.4s infinite ease-in-out;
+}
+
+.thinkingDots > div:nth-of-type(1) {
+  animation-delay: 0s;
+}
+
+.thinkingDots > div:nth-of-type(2) {
+  animation-delay: 0.2s;
+}
+
+.thinkingDots > div:nth-of-type(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes thinking {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -3,8 +3,8 @@ import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import styles from '../Play.module.css';
-import { formatMoveLocation } from '../../../functions/play/moveDisplayUtils';
+import styles from './AnalysisPanel.module.css';
+import { formatMoveLocation } from '../../functions/play/moveDisplayUtils';
 
 const LAYERS = [
   { key: 'preview', label: 'Preview' },
@@ -13,15 +13,15 @@ const LAYERS = [
 ];
 
 const FRAME_LABELS = {
-  selected: 'Your move',
-  opponent: "Bot's reply",
-  player: 'Your reply'
+  selected: 'Selected move',
+  opponent: "Opponent's reply",
+  player: 'Reply'
 };
 
 // Analysis Mode's single control surface: pick a candidate move, switch
 // between analysis layers, and step through whatever the active layer
-// produced. Nothing here ever touches the real game state - it's purely
-// prop-driven, same as every other component in Play/components.
+// produced. Nothing here ever touches game state directly - it's purely
+// prop-driven, shared between Play and Viewer.
 export default function AnalysisPanel({
   analysisState,
   onSelectMove,
@@ -31,7 +31,6 @@ export default function AnalysisPanel({
   onRunHeatMap,
   onRunOpponentResponses,
   topMoves,
-  currentPlayer,
   lightMode = 'dark'
 }) {
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
@@ -231,7 +230,7 @@ export default function AnalysisPanel({
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
-          {selectedMove.word} - where the bot's replies land over {heatMapIterations} simulated iterations
+          {selectedMove.word} - where opponent replies land over {heatMapIterations} simulated iterations
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

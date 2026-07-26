@@ -6,7 +6,7 @@ export const getOwnershipColor = (ownership) => {
     return { bg: 'rgba(33, 150, 243, 0.9)', textColor: 'white' }; // Blue for the player's simulated tiles
   }
   if (ownership === 'opponent') {
-    return { bg: 'rgba(244, 67, 54, 0.9)', textColor: 'white' }; // Red for the bot's simulated tiles
+    return { bg: 'rgba(244, 67, 54, 0.9)', textColor: 'white' }; // Red for the opponent's simulated tiles
   }
   return { bg: 'rgba(255, 255, 255, 1)', textColor: '#333' }; // White for tiles that already existed on the board
 };
