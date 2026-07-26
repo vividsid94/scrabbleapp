@@ -1015,8 +1015,32 @@ export const useGameStore = create((set, get) => {
     setAnalysisState: (partial) => set(state => ({ analysis: { ...state.analysis, ...partial } })),
 
     enterAnalysisMode: () => {
-      const { isBotMode, isMultiplayerMode, gameStarted } = get();
+      const {
+        isBotMode, isMultiplayerMode, gameStarted,
+        selectedTiles, currentPlayer, player1Rack, player2Rack,
+        setPlayer1Rack, setPlayer2Rack,
+        boardCoords, setTempBoardCoords, setSelectedTiles, setSelectedBoardPosition
+      } = get();
       if (!isBotMode || isMultiplayerMode || !gameStarted) return;
+
+      // Give back any tiles placed on the board but not yet committed, so
+      // Analysis Mode always starts from the real, committed position -
+      // same "return tiles to rack" pattern used when a word submission
+      // fails validation (see wordSubmitFunctions.js).
+      if (selectedTiles.length > 0) {
+        const rackToUpdate = currentPlayer === 1 ? player1Rack : player2Rack;
+        const tilesToReturn = selectedTiles.map(tile => tile.tile);
+        const updatedRack = [...rackToUpdate, ...tilesToReturn];
+        if (currentPlayer === 1) {
+          setPlayer1Rack(updatedRack);
+        } else {
+          setPlayer2Rack(updatedRack);
+        }
+        setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
+        setSelectedTiles([]);
+        setSelectedBoardPosition(null);
+      }
+
       set({ analysis: { ...DEFAULT_ANALYSIS_STATE, active: true } });
     },
 
