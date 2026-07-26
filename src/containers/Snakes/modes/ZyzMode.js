@@ -2,8 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
 import { pickDeadRack, estimateRank } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting } from '../snakesShared';
+import { PRESETS, shuffle, Protile, WordChip, DeadRacksSetting, TimeLimitSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
+
+const TIME_LIMIT_MIN = 10;
+const TIME_LIMIT_MAX = 60;
+const TIME_LIMIT_STEP = 5;
 
 function formatElapsed(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -30,6 +34,12 @@ export default function ZyzMode({ tileColor }) {
 
   const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
   const [deadRacksPercent, setDeadRacksPercent] = useState(20);
+
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(30);
+  const [timeLimitUnit, setTimeLimitUnit] = useState('word');
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  const [roundKey, setRoundKey] = useState(0);
 
   const [queue, setQueue] = useState([]); // {alpha, isDead, fakeRank?}[]
   const [totalCount, setTotalCount] = useState(0);
@@ -95,6 +105,19 @@ export default function ZyzMode({ tileColor }) {
 
   const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
 
+  // Kept in sync with the latest render's values on every render (not just
+  // inside an effect) so handleReveal can read the CURRENT foundWords /
+  // roundEntries even when it's invoked from the time-limit effect's
+  // setInterval callback below, which - for a "per alphagram" timer - can
+  // live across several renders without itself re-running; reading the
+  // closed-over state directly there would use whatever foundWords looked
+  // like back when the round started, wrongly re-revealing words the user
+  // already found in the meantime.
+  const foundWordsRef = useRef(foundWords);
+  foundWordsRef.current = foundWords;
+  const roundEntriesRef = useRef(roundEntries);
+  roundEntriesRef.current = roundEntries;
+
   // Letter-by-letter hint reveal - identical timing/behavior to Classic
   // mode. For a dead round, "DEAD" is the word being hinted at, so this
   // needs no special casing either - it just attributes the stat
@@ -115,6 +138,56 @@ export default function ZyzMode({ tileColor }) {
     return () => clearTimeout(timeoutId);
   }, [hint, foundWords, currentIsDead]);
 
+  // Reveals whatever's left in the round, exactly like the old manual
+  // "Reveal remaining" button did - now also the target of both the new
+  // per-question Give Up button AND an expired time limit, so both just
+  // call this directly instead of pausing and waiting on the user. Reads
+  // via the refs above (not the foundWords/roundEntries closed over by this
+  // render) so it's correct no matter which of those call sites invokes it.
+  const handleReveal = () => {
+    const remaining = roundEntriesRef.current.filter((entry) => !foundWordsRef.current.has(entry.word));
+    if (remaining.length === 0) return;
+    setHint(null); // stop any in-progress hint animation - it'd otherwise double-count this word
+    setRevealedWords((prev) => new Set([...prev, ...remaining.map((entry) => entry.word)]));
+    setStats((s) => ({ ...s, revealed: s.revealed + remaining.length }));
+    setFeedback(null);
+  };
+
+  // Time Limit (optional, off by default). "Per alphagram" resets once per
+  // round (roundKey alone drives it - wordProgress is forced to a constant
+  // so it can't retrigger mid-round); "per word" additionally resets every
+  // time a word resolves (found, hinted, or revealed) while the round's
+  // still active, giving each remaining word a fresh full duration. When it
+  // runs out, the round is just auto-revealed - same as if the user had
+  // clicked Give Up themselves - rather than pausing and asking.
+  //
+  // This is deliberately ONE effect (reset + tick together), not two: a
+  // separate reset effect and tick effect both keyed on roundActive/roundKey
+  // fire in the same pass when a round changes, and the tick effect would
+  // read the stale pre-reset `remainingSeconds` (already at 0 from the
+  // round that just ended) and immediately re-trigger. Counting down via a
+  // local `remaining` variable inside a single effect - rather than reading
+  // `remainingSeconds` state across effects - makes each run self-contained
+  // and immune to that race.
+  const wordProgress = foundWords.size + revealedWords.size;
+  const timeResetTrigger = timeLimitUnit === 'word' ? wordProgress : 0;
+  useEffect(() => {
+    if (!timeLimitEnabled || stage !== 'quiz' || !roundActive) return;
+    let remaining = timeLimitSeconds;
+    setRemainingSeconds(remaining);
+    const intervalId = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        setRemainingSeconds(0);
+        handleReveal();
+      } else {
+        setRemainingSeconds(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [timeLimitEnabled, stage, roundActive, roundKey, timeResetTrigger, timeLimitSeconds]);
+
   const startRound = (cell) => {
     // A dead round's "word" is the literal string DEAD - that's what makes
     // it resolve through the exact same found/hint/reveal machinery as a
@@ -128,6 +201,7 @@ export default function ZyzMode({ tileColor }) {
     setGuessInput('');
     setFeedback(null);
     setHint(null);
+    setRoundKey((k) => k + 1);
   };
 
   const handleStart = async () => {
@@ -212,13 +286,6 @@ export default function ZyzMode({ tileColor }) {
     inputRef.current?.focus();
   };
 
-  const handleReveal = () => {
-    const remaining = roundEntries.filter((entry) => !foundWords.has(entry.word));
-    setRevealedWords(new Set(remaining.map((entry) => entry.word)));
-    setStats((s) => ({ ...s, revealed: s.revealed + remaining.length }));
-    setFeedback(null);
-  };
-
   const handleHint = () => {
     if (hint) return; // already animating one
     const remaining = roundEntries.filter((entry) => !foundWords.has(entry.word));
@@ -226,7 +293,7 @@ export default function ZyzMode({ tileColor }) {
     setHint({ word: remaining[0].word, revealedCount: 1 });
   };
 
-  const handleGiveUp = () => setStage('complete');
+  const handleEndQuiz = () => setStage('complete');
 
   const advanceRound = () => {
     setStats((s) => ({ ...s, stemsCompleted: s.stemsCompleted + 1 }));
@@ -329,6 +396,20 @@ export default function ZyzMode({ tileColor }) {
             hint="Some rounds will be fakes with no real word. Type DEAD if you think this one is — typing it on a real round counts as a miss."
           />
 
+          <TimeLimitSetting
+            enabled={timeLimitEnabled}
+            onToggleChange={setTimeLimitEnabled}
+            seconds={timeLimitSeconds}
+            onSecondsChange={setTimeLimitSeconds}
+            min={TIME_LIMIT_MIN}
+            max={TIME_LIMIT_MAX}
+            step={TIME_LIMIT_STEP}
+            formatValue={(s) => `${s}s`}
+            unit={timeLimitUnit}
+            onUnitChange={setTimeLimitUnit}
+            hint="Per word: the clock resets every time you find one. Per alphagram: one clock for the whole round. When it runs out, whatever's left is revealed automatically."
+          />
+
           <div className={styles.presetRow}>
             {PRESETS.map((p) => (
               <button
@@ -354,6 +435,11 @@ export default function ZyzMode({ tileColor }) {
         <div className={styles.card}>
           <div className={styles.progressRow}>
             <span>Stem {Math.min(stats.stemsCompleted + 1, totalCount)} / {totalCount}</span>
+            {timeLimitEnabled && roundActive && (
+              <span style={remainingSeconds != null && remainingSeconds <= 5 ? { color: '#DC2626' } : undefined}>
+                {remainingSeconds ?? timeLimitSeconds}s
+              </span>
+            )}
             <span>{formatElapsed(elapsedSeconds)}</span>
           </div>
           <div className={styles.progressTrack}>
@@ -362,8 +448,6 @@ export default function ZyzMode({ tileColor }) {
               style={{ width: `${totalCount ? (stats.stemsCompleted / totalCount) * 100 : 0}%` }}
             />
           </div>
-
-          <div className={styles.roundKind}>Find every word for this alphagram</div>
 
           <div className={styles.tileRow}>
             {currentAlpha.split('').map((l, i) => (
@@ -428,10 +512,10 @@ export default function ZyzMode({ tileColor }) {
                   Hint
                 </button>
                 <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
-                  Reveal remaining
-                </button>
-                <button type="button" className={styles.secondaryButton} onClick={handleGiveUp}>
                   Give up
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={handleEndQuiz}>
+                  End Quiz
                 </button>
               </div>
             </>

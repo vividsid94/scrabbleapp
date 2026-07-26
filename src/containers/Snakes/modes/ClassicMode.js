@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSnakesData, alphagram } from '../snakesData';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, WordChip } from '../snakesShared';
+import { PRESETS, shuffle, Protile, WordChip, TimeLimitSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
+
+const TIME_LIMIT_MIN = 10;
+const TIME_LIMIT_MAX = 60;
+const TIME_LIMIT_STEP = 5;
 
 // The letters left over in an eight-letter alphagram once a seven's letters
 // are removed one-for-one (multiset difference, not a naive character set
@@ -29,6 +33,12 @@ export default function ClassicMode({ tileColor }) {
   const [rangeMin, setRangeMin] = useState('1');
   const [rangeMax, setRangeMax] = useState('100');
   const [rangeError, setRangeError] = useState('');
+
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(30);
+  const [timeLimitUnit, setTimeLimitUnit] = useState('word');
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  const [roundKey, setRoundKey] = useState(0);
 
   const [queue, setQueue] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -77,6 +87,69 @@ export default function ClassicMode({ tileColor }) {
 
   const roundActive = (foundWords.size + revealedWords.size) < roundEntries.length;
 
+  // Kept in sync with the latest render's values on every render (not just
+  // inside an effect) so handleReveal can read the CURRENT foundWords /
+  // roundEntries even when it's invoked from the time-limit effect's
+  // setInterval callback below, which - for a "per alphagram" timer - can
+  // live across several renders without itself re-running; reading the
+  // closed-over state directly there would use whatever foundWords looked
+  // like back when the round started, wrongly re-revealing words the user
+  // already found in the meantime.
+  const foundWordsRef = useRef(foundWords);
+  foundWordsRef.current = foundWords;
+  const roundEntriesRef = useRef(roundEntries);
+  roundEntriesRef.current = roundEntries;
+
+  // Reveals whatever's left in the round, exactly like the old manual
+  // "Reveal remaining" button did - now also the target of both the new
+  // per-question Give Up button AND an expired time limit, so both just
+  // call this directly instead of pausing and waiting on the user. Reads
+  // via the refs above (not the foundWords/roundEntries closed over by this
+  // render) so it's correct no matter which of those call sites invokes it.
+  const handleReveal = () => {
+    const remaining = roundEntriesRef.current.filter((entry) => !foundWordsRef.current.has(entry.word));
+    if (remaining.length === 0) return;
+    setHint(null); // stop any in-progress hint animation - it'd otherwise double-count this word
+    setRevealedWords((prev) => new Set([...prev, ...remaining.map((entry) => entry.word)]));
+    setStats((s) => ({ ...s, revealed: s.revealed + remaining.length }));
+    setFeedback(null);
+  };
+
+  // Time Limit (optional, off by default). "Per alphagram" resets once per
+  // round (roundKey alone drives it - wordProgress is forced to a constant
+  // so it can't retrigger mid-round); "per word" additionally resets every
+  // time a word resolves (found, hinted, or revealed) while the round's
+  // still active, giving each remaining word a fresh full duration. When it
+  // runs out, the round is just auto-revealed - same as if the user had
+  // clicked Give Up themselves - rather than pausing and asking.
+  //
+  // This is deliberately ONE effect (reset + tick together), not two: a
+  // separate reset effect and tick effect both keyed on roundActive/roundKey
+  // fire in the same pass when a round changes, and the tick effect would
+  // read the stale pre-reset `remainingSeconds` (already at 0 from the
+  // round that just ended) and immediately re-trigger. Counting down via a
+  // local `remaining` variable inside a single effect - rather than reading
+  // `remainingSeconds` state across effects - makes each run self-contained
+  // and immune to that race.
+  const wordProgress = foundWords.size + revealedWords.size;
+  const timeResetTrigger = timeLimitUnit === 'word' ? wordProgress : 0;
+  useEffect(() => {
+    if (!timeLimitEnabled || stage !== 'quiz' || !roundActive) return;
+    let remaining = timeLimitSeconds;
+    setRemainingSeconds(remaining);
+    const intervalId = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        setRemainingSeconds(0);
+        handleReveal();
+      } else {
+        setRemainingSeconds(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [timeLimitEnabled, stage, roundActive, roundKey, timeResetTrigger, timeLimitSeconds]);
+
   // Letter-by-letter hint reveal. Ticks revealedCount up on a timer; once it
   // reaches the target word's length, counts the word as found (unless the
   // player already guessed it correctly mid-animation, in which case it's
@@ -110,6 +183,7 @@ export default function ClassicMode({ tileColor }) {
     setGuessInput('');
     setFeedback(null);
     setHint(null);
+    setRoundKey((k) => k + 1);
   };
 
   const startEightRound = (eightAlpha) => {
@@ -122,6 +196,7 @@ export default function ClassicMode({ tileColor }) {
     setGuessInput('');
     setFeedback(null);
     setHint(null);
+    setRoundKey((k) => k + 1);
   };
 
   const finishStemAndAdvance = (remainingQueue) => {
@@ -172,13 +247,6 @@ export default function ClassicMode({ tileColor }) {
     inputRef.current?.focus();
   };
 
-  const handleReveal = () => {
-    const remaining = roundEntries.filter((entry) => !foundWords.has(entry.word));
-    setRevealedWords(new Set(remaining.map((entry) => entry.word)));
-    setStats((s) => ({ ...s, revealed: s.revealed + remaining.length }));
-    setFeedback(null);
-  };
-
   const handleHint = () => {
     if (hint) return; // already animating one
     const remaining = roundEntries.filter((entry) => !foundWords.has(entry.word));
@@ -187,6 +255,8 @@ export default function ClassicMode({ tileColor }) {
     // which is alphabetically first since roundEntries is sorted that way).
     setHint({ word: remaining[0].word, revealedCount: 1 });
   };
+
+  const handleEndQuiz = () => setStage('complete');
 
   const advanceRound = () => {
     if (roundKind === 'seven') {
@@ -259,6 +329,20 @@ export default function ClassicMode({ tileColor }) {
             </div>
           </div>
 
+          <TimeLimitSetting
+            enabled={timeLimitEnabled}
+            onToggleChange={setTimeLimitEnabled}
+            seconds={timeLimitSeconds}
+            onSecondsChange={setTimeLimitSeconds}
+            min={TIME_LIMIT_MIN}
+            max={TIME_LIMIT_MAX}
+            step={TIME_LIMIT_STEP}
+            formatValue={(s) => `${s}s`}
+            unit={timeLimitUnit}
+            onUnitChange={setTimeLimitUnit}
+            hint="Per word: the clock resets every time you find one. Per alphagram: one clock for the whole round. When it runs out, whatever's left is revealed automatically."
+          />
+
           <div className={styles.presetRow}>
             {PRESETS.map((p) => (
               <button
@@ -284,6 +368,11 @@ export default function ClassicMode({ tileColor }) {
         <div className={styles.card}>
           <div className={styles.progressRow}>
             <span>Stem {Math.min(stats.stemsCompleted + 1, totalCount)} / {totalCount}</span>
+            {timeLimitEnabled && roundActive && (
+              <span style={remainingSeconds != null && remainingSeconds <= 5 ? { color: '#DC2626' } : undefined}>
+                {remainingSeconds ?? timeLimitSeconds}s
+              </span>
+            )}
             <span>
               {roundKind === 'seven'
                 ? 'Sevens'
@@ -295,10 +384,6 @@ export default function ClassicMode({ tileColor }) {
               className={styles.progressFill}
               style={{ width: `${totalCount ? (stats.stemsCompleted / totalCount) * 100 : 0}%` }}
             />
-          </div>
-
-          <div className={styles.roundKind}>
-            {roundKind === 'seven' ? 'Find every word for this alphagram' : 'Find every bingo this makes'}
           </div>
 
           <div className={styles.tileRow}>
@@ -360,7 +445,10 @@ export default function ClassicMode({ tileColor }) {
                   Hint
                 </button>
                 <button type="button" className={styles.secondaryButton} onClick={handleReveal} disabled={!!hint}>
-                  Reveal remaining
+                  Give up
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={handleEndQuiz}>
+                  End Quiz
                 </button>
               </div>
             </>

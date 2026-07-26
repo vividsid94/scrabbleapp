@@ -1,4 +1,5 @@
 import React from 'react';
+import { ClockCountdown } from '@phosphor-icons/react';
 import Cell from '../../components/AppContent/Board/Cell.js';
 import { getHooksLocal } from '../../utils/localDictionary';
 import styles from './Snakes.module.css';
@@ -111,6 +112,75 @@ export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentCh
               style={{ background: `linear-gradient(to right, var(--amber) ${percent * 2}%, var(--border) ${percent * 2}%)` }}
             />
             <span className={styles.sliderValue}>{percent}%</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Toggle + conditional countdown-duration slider for the optional Time
+// Limit setting - shared by all three modes' setup screens the same way
+// DeadRacksSetting is. `unit`/`onUnitChange` are only passed by modes where
+// a "round" can hold multiple words (Zyz/Classic), to expose the
+// per-word-vs-per-alphagram choice; Lith mode (one timer per page, no
+// per-word concept) omits them and gets just the toggle + slider.
+export function TimeLimitSetting({ enabled, onToggleChange, seconds, onSecondsChange, min, max, step, formatValue, hint, unit, onUnitChange }) {
+  const fillPercent = ((seconds - min) / (max - min)) * 100;
+  return (
+    <div className={styles.deadRacksBox}>
+      <label className={styles.toggleRow}>
+        <span className={styles.toggleLabel}>
+          <ClockCountdown size={16} weight="bold" style={{ verticalAlign: -3, marginRight: 5 }} />
+          Time limit
+        </span>
+        <span className={styles.toggleSwitch}>
+          <input
+            type="checkbox"
+            className={styles.toggleInput}
+            checked={enabled}
+            onChange={(e) => onToggleChange(e.target.checked)}
+          />
+          <span className={styles.toggleTrack}>
+            <span className={styles.toggleThumb} />
+          </span>
+        </span>
+      </label>
+      {hint && <div className={styles.deadRacksHint}>{hint}</div>}
+      {enabled && (
+        <>
+          {unit && (
+            <div className={styles.presetRow} style={{ marginTop: 4 }}>
+              <button
+                type="button"
+                className={styles.presetPill}
+                style={unit === 'word' ? { background: 'var(--amber)', color: '#fff', borderColor: 'var(--amber)' } : undefined}
+                onClick={() => onUnitChange('word')}
+              >
+                Per word
+              </button>
+              <button
+                type="button"
+                className={styles.presetPill}
+                style={unit === 'alphagram' ? { background: 'var(--amber)', color: '#fff', borderColor: 'var(--amber)' } : undefined}
+                onClick={() => onUnitChange('alphagram')}
+              >
+                Per alphagram
+              </button>
+            </div>
+          )}
+          <div className={styles.sliderRow}>
+            <input
+              type="range"
+              className={styles.percentSlider}
+              min={min}
+              max={max}
+              step={step}
+              value={seconds}
+              onChange={(e) => onSecondsChange(Number(e.target.value))}
+              style={{ background: `linear-gradient(to right, var(--amber) ${fillPercent}%, var(--border) ${fillPercent}%)` }}
+            />
+            <span className={styles.sliderValue}>{formatValue(seconds)}</span>
           </div>
         </>
       )}

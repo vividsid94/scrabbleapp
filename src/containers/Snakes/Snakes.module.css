@@ -670,6 +670,7 @@
 
 .footerRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -714,6 +715,70 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 2px;
+}
+
+/* ---- Lith mode: page-end overlay (Give Up / time's up) ---- */
+
+.pageEndBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.pageEndCard {
+  composes: card;
+  max-width: 420px;
+  align-items: center;
+  text-align: center;
+}
+
+.pageEndTitle {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pageEndSubtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.solutionList {
+  width: 100%;
+  max-height: 40vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.solutionRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--amber-soft);
+}
+
+.solutionAlpha {
+  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.solutionAnswer {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* ---- Lith mode puzzle grid ---- */

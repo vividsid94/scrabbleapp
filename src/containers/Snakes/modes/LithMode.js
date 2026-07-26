@@ -1,11 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ClockCountdown } from '@phosphor-icons/react';
 import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
 import { pickDeadRack } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
-import { PRESETS, shuffle, Protile, badgeColorForCount, DeadRacksSetting } from '../snakesShared';
+import { PRESETS, shuffle, Protile, badgeColorForCount, DeadRacksSetting, TimeLimitSetting } from '../snakesShared';
 import styles from '../Snakes.module.css';
 
 const PAGE_SIZE = 50;
+// min/max/step must line up exactly (max - min divisible by step) or the
+// slider's highest reachable position falls short of TIME_LIMIT_MAX - e.g.
+// min=5 with step=30 could only ever reach 575s (9:35), never the intended
+// 600s (10:00).
+const TIME_LIMIT_MIN = 30;
+const TIME_LIMIT_MAX = 600;
+const TIME_LIMIT_STEP = 30;
 const MAX_TILE_SIZE = 19;
 const MIN_TILE_SIZE = 12;
 const GRID_GAP = 10;
@@ -68,6 +76,17 @@ export default function LithMode({ tileColor }) {
   const [deadRacksEnabled, setDeadRacksEnabled] = useState(false);
   const [deadRacksPercent, setDeadRacksPercent] = useState(20);
 
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(300);
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  // pageEnded covers both an actual Give Up and the timer running out - both
+  // stop the page short and show the same overlay (pageEndReason just picks
+  // its wording); solutionsRevealed tracks whether the user chose to see
+  // the page's answers before moving on, or skipped straight to the next page.
+  const [pageEnded, setPageEnded] = useState(false);
+  const [pageEndReason, setPageEndReason] = useState(null); // 'timeup' | 'giveup' | null
+  const [solutionsRevealed, setSolutionsRevealed] = useState(false);
+
   const [pages, setPages] = useState([]); // {alpha, isDead, fakeCount?}[][]
   const [pageIndex, setPageIndex] = useState(0);
   const [foundWords, setFoundWords] = useState(new Set());
@@ -86,6 +105,45 @@ export default function LithMode({ tileColor }) {
     const intervalId = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
     return () => clearInterval(intervalId);
   }, [stage]);
+
+  // Time Limit (optional, off by default): one countdown per page, freshly
+  // reset whenever a new page begins - firing on the stage->'grid'
+  // transition (first page) and on every pageIndex change afterward (next
+  // and previous page both count as "a new page begins").
+  //
+  // This is deliberately ONE effect (reset + tick together), not two: a
+  // separate reset effect and tick effect both keyed on stage fire in the
+  // same pass whenever stage flips back to 'grid' (e.g. Drill again after
+  // Ending a quiz), and the tick effect would read the stale pre-reset
+  // `remainingSeconds` left over from the previous session (often already
+  // at 0) and immediately end the new page before it even started.
+  // Counting down via a local `remaining` variable inside a single effect -
+  // rather than reading `remainingSeconds` state across effects - makes
+  // each run self-contained and immune to that race.
+  useEffect(() => {
+    if (stage !== 'grid') return;
+    setPageEnded(false);
+    setPageEndReason(null);
+    setSolutionsRevealed(false);
+    if (!timeLimitEnabled) {
+      setRemainingSeconds(null);
+      return;
+    }
+    let remaining = timeLimitSeconds;
+    setRemainingSeconds(remaining);
+    const intervalId = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        setRemainingSeconds(0);
+        setPageEnded(true);
+        setPageEndReason('timeup');
+      } else {
+        setRemainingSeconds(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [stage, pageIndex, timeLimitEnabled, timeLimitSeconds]);
 
   // Kick off the (lazy, ~13MB worst case) dead-rack data load in the
   // background as soon as the toggle goes on, so it's likely already
@@ -211,7 +269,14 @@ export default function LithMode({ tileColor }) {
     setStage('grid');
   };
 
-  const handleGiveUp = () => setStage('complete');
+  const handleEndQuiz = () => setStage('complete');
+
+  // The actual "give up" - ends only the current page (shows the same
+  // overlay the timer running out shows), not the whole quiz.
+  const handleGiveUpPage = () => {
+    setPageEnded(true);
+    setPageEndReason('giveup');
+  };
 
   // Flagging a fake is done by typing its on-page number followed by F
   // (e.g. "12F") into the same textbox real guesses go in, rather than a
@@ -237,7 +302,7 @@ export default function LithMode({ tileColor }) {
     e.preventDefault();
     const guess = guessInput.trim().toUpperCase();
     setGuessInput('');
-    if (!guess) return;
+    if (!guess || pageEnded) return;
 
     // Words are letters only, so "<digits>F" can never collide with an
     // actual word guess - safe to check unconditionally before the normal
@@ -358,6 +423,18 @@ export default function LithMode({ tileColor }) {
             hint="Some alphagrams on the grid will be fakes with no real word. Each one has a number — type its number followed by F (e.g. “12F”) if you think it's fake. Flagging a real one counts as a miss."
           />
 
+          <TimeLimitSetting
+            enabled={timeLimitEnabled}
+            onToggleChange={setTimeLimitEnabled}
+            seconds={timeLimitSeconds}
+            onSecondsChange={setTimeLimitSeconds}
+            min={TIME_LIMIT_MIN}
+            max={TIME_LIMIT_MAX}
+            step={TIME_LIMIT_STEP}
+            formatValue={formatElapsed}
+            hint="Each page gets this long. When it runs out, you'll be asked whether to see the page's solutions before moving on."
+          />
+
           <div className={styles.presetRow}>
             {PRESETS.map((p) => (
               <button
@@ -380,10 +457,13 @@ export default function LithMode({ tileColor }) {
       )}
 
       {stage === 'grid' && (
+        <>
         <div className={styles.cardBlend} style={{ maxWidth: 1080 }}>
           <div className={styles.progressRow}>
             <span>Page {pageIndex + 1} / {pages.length}</span>
-            <span>{formatElapsed(elapsedSeconds)}</span>
+            <span style={timeLimitEnabled && remainingSeconds != null && remainingSeconds <= 10 ? { color: '#DC2626' } : undefined}>
+              {timeLimitEnabled ? formatElapsed(remainingSeconds ?? timeLimitSeconds) : formatElapsed(elapsedSeconds)}
+            </span>
             <span>{currentPageCells.filter(isResolved).length} / {currentPageCells.length} solved</span>
           </div>
           <div className={styles.progressTrack}>
@@ -433,6 +513,7 @@ export default function LithMode({ tileColor }) {
               placeholder="Type a word…"
               autoComplete="off"
               autoCapitalize="characters"
+              disabled={pageEnded}
             />
           </form>
           {feedback && <div className={feedbackClass}>{feedback.message}</div>}
@@ -443,14 +524,62 @@ export default function LithMode({ tileColor }) {
                 ◂ Previous page
               </button>
             )}
-            <button type="button" className={styles.secondaryButton} onClick={handleGiveUp}>
+            <button type="button" className={styles.secondaryButton} onClick={handleGiveUpPage} disabled={pageComplete || pageEnded}>
               Give up
+            </button>
+            <button type="button" className={styles.secondaryButton} onClick={handleEndQuiz}>
+              End Quiz
             </button>
             <button type="button" className={styles.primaryButton} onClick={goNextPage} disabled={!pageComplete}>
               {isLastPage ? 'Finish ▸' : 'Next page ▸'}
             </button>
           </div>
         </div>
+
+        {pageEnded && (
+          <div className={styles.pageEndBackdrop}>
+            <div className={styles.pageEndCard}>
+              <div className={styles.pageEndTitle}>
+                {pageEndReason === 'timeup' ? (
+                  <>
+                    <ClockCountdown size={20} weight="bold" style={{ verticalAlign: -4, marginRight: 6 }} />
+                    Time's up!
+                  </>
+                ) : 'Page given up'}
+              </div>
+              {!solutionsRevealed ? (
+                <>
+                  <div className={styles.pageEndSubtitle}>Want to see this page's solutions before moving on?</div>
+                  <div className={styles.footerRow}>
+                    <button type="button" className={styles.secondaryButton} onClick={() => setSolutionsRevealed(true)}>
+                      Show solutions
+                    </button>
+                    <button type="button" className={styles.primaryButton} onClick={goNextPage}>
+                      {isLastPage ? 'Finish ▸' : 'Next page ▸'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.solutionList}>
+                    {currentPageCells.filter((cell) => !isResolved(cell)).map((cell) => (
+                      <div key={cell.alpha} className={styles.solutionRow}>
+                        <span className={styles.solutionAlpha}>{cell.alpha}</span>
+                        <span className={styles.solutionAnswer}>
+                          {cell.isDead ? '💀 Fake — no real word' : (alphaMap.get(cell.alpha) || []).map((e) => e.word).join(', ')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" className={styles.primaryButton} onClick={goNextPage}>
+                    {isLastPage ? 'Finish ▸' : 'Next page ▸'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {stage === 'complete' && (
