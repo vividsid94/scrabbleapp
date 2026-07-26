@@ -41,7 +41,7 @@ export default function AnalysisPanel({
   const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)';
   const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
 
-  const [heatMapIterations, setHeatMapIterations] = useState(20);
+  const [heatMapIterations, setHeatMapIterations] = useState(200);
   const [opponentResponsesIterations, setOpponentResponsesIterations] = useState(20);
 
   const { layer, selectedMove, frames, stepIndex, isRunning, error, heatMap, opponentResponses } = analysisState;
@@ -67,7 +67,7 @@ export default function AnalysisPanel({
       onStep(i);
       i += 1;
       if (i < frames.length) {
-        autoPlayTimeoutRef.current = setTimeout(advance, 900);
+        autoPlayTimeoutRef.current = setTimeout(advance, 250);
       }
     };
     advance();
@@ -292,7 +292,7 @@ export default function AnalysisPanel({
             value={heatMapIterations}
             onChange={(e, value) => setHeatMapIterations(value)}
             min={5}
-            max={50}
+            max={200}
             step={5}
             disabled={isRunning}
             sx={{ flex: 1 }}

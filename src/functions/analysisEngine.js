@@ -43,7 +43,7 @@ export const DEFAULT_ANALYSIS_STATE = {
 // server only randomizes the rest. Those leave tiles are stripped out of the
 // tilePool sent up front, so the same physical tile can never simultaneously
 // be drawn for the opponent's random rack and be sitting in ours.
-export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numSimulations = 5 }, setAnalysisState) => {
+export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numSimulations = 50 }, setAnalysisState) => {
   setAnalysisState({ isRunning: true, error: null });
 
   try {
@@ -88,7 +88,7 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
       row.map((cell, colIndex) => {
         if (typeof cell !== 'string' || cell === '') return null;
         const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
-        return isOurMove ? 'player' : 'existing';
+        return isOurMove ? 'selected' : 'existing';
       })
     );
 
@@ -133,7 +133,15 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
 // Backed by the same bulk-move-gen includeMoveDetails call as Preview, but
 // only the opponentMove half of each iteration is used - ourReply is
 // discarded entirely (heat map has no "our next move" concept).
-export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations = 20 }, setAnalysisState) => {
+//
+// One bulk call fetches all `numSimulations` iterations at once, but they're
+// revealed to the UI in a fixed number of animated steps (not all at once)
+// so the grid visibly heats up from cold to hot rather than snapping straight
+// to the final result - each step folds in another chunk of iterations and
+// re-renders, dividing by the final `numSimulations` throughout so the
+// coloring is intentionally "underheated" until the last step, which lines up
+// with the true final intensities.
+export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations = 200 }, setAnalysisState) => {
   setAnalysisState({ isRunning: true, error: null, selectedMove: move });
 
   try {
@@ -164,18 +172,33 @@ export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations
     }
 
     const data = await response.json();
+    const iterationDetails = data.iterationDetails || [];
 
     const heatMapGrid = Array(15).fill(null).map(() => Array(15).fill(0));
-    (data.iterationDetails || []).forEach(detail => {
-      if (!detail.opponentMove) return;
-      detail.opponentMove.tiles.forEach(tile => {
-        if (tile.isNew) {
-          heatMapGrid[tile.row][tile.col]++;
-        }
-      });
-    });
+    const totalSteps = Math.max(1, Math.min(25, iterationDetails.length));
 
-    setAnalysisState({ heatMap: { grid: heatMapGrid, maxSimulations: numSimulations }, isRunning: false });
+    for (let step = 0; step < totalSteps; step++) {
+      const rangeStart = Math.floor((step * iterationDetails.length) / totalSteps);
+      const rangeEnd = Math.floor(((step + 1) * iterationDetails.length) / totalSteps);
+
+      for (let i = rangeStart; i < rangeEnd; i++) {
+        const detail = iterationDetails[i];
+        if (!detail?.opponentMove) continue;
+        detail.opponentMove.tiles.forEach(tile => {
+          if (tile.isNew) {
+            heatMapGrid[tile.row][tile.col]++;
+          }
+        });
+      }
+
+      setAnalysisState({ heatMap: { grid: heatMapGrid.map(row => [...row]), maxSimulations: numSimulations } });
+
+      if (step < totalSteps - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    setAnalysisState({ isRunning: false });
   } catch (error) {
     console.error('Error running analysis heat map:', error);
     setAnalysisState({ isRunning: false, error: error.message });

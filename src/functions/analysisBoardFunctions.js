@@ -2,8 +2,11 @@
 // SimulationModal's ownership color logic, now that the modal itself is gone.
 
 export const getOwnershipColor = (ownership) => {
+  if (ownership === 'selected') {
+    return { bg: 'rgba(158, 158, 158, 0.9)', textColor: 'white' }; // Silver/grey for our initially committed/previewed move
+  }
   if (ownership === 'player') {
-    return { bg: 'rgba(33, 150, 243, 0.9)', textColor: 'white' }; // Blue for the player's simulated tiles
+    return { bg: 'rgba(33, 150, 243, 0.9)', textColor: 'white' }; // Blue for the player's simulated reply tiles
   }
   if (ownership === 'opponent') {
     return { bg: 'rgba(244, 67, 54, 0.9)', textColor: 'white' }; // Red for the opponent's simulated tiles
