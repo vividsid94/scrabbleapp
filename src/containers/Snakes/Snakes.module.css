@@ -576,6 +576,35 @@
   flex-shrink: 0;
 }
 
+/* Rewind mode: marks which one of the eight tiles is excluded for the
+   current sub-seven round - the tile itself fades out and grey diagonal
+   stripes lay over it, instead of splitting it out into a separate
+   "-1 letter" group. */
+.tileExcluded {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.tileExcluded .protileBox {
+  opacity: 0.25;
+}
+
+.tileExcluded::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(107, 114, 128, 0.65) 0px,
+    rgba(107, 114, 128, 0.65) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  pointer-events: none;
+}
+
 .protileBox {
   width: 52px;
   height: 52px;

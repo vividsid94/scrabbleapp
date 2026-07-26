@@ -102,6 +102,15 @@ export default function RewindMode({ tileColor }) {
     return extraLetters(currentEightAlpha, currentSevenAlpha);
   }, [roundKind, currentEightAlpha, currentSevenAlpha]);
 
+  // Which position in the full eight-tile row to strike out (UI only - the
+  // actual round logic only ever cares about currentSevenAlpha/roundEntries
+  // above). Any occurrence of the letter is fine to mark if there are
+  // duplicates, since they're visually indistinguishable anyway.
+  const removedLetterIndex = useMemo(() => {
+    if (roundKind !== 'seven' || !extraLetterForCurrentSeven) return -1;
+    return currentEightAlpha.indexOf(extraLetterForCurrentSeven);
+  }, [roundKind, currentEightAlpha, extraLetterForCurrentSeven]);
+
   const promptRank = useMemo(() => {
     if (!data) return null;
     const map = roundKind === 'eight' ? data.eightAlphagramToWords : data.sevenAlphagramToWords;
@@ -456,16 +465,10 @@ export default function RewindMode({ tileColor }) {
 
           <div className={styles.tileRow}>
             {currentEightAlpha.split('').map((l, i) => (
-              <Protile key={`base${i}`} letter={l} color={tileColor.current} />
+              <span key={i} className={i === removedLetterIndex ? styles.tileExcluded : undefined}>
+                <Protile letter={l} color={tileColor.current} />
+              </span>
             ))}
-            {roundKind === 'seven' && (
-              <>
-                <span className={styles.tilePlus}>−</span>
-                {extraLetterForCurrentSeven.split('').map((l, i) => (
-                  <Protile key={`removed${i}`} letter={l} color={tileColor.current} />
-                ))}
-              </>
-            )}
           </div>
 
           {promptRank !== null && (
