@@ -604,6 +604,31 @@
   box-shadow: 0 0 0 2px var(--amber-soft);
 }
 
+/* On mobile in Zyz/Classic, the on-screen keyboard writes into this
+   instead of a real <input> - a plain input can't render individual
+   characters in different colors, which is what showing a fat-finger
+   correction needs. Composes .guessInput so it's pixel-identical otherwise. */
+.guessDisplay {
+  composes: guessInput;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.guessDisplayPlaceholder {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* A letter the on-screen keyboard silently substituted for an adjacent
+   key it decided was actually meant - see keyboardCorrection.js. */
+.correctedLetter {
+  color: #EAB308;
+}
+
 .feedbackBanner {
   text-align: center;
   font-size: 13px;

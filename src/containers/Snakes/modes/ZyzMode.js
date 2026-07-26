@@ -4,6 +4,7 @@ import { loadSnakesData, loadDeadRackData, alphagram } from '../snakesData';
 import { pickDeadRack, estimateRank } from '../deadRacks';
 import { initializeDictionary } from '../../../utils/localDictionary';
 import { PRESETS, presetMax, presetLabel, shuffle, Protile, WordChip, DeadRacksSetting, TimeLimitSetting, useIsMobile } from '../snakesShared';
+import { resolveTypedKey } from '../keyboardCorrection';
 import styles from '../Snakes.module.css';
 
 const TIME_LIMIT_MIN = 10;
@@ -57,6 +58,11 @@ export default function ZyzMode({ tileColor }) {
   const [foundWords, setFoundWords] = useState(new Set());
   const [revealedWords, setRevealedWords] = useState(new Set());
   const [guessInput, setGuessInput] = useState('');
+  // Parallel to guessInput - true at index i if that character was a
+  // fat-finger correction rather than the key actually pressed (see
+  // keyboardCorrection.js). Only ever populated via the on-screen keyboard;
+  // physical typing (desktop) never touches this.
+  const [correctedFlags, setCorrectedFlags] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [hint, setHint] = useState(null); // { word, revealedCount } | null
 
@@ -205,9 +211,15 @@ export default function ZyzMode({ tileColor }) {
     setFoundWords(new Set());
     setRevealedWords(new Set());
     setGuessInput('');
+    setCorrectedFlags([]);
     setFeedback(null);
     setHint(null);
     setRoundKey((k) => k + 1);
+    // Re-mounting the guessForm's input (roundActive flips) already
+    // refocuses/reopens the keyboard on desktop via autoFocus; on mobile
+    // the guess box is a plain non-focusable display instead (see below),
+    // so this is what makes the on-screen keyboard reappear each round.
+    setKeyboardOpen(true);
   };
 
   const handleStart = async () => {
@@ -293,6 +305,7 @@ export default function ZyzMode({ tileColor }) {
       setFeedback({ type: 'wrong', message: 'Not a match — try again.' });
     }
     setGuessInput('');
+    setCorrectedFlags([]);
     inputRef.current?.focus();
   };
 
@@ -300,15 +313,22 @@ export default function ZyzMode({ tileColor }) {
   // controlled guessInput/handleGuessSubmit pair, since the on-screen
   // keyboard is the only way to type at all once the real input is
   // readOnly on mobile. 'Dead' (the skull key) submits DEAD immediately.
+  // Letter keys go through resolveTypedKey first - see keyboardCorrection.js.
   const handleOverlayKeyPress = (key) => {
     if (key === 'Backspace') {
       setGuessInput((v) => v.slice(0, -1));
+      setCorrectedFlags((f) => f.slice(0, -1));
     } else if (key === 'Enter') {
       handleGuessSubmit({ preventDefault: () => {} });
     } else if (key === 'Dead') {
       handleGuessSubmit({ preventDefault: () => {} }, 'DEAD');
     } else {
-      setGuessInput((v) => v + key);
+      const candidateWords = roundEntries
+        .filter((entry) => !foundWords.has(entry.word) && !revealedWords.has(entry.word))
+        .map((entry) => entry.word);
+      const { letter, corrected } = resolveTypedKey(key, candidateWords, guessInput);
+      setGuessInput((v) => v + letter);
+      setCorrectedFlags((f) => [...f, corrected]);
     }
   };
 
@@ -492,19 +512,32 @@ export default function ZyzMode({ tileColor }) {
           {roundActive ? (
             <>
               <form className={styles.guessForm} onSubmit={handleGuessSubmit}>
-                <input
-                  ref={inputRef}
-                  autoFocus
-                  className={styles.guessInput}
-                  value={guessInput}
-                  onChange={(e) => setGuessInput(e.target.value)}
-                  onFocus={() => isMobile && setKeyboardOpen(true)}
-                  placeholder="Type a word…"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  readOnly={isMobile}
-                  inputMode={isMobile ? 'none' : undefined}
-                />
+                {isMobile ? (
+                  // A real <input> can only show one text color at a time,
+                  // which can't display a fat-finger correction in yellow -
+                  // this is a plain display driven entirely by the on-screen
+                  // keyboard's handleOverlayKeyPress, not a focusable field.
+                  <div className={styles.guessDisplay} onClick={() => setKeyboardOpen(true)}>
+                    {guessInput ? (
+                      guessInput.split('').map((ch, i) => (
+                        <span key={i} className={correctedFlags[i] ? styles.correctedLetter : undefined}>{ch}</span>
+                      ))
+                    ) : (
+                      <span className={styles.guessDisplayPlaceholder}>Type a word…</span>
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    ref={inputRef}
+                    autoFocus
+                    className={styles.guessInput}
+                    value={guessInput}
+                    onChange={(e) => setGuessInput(e.target.value)}
+                    placeholder="Type a word…"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                  />
+                )}
               </form>
               {feedback && <div className={feedbackClass}>{feedback.message}</div>}
               {hint && (
