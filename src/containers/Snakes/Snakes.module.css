@@ -247,6 +247,14 @@
   cursor: pointer;
 }
 
+/* Splits two unrelated toggles (Time Limit + Hide Counts) across one row
+   instead of each getting its own full-width row. */
+.toggleSplitRow {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .toggleLabel {
   font-size: 14px;
   font-weight: 700;

@@ -48,6 +48,9 @@ export default function WindUpMode({ tileColor }) {
   const [timeLimitUnit, setTimeLimitUnit] = useState('word');
   const [remainingSeconds, setRemainingSeconds] = useState(null);
   const [roundKey, setRoundKey] = useState(0);
+  // Hides the "X / Y found" label - that's where "number of solutions"
+  // shows up here, instead of Lith's per-cell badge.
+  const [hideSolutionCounts, setHideSolutionCounts] = useState(false);
 
   const [queue, setQueue] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -385,7 +388,7 @@ export default function WindUpMode({ tileColor }) {
             formatValue={(s) => `${s}s`}
             unit={timeLimitUnit}
             onUnitChange={setTimeLimitUnit}
-            hint="Per word: the clock resets every time you find one. Per alphagram: one clock for the whole round. When it runs out, whatever's left is revealed automatically."
+            visibilityToggle={{ enabled: hideSolutionCounts, onToggleChange: setHideSolutionCounts }}
           />
 
           <div className={styles.presetRow}>
@@ -449,9 +452,11 @@ export default function WindUpMode({ tileColor }) {
             <div className={styles.promptRank}>Prob #{promptRank.toLocaleString()}</div>
           )}
 
-          <div className={styles.answerCount}>
-            {foundWords.size + revealedWords.size} / {roundEntries.length} found
-          </div>
+          {!hideSolutionCounts && (
+            <div className={styles.answerCount}>
+              {foundWords.size + revealedWords.size} / {roundEntries.length} found
+            </div>
+          )}
 
           {roundActive ? (
             <>

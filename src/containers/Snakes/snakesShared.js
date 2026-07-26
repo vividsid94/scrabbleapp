@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ClockCountdown } from '@phosphor-icons/react';
+import { ClockCountdown, EyeSlash } from '@phosphor-icons/react';
 import Cell from '../../components/AppContent/Board/Cell.js';
 import { getHooksLocal } from '../../utils/localDictionary';
 import styles from './Snakes.module.css';
@@ -156,27 +156,52 @@ export function DeadRacksSetting({ enabled, percent, onToggleChange, onPercentCh
 // a "round" can hold multiple words (Zyz/Wind Up), to expose the
 // per-word-vs-per-alphagram choice; Lith mode (one timer per page, no
 // per-word concept) omits them and gets just the toggle + slider.
-export function TimeLimitSetting({ enabled, onToggleChange, seconds, onSecondsChange, min, max, step, formatValue, hint, unit, onUnitChange }) {
+// visibilityToggle (optional) is a second, unrelated toggle - "hide the
+// number of solutions" - rendered in the SAME row as the Time Limit toggle
+// (a plain on/off switch, sharing the row 50/50) rather than getting its
+// own separate box, since it has no slider/expanded content of its own.
+export function TimeLimitSetting({ enabled, onToggleChange, seconds, onSecondsChange, min, max, step, formatValue, hint, unit, onUnitChange, visibilityToggle }) {
   const fillPercent = ((seconds - min) / (max - min)) * 100;
   return (
     <div className={styles.deadRacksBox}>
-      <label className={styles.toggleRow}>
-        <span className={styles.toggleLabel}>
-          <ClockCountdown size={16} weight="bold" style={{ verticalAlign: -3, marginRight: 5 }} />
-          Time limit
-        </span>
-        <span className={styles.toggleSwitch}>
-          <input
-            type="checkbox"
-            className={styles.toggleInput}
-            checked={enabled}
-            onChange={(e) => onToggleChange(e.target.checked)}
-          />
-          <span className={styles.toggleTrack}>
-            <span className={styles.toggleThumb} />
+      <div className={styles.toggleSplitRow}>
+        <label className={styles.toggleRow} style={{ flex: 1, minWidth: 0 }}>
+          <span className={styles.toggleLabel}>
+            <ClockCountdown size={16} weight="bold" style={{ verticalAlign: -3, marginRight: 5 }} />
+            Time limit
           </span>
-        </span>
-      </label>
+          <span className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              className={styles.toggleInput}
+              checked={enabled}
+              onChange={(e) => onToggleChange(e.target.checked)}
+            />
+            <span className={styles.toggleTrack}>
+              <span className={styles.toggleThumb} />
+            </span>
+          </span>
+        </label>
+        {visibilityToggle && (
+          <label className={styles.toggleRow} style={{ flex: 1, minWidth: 0 }}>
+            <span className={styles.toggleLabel}>
+              <EyeSlash size={16} weight="bold" style={{ verticalAlign: -3, marginRight: 5 }} />
+              Hide counts
+            </span>
+            <span className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                className={styles.toggleInput}
+                checked={visibilityToggle.enabled}
+                onChange={(e) => visibilityToggle.onToggleChange(e.target.checked)}
+              />
+              <span className={styles.toggleTrack}>
+                <span className={styles.toggleThumb} />
+              </span>
+            </span>
+          </label>
+        )}
+      </div>
       {hint && <div className={styles.deadRacksHint}>{hint}</div>}
       {enabled && (
         <>

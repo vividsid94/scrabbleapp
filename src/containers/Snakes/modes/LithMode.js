@@ -134,6 +134,9 @@ export default function LithMode({ tileColor }) {
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(false);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(300);
   const [remainingSeconds, setRemainingSeconds] = useState(null);
+  // Hides each cell's remaining-solutions badge - the "number of solutions"
+  // in Lith is the badge, not a text label the other modes have instead.
+  const [hideSolutionCounts, setHideSolutionCounts] = useState(false);
   // pageEnded covers both an actual Give Up and the timer running out - both
   // stop the page short and show the same overlay (pageEndReason just picks
   // its wording); solutionsRevealed tracks whether the user chose to see
@@ -512,7 +515,7 @@ export default function LithMode({ tileColor }) {
             max={TIME_LIMIT_MAX}
             step={TIME_LIMIT_STEP}
             formatValue={formatElapsed}
-            hint="Each page gets this long. When it runs out, you'll be asked whether to see the page's solutions before moving on."
+            visibilityToggle={{ enabled: hideSolutionCounts, onToggleChange: setHideSolutionCounts }}
           />
 
           <div className={styles.presetRow}>
@@ -571,17 +574,19 @@ export default function LithMode({ tileColor }) {
                   className={resolved ? styles.lithCellSolved : styles.lithCell}
                 >
                   <span className={styles.lithIndex}>{index + 1}</span>
-                  <span
-                    className={styles.lithBadge}
-                    style={{
-                      width: lithBadgeSize,
-                      height: lithBadgeSize,
-                      fontSize: lithBadgeFontSize,
-                      background: resolved ? undefined : badgeColorForCount(badgeNumber),
-                    }}
-                  >
-                    {resolved ? '✓' : badgeNumber}
-                  </span>
+                  {!hideSolutionCounts && (
+                    <span
+                      className={styles.lithBadge}
+                      style={{
+                        width: lithBadgeSize,
+                        height: lithBadgeSize,
+                        fontSize: lithBadgeFontSize,
+                        background: resolved ? undefined : badgeColorForCount(badgeNumber),
+                      }}
+                    >
+                      {resolved ? '✓' : badgeNumber}
+                    </span>
+                  )}
                   <span className={styles.lithTiles}>
                     {cell.alpha.split('').map((l, i) => (
                       <Protile key={i} letter={l} color={tileColor.current} size={gridTileSize} />
