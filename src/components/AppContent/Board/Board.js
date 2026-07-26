@@ -6,6 +6,7 @@ import { Modal } from '@mui/material';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
 import { ArrowsOut, Hand, ChatCircle } from '@phosphor-icons/react';
+import { getOwnershipColor, getHeatColor } from '../../../functions/analysisBoardFunctions';
 
 export default function Board({
     boardMode = "STANDARD",
@@ -26,7 +27,10 @@ export default function Board({
     lastMoveCoordinates = [],
     commentary = null,
     showNoCommentaryLabel = true,
-    enableTelestrator = false
+    enableTelestrator = false,
+    analysisGhostGrid = null,
+    analysisHeatGrid = null,
+    analysisHeatMaxSimulations = 5
 }) {
     const { lightMode } = useContext(ThemeContext);
     const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
@@ -520,6 +524,24 @@ export default function Board({
                                             onClick={() => onBoardChildClick && onBoardChildClick(rowIndex, colIndex)}
                                         >
                                             {col}
+                                            {analysisHeatGrid && (
+                                                <div
+                                                    className={styles.analysisHeatTile}
+                                                    style={{ backgroundColor: getHeatColor(analysisHeatGrid[rowIndex]?.[colIndex], analysisHeatMaxSimulations) }}
+                                                />
+                                            )}
+                                            {analysisGhostGrid?.[rowIndex]?.[colIndex] && (() => {
+                                                const ghost = analysisGhostGrid[rowIndex][colIndex];
+                                                const { bg, textColor } = getOwnershipColor(ghost.ownership);
+                                                return (
+                                                    <div
+                                                        className={styles.analysisGhostTile}
+                                                        style={{ backgroundColor: bg, color: textColor }}
+                                                    >
+                                                        {ghost.letter.toUpperCase()}
+                                                    </div>
+                                                );
+                                            })()}
                                             {selectedPosition && selectedPosition.row === rowIndex && selectedPosition.col === colIndex && (
                                                 <div className={previewScore && previewScorePosition?.row === rowIndex && previewScorePosition?.col === colIndex ? 
                                                     styles.arrowIndicatorWithScore : styles.arrowIndicator}>

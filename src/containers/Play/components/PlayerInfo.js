@@ -15,7 +15,8 @@ import SyncIcon from '@mui/icons-material/Sync';
 import LatestMove from './LatestMove';
 import TopMoves from './TopMoves';
 import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
-import { UserCircle, DotsThree, ScribbleLoop } from '@phosphor-icons/react';
+import { UserCircle, DotsThree, ScribbleLoop, Brain } from '@phosphor-icons/react';
+import AnalysisPanel from './AnalysisPanel';
 
 const actionButtonStyle = {
   width: '24px',
@@ -321,10 +322,6 @@ export default function PlayerInfo({
   moveHistory,
   topMoves,
   onMoveSelect,
-  onSimulateMove,
-  onOpenSimulationModal,
-  onOpenMetrics2Modal,
-  simulatingMove,
   boardCoords,
   blankTiles,
   pool,
@@ -338,7 +335,17 @@ export default function PlayerInfo({
   opponentRackCount,
   telestratorEnabled,
   onToggleTelestrator,
-  topeThinking
+  topeThinking,
+  analysisModeActive,
+  canUseAnalysisMode,
+  onToggleAnalysisMode,
+  analysisState,
+  onAnalysisSelectMove,
+  onAnalysisSetSelectedMove,
+  onAnalysisSetLayer,
+  onAnalysisStep,
+  onAnalysisRunHeatMap,
+  onAnalysisRunOpponentResponses
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const [showTopePrompt, setShowTopePrompt] = useState(false);
@@ -440,8 +447,51 @@ export default function PlayerInfo({
             <DotsThree size={20} color={lightMode === 'dark' ? "white" : "#1F2937"} />
           </Box>
         </Tooltip>
+        {canUseAnalysisMode && (
+          <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : "Analysis Mode"}>
+            <Box
+              onClick={() => {
+                if (!gameStarted) return;
+                onToggleAnalysisMode();
+              }}
+              sx={{
+                opacity: !gameStarted ? 0.3 : 1,
+                cursor: !gameStarted ? 'not-allowed' : 'pointer',
+                pointerEvents: !gameStarted ? 'none' : 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginLeft: '16px'
+              }}
+            >
+              <Brain
+                size={20}
+                weight={analysisModeActive ? 'fill' : 'regular'}
+                color={analysisModeActive
+                  ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                  : (lightMode === 'dark' ? 'white' : '#1F2937')
+                }
+              />
+            </Box>
+          </Tooltip>
+        )}
       </Box>
 
+      {analysisModeActive ? (
+        <AnalysisPanel
+          analysisState={analysisState}
+          onSelectMove={onAnalysisSelectMove}
+          onSetSelectedMove={onAnalysisSetSelectedMove}
+          onSetLayer={onAnalysisSetLayer}
+          onStep={onAnalysisStep}
+          onRunHeatMap={onAnalysisRunHeatMap}
+          onRunOpponentResponses={onAnalysisRunOpponentResponses}
+          topMoves={topMoves}
+          currentPlayer={currentPlayer}
+          lightMode={lightMode}
+        />
+      ) : (
+      <>
       <Collapse in={showBestMove}>
         <Box className={styles.bestMoveSection} sx={{
           display: 'flex',
@@ -691,15 +741,13 @@ export default function PlayerInfo({
         isLoadingTopMoves={isLoadingTopMoves}
         isDictionaryLoading={isDictionaryLoading}
             onMoveSelect={onMoveSelect}
-            onSimulateMove={onSimulateMove}
             onGetTopMoves={onGetTopMoves}
-            onOpenSimulationModal={onOpenSimulationModal}
-            onOpenMetrics2Modal={onOpenMetrics2Modal}
-        simulatingMove={simulatingMove}
         currentPlayer={currentPlayer}
         gameStarted={gameStarted}
         lightMode={lightMode}
       />
+      </>
+      )}
     </Box>
   );
-} 
+}

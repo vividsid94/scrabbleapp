@@ -6,19 +6,16 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import styles from '../Play.module.css';
 import sidenavStyles from '../../../components/AppContent/Sidenav/Sidenav.module.css';
+import { formatMoveLocation } from '../../../functions/play/moveDisplayUtils';
 
-const TopMoves = ({ 
-  topMoves, 
-  isLoadingTopMoves, 
-  isDictionaryLoading, 
-  onMoveSelect, 
-  onSimulateMove, 
+const TopMoves = ({
+  topMoves,
+  isLoadingTopMoves,
+  isDictionaryLoading,
+  onMoveSelect,
   onGetTopMoves,
-  simulatingMove,
   currentPlayer,
   gameStarted,
-  onOpenSimulationModal,
-  onOpenMetrics2Modal,
   lightMode = 'dark'
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,26 +53,7 @@ const TopMoves = ({
   }, [topMoves]);
 
   // Helper function to format move location
-  const formatLocation = (move) => {
-    if (!move.tiles || move.tiles.length === 0) {
-      return null;
-    }
-
-    // Find the first tile
-    const firstTile = move.tiles[0];
-    let firstRow = firstTile.row;
-    let firstCol = firstTile.col;
-    
-    // Determine if it's horizontal by checking if there are tiles in the same row
-    const isHorizontal = move.tiles.some(t => t.row === firstRow && t.col === firstCol + 1);
-    
-    // Format the position (convert 0-14 to 1-15 for rows, 0-14 to A-O for columns)
-    const row = firstRow + 1;
-    const col = String.fromCharCode(65 + firstCol);
-    const position = isHorizontal ? `${row}${col}` : `${col}${row}`;
-    
-    return position;
-  };
+  const formatLocation = formatMoveLocation;
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded);
@@ -83,10 +61,6 @@ const TopMoves = ({
 
   const handleMoveSelect = (move) => {
     onMoveSelect(move);
-  };
-
-  const handleSimulateMove = (move) => {
-    onSimulateMove(move);
   };
 
   const handleGetTopMoves = () => {
@@ -97,7 +71,6 @@ const TopMoves = ({
 
   const renderMoveItem = (move, index) => {
     const location = formatLocation(move);
-    const isSimulating = simulatingMove && simulatingMove.word === move.word;
 
     // Get leave value and leave string
     const leaveValue = move.leaveValue || 0;
@@ -249,60 +222,9 @@ const TopMoves = ({
       
       {/* Expanded Content */}
       {isExpanded && topMoves && topMoves.length > 0 && (
-        <>
-          {/* Metrics buttons when expanded */}
-          {(topMoves.length >= 15 || topMoves.length >= 10) && (
-            <Box sx={{ display: 'flex', gap: '6px', marginBottom: '8px', padding: '0 4px' }}>
-              {topMoves.length >= 15 && (
-                <Box 
-                  onClick={() => onOpenSimulationModal()}
-                  sx={{
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: secondaryTextColor,
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-                    border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.18)'
-                    }
-                  }}
-                >
-                  Metrics
-                </Box>
-              )}
-              {topMoves.length >= 10 && (
-                <Box 
-                  onClick={() => onOpenMetrics2Modal && onOpenMetrics2Modal()}
-                  sx={{
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: secondaryTextColor,
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-                    border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.18)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-                      borderColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.18)'
-                    }
-                  }}
-                >
-                  Metrics (2)
-                </Box>
-              )}
-            </Box>
-          )}
-          <Box className={styles.topMovesList}>
-            {topMoves.map((move, index) => renderMoveItem(move, index))}
-          </Box>
-        </>
+        <Box className={styles.topMovesList}>
+          {topMoves.map((move, index) => renderMoveItem(move, index))}
+        </Box>
       )}
     </Box>
   );

@@ -5,6 +5,21 @@ import { getBoardDiff } from '../functions/play/boardUtils';
 import { markBlanksLowercase } from '../functions/play/boardApiUtils';
 import { saveActiveGameSnapshot, clearActiveGameSnapshot } from '../utils/activeGamePersistence';
 
+// Analysis Mode: a single self-contained slice rather than flat top-level
+// fields, so exiting/resetting is one assignment and nothing here can leak
+// into the real board/rack/timer state it's meant to preview alongside.
+const DEFAULT_ANALYSIS_STATE = {
+  active: false,
+  layer: 'preview', // 'preview' | 'heatmap' | 'opponentResponses'
+  selectedMove: null,
+  frames: [], // array of {board, tileOwnership, move} snapshots from simulateMove's onProgress callback
+  stepIndex: 0,
+  isRunning: false,
+  error: null,
+  heatMap: null, // heat map layer's occupancy grid
+  opponentResponses: null // opponent responses layer's per-move {avgScore, bingoPercent, ...} map
+};
+
 export const useGameStore = create((set, get) => {
   // Initial state
   const initialState = {
@@ -82,26 +97,14 @@ export const useGameStore = create((set, get) => {
     finalPlayer1Score: 0,
     finalPlayer2Score: 0,
     
-    // Simulation state (moved from Play.js)
-    simulatingMove: null,
-    simulationResult: null,
-    simulationProgress: 0,
-    previewBoard: null,
-    previewMove: null,
-    previewTileOwnership: null,
-    moveWithResults: null,
-    simulationBoard: null,
+    // Live single-tile score preview, shown on the real board while placing tiles
     leaveValues: {},
-    showSimulationModal: false,
-    shouldStopSimulation: false,
-    allMoveResults: {},
-    isSimulatingAllMoves: false,
     previewScore: null,
     previewScorePosition: null,
-    shouldStopSimulationRef: { current: false },
-    isHeatMapMode: false,
-    heatMapData: null,
-    
+
+    // Analysis Mode (board-based, replaces the old Metrics/Metrics2 modals)
+    analysis: DEFAULT_ANALYSIS_STATE,
+
     // UI state (moved from Play.js)
     theme: "STANDARD",
     open: false,
@@ -131,9 +134,6 @@ export const useGameStore = create((set, get) => {
     defenseMove: null,
     defenseResults: null,
     isDefenseLoading: false,
-    
-    // Metrics2 modal state
-    showMetrics2Modal: false,
     
     // Tess opponent simulation state
     tessOpponentSims: {},
@@ -287,25 +287,10 @@ export const useGameStore = create((set, get) => {
     setFinalPlayer1Score: (score) => set({ finalPlayer1Score: score }),
     setFinalPlayer2Score: (score) => set({ finalPlayer2Score: score }),
     
-    // Actions - Simulation
-    setSimulatingMove: (move) => set({ simulatingMove: move }),
-    setSimulationResult: (result) => set({ simulationResult: result }),
-    setSimulationProgress: (progress) => set({ simulationProgress: progress }),
-    setPreviewBoard: (board) => set({ previewBoard: board }),
-    setPreviewMove: (move) => set({ previewMove: move }),
-    setPreviewTileOwnership: (ownership) => set({ previewTileOwnership: ownership }),
-    setMoveWithResults: (results) => set({ moveWithResults: results }),
-    setSimulationBoard: (board) => set({ simulationBoard: board }),
+    // Actions - live single-tile score preview
     setLeaveValues: (values) => set({ leaveValues: values }),
-    setShowSimulationModal: (show) => set({ showSimulationModal: show }),
-    setShouldStopSimulation: (stop) => set({ shouldStopSimulation: stop }),
-    setAllMoveResults: (results) => set({ allMoveResults: results }),
-    setIsSimulatingAllMoves: (simulating) => set({ isSimulatingAllMoves: simulating }),
     setPreviewScore: (score) => set({ previewScore: score }),
     setPreviewScorePosition: (position) => set({ previewScorePosition: position }),
-    setShouldStopSimulationRef: (ref) => set({ shouldStopSimulationRef: ref }),
-    setIsHeatMapMode: (mode) => set({ isHeatMapMode: mode }),
-    setHeatMapData: (data) => set({ heatMapData: data }),
     
     // Actions - UI
     setTheme: (theme) => set({ theme: theme }),
@@ -361,9 +346,6 @@ export const useGameStore = create((set, get) => {
     setDefenseResults: (results) => set({ defenseResults: results }),
     setIsDefenseLoading: (loading) => set({ isDefenseLoading: loading }),
     
-    // Metrics2 modal actions
-    setShowMetrics2Modal: (show) => set({ showMetrics2Modal: show }),
-    
     // Move Coach actions
     setShowMoveCoach: (show) => set({ showMoveCoach: show }),
     setMoveCoachData: (data) => set({ moveCoachData: data }),
@@ -410,19 +392,7 @@ export const useGameStore = create((set, get) => {
         winner: null,
         finalPlayer1Score: 0,
         finalPlayer2Score: 0,
-        simulatingMove: null,
-        simulationResult: null,
-        simulationProgress: 0,
-        previewBoard: null,
-        previewMove: null,
-        previewTileOwnership: null,
-        moveWithResults: null,
-        simulationBoard: null,
         leaveValues: {},
-        showSimulationModal: false,
-        shouldStopSimulation: false,
-        allMoveResults: {},
-        isSimulatingAllMoves: false,
         previewScore: null,
         previewScorePosition: null,
         // Reset multiplayer state
@@ -899,18 +869,11 @@ export const useGameStore = create((set, get) => {
     // Handle move selection for both simulation modal and normal game board
     handleMoveSelectClick: (move) => {
       const {
-        showSimulationModal,
         boardCoords,
         tempBoardCoords,
         currentPlayer,
         player1Rack,
         player2Rack,
-        setMoveWithResults,
-        setPreviewBoard,
-        setPreviewMove,
-        setPreviewTileOwnership,
-        setSimulationBoard,
-        setSimulationProgress,
         setTempBoardCoords,
         setSelectedTiles,
         setPlayer1Rack,
@@ -918,56 +881,30 @@ export const useGameStore = create((set, get) => {
         setSelectedBoardPosition,
         setArrowDirection
       } = get();
-      
+
       // Validate move structure
       if (!move || !move.tiles || !Array.isArray(move.tiles)) {
         console.error('Invalid move structure:', move);
         return;
       }
-      
-      // If the simulation modal is open, update the selected move and board
-      if (showSimulationModal) {
-        setMoveWithResults(move);
-        
-        // Clear preview board so the new move shows up
-        setPreviewBoard(null);
-        setPreviewMove(null);
-        setPreviewTileOwnership(null);
-        
-        // Clear heat map data when selecting a new move
-        setSimulationBoard(null);
-        setSimulationProgress(0);
-        
-        // Update the simulation board with the new move
-        const simulationBoardData = JSON.parse(JSON.stringify(boardCoords));
-        
-        // Apply the move to the simulation board
-        for (const tile of move.tiles) {
-          if (tile.isNew) {
-            simulationBoardData[tile.row][tile.col] = tile.letter;
-          }
-        }
-        
-        setSimulationBoard(simulationBoardData);
-      } else {
-        // Normal move selection for the game board
-        import('../functions/play/moveFunctions').then(({ handleMoveSelect }) => {
-          handleMoveSelect({
-            move,
-            boardCoords,
-            tempBoardCoords,
-            currentPlayer,
-            player1Rack,
-            player2Rack,
-            setTempBoardCoords,
-            setSelectedTiles,
-            setPlayer1Rack,
-            setPlayer2Rack,
-            setSelectedBoardPosition,
-            setArrowDirection
-          });
+
+      // Place the move on the real game board
+      import('../functions/play/moveFunctions').then(({ handleMoveSelect }) => {
+        handleMoveSelect({
+          move,
+          boardCoords,
+          tempBoardCoords,
+          currentPlayer,
+          player1Rack,
+          player2Rack,
+          setTempBoardCoords,
+          setSelectedTiles,
+          setPlayer1Rack,
+          setPlayer2Rack,
+          setSelectedBoardPosition,
+          setArrowDirection
         });
-      }
+      });
     },
     
     // Calculate preview score for placed tiles
@@ -1019,71 +956,6 @@ export const useGameStore = create((set, get) => {
       const { setShowConfetti } = get();
       setShowConfetti(false);
       // Don't hide the victory card - let it stay open until user clicks rematch
-    },
-
-    // Run simulation for a move
-    runSimulation: async (move, callbacks) => {
-      const {
-        setSimulatingMove,
-        setSimulationProgress,
-        setShouldStopSimulation,
-        setPreviewBoard,
-        setPreviewMove,
-        setPreviewTileOwnership,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        setSimulationBoard,
-        simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool,
-        shouldStopSimulation
-      } = get();
-
-      setSimulatingMove(move);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-
-      const gameState = {
-        boardCoords: simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool
-      };
-
-      // Dynamic import to avoid circular dependency
-      const { runSimulation: runSimulationFunction } = await import('../functions/simulationFunctions');
-
-      await runSimulationFunction(move, gameState, {}, callbacks || {
-        onProgress: setSimulationProgress,
-        onPreviewUpdate: (previewData) => {
-          setPreviewBoard(previewData.board);
-          setPreviewMove(previewData.move);
-          setPreviewTileOwnership(previewData.tileOwnership);
-        },
-        onError: (message) => {
-          setSnackbarMessage(message);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        },
-        onComplete: () => {
-          setSimulatingMove(null);
-          setSimulationProgress(0);
-          setShouldStopSimulation(false);
-        },
-        shouldStopRef: { current: shouldStopSimulation },
-        resetHeatMapMode: () => {
-          setSimulationBoard(null);
-          setSimulationProgress(0);
-        }
-      });
     },
 
     // UI handler functions
@@ -1152,214 +1024,129 @@ export const useGameStore = create((set, get) => {
       });
     },
 
-    // Simulation handler functions
-    openSimulationModal: (move = null) => {
-      const { topMoves, boardCoords, setMoveWithResults, setSimulationBoard, setPreviewBoard, setPreviewMove, setShowSimulationModal } = get();
-      
-      // Dynamic import to avoid circular dependency
-      import('../functions/simulationFunctions').then(({ openSimulationModal: openSimulationModalFunction }) => {
-        openSimulationModalFunction(move, topMoves, boardCoords, {
-          setMoveWithResults,
-          setSimulationBoard,
-          setPreviewBoard,
-          setPreviewMove,
-          setShowSimulationModal
-        });
-      });
+    // --- Analysis Mode (board-based) ---
+
+    setAnalysisState: (partial) => set(state => ({ analysis: { ...state.analysis, ...partial } })),
+
+    enterAnalysisMode: () => {
+      const { isBotMode, isMultiplayerMode, gameStarted } = get();
+      if (!isBotMode || isMultiplayerMode || !gameStarted) return;
+      set({ analysis: { ...DEFAULT_ANALYSIS_STATE, active: true } });
     },
 
-    resetHeatMapMode: () => {
-      const { setSimulationBoard, setSimulationProgress, setPreviewMove, setPreviewTileOwnership, setIsHeatMapMode, setHeatMapData } = get();
-      
-      // Dynamic import to avoid circular dependency
-      import('../functions/simulationFunctions').then(({ resetHeatMapMode: resetHeatMapModeFunction }) => {
-        resetHeatMapModeFunction({
-          setSimulationBoard,
-          setSimulationProgress,
-          setPreviewMove,
-          setPreviewTileOwnership,
-          setIsHeatMapMode,
-          setHeatMapData
-        });
-      });
-    },
+    exitAnalysisMode: () => set({ analysis: { ...DEFAULT_ANALYSIS_STATE } }),
 
-    stopSimulation: (shouldStopRef) => {
-      const { setShouldStopSimulation, setSimulatingMove, setSimulationProgress, setPreviewMove, setPreviewTileOwnership } = get();
-      
-      // Dynamic import to avoid circular dependency
-      import('../functions/simulationFunctions').then(({ stopSimulation: stopSimulationFunction }) => {
-        stopSimulationFunction({
-          setShouldStopSimulation,
-          shouldStopRef,
-          setSimulatingMove,
-          setSimulationProgress,
-          setPreviewMove,
-          setPreviewTileOwnership
-        });
-      });
-    },
+    runAnalysisMovePreview: async (move) => {
+      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool } = get();
+      setAnalysisState({ isRunning: true, error: null });
 
-    simulateMove: async (move) => {
-      const { openSimulationModal, runSimulation } = get();
-      openSimulationModal(move);
-      await runSimulation(move);
-    },
-
-    runAllMovesSimulation: async () => {
-      const {
-        topMoves,
-        simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool,
-        setIsSimulatingAllMoves,
-        setSimulationProgress,
-        setShouldStopSimulation,
-        setAllMoveResults,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen
-      } = get();
-
-      if (!topMoves || topMoves.length === 0) return;
-      
-      setIsSimulatingAllMoves(true);
-      setSimulationProgress(0);
-      setShouldStopSimulation(false);
-      
-      // Get the ref from the store state
-      const shouldStopSimulationRef = get().shouldStopSimulationRef;
-      if (shouldStopSimulationRef) {
-        shouldStopSimulationRef.current = false;
-      }
-      
-      const gameState = {
-        boardCoords: simulationBoard,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool
-      };
-      
-      // Dynamic import to avoid circular dependency
-      const { runAllMovesSimulation: runAllMovesSimulationFunction } = await import('../functions/simulationFunctions');
-      
-      await runAllMovesSimulationFunction(topMoves, gameState, {
-        numSimulations: 5,
-        turnsPerSim: 1
-      }, {
-        onProgress: setSimulationProgress,
-        onResultsUpdate: setAllMoveResults,
-        onError: (message) => {
-          setSnackbarMessage(message);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        },
-        onComplete: () => {
-          setIsSimulatingAllMoves(false);
-          setSimulationProgress(0);
-          setShouldStopSimulation(false);
-          if (shouldStopSimulationRef) {
-            shouldStopSimulationRef.current = false;
-          }
-        },
-        shouldStopRef: shouldStopSimulationRef || { current: false }
-      });
-    },
-
-    runHeatMapSimulation: async (move) => {
-      const {
-        setSimulatingMove,
-        setSimulationProgress,
-        setShouldStopSimulation,
-        setSimulationBoard,
-        setSnackbarMessage,
-        setSnackbarSeverity,
-        setSnackbarOpen,
-        simulationBoard,
-        boardCoords, // Keep this as fallback
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool,
-        setHeatMapData,
-        setIsHeatMapMode
-      } = get();
-
-      setSimulatingMove(move);
-      setSimulationProgress(0);
-      
-      // Set heat map mode and clear existing data
-      setIsHeatMapMode(true);
-      setHeatMapData(null);
-      
-      // Reset stop flag
-      setShouldStopSimulation(false);
-      
-      // Get the ref from the store state
-      const shouldStopSimulationRef = get().shouldStopSimulationRef;
-      if (shouldStopSimulationRef) {
-        shouldStopSimulationRef.current = false;
-      }
-      
-      // Ensure we have a valid board to work with
-      let boardToUse = simulationBoard;
-      if (!boardToUse || !Array.isArray(boardToUse) || boardToUse.length !== 15) {
-        // If simulation board is not valid, use the current game board
-        boardToUse = boardCoords;
-        
-        // If the current game board is also not valid, create a new one
-        if (!boardToUse || !Array.isArray(boardToUse) || boardToUse.length !== 15) {
-          console.error('No valid board available for heat map simulation');
-          setSnackbarMessage('No valid board available for heat map simulation');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          return;
+      const frames = [];
+      const onProgress = (progress, previewData) => {
+        if (previewData) {
+          frames.push(previewData);
         }
-      }
-      
-      const gameState = {
-        boardCoords: boardToUse,
-        currentPlayer,
-        player1Rack,
-        player2Rack,
-        player1points,
-        player2points,
-        pool
       };
-      
-      // Dynamic import to avoid circular dependency
-      const { runHeatMapSimulation: runHeatMapSimulationFunction } = await import('../functions/simulationFunctions');
-      
-      await runHeatMapSimulationFunction(move, gameState, {
-        numSimulations: 5,
-        turnsPerSim: 1
-      }, {
-        onProgress: setSimulationProgress,
-        onHeatMapUpdate: setHeatMapData,
-        onError: (message) => {
-          setSnackbarMessage(message);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        },
-        onComplete: () => {
-          setSimulatingMove(null);
-          setSimulationProgress(0);
-          setShouldStopSimulation(false);
-          if (shouldStopSimulationRef) {
-            shouldStopSimulationRef.current = false;
+
+      try {
+        const { simulateMove: simulateMoveFn } = await import('../functions/simulationFunctions');
+        await simulateMoveFn(
+          move,
+          { boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool },
+          onProgress,
+          { numSimulations: 1, turnsPerSim: 3 }
+        );
+        setAnalysisState({ selectedMove: move, frames, stepIndex: 0, isRunning: false });
+      } catch (error) {
+        console.error('Error running analysis move preview:', error);
+        setAnalysisState({ isRunning: false, error: error.message });
+      }
+    },
+
+    runAnalysisHeatMap: async (move, numSimulations = 20) => {
+      const { setAnalysisState, boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool } = get();
+      setAnalysisState({ isRunning: true, error: null, selectedMove: move });
+
+      const gameState = { boardCoords, currentPlayer, player1Rack, player2Rack, player1points, player2points, pool };
+      const shouldStopRef = { current: false };
+
+      try {
+        const { runHeatMapSimulation } = await import('../functions/simulationFunctions');
+        await runHeatMapSimulation(
+          move,
+          gameState,
+          { numSimulations, turnsPerSim: 1 },
+          {
+            onHeatMapUpdate: (heatMapGrid) => {
+              setAnalysisState({ heatMap: { grid: heatMapGrid, maxSimulations: numSimulations } });
+            },
+            onError: (message) => setAnalysisState({ isRunning: false, error: message }),
+            onComplete: () => setAnalysisState({ isRunning: false }),
+            shouldStopRef
           }
-        },
-        shouldStopRef: shouldStopSimulationRef || { current: false }
-      });
+        );
+      } catch (error) {
+        console.error('Error running analysis heat map:', error);
+        setAnalysisState({ isRunning: false, error: error.message });
+      }
+    },
+
+    // Opponent Responses: bulk per-move stats (avg score / bingo %) from the
+    // Railway bulk-move-gen endpoint - one server-side call per move, run in
+    // parallel, instead of the ply-by-ply client-driven simulation the other
+    // layers use. Ported from the old Metrics2Modal's analyzeAllMoves.
+    runAnalysisOpponentResponses: async (moves, iterations = 20) => {
+      const { setAnalysisState, boardCoords, pool } = get();
+      if (!moves || moves.length === 0) return;
+
+      setAnalysisState({ isRunning: true, error: null });
+
+      const movesToAnalyze = moves.slice(0, 10);
+      const tilePoolString = pool.join('');
+
+      try {
+        const results = await Promise.all(movesToAnalyze.map(async (move) => {
+          try {
+            const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
+            boardCoords.forEach((row, rowIndex) => {
+              row.forEach((cell, colIndex) => {
+                if (typeof cell === 'string' && cell !== '') {
+                  cleanBoard[rowIndex][colIndex] = cell;
+                }
+              });
+            });
+            move.tiles.forEach(tile => {
+              if (tile.isNew) {
+                cleanBoard[tile.row][tile.col] = tile.letter;
+              }
+            });
+
+            const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ board: cleanBoard, tilePool: tilePoolString, iterations })
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { word: move.word, data };
+          } catch (error) {
+            return { word: move.word, error: error.message };
+          }
+        }));
+
+        const resultsMap = {};
+        results.forEach(({ word, data, error }) => {
+          resultsMap[word] = { data, error };
+        });
+
+        setAnalysisState({ opponentResponses: resultsMap, isRunning: false });
+      } catch (error) {
+        console.error('Error running opponent response analysis:', error);
+        setAnalysisState({ isRunning: false, error: error.message });
+      }
     },
 
     handleGetTopMovesForExpandable: () => {

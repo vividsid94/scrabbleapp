@@ -13,10 +13,8 @@ import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
-import SimulationModal from '../../components/Modals/SimulationModal';
 import GameModal from '../../components/Modals/GameModal';
 import DefenseModal from '../../components/Modals/DefenseModal';
-import Metrics2Modal from '../../components/Modals/Metrics2Modal';
 import MoveCoach from './components/MoveCoach';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
@@ -32,6 +30,7 @@ import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
+import { buildGhostOverlayGrid } from '../../functions/analysisBoardFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
 import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
@@ -115,32 +114,11 @@ export default function Play({ isMultiplayer = false }) {
     // Victory state
     winner,
     
-    // Simulation state
-    simulatingMove,
-    simulationResult,
-    simulationProgress,
-    previewBoard,
-    previewTileOwnership,
-    moveWithResults,
-    simulationBoard,
-    showSimulationModal,
-    allMoveResults,
-    isSimulatingAllMoves,
+    // Live single-tile score preview
     previewScore,
     previewScorePosition,
-    isHeatMapMode,
-    heatMapData,
-    setSimulatingMove,
-    setSimulationResult,
-    setSimulationProgress,
-    setPreviewBoard,
-    setPreviewMove,
-    setPreviewTileOwnership,
-    setMoveWithResults,
-    setSimulationBoard,
     setLeaveValues,
-    setShowSimulationModal,
-    
+
     // UI state
     theme,
     snackbarOpen,
@@ -163,8 +141,7 @@ export default function Play({ isMultiplayer = false }) {
     startTimer,
     handleMoveSelectClick,
     handleConfettiComplete,
-    runSimulation,
-    
+
     // UI handler functions
     handleSettingsOpen,
     handleWordSubmitClick,
@@ -172,14 +149,6 @@ export default function Play({ isMultiplayer = false }) {
     handleExchangeClick,
     handlePlayTopMoveClick,
     handleBotModeToggle,
-    
-    // Simulation handler functions
-    openSimulationModal,
-    resetHeatMapMode,
-    stopSimulation,
-    simulateMove,
-    runAllMovesSimulation,
-    runHeatMapSimulation,
     handleGetTopMovesForExpandable,
     
     // Utility functions
@@ -208,10 +177,16 @@ export default function Play({ isMultiplayer = false }) {
     updateDefenseResults,
     setShowDefenseModal,
     setDefenseMove,
-    
-    // Metrics2 modal
-    showMetrics2Modal,
-    setShowMetrics2Modal,
+
+
+    // Analysis Mode (board-based)
+    analysis,
+    enterAnalysisMode,
+    exitAnalysisMode,
+    setAnalysisState,
+    runAnalysisMovePreview,
+    runAnalysisHeatMap,
+    runAnalysisOpponentResponses,
     
     // Move Coach
     showMoveCoach,
@@ -474,12 +449,12 @@ export default function Play({ isMultiplayer = false }) {
   // Removed duplicate keydown listener to prevent double-press issues
 
   // Bot turns — call botFunctions directly (not via store dynamic import, which cached stale code)
-  useEffect(() => { 
-    if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current) {
+  useEffect(() => {
+    if (isBotMode && currentPlayer === 2 && !isBotThinking && !gameEnded && !botMoveMadeRef.current && !analysis.active) {
       botMoveMadeRef.current = true;
       runBotMove(botMoveSound);
     }
-  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, gameStarted, botMoveSound]);
+  }, [currentPlayer, isBotMode, isBotThinking, gameEnded, gameStarted, botMoveSound, analysis.active]);
 
   // Reset bot move flag when player changes to 1
   useEffect(() => {
@@ -501,6 +476,17 @@ export default function Play({ isMultiplayer = false }) {
       botMoveMadeRef.current = false;
     }
   }, [isBotMode]);
+
+  // Analysis Mode toggle - only usable in single-player bot mode (enforced
+  // again in the store itself, this is just the UI-level guard)
+  const handleToggleAnalysisMode = () => {
+    if (isBotThinking || isPlayerThinking) return;
+    if (analysis.active) {
+      exitAnalysisMode();
+    } else {
+      enterAnalysisMode();
+    }
+  };
 
   // Show modal when toggling bot mode on
   const handleBotModeToggleWithSounds = () => {
@@ -626,10 +612,13 @@ export default function Play({ isMultiplayer = false }) {
     }
   }, [currentPlayer, gameStarted]);
 
-  // Start timer when it's a player's turn
+  // Start timer when it's a player's turn - paused entirely while Analysis
+  // Mode is active (no interval is started, so nothing needs to be
+  // snapshotted/restored; re-running this effect on exit resumes normally).
   useEffect(() => {
+    if (analysis.active) return;
     return startTimer(timerRef);
-  }, [timerActive, currentPlayer, gameStarted]);
+  }, [timerActive, currentPlayer, gameStarted, analysis.active]);
 
   // Get the latest move from move history
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
@@ -685,6 +674,27 @@ export default function Play({ isMultiplayer = false }) {
     );
   }, [tempBoardCoords, boardCoords, origBoardCoords, theme, color.current, boardColor.current, blankTiles, lastMoveCoordinates, lightMode, invalidWordCoords, premiumSquares]);
 
+  // Ghost-tile overlay for Analysis Mode's move preview - built from the
+  // current step's simulated frame, never from real board state, so it can
+  // never leak into boardCoords/tempBoardCoords or the active-game snapshot.
+  // Gated on the "preview" layer specifically so switching to another layer
+  // doesn't leave stale ghost tiles showing alongside its overlay.
+  const analysisGhostGrid = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'preview' || !analysis.frames || analysis.frames.length === 0) {
+      return null;
+    }
+    return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
+
+  // Heat-map tint overlay for Analysis Mode - same gating rule as the ghost
+  // grid above, keyed to the "heatmap" layer.
+  const analysisHeatGrid = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'heatmap' || !analysis.heatMap) {
+      return null;
+    }
+    return analysis.heatMap.grid;
+  }, [analysis.active, analysis.layer, analysis.heatMap]);
+
   // Update player time states when gameTime changes
   useEffect(() => {
     setPlayer1Time(gameTime * 60);
@@ -706,12 +716,6 @@ export default function Play({ isMultiplayer = false }) {
       // reset on the next arrival anyway (via initializeGame or
       // restoreActiveGame), so nothing needs to happen here.
       setTopMoves([]);
-      setSimulatingMove(null);
-      setSimulationResult(null);
-      setSimulationProgress(0);
-      setPreviewBoard(null);
-      setPreviewMove(null);
-      setMoveWithResults(null);
       setLeaveValues({}); // Clear leave values cache
       setSelectedTiles([]);
       setSelectedBoardPosition(null);
@@ -967,6 +971,8 @@ export default function Play({ isMultiplayer = false }) {
             lightMode={lightMode}
             showNoCommentaryLabel={false}
             onBoardChildClick={(row, col) => {
+              // Nothing gets pressed/committed while analyzing
+              if (analysis.active) return;
               // Run the existing selection logic (only works on non-occupied cells)
               handleBoardPositionSelect({
                 row,
@@ -978,19 +984,22 @@ export default function Play({ isMultiplayer = false }) {
                 setArrowDirection
               });
             }}
-            onTileClick={(tile, index) => handleTileClick({
-              tile,
-              index,
-              currentPlayer,
-              player1Rack,
-              player2Rack,
-              selectedTilesArray,
-              setSelectedTiles,
-              tilesToExchange,
-              setTilesToExchange,
-              exchangeModeActive: false
-            })}
-            selectedPosition={selectedBoardPosition}
+            onTileClick={(tile, index) => {
+              if (analysis.active) return;
+              handleTileClick({
+                tile,
+                index,
+                currentPlayer,
+                player1Rack,
+                player2Rack,
+                selectedTilesArray,
+                setSelectedTiles,
+                tilesToExchange,
+                setTilesToExchange,
+                exchangeModeActive: false
+              });
+            }}
+            selectedPosition={analysis.active ? null : selectedBoardPosition}
             arrowDirection={arrowDirection}
             onArrowDirectionChange={(newDirection) => {
                 console.log('Play component received direction change:', newDirection);
@@ -998,6 +1007,9 @@ export default function Play({ isMultiplayer = false }) {
             }}
             animate={false}
             enableTelestrator={telestratorEnabled}
+            analysisGhostGrid={analysisGhostGrid}
+            analysisHeatGrid={analysisHeatGrid}
+            analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
             showSlip={false}
             showDictionary={false}
             dictionary=""
@@ -1058,10 +1070,6 @@ export default function Play({ isMultiplayer = false }) {
             moveHistory={moveHistory}
             topMoves={topMoves}
             onMoveSelect={handleMoveSelectClick}
-            onSimulateMove={simulateMove}
-            onOpenSimulationModal={openSimulationModal}
-            onOpenMetrics2Modal={() => setShowMetrics2Modal(true)}
-            simulatingMove={simulatingMove}
             boardCoords={boardCoords}
             blankTiles={blankTiles}
             pool={pool}
@@ -1090,6 +1098,16 @@ export default function Play({ isMultiplayer = false }) {
             telestratorEnabled={telestratorEnabled}
             onToggleTelestrator={setTelestratorEnabled}
             topeThinking={topeThinking}
+            analysisModeActive={analysis.active}
+            canUseAnalysisMode={isBotMode && !isMultiplayerMode}
+            onToggleAnalysisMode={handleToggleAnalysisMode}
+            analysisState={analysis}
+            onAnalysisSelectMove={runAnalysisMovePreview}
+            onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
+            onAnalysisSetLayer={(layer) => setAnalysisState({ layer })}
+            onAnalysisStep={(stepIndex) => setAnalysisState({ stepIndex })}
+            onAnalysisRunHeatMap={runAnalysisHeatMap}
+            onAnalysisRunOpponentResponses={runAnalysisOpponentResponses}
           />
 
           {showTimeSlider && !gameStarted && (
@@ -1389,16 +1407,6 @@ export default function Play({ isMultiplayer = false }) {
           onUpdateResults={updateDefenseResults}
         />
 
-        <Metrics2Modal
-          open={showMetrics2Modal}
-          onClose={() => {
-            setShowMetrics2Modal(false);
-          }}
-          topMoves={topMoves}
-          boardCoords={boardCoords}
-          pool={pool}
-        />
-        
         <MoveCoach
           open={showMoveCoach}
           onClose={() => setShowMoveCoach(false)}
@@ -1507,47 +1515,6 @@ export default function Play({ isMultiplayer = false }) {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
-      <SimulationModal
-        open={showSimulationModal}
-        onClose={() => {
-          setShowSimulationModal(false);
-          setSimulationBoard(null);
-          setPreviewMove(null);
-          setPreviewTileOwnership(null);
-          setMoveWithResults(null);
-          resetHeatMapMode();
-        }}
-        simulationBoard={previewBoard || simulationBoard}
-          previewBoard={previewBoard}
-        previewTileOwnership={previewTileOwnership}
-        theme={theme}
-        color={color}
-        complementaryColor={complementaryColor}
-        blankTiles={blankTiles}
-        simulatingMove={simulatingMove}
-        simulationProgress={simulationProgress}
-        simulationResult={simulationResult}
-        moveWithResults={moveWithResults}
-        onStartSimulation={runSimulation}
-        onStartHeatMap={runHeatMapSimulation}
-        onStopSimulation={stopSimulation}
-          onSwitchToMetrics={() => {}}
-        heatMapData={heatMapData}
-        isHeatMapMode={isHeatMapMode}
-          simulationSettings={{
-            numSimulations: 5,
-            turnsPerSim: 1
-          }}
-          onSimulationSettingsChange={(newSettings) => {
-            // This function is now empty as the state is managed by the simulation store
-          }}
-        topMoves={topMoves}
-        onMoveSelect={handleMoveSelectClick}
-        onRunAllMovesSimulation={runAllMovesSimulation}
-        allMoveResults={allMoveResults}
-        isSimulatingAllMoves={isSimulatingAllMoves}
-      />
 
       {/* Victory Celebration Components */}
       <Confetti
