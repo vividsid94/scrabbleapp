@@ -236,12 +236,9 @@ export default function ClassicMode({ tileColor }) {
     setStage('quiz');
   };
 
-  // overrideGuess lets the on-screen keyboard's skull key submit "DEAD"
-  // immediately (see handleOverlayKeyPress) without a stale-state round trip
-  // through guessInput.
-  const handleGuessSubmit = (e, overrideGuess) => {
+  const handleGuessSubmit = (e) => {
     e.preventDefault();
-    const guess = (overrideGuess ?? guessInput).trim().toUpperCase();
+    const guess = guessInput.trim().toUpperCase();
     if (!guess) return;
     if (foundWords.has(guess)) {
       setFeedback({ type: 'repeat', message: 'Already found that one!' });
@@ -259,16 +256,13 @@ export default function ClassicMode({ tileColor }) {
   // Mirrors what typing on a physical keyboard would do to the same
   // controlled guessInput/handleGuessSubmit pair, since the on-screen
   // keyboard is the only way to type at all once the real input is
-  // readOnly on mobile. 'Dead' (the skull key) submits DEAD immediately -
-  // Classic has no dead-rack rounds, so it just always misses, same as
-  // typing it on the physical keyboard would.
+  // readOnly on mobile. No skull/dead key here - Classic has no dead-rack
+  // rounds at all, unlike Zyz.
   const handleOverlayKeyPress = (key) => {
     if (key === 'Backspace') {
       setGuessInput((v) => v.slice(0, -1));
     } else if (key === 'Enter') {
       handleGuessSubmit({ preventDefault: () => {} });
-    } else if (key === 'Dead') {
-      handleGuessSubmit({ preventDefault: () => {} }, 'DEAD');
     } else {
       setGuessInput((v) => v + key);
     }
@@ -502,7 +496,6 @@ export default function ClassicMode({ tileColor }) {
             visible={isMobile && keyboardOpen && roundActive}
             onKeyPress={handleOverlayKeyPress}
             onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
-            deadKey
           />
         </div>
       )}

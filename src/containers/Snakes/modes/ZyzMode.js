@@ -564,7 +564,7 @@ export default function ZyzMode({ tileColor }) {
             visible={isMobile && keyboardOpen && roundActive}
             onKeyPress={handleOverlayKeyPress}
             onClose={() => { setKeyboardOpen(false); inputRef.current?.blur(); }}
-            deadKey
+            deadKey={deadRacksEnabled}
           />
         </div>
       )}

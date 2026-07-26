@@ -111,18 +111,18 @@
 .row {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .key {
   flex: 1;
-  max-width: 42px;
-  min-height: 48px;
+  max-width: 30px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 18px;
+  border-radius: 6px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -152,19 +152,20 @@
 }
 
 .keyDark:active,
-.keyLight:active {
+.keyLight:active,
+.key.keyPressed {
   transform: translateY(1px);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .keyPrimary {
   flex: 0 0 auto;
-  width: 54px;
-  min-width: 54px;
-  max-width: 54px;
-  min-height: 48px;
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+  min-height: 52px;
   color: #fff;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -173,6 +174,7 @@
   box-shadow: 0 1px 0 rgba(4, 120, 87, 0.45);
 }
 
-.keyPrimary:active {
+.keyPrimary:active,
+.keyPrimary.keyPressed {
   background: linear-gradient(180deg, #059669 0%, #047857 100%);
 }

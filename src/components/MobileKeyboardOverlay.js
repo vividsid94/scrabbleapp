@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import { ThemeContext } from '../App';
 import styles from './MobileKeyboardOverlay.module.css';
@@ -17,6 +17,7 @@ import styles from './MobileKeyboardOverlay.module.css';
  */
 export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, label, deadKey }) {
   const { lightMode } = useContext(ThemeContext);
+  const [pressedKey, setPressedKey] = useState(null);
 
   if (!visible) return null;
 
@@ -25,6 +26,37 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, la
   const keyClass = isDark ? styles.keyDark : styles.keyLight;
   const backspaceClass = isDark ? styles.backspaceBtnDark : styles.backspaceBtnLight;
   const exitClass = isDark ? styles.exitBtnDark : styles.exitBtnLight;
+
+  // Letter keys sit edge-to-edge with only a thin visual gap between them
+  // (see .row's gap) - a finger landing exactly on that gap, or just past a
+  // key's own edge, would otherwise hit nothing. Handling the touch at the
+  // ROW level and picking whichever key's box is horizontally closest to
+  // the touch point - instead of relying on the browser's normal per-element
+  // hit testing - means there's no dead zone between keys at all, which is
+  // what actually made this hard to type on with bigger fingers (the fix
+  // isn't bigger keys, it's no gaps a touch can fall through).
+  const handleRowPointerDown = (e) => {
+    const row = e.currentTarget;
+    const x = e.clientX;
+    let closestKey = null;
+    let closestDist = Infinity;
+    for (const child of row.children) {
+      const key = child.getAttribute('data-key');
+      if (!key) continue;
+      const rect = child.getBoundingClientRect();
+      const dist = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestKey = key;
+      }
+    }
+    if (closestKey) {
+      setPressedKey(closestKey);
+      onKeyPress && onKeyPress(closestKey);
+    }
+  };
+
+  const clearPressedKey = () => setPressedKey(null);
 
   return (
     <Box
@@ -63,20 +95,26 @@ export default function MobileKeyboardOverlay({ visible, onKeyPress, onClose, la
       </Box>
 
       {rows.map((row, rowIndex) => (
-        <Box key={row} className={styles.row}>
+        <Box
+          key={row}
+          className={styles.row}
+          onPointerDown={handleRowPointerDown}
+          onPointerUp={clearPressedKey}
+          onPointerLeave={clearPressedKey}
+        >
           {row.split('').map((letter) => (
             <Box
               key={letter}
-              className={`${styles.key} ${keyClass}`}
-              onClick={() => onKeyPress && onKeyPress(letter)}
+              data-key={letter}
+              className={`${styles.key} ${keyClass} ${pressedKey === letter ? styles.keyPressed : ''}`}
             >
               {letter}
             </Box>
           ))}
           {rowIndex === 2 && (
             <Box
-              className={`${styles.key} ${styles.keyPrimary}`}
-              onClick={() => onKeyPress && onKeyPress('Enter')}
+              data-key="Enter"
+              className={`${styles.key} ${styles.keyPrimary} ${pressedKey === 'Enter' ? styles.keyPressed : ''}`}
             >
               Go
             </Box>
