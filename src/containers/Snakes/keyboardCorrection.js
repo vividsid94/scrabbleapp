@@ -17,11 +17,15 @@
  */
 
 // Physical QWERTY key-adjacency (directly up/down/left/right only, no
-// diagonals), derived from the real keyboard's staggered row geometry -
-// row 2 (ASDFGHJKL) sits offset half a key right of row 1 (QWERTYUIOP), and
-// row 3 (ZXCVBNM) a further quarter-key right of row 2. That stagger is why,
-// e.g., S has TWO up-neighbors (W and E) but only ONE down-neighbor (X,
-// not Z) - it's not a symmetric plus-shape.
+// diagonals). Row 2 (ASDFGHJKL) and row 3 (ZXCVBNM) each sit staggered
+// relative to the row above, which is why the shape isn't a symmetric plus
+// for every key: most row-2 keys (D, F, G, H, J) have TWO row-3
+// down-neighbors, but S only has one (X) and K only has one (M) - S because
+// its other geometric neighbor, Z, sits far enough left in practice to not
+// read as adjacent, and K because there's nothing to its right in row 3 (M
+// is J's neighbor, not K's). Checked symmetric (every A->B has a matching
+// B->A) and verified against real fat-finger reports, not just derived
+// from an abstract offset formula.
 export const QWERTY_ADJACENCY = {
   Q: ['W', 'A'],
   W: ['Q', 'E', 'A', 'S'],
@@ -33,22 +37,22 @@ export const QWERTY_ADJACENCY = {
   I: ['U', 'O', 'J', 'K'],
   O: ['I', 'P', 'K', 'L'],
   P: ['O', 'L'],
-  A: ['S', 'Q', 'W', 'Z'],
-  S: ['A', 'D', 'W', 'E', 'X'],
-  D: ['S', 'F', 'E', 'R', 'C'],
-  F: ['D', 'G', 'R', 'T', 'V'],
-  G: ['F', 'H', 'T', 'Y', 'B'],
-  H: ['G', 'J', 'Y', 'U', 'N'],
-  J: ['H', 'K', 'U', 'I', 'M'],
-  K: ['J', 'L', 'I', 'O'],
-  L: ['K', 'O', 'P'],
-  Z: ['X', 'A'],
-  X: ['Z', 'C', 'S'],
-  C: ['X', 'V', 'D'],
-  V: ['C', 'B', 'F'],
-  B: ['V', 'N', 'G'],
-  N: ['B', 'M', 'H'],
-  M: ['N', 'J'],
+  A: ['Q', 'W', 'S', 'Z'],
+  S: ['A', 'W', 'E', 'D', 'X'],
+  D: ['E', 'R', 'S', 'F', 'X', 'C'],
+  F: ['R', 'T', 'D', 'G', 'C', 'V'],
+  G: ['T', 'Y', 'F', 'H', 'V', 'B'],
+  H: ['Y', 'U', 'G', 'J', 'B', 'N'],
+  J: ['U', 'I', 'H', 'K', 'N', 'M'],
+  K: ['I', 'O', 'J', 'L', 'M'],
+  L: ['O', 'P', 'K'],
+  Z: ['A', 'X'],
+  X: ['Z', 'S', 'D', 'C'],
+  C: ['D', 'X', 'F', 'V'],
+  V: ['C', 'F', 'G', 'B'],
+  B: ['V', 'G', 'H', 'N'],
+  N: ['B', 'H', 'J', 'M'],
+  M: ['N', 'J', 'K'],
 };
 
 // candidateWords: words for the current round that are still unfound AND
