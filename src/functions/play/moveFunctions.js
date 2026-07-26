@@ -361,12 +361,6 @@ export const handleGetTopMoves = async ({
  * @param {Function} params.setPool - Function to update tile pool
  * @param {Function} params.setMoveHistory - Function to update move history
  * @param {Function} params.setCurrentPlayer - Function to update current player
- * @param {Function} params.setSimulatingMove - Function to update simulating move state
- * @param {Function} params.setSimulationResult - Function to update simulation result
- * @param {Function} params.setSimulationProgress - Function to update simulation progress
- * @param {Function} params.setPreviewBoard - Function to update preview board
- * @param {Function} params.setPreviewMove - Function to update preview move
- * @param {Function} params.setMoveWithResults - Function to update move with results
  * @param {Function} params.setTopMoves - Function to update top moves
  * @param {Function} params.setSnackbarMessage - Function to update snackbar message
  * @param {Function} params.setSnackbarSeverity - Function to update snackbar severity
@@ -406,12 +400,6 @@ export const handlePlayTopMove = async () => {
     setPool,
     setMoveHistory,
     setCurrentPlayer,
-    setSimulatingMove,
-    setSimulationResult,
-    setSimulationProgress,
-    setPreviewBoard,
-    setPreviewMove,
-    setMoveWithResults,
     setTopMoves,
     setSnackbarMessage,
     setSnackbarSeverity,
@@ -726,12 +714,6 @@ export const handlePlayTopMove = async () => {
       setArrowDirection('right');
 
       // After successful move
-      setSimulatingMove(null);
-      setSimulationResult(null);
-      setSimulationProgress(0);
-      setPreviewBoard(null);
-      setPreviewMove(null);
-      setMoveWithResults(null);
       setTopMoves([]); // Clear top moves
     }
   } catch (error) {
@@ -741,12 +723,6 @@ export const handlePlayTopMove = async () => {
     setSnackbarOpen(true);
   } finally {
     // Clear states even on error
-    setSimulatingMove(null);
-    setSimulationResult(null);
-    setSimulationProgress(0);
-    setPreviewBoard(null);
-    setPreviewMove(null);
-    setMoveWithResults(null);
     setTopMoves([]); // Clear top moves
   }
 };

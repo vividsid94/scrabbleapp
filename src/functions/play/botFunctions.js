@@ -136,12 +136,6 @@ export const makeBotMove = async (botMoveSound) => {
     setArrowDirection,
     setAutoPlayBest,
     getBoardDiff,
-    setSimulatingMove,
-    setSimulationResult,
-    setSimulationProgress,
-    setPreviewBoard,
-    setPreviewMove,
-    setMoveWithResults,
     setTopeThinking
   } = useGameStore.getState();
 
@@ -870,12 +864,6 @@ export const makeBotMove = async (botMoveSound) => {
       setIsBotThinking(false);
     }
     // Clear states even on error
-    setSimulatingMove(null);
-    setSimulationResult(null);
-    setSimulationProgress(0);
-    setPreviewBoard(null);
-    setPreviewMove(null);
-    setMoveWithResults(null);
     setTopMoves([]); // Clear top moves
   }
 };
@@ -894,12 +882,6 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
     setPlayer2Rack,
     setIsBotMode,
     setPlayer1Name,
-    setSimulatingMove,
-    setSimulationResult,
-    setSimulationProgress,
-    setPreviewBoard,
-    setPreviewMove,
-    setMoveWithResults,
     setTopMoves,
     setMoveHistory,
     setGameStarted,
@@ -987,12 +969,6 @@ export const startBotGame = ({ origBoard, origPool, TEST_RACKS, gameStartSound, 
   setPlayer1Name('You');
 
   // Clear all temporary states
-  setSimulatingMove(null);
-  setSimulationResult(null);
-  setSimulationProgress(0);
-  setPreviewBoard(null);
-  setPreviewMove(null);
-  setMoveWithResults(null);
   setTopMoves([]);
   
   // Set gameStarted to true
