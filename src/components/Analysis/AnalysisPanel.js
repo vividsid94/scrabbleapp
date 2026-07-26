@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import styles from './AnalysisPanel.module.css';
 import { formatMoveLocation } from '../../functions/play/moveDisplayUtils';
+import { buildIterationLabel } from '../../functions/analysisBoardFunctions';
 
 const LAYERS = [
   { key: 'preview', label: 'Preview' },
@@ -44,6 +45,36 @@ export default function AnalysisPanel({
   const [opponentResponsesIterations, setOpponentResponsesIterations] = useState(20);
 
   const { layer, selectedMove, frames, stepIndex, isRunning, error, heatMap, opponentResponses } = analysisState;
+
+  // Auto-play through a freshly-run Preview: whenever a new `frames` array
+  // arrives, step through it on a timer instead of requiring manual Prev/Next
+  // clicks. `frames` is a new array reference each time a run completes, so
+  // this effect fires exactly once per Run click, not on every re-render.
+  const autoPlayTimeoutRef = useRef(null);
+
+  const stopAutoPlay = () => {
+    if (autoPlayTimeoutRef.current) {
+      clearTimeout(autoPlayTimeoutRef.current);
+      autoPlayTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!frames || frames.length === 0) return undefined;
+
+    let i = 0;
+    const advance = () => {
+      onStep(i);
+      i += 1;
+      if (i < frames.length) {
+        autoPlayTimeoutRef.current = setTimeout(advance, 900);
+      }
+    };
+    advance();
+
+    return stopAutoPlay;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frames]);
 
   const renderLayerTabs = () => (
     <Box sx={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
@@ -185,16 +216,17 @@ export default function AnalysisPanel({
 
     const currentFrame = frames[stepIndex];
     const frameLabel = FRAME_LABELS[currentFrame?.move] || 'Move';
+    const iterationLabel = buildIterationLabel(frames, stepIndex);
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
-          {selectedMove.word} - step {stepIndex + 1} of {frames.length}: {frameLabel}
+          {selectedMove.word} - {iterationLabel ? `${iterationLabel} - ` : ''}{frameLabel}
         </Box>
         <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Box
             component="button"
-            onClick={() => onStep(stepIndex - 1)}
+            onClick={() => { stopAutoPlay(); onStep(stepIndex - 1); }}
             disabled={stepIndex <= 0}
             sx={{
               display: 'flex',
@@ -214,7 +246,7 @@ export default function AnalysisPanel({
           </Box>
           <Box
             component="button"
-            onClick={() => onStep(stepIndex + 1)}
+            onClick={() => { stopAutoPlay(); onStep(stepIndex + 1); }}
             disabled={stepIndex >= frames.length - 1}
             sx={{
               display: 'flex',

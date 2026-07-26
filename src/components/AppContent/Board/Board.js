@@ -30,7 +30,8 @@ export default function Board({
     enableTelestrator = false,
     analysisGhostGrid = null,
     analysisHeatGrid = null,
-    analysisHeatMaxSimulations = 5
+    analysisHeatMaxSimulations = 5,
+    analysisIterationLabel = null
 }) {
     const { lightMode } = useContext(ThemeContext);
     const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
@@ -311,7 +312,12 @@ export default function Board({
 
     return (
         <Box className={styles.boardWrapper}>
-            <Box 
+            {analysisIterationLabel && (
+                <Box className={styles.analysisIterationBadge}>
+                    {analysisIterationLabel}
+                </Box>
+            )}
+            <Box
                 ref={boardRef}
                 className={`${styles.BoardContainer} ${styles[boardTheme]}`}
                 style={{

@@ -48,7 +48,7 @@ import SubmittedGamesModal from './components/SubmittedGamesModal';
 import Typography from '@mui/material/Typography';
 import BrowsePlayersModal from './components/BrowsePlayersModal';
 import AnalysisPanel from '../../components/Analysis/AnalysisPanel';
-import { buildGhostOverlayGrid } from '../../functions/analysisBoardFunctions';
+import { buildGhostOverlayGrid, buildIterationLabel } from '../../functions/analysisBoardFunctions';
 
 export default function Viewer({ onChange }){ 
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -432,6 +432,11 @@ export default function Viewer({ onChange }){
     return analysis.heatMap.grid;
   }, [analysis.active, analysis.layer, analysis.heatMap]);
 
+  const analysisIterationLabel = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'preview') return null;
+    return buildIterationLabel(analysis.frames, analysis.stepIndex);
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex]);
+
   return (
     <Box className={styles.container}>
       <Sidenav/>
@@ -509,6 +514,7 @@ export default function Viewer({ onChange }){
                 analysisGhostGrid={analysisGhostGrid}
                 analysisHeatGrid={analysisHeatGrid}
                 analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
+                analysisIterationLabel={analysisIterationLabel}
               />
             </Box>
           </Box>

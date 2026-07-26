@@ -43,7 +43,23 @@ export const buildGhostOverlayGrid = (frame, boardCoords) => {
       if (alreadyCommitted) return null;
 
       const ownership = frame.tileOwnership?.[rowIndex]?.[colIndex] || 'existing';
-      return { letter: cell, ownership };
+      // iteration is null for the shared "selected move" baseline frame, and
+      // a 0-indexed repetition number for every later opponent/player frame -
+      // used to badge tiles with which repetition they belong to.
+      return { letter: cell, ownership, iteration: frame.iteration ?? null };
     })
   );
+};
+
+// "Iteration 3 of 5" for whichever frame is currently shown - null for the
+// shared baseline "selected move" frame (iteration null) or when there's
+// nothing to show yet. Shared so the board-level badge (one label, shown
+// once) and the panel's own step header stay in sync.
+export const buildIterationLabel = (frames, stepIndex) => {
+  if (!frames || frames.length === 0) return null;
+  const frame = frames[stepIndex];
+  if (!frame || frame.iteration === null || frame.iteration === undefined) return null;
+
+  const totalIterations = Math.max(...frames.map(f => f.iteration ?? -1)) + 1;
+  return `Iteration ${frame.iteration + 1} of ${totalIterations}`;
 };

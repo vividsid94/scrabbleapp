@@ -24,14 +24,38 @@ export const DEFAULT_ANALYSIS_STATE = {
 // opponent's rack/score are never actually used, a fresh random rack is
 // always generated for them internally. So any caller only needs to supply
 // the rack of whoever's move is being analyzed, not a full two-player state.
-export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool }, setAnalysisState) => {
+//
+// Preview shows exactly 2 plies per run (opponent's reply, then our reply),
+// repeated over `numSimulations` independent random continuations - each
+// repetition draws a fresh random opponent rack, so it's a genuinely
+// different look each time, not the same two plies shown 5x. The very first
+// "selected" frame (our chosen move, freshly applied to the real board) is
+// identical across every repetition, so it's kept just once as a shared
+// baseline instead of being repeated per iteration. Every later frame is
+// tagged with which 0-indexed repetition it belongs to, so the UI can badge
+// tiles with "iteration 1", "iteration 2", etc.
+export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numSimulations = 5, turnsPerSim = 2 }, setAnalysisState) => {
   setAnalysisState({ isRunning: true, error: null });
 
   const frames = [];
+  let iteration = 0;
+  let selectedFrameShown = false;
+
   const onProgress = (progress, previewData) => {
-    if (previewData) {
-      frames.push(previewData);
+    if (!previewData) return;
+
+    if (previewData.move === 'selected') {
+      if (!selectedFrameShown) {
+        frames.push({ ...previewData, iteration: null });
+        selectedFrameShown = true;
+      } else {
+        // A later "selected" frame marks the start of the next repetition.
+        iteration += 1;
+      }
+      return;
     }
+
+    frames.push({ ...previewData, iteration });
   };
 
   try {
@@ -40,7 +64,7 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool }, se
       move,
       { boardCoords, currentPlayer: 1, player1Rack: rack, player2Rack: [], player1points: 0, player2points: 0, pool },
       onProgress,
-      { numSimulations: 1, turnsPerSim: 3 }
+      { numSimulations, turnsPerSim }
     );
     setAnalysisState({ selectedMove: move, frames, stepIndex: 0, isRunning: false });
   } catch (error) {

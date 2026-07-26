@@ -65,12 +65,7 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
       // Report progress at the start of each simulation
       const simulationProgress = sim / numSimulations;
       onProgress?.(simulationProgress);
-      
-      // Add a delay between simulations to make each one visible
-      if (sim > 0) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      
+
       // Reset state for this simulation
       let simBoard = JSON.parse(JSON.stringify(board));
       let simOurRack = [...ourRack]; // Fresh copy of our rack for each simulation
@@ -265,11 +260,6 @@ export const simulateMove = async (move, gameState, onProgress, settings = {}) =
         movesPlayed: simMoves,
         firstTurnOpponentScore: firstTurnOpponentScore
       });
-      
-      // Add a delay at the end of each simulation to show the final state
-      if (sim < numSimulations - 1) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
     }
     
     // Report final progress

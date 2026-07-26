@@ -30,7 +30,7 @@ import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
-import { buildGhostOverlayGrid } from '../../functions/analysisBoardFunctions';
+import { buildGhostOverlayGrid, buildIterationLabel } from '../../functions/analysisBoardFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
 import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
@@ -695,6 +695,13 @@ export default function Play({ isMultiplayer = false }) {
     return analysis.heatMap.grid;
   }, [analysis.active, analysis.layer, analysis.heatMap]);
 
+  // Single board-level "Iteration X of Y" badge for the Preview layer -
+  // replaces per-tile badges, shown once in the board's top-left corner.
+  const analysisIterationLabel = useMemo(() => {
+    if (!analysis.active || analysis.layer !== 'preview') return null;
+    return buildIterationLabel(analysis.frames, analysis.stepIndex);
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex]);
+
   // Update player time states when gameTime changes
   useEffect(() => {
     setPlayer1Time(gameTime * 60);
@@ -1010,6 +1017,7 @@ export default function Play({ isMultiplayer = false }) {
             analysisGhostGrid={analysisGhostGrid}
             analysisHeatGrid={analysisHeatGrid}
             analysisHeatMaxSimulations={analysis.heatMap?.maxSimulations}
+            analysisIterationLabel={analysisIterationLabel}
             showSlip={false}
             showDictionary={false}
             dictionary=""
