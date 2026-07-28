@@ -59,17 +59,11 @@ const getBotRank = (botName, staticRank) => {
   return null;
 };
 
-// English ordinal suffix (1st, 2nd, 3rd, 4th... 11th, 12th, 13th, 14th...).
-const ordinal = (n) => {
-  const j = n % 10, k = n % 100;
-  if (j === 1 && k !== 11) return `${n}st`;
-  if (j === 2 && k !== 12) return `${n}nd`;
-  if (j === 3 && k !== 13) return `${n}rd`;
-  return `${n}th`;
-};
-
+// "Static" is the internal botName (matches the rank-based mechanism in
+// simulate.go/sandboxBotFunctions.js); "SpeedyN" is just how it's displayed/
+// named in the UI, GCGs, and results.
 const getBotDisplayName = (botName, staticRank) =>
-  botName === 'Static' ? `${ordinal(staticRank)} static` : botName;
+  botName === 'Static' ? `Speedy${staticRank}` : botName;
 
 export const useSandboxStore = create((set, get) => ({
   // Live single-game state

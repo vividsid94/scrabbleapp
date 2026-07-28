@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
-import { MenuItem, Select, TextField, Button } from '@mui/material';
+import { TextField, Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui/material';
 import { Play, Stop, Download } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
@@ -9,18 +9,13 @@ import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { ThemeContext } from '../../App';
 import styles from './Sandbox.module.css';
 
-const BOT_OPTIONS = ['Theo', 'Tess', 'Static'];
-
-// Mirrors sandboxStore.js's own ordinal() - kept as a tiny local duplicate
-// here purely for the UI hint ("5th") rather than exporting an internal
-// store helper.
-const ordinal = (n) => {
-  const j = n % 10, k = n % 100;
-  if (j === 1 && k !== 11) return `${n}st`;
-  if (j === 2 && k !== 12) return `${n}nd`;
-  if (j === 3 && k !== 13) return `${n}rd`;
-  return `${n}th`;
-};
+// 'Static' stays the internal botName (matches sandboxStore.js/
+// sandboxBotFunctions.js's rank mechanism) - "Speedy" is just its label here.
+const BOT_OPTIONS = [
+  { value: 'Theo', label: 'Theo' },
+  { value: 'Tess', label: 'Tess' },
+  { value: 'Static', label: 'Speedy' },
+];
 
 const SandboxPlayerInfo = React.memo(() => {
   const { lightMode } = useContext(ThemeContext);
@@ -105,65 +100,95 @@ const SandboxPlayerInfo = React.memo(() => {
     marginBottom: '6px',
   };
 
-  const selectSx = {
-    fontSize: '13px',
-    color: textColor,
-    '.MuiOutlinedInput-notchedOutline': { borderColor },
+  const accentColor = lightMode === 'dark' ? '#10B981' : '#059669';
+
+  const toggleButtonSx = {
+    flex: 1,
+    fontSize: '11px',
+    fontWeight: 600,
+    fontFamily: 'Syne, sans-serif',
+    textTransform: 'none',
+    color: mutedTextColor,
+    borderColor: borderColor,
+    padding: '5px 4px',
+    '&.Mui-selected': {
+      backgroundColor: lightMode === 'dark' ? 'rgba(16, 185, 129, 0.22)' : 'rgba(5, 150, 105, 0.15)',
+      color: accentColor,
+      borderColor: accentColor,
+    },
+    '&.Mui-selected:hover': {
+      backgroundColor: lightMode === 'dark' ? 'rgba(16, 185, 129, 0.32)' : 'rgba(5, 150, 105, 0.25)',
+    },
   };
+
+  const sliderSx = {
+    color: accentColor,
+    padding: '10px 0 4px',
+    '& .MuiSlider-valueLabel': {
+      backgroundColor: accentColor,
+      fontSize: '10px',
+      fontWeight: 700,
+      fontFamily: 'Syne, sans-serif',
+    },
+    '& .MuiSlider-thumb:hover, & .MuiSlider-thumb.Mui-focusVisible': {
+      boxShadow: `0 0 0 8px ${lightMode === 'dark' ? 'rgba(16, 185, 129, 0.16)' : 'rgba(5, 150, 105, 0.16)'}`,
+    },
+  };
+
+  const gamesCompleted = seriesResults.length;
+  const seriesProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
 
   return (
     <Box className={styles.playerPanel}>
       {/* Setup */}
       <Box sx={sectionSx}>
         <Box sx={labelSx}>Series Setup</Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: player1BotName === 'Static' || player2BotName === 'Static' ? '6px' : '10px' }}>
-          <Select
-            size="small"
-            value={player1BotName}
-            onChange={(e) => setPlayer1BotName(e.target.value)}
-            disabled={isRunning}
-            sx={{ ...selectSx, flex: 1 }}
-          >
-            {BOT_OPTIONS.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}
-          </Select>
-          <Box sx={{ fontSize: '11px', color: mutedTextColor }}>vs</Box>
-          <Select
-            size="small"
-            value={player2BotName}
-            onChange={(e) => setPlayer2BotName(e.target.value)}
-            disabled={isRunning}
-            sx={{ ...selectSx, flex: 1 }}
-          >
-            {BOT_OPTIONS.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}
-          </Select>
-        </Box>
-        {(player1BotName === 'Static' || player2BotName === 'Static') && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', visibility: player1BotName === 'Static' ? 'visible' : 'hidden' }}>
-              <TextField
-                size="small"
-                type="number"
-                value={player1StaticRank}
-                onChange={(e) => setPlayer1StaticRank(parseInt(e.target.value, 10))}
-                disabled={isRunning}
-                inputProps={{ min: 1, max: 15, style: { fontSize: '13px', color: textColor, width: '36px' } }}
-              />
-              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{ordinal(player1StaticRank)} static</Box>
-            </Box>
-            <Box sx={{ width: '20px' }} />
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', visibility: player2BotName === 'Static' ? 'visible' : 'hidden' }}>
-              <TextField
-                size="small"
-                type="number"
-                value={player2StaticRank}
-                onChange={(e) => setPlayer2StaticRank(parseInt(e.target.value, 10))}
-                disabled={isRunning}
-                inputProps={{ min: 1, max: 15, style: { fontSize: '13px', color: textColor, width: '36px' } }}
-              />
-              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{ordinal(player2StaticRank)} static</Box>
-            </Box>
-          </Box>
-        )}
+        {[
+          { botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1' },
+          { botName: player2BotName, setBotName: setPlayer2BotName, rank: player2StaticRank, setRank: setPlayer2StaticRank, label: 'Player 2' },
+        ].map((side, i) => (
+          <React.Fragment key={side.label}>
+            {i === 1 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
+                <Box sx={{ fontSize: '10px', fontWeight: 700, color: mutedTextColor }}>VS</Box>
+                <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
+              </Box>
+            )}
+            <Box sx={{ fontSize: '10px', color: mutedTextColor, marginBottom: '4px' }}>{side.label}</Box>
+            <ToggleButtonGroup
+              value={side.botName}
+              exclusive
+              fullWidth
+              size="small"
+              disabled={isRunning}
+              onChange={(e, val) => val && side.setBotName(val)}
+              sx={{ marginBottom: side.botName === 'Static' ? '2px' : '10px' }}
+            >
+              {BOT_OPTIONS.map(opt => (
+                <ToggleButton key={opt.value} value={opt.value} sx={toggleButtonSx}>
+                  {opt.value === 'Static' && side.botName === 'Static' ? `Speedy${side.rank}` : opt.label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            {side.botName === 'Static' && (
+              <Box sx={{ padding: '0 10px', marginBottom: '10px' }}>
+                <Slider
+                  size="small"
+                  value={side.rank}
+                  onChange={(e, val) => side.setRank(val)}
+                  min={1}
+                  max={15}
+                  step={1}
+                  disabled={isRunning}
+                  valueLabelDisplay="on"
+                  valueLabelFormat={(v) => `Speedy${v}`}
+                  sx={sliderSx}
+                />
+              </Box>
+            )}
+          </React.Fragment>
+        ))}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Box sx={{ fontSize: '12px', color: textColor }}>Number of games</Box>
           <TextField
@@ -175,22 +200,41 @@ const SandboxPlayerInfo = React.memo(() => {
             inputProps={{ min: 1, max: maxGames, style: { fontSize: '13px', color: textColor, width: '50px' } }}
           />
         </Box>
+        <Box sx={{ fontSize: '10px', color: mutedTextColor, opacity: 0.8, marginBottom: '4px', lineHeight: 1.4 }}>
+          Note: series with Tess are capped at 30 games; series with only static bots (Theo or Speedy, either side) are capped at 500.
+        </Box>
         <Box sx={{ fontSize: '10px', color: mutedTextColor, opacity: 0.8, marginBottom: '12px', lineHeight: 1.4 }}>
-          Note: series with Tess are capped at 30 games; series with only static bots (Theo or Nth static, either side) are capped at 500.
+          Series over 30 games skip the move-by-move animation and jump straight to the final board and results - every game still gets its own downloadable GCG.
         </Box>
         <Button
           fullWidth
           variant="contained"
-          startIcon={isRunning ? <Stop weight="fill" /> : <Play weight="fill" />}
+          disableElevation
           onClick={() => isRunning ? stopSeries() : startSeries()}
           sx={{
             textTransform: 'none',
             fontFamily: 'Syne, sans-serif',
-            backgroundColor: isRunning ? '#DC2626' : '#059669',
-            '&:hover': { backgroundColor: isRunning ? '#B91C1C' : '#047857' }
+            position: 'relative',
+            overflow: 'hidden',
+            backgroundColor: isRunning ? 'rgba(220, 38, 38, 0.22)' : '#059669',
+            color: isRunning ? '#DC2626' : '#fff',
+            '&:hover': { backgroundColor: isRunning ? 'rgba(220, 38, 38, 0.32)' : '#047857' },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: isRunning ? `${seriesProgressPercent}%` : '0%',
+              backgroundColor: '#DC2626',
+              transition: 'width 0.2s ease',
+            },
           }}
         >
-          {isRunning ? 'Stop Series' : 'Start Series'}
+          <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {isRunning ? <Stop weight="fill" size={16} /> : <Play weight="fill" size={16} />}
+            {isRunning ? `Stop (${gamesCompleted}/${totalGames})` : 'Start Series'}
+          </Box>
         </Button>
       </Box>
 

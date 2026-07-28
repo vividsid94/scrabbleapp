@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useRef } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
+import { Flask } from '@phosphor-icons/react';
 import styles from './Sandbox.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
 import { useSandboxStore } from '../../stores/sandboxStore';
@@ -13,6 +14,7 @@ export default function Sandbox() {
   const { lightMode } = useContext(ThemeContext);
   const complementaryColor = useRef('#9F7A83');
 
+  const gameStarted = useSandboxStore(state => state.gameStarted);
   const boardCoords = useSandboxStore(state => state.boardCoords);
   const blankTiles = useSandboxStore(state => state.blankTiles);
   const moveHistory = useSandboxStore(state => state.moveHistory);
@@ -52,21 +54,30 @@ export default function Sandbox() {
               className={`${styles.mainBox} ${styles.mainBoxContent}`}
               component="main"
             >
-              <Board
-                board={board}
-                boardMode="STANDARD"
-                animate={false}
-                enableTelestrator={false}
-                showSlip={false}
-                showDictionary={false}
-                showNoCommentaryLabel={false}
-                dictionary=""
-                previewScore={null}
-                previewScorePosition={null}
-                lastMoveCoordinates={lastMoveCoordinates}
-                arrowDirection="right"
-                lightMode={lightMode}
-              />
+              {gameStarted ? (
+                <Board
+                  board={board}
+                  boardMode="STANDARD"
+                  animate={false}
+                  enableTelestrator={false}
+                  showSlip={false}
+                  showDictionary={false}
+                  showNoCommentaryLabel={false}
+                  dictionary=""
+                  previewScore={null}
+                  previewScorePosition={null}
+                  lastMoveCoordinates={lastMoveCoordinates}
+                  arrowDirection="right"
+                  lightMode={lightMode}
+                />
+              ) : (
+                <Box className={styles.emptyBoardState}>
+                  <Flask size={40} weight="duotone" style={{ opacity: 0.5 }} />
+                  <Box className={styles.emptyBoardStateText}>
+                    Set up a series and press Start to watch it play out
+                  </Box>
+                </Box>
+              )}
             </Box>
           </Box>
           <Box className={styles.rightPanel}>
