@@ -16,6 +16,14 @@ const dealRackFrom = (pool) => {
   return alphabetizeRack(rack);
 };
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// How long to pause after applying each replayed turn, purely for visual
+// pacing - the whole series already arrived in one response by this point,
+// so this is the only thing standing between "instant dump" and "watch it
+// happen" for the bulk Theo-vs-Theo path.
+const REPLAY_DELAY_MS = 180;
+
 const drawUpTo7 = (rack, pool) => {
   const newRack = [...rack];
   const newPool = [...pool];
@@ -184,9 +192,143 @@ export const useSandboxStore = create((set, get) => ({
     return { gameIndex, player1Score, player2Score, winner, player1Name, player2Name, gcgContent };
   },
 
+  // Replays one already-simulated game (from the Go /simulate-series bulk
+  // endpoint) turn by turn into the store, so the board visibly steps
+  // through even though the whole game's outcome was already decided
+  // server-side in one shot. Mirrors playOneGame's per-turn set() shape so
+  // the UI (which just reads moveHistory/boardCoords/racks) can't tell the
+  // difference between this and a live-fetched game.
+  replayBulkGame: async ({ gameData, gameIndex, player1BotName, player2BotName }) => {
+    const sameBotName = player1BotName === player2BotName;
+    const player1Name = sameBotName ? `${formatPlayerName(player1BotName)}_1` : formatPlayerName(player1BotName);
+    const player2Name = sameBotName ? `${formatPlayerName(player2BotName)}_2` : formatPlayerName(player2BotName);
+
+    let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    let blankTiles = [];
+    let moveHistory = [];
+    let player1points = 0;
+    let player2points = 0;
+
+    set({
+      boardCoords, player1Rack: [], player2Rack: [], pool: [], currentPlayer: 1,
+      player1points, player2points, moveHistory, blankTiles,
+      gameStarted: true, player1Name, player2Name
+    });
+
+    for (const turn of (gameData.turns || [])) {
+      if (get().shouldStop) return null;
+
+      const playerName = turn.player === 1 ? player1Name : player2Name;
+
+      if (turn.type === 'pass') {
+        moveHistory = [...moveHistory, {
+          boardDiff: [], player: playerName, score: 0,
+          rack: turn.rackBefore, total: turn.runningTotal, word: 'Pass'
+        }];
+      } else if (turn.type === 'exchange') {
+        moveHistory = [...moveHistory, {
+          boardDiff: [], player: playerName, score: 0,
+          rack: turn.rackBefore, tilesExchanged: turn.tilesExchanged,
+          total: turn.runningTotal, word: 'Exchange'
+        }];
+      } else {
+        const newTiles = (turn.tiles || []).filter(t => t.isNew);
+        const boardDiff = newTiles.map(t => ({ row: t.row, col: t.col, value: t.letter }));
+        const newBoard = boardCoords.map(row => [...row]);
+        boardDiff.forEach(d => { newBoard[d.row][d.col] = d.value; });
+        boardCoords = newBoard;
+
+        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col }));
+        blankTiles = [...blankTiles, ...newBlanks];
+
+        moveHistory = [...moveHistory, {
+          boardDiff, player: playerName, score: turn.score,
+          rack: turn.rackBefore, total: turn.runningTotal, word: turn.word
+        }];
+      }
+
+      if (turn.player === 1) player1points = turn.runningTotal; else player2points = turn.runningTotal;
+
+      const rackUpdate = turn.player === 1
+        ? { player1Rack: turn.rackBefore.split('') }
+        : { player2Rack: turn.rackBefore.split('') };
+
+      set({
+        boardCoords, moveHistory, blankTiles, player1points, player2points,
+        currentPlayer: turn.player, ...rackUpdate
+      });
+
+      await sleep(REPLAY_DELAY_MS);
+    }
+
+    const winner = gameData.winner === 1 ? player1Name : gameData.winner === 2 ? player2Name : null;
+
+    const gcgContent = generateGCGContent(
+      moveHistory, player1Name, player2Name, blankTiles,
+      (gameData.player1FinalRack || '').split(''),
+      (gameData.player2FinalRack || '').split(''),
+      (gameData.finalPool || '').split('')
+    );
+
+    set({
+      player1Rack: (gameData.player1FinalRack || '').split(''),
+      player2Rack: (gameData.player2FinalRack || '').split(''),
+      pool: (gameData.finalPool || '').split('')
+    });
+
+    return {
+      gameIndex,
+      player1Score: gameData.player1Score,
+      player2Score: gameData.player2Score,
+      winner,
+      player1Name,
+      player2Name,
+      gcgContent
+    };
+  },
+
   startSeries: async () => {
     const { totalGames, player1BotName, player2BotName } = get();
     set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false });
+
+    // Theo vs Theo can be decided entirely server-side in one call (Theo's
+    // move choice - best by score+leaveValue - needs no client-side
+    // simulation loop). Tess (defense sims) and Intermediate aren't ported
+    // server-side yet, so anything else still uses the per-move client loop.
+    const useBulkTheoPath = player1BotName === 'Theo' && player2BotName === 'Theo';
+
+    if (useBulkTheoPath) {
+      try {
+        const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games: totalGames })
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const games = data.games || [];
+
+        for (let gameIndex = 0; gameIndex < games.length; gameIndex++) {
+          if (get().shouldStop) break;
+          set({ currentGameIndex: gameIndex });
+
+          const result = await get().replayBulkGame({
+            gameData: games[gameIndex], gameIndex, player1BotName, player2BotName
+          });
+          if (!result) break; // stopped mid-replay
+
+          set(state => ({ seriesResults: [...state.seriesResults, result] }));
+          if (get().shouldStop) break;
+        }
+      } catch (error) {
+        console.error('Sandbox bulk series error:', error);
+      }
+
+      set({ isRunning: false });
+      return;
+    }
 
     for (let gameIndex = 0; gameIndex < totalGames; gameIndex++) {
       if (get().shouldStop) break;
