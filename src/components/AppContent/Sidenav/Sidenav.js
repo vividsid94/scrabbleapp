@@ -35,6 +35,7 @@ import {
   Moon,
   Cube,
   PuzzlePiece,
+  Flask,
   User,
   SignOut,
   SpeakerHigh,
@@ -181,6 +182,7 @@ export default function MiniDrawer() {
     if (path === '/3dplay') return '3D Play';
     if (path === '/playground' || path === '/play') return 'Play';
     if (path === '/puzzle') return 'Puzzle';
+    if (path === '/sandbox') return 'Sandbox';
     if (path === '/submit-game') return 'Submit Game';
     if (path === '/memory') return 'Memory';
     if (path === '/words') return 'Words';
@@ -198,6 +200,7 @@ export default function MiniDrawer() {
     if (pagePath === '/3dplay' && path === '/3dplay') return true;
     if ((pagePath === '/playground' || pagePath === '/play') && (path === '/playground' || path === '/play')) return true;
     if (pagePath === '/puzzle' && path === '/puzzle') return true;
+    if (pagePath === '/sandbox' && path === '/sandbox') return true;
     if (pagePath === '/submit-game' && path === '/submit-game') return true;
     return false;
   };
@@ -394,6 +397,22 @@ export default function MiniDrawer() {
                 >
                   <PuzzlePiece size={18} weight={isCurrentPage('/puzzle') ? "fill" : "regular"} />
                   Puzzle {isCurrentPage('/puzzle') && '✓'}
+                </MenuItem>
+                <MenuItem
+                  onClick={handleClose}
+                  component={Link}
+                  to="/sandbox"
+                  sx={{
+                    backgroundColor: isCurrentPage('/sandbox') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    fontWeight: isCurrentPage('/sandbox') ? '600' : '400',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    paddingLeft: '40px'
+                  }}
+                >
+                  <Flask size={18} weight={isCurrentPage('/sandbox') ? "fill" : "regular"} />
+                  Sandbox {isCurrentPage('/sandbox') && '✓'}
                 </MenuItem>
                 <MenuItem 
                   onClick={handleClose} 
@@ -688,6 +707,26 @@ export default function MiniDrawer() {
                       {sidebarExpanded && (
                         <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/puzzle') ? '600' : '400' }}>
                           Puzzle
+                        </Box>
+                      )}
+                    </Box>
+                  </ListItemIcon>
+                </ListItem>
+              </a>
+              <a id="sandboxBtn" className={styles.link} href="/sandbox">
+                <ListItem className={`${styles.listItem} ${isCurrentPage('/sandbox') ? styles.activePage : ''}`} sx={{ ...listItemStyle, minHeight: '34px' }}>
+                  <ListItemIcon sx={iconStyle}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '8px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '2px' : '0' }}>
+                      <Flask
+                        style={{
+                          color: isCurrentPage('/sandbox') ? '#10B981' : getTextColor(),
+                          fontSize: '18px'
+                        }}
+                        weight={isCurrentPage('/sandbox') ? "fill" : "regular"}
+                      />
+                      {sidebarExpanded && (
+                        <Box sx={{ color: getTextColor(), fontSize: '11px', fontWeight: isCurrentPage('/sandbox') ? '600' : '400' }}>
+                          Sandbox
                         </Box>
                       )}
                     </Box>

@@ -7,7 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 import styles from './Home.module.css';
-import { Trophy, X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
+import { X, CaretDown, GameController, PuzzlePiece, Eye, Sparkle, Cube, PaperPlaneTilt, Flask, MagnifyingGlass as SearchIcon } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../App';
 import { loadActiveGameSnapshot, clearActiveGameSnapshot } from '../../utils/activeGamePersistence';
@@ -115,11 +115,19 @@ export default function Home(){
                   </span>
                 </button>
               </Link>
-              <Link to="/tournaments" style={{ textDecoration: 'none' }}>
+              <Link to="/snakes" style={{ textDecoration: 'none' }}>
                 <button className={styles.secondaryButton}>
                   <span className={styles.secondaryButtonContent}>
-                    <Trophy size={18} weight="fill" />
-                    <span>Results & rankings</span>
+                    <GameController size={18} weight="fill" />
+                    <span>Snakes (Beta)</span>
+                  </span>
+                </button>
+              </Link>
+              <Link to="/sandbox" style={{ textDecoration: 'none' }}>
+                <button className={styles.secondaryButton}>
+                  <span className={styles.secondaryButtonContent}>
+                    <Flask size={18} weight="fill" />
+                    <span>Sandbox (Beta)</span>
                   </span>
                 </button>
               </Link>
@@ -261,8 +269,8 @@ export default function Home(){
         >
           3D Viewer
         </MenuItem>
-        <MenuItem 
-          onClick={() => { handleToolsMenuClose(); navigate('/tournaments'); }}
+        <MenuItem
+          onClick={() => { handleToolsMenuClose(); navigate('/snakes'); }}
           sx={{
             color: lightMode === 'dark' ? '#fff' : '#1F2937',
             fontSize: '14px',
@@ -272,7 +280,20 @@ export default function Home(){
             }
           }}
         >
-          Results & rankings
+          Snakes (Beta)
+        </MenuItem>
+        <MenuItem
+          onClick={() => { handleToolsMenuClose(); navigate('/sandbox'); }}
+          sx={{
+            color: lightMode === 'dark' ? '#fff' : '#1F2937',
+            fontSize: '14px',
+            padding: '10px 16px',
+            '&:hover': {
+              backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'
+            }
+          }}
+        >
+          Sandbox (Beta)
         </MenuItem>
         <MenuItem 
           onClick={() => { handleToolsMenuClose(); navigate('/submit-game'); }}

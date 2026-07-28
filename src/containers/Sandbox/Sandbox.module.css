@@ -1,0 +1,98 @@
+.container {
+  display: flex;
+}
+
+.page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainPanel {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: 1fr;
+  grid-template-areas:
+    "board panel";
+}
+
+.leftContainer {
+  grid-area: board;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainBox {
+  flex-grow: 1;
+  padding: 24px;
+}
+
+.mainBoxContent {
+  flex-grow: 1;
+  padding: 24px;
+}
+
+.rightPanel {
+  grid-area: panel;
+  width: 380px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 20px;
+  z-index: 1000;
+  position: relative;
+}
+
+.playerPanel {
+  height: auto;
+  padding: 10px 0px;
+  border: 0;
+  color: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.Rack {
+  display: flex;
+  justify-content: center;
+}
+
+@media screen and (max-width: 992px) {
+  .mainPanel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  .page {
+    margin-top: 100px;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .mainPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "board"
+      "panel";
+    gap: 8px;
+  }
+
+  .rightPanel {
+    width: auto;
+    min-width: 0;
+    padding: 12px;
+  }
+}
+
+@media screen and (max-width: 676px) {
+  .page {
+    margin-top: 80px;
+  }
+  .mainBox {
+    padding: 16px !important;
+  }
+}
