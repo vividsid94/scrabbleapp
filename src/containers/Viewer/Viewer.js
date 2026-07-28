@@ -630,29 +630,6 @@ export default function Viewer({ onChange }){
                   );
                 })}
 
-                <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginLeft: '2px',
-                      marginRight: '4px',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setTelestratorEnabled(!telestratorEnabled)}
-                  >
-                    <ScribbleLoop
-                      size={20}
-                      color={telestratorEnabled
-                        ? (lightMode === 'dark' ? '#10B981' : '#059669')
-                        : (lightMode === 'dark' ? '#ffffff' : '#1F2937')
-                      }
-                      weight={telestratorEnabled ? 'fill' : 'regular'}
-                    />
-                  </Box>
-                </Tooltip>
-
                 {/* Collapsible options button */}
                 <Tooltip title={showOptions ? "Hide Options" : "Show Options"}>
                   <Box
@@ -680,32 +657,6 @@ export default function Viewer({ onChange }){
                     />
                   </Box>
                 </Tooltip>
-
-                {parsedMoves && parsedMoves.length > 0 && (
-                  <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : "Analysis Mode"}>
-                    <Box
-                      className={styles.keyBtn}
-                      onClick={handleToggleAnalysisMode}
-                      sx={{
-                        ...actionButtonStyle,
-                        width: '20px',
-                        height: '20px',
-                        minWidth: '20px',
-                        minHeight: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: '4px'
-                      }}
-                    >
-                      <Brain
-                        size={20}
-                        weight={analysisModeActive ? 'fill' : 'regular'}
-                        color={analysisModeActive ? '#10B981' : (lightMode === 'dark' ? '#fff' : '#1F2937')}
-                      />
-                    </Box>
-                  </Tooltip>
-                )}
               </Box>
 
               {/* Collapsible options section */}
@@ -951,6 +902,45 @@ export default function Viewer({ onChange }){
                           </>
                         )}
                       </Box>
+                    </Box>
+                  </Box>
+
+                  {/* Tier 3 - Drawing & Analysis Tools */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                    <Box sx={{ fontSize: '12px', color: lightMode === 'dark' ? '#fff' : '#1F2937', opacity: 0.7, fontWeight: 500 }}>Tools</Box>
+                    <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                      <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
+                        <Box
+                          className={styles.bestMoveButton}
+                          onClick={() => setTelestratorEnabled(!telestratorEnabled)}
+                          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <ScribbleLoop
+                            size={20}
+                            color={telestratorEnabled
+                              ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                              : (lightMode === 'dark' ? '#ffffff' : '#1F2937')
+                            }
+                            weight={telestratorEnabled ? 'fill' : 'regular'}
+                          />
+                        </Box>
+                      </Tooltip>
+
+                      {parsedMoves && parsedMoves.length > 0 && (
+                        <Tooltip title={analysisModeActive ? "Exit Analysis Mode" : "Analysis Mode"}>
+                          <Box
+                            className={styles.bestMoveButton}
+                            onClick={handleToggleAnalysisMode}
+                            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Brain
+                              size={20}
+                              weight={analysisModeActive ? 'fill' : 'regular'}
+                              color={analysisModeActive ? '#10B981' : (lightMode === 'dark' ? '#fff' : '#1F2937')}
+                            />
+                          </Box>
+                        </Tooltip>
+                      )}
                     </Box>
                   </Box>
                 </Box>
