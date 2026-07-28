@@ -18,11 +18,12 @@ const dealRackFrom = (pool) => {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// How long to pause after applying each replayed turn, purely for visual
-// pacing - the whole series already arrived in one response by this point,
-// so this is the only thing standing between "instant dump" and "watch it
-// happen" for the bulk Theo-vs-Theo path.
-const REPLAY_DELAY_MS = 180;
+// The whole series already arrived in one response by the time replay runs,
+// so there's nothing to wait on - this is 0 (not removed entirely) only so
+// each turn still yields one tick back to the event loop between set()
+// calls, keeping the tab responsive instead of blocking through a couple
+// hundred turns in one synchronous burst.
+const REPLAY_DELAY_MS = 0;
 
 const drawUpTo7 = (rack, pool) => {
   const newRack = [...rack];
@@ -34,6 +35,41 @@ const drawUpTo7 = (rack, pool) => {
   }
   return { rack: alphabetizeRack(newRack), pool: newPool };
 };
+
+// Any matchup of "static" bots (Theo, or a user-chosen Nth-ranked static
+// bot) runs entirely server-side in one call, so it can handle a much
+// bigger series than the per-move client loop Tess still needs. Above this
+// many games the bulk path also skips the animated replay (see
+// startSeries) - nobody's watching 30+ games play out turn by turn.
+const MAX_GAMES_STATIC = 500;
+const MAX_GAMES_WITH_TESS = 30;
+const REPLAY_GAME_LIMIT = 30;
+
+const isStaticBot = (botName) => botName === 'Theo' || botName === 'Static';
+
+const getMaxGamesForBots = (player1BotName, player2BotName) =>
+  (isStaticBot(player1BotName) && isStaticBot(player2BotName)) ? MAX_GAMES_STATIC : MAX_GAMES_WITH_TESS;
+
+// Theo is just rank 1 of the same "pick the Nth-ranked move" mechanism a
+// user-chosen Static bot uses; Tess has no rank (she runs her own defense
+// sim client-side and never reaches the bulk endpoint).
+const getBotRank = (botName, staticRank) => {
+  if (botName === 'Theo') return 1;
+  if (botName === 'Static') return staticRank;
+  return null;
+};
+
+// English ordinal suffix (1st, 2nd, 3rd, 4th... 11th, 12th, 13th, 14th...).
+const ordinal = (n) => {
+  const j = n % 10, k = n % 100;
+  if (j === 1 && k !== 11) return `${n}st`;
+  if (j === 2 && k !== 12) return `${n}nd`;
+  if (j === 3 && k !== 13) return `${n}rd`;
+  return `${n}th`;
+};
+
+const getBotDisplayName = (botName, staticRank) =>
+  botName === 'Static' ? `${ordinal(staticRank)} static` : botName;
 
 export const useSandboxStore = create((set, get) => ({
   // Live single-game state
@@ -54,10 +90,28 @@ export const useSandboxStore = create((set, get) => ({
   // Series configuration - editable while not running
   player1BotName: 'Theo',
   player2BotName: 'Theo',
+  // Only meaningful when the corresponding botName is 'Static' - which
+  // ranked candidate (1-15) that side plays every turn.
+  player1StaticRank: 5,
+  player2StaticRank: 5,
   totalGames: 5,
-  setPlayer1BotName: (name) => set({ player1BotName: name }),
-  setPlayer2BotName: (name) => set({ player2BotName: name }),
-  setTotalGames: (n) => set({ totalGames: n }),
+  // Switching either side re-clamps totalGames immediately, so the input
+  // never silently shows a number bigger than what'll actually run (e.g.
+  // dropping from 200/Theo-Theo down to Tess shouldn't leave 200 displayed
+  // when only 30 will start).
+  setPlayer1BotName: (name) => set(state => ({
+    player1BotName: name,
+    totalGames: Math.min(state.totalGames, getMaxGamesForBots(name, state.player2BotName))
+  })),
+  setPlayer2BotName: (name) => set(state => ({
+    player2BotName: name,
+    totalGames: Math.min(state.totalGames, getMaxGamesForBots(state.player1BotName, name))
+  })),
+  setPlayer1StaticRank: (rank) => set({ player1StaticRank: Math.min(Math.max(1, rank || 1), 15) }),
+  setPlayer2StaticRank: (rank) => set({ player2StaticRank: Math.min(Math.max(1, rank || 1), 15) }),
+  setTotalGames: (n) => set(state => ({
+    totalGames: Math.min(Math.max(1, n || 1), getMaxGamesForBots(state.player1BotName, state.player2BotName))
+  })),
 
   // Series run state
   isRunning: false,
@@ -73,11 +127,7 @@ export const useSandboxStore = create((set, get) => ({
   // visibly steps through move by move. Returns the finished game's result,
   // or null if the series was stopped mid-game (no GCG generated for an
   // aborted game).
-  playOneGame: async ({ gameIndex, player1BotName, player2BotName }) => {
-    const sameBotName = player1BotName === player2BotName;
-    const player1Name = sameBotName ? `${formatPlayerName(player1BotName)}_1` : formatPlayerName(player1BotName);
-    const player2Name = sameBotName ? `${formatPlayerName(player2BotName)}_2` : formatPlayerName(player2BotName);
-
+  playOneGame: async ({ gameIndex, player1BotName, player2BotName, player1Rank, player2Rank, player1Name, player2Name }) => {
     let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     let pool = origPool.split('');
     let player1Rack = dealRackFrom(pool);
@@ -101,6 +151,7 @@ export const useSandboxStore = create((set, get) => ({
       if (get().shouldStop) return null;
 
       const botName = currentPlayer === 1 ? player1BotName : player2BotName;
+      const rank = currentPlayer === 1 ? player1Rank : player2Rank;
       const playerName = currentPlayer === 1 ? player1Name : player2Name;
       const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
       const currentPoints = currentPlayer === 1 ? player1points : player2points;
@@ -108,7 +159,7 @@ export const useSandboxStore = create((set, get) => ({
       let chosenMove = null;
       try {
         const sortedMoves = await fetchSandboxMoves({ boardCoords, rack: currentRack, pool });
-        chosenMove = await pickBotMove({ sortedMoves, botName, boardCoords, pool });
+        chosenMove = await pickBotMove({ sortedMoves, botName, rank, boardCoords, pool });
       } catch (error) {
         console.error('Sandbox move-fetch error:', error);
         chosenMove = null;
@@ -198,11 +249,7 @@ export const useSandboxStore = create((set, get) => ({
   // server-side in one shot. Mirrors playOneGame's per-turn set() shape so
   // the UI (which just reads moveHistory/boardCoords/racks) can't tell the
   // difference between this and a live-fetched game.
-  replayBulkGame: async ({ gameData, gameIndex, player1BotName, player2BotName }) => {
-    const sameBotName = player1BotName === player2BotName;
-    const player1Name = sameBotName ? `${formatPlayerName(player1BotName)}_1` : formatPlayerName(player1BotName);
-    const player2Name = sameBotName ? `${formatPlayerName(player2BotName)}_2` : formatPlayerName(player2BotName);
-
+  replayBulkGame: async ({ gameData, gameIndex, player1Name, player2Name }) => {
     let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     let blankTiles = [];
     let moveHistory = [];
@@ -287,22 +334,109 @@ export const useSandboxStore = create((set, get) => ({
     };
   },
 
+  // Same data transform as replayBulkGame, but with no set()/delay per turn -
+  // for series too big to sensibly animate (REPLAY_GAME_LIMIT+), nobody's
+  // watching each of 30+ games play out, so just compute results and GCGs
+  // directly. Returns the game's result plus the final display state
+  // (board/racks/etc as of the LAST turn), which the caller applies only
+  // once, for the final game in the series.
+  finalizeBulkGame: ({ gameData, gameIndex, player1Name, player2Name }) => {
+    let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
+    let blankTiles = [];
+    let moveHistory = [];
+
+    (gameData.turns || []).forEach(turn => {
+      const playerName = turn.player === 1 ? player1Name : player2Name;
+
+      if (turn.type === 'pass') {
+        moveHistory.push({
+          boardDiff: [], player: playerName, score: 0,
+          rack: turn.rackBefore, total: turn.runningTotal, word: 'Pass'
+        });
+      } else if (turn.type === 'exchange') {
+        moveHistory.push({
+          boardDiff: [], player: playerName, score: 0,
+          rack: turn.rackBefore, tilesExchanged: turn.tilesExchanged,
+          total: turn.runningTotal, word: 'Exchange'
+        });
+      } else {
+        const newTiles = (turn.tiles || []).filter(t => t.isNew);
+        const boardDiff = newTiles.map(t => ({ row: t.row, col: t.col, value: t.letter }));
+        const newBoard = boardCoords.map(row => [...row]);
+        boardDiff.forEach(d => { newBoard[d.row][d.col] = d.value; });
+        boardCoords = newBoard;
+
+        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col }));
+        blankTiles = [...blankTiles, ...newBlanks];
+
+        moveHistory.push({
+          boardDiff, player: playerName, score: turn.score,
+          rack: turn.rackBefore, total: turn.runningTotal, word: turn.word
+        });
+      }
+    });
+
+    const winner = gameData.winner === 1 ? player1Name : gameData.winner === 2 ? player2Name : null;
+
+    const gcgContent = generateGCGContent(
+      moveHistory, player1Name, player2Name, blankTiles,
+      (gameData.player1FinalRack || '').split(''),
+      (gameData.player2FinalRack || '').split(''),
+      (gameData.finalPool || '').split('')
+    );
+
+    return {
+      result: {
+        gameIndex,
+        player1Score: gameData.player1Score,
+        player2Score: gameData.player2Score,
+        winner, player1Name, player2Name, gcgContent
+      },
+      finalDisplayState: {
+        boardCoords, blankTiles, moveHistory,
+        player1Rack: (gameData.player1FinalRack || '').split(''),
+        player2Rack: (gameData.player2FinalRack || '').split(''),
+        pool: (gameData.finalPool || '').split(''),
+        player1points: gameData.player1Score,
+        player2points: gameData.player2Score,
+        player1Name, player2Name
+      }
+    };
+  },
+
   startSeries: async () => {
-    const { totalGames, player1BotName, player2BotName } = get();
-    set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false });
+    const { player1BotName, player2BotName, player1StaticRank, player2StaticRank } = get();
+    // Defensive re-clamp in case bot selection changed after totalGames was
+    // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
+    // but this is the last checkpoint before anything actually runs).
+    const totalGames = Math.min(get().totalGames, getMaxGamesForBots(player1BotName, player2BotName));
+    set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false, totalGames });
 
-    // Theo vs Theo can be decided entirely server-side in one call (Theo's
-    // move choice - best by score+leaveValue - needs no client-side
-    // simulation loop). Tess (defense sims) and Intermediate aren't ported
-    // server-side yet, so anything else still uses the per-move client loop.
-    const useBulkTheoPath = player1BotName === 'Theo' && player2BotName === 'Theo';
+    // Single source of truth for both display names (with same-bot
+    // disambiguation) and ranks - computed once here and threaded through
+    // playOneGame/replayBulkGame/finalizeBulkGame rather than each
+    // re-deriving it.
+    const player1BaseName = getBotDisplayName(player1BotName, player1StaticRank);
+    const player2BaseName = getBotDisplayName(player2BotName, player2StaticRank);
+    const sameBotName = player1BaseName === player2BaseName;
+    const player1Name = sameBotName ? `${formatPlayerName(player1BaseName)}_1` : formatPlayerName(player1BaseName);
+    const player2Name = sameBotName ? `${formatPlayerName(player2BaseName)}_2` : formatPlayerName(player2BaseName);
+    const player1Rank = getBotRank(player1BotName, player1StaticRank);
+    const player2Rank = getBotRank(player2BotName, player2StaticRank);
 
-    if (useBulkTheoPath) {
+    // Any matchup where neither side is Tess can be decided entirely
+    // server-side in one call - Theo/Static picks are just "the Nth-ranked
+    // candidate," which needs no client-side simulation loop. Tess (defense
+    // sims) isn't ported server-side, so a series involving her still uses
+    // the per-move client loop.
+    const useBulkPath = isStaticBot(player1BotName) && isStaticBot(player2BotName);
+
+    if (useBulkPath) {
       try {
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ games: totalGames })
+          body: JSON.stringify({ games: totalGames, player1Rank, player2Rank })
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -310,16 +444,32 @@ export const useSandboxStore = create((set, get) => ({
         const data = await response.json();
         const games = data.games || [];
 
+        // Past REPLAY_GAME_LIMIT games, skip the turn-by-turn animation
+        // entirely and just compute each game's result/GCG directly -
+        // nobody's watching 30+ games play out one move at a time. Only the
+        // very last game's ending position gets shown, once everything's done.
+        const skipReplay = games.length > REPLAY_GAME_LIMIT;
+
         for (let gameIndex = 0; gameIndex < games.length; gameIndex++) {
           if (get().shouldStop) break;
           set({ currentGameIndex: gameIndex });
 
-          const result = await get().replayBulkGame({
-            gameData: games[gameIndex], gameIndex, player1BotName, player2BotName
-          });
-          if (!result) break; // stopped mid-replay
+          if (skipReplay) {
+            const { result, finalDisplayState } = get().finalizeBulkGame({
+              gameData: games[gameIndex], gameIndex, player1Name, player2Name
+            });
+            set(state => ({ seriesResults: [...state.seriesResults, result] }));
+            if (gameIndex === games.length - 1) {
+              set({ ...finalDisplayState, gameStarted: true });
+            }
+          } else {
+            const result = await get().replayBulkGame({
+              gameData: games[gameIndex], gameIndex, player1Name, player2Name
+            });
+            if (!result) break; // stopped mid-replay
 
-          set(state => ({ seriesResults: [...state.seriesResults, result] }));
+            set(state => ({ seriesResults: [...state.seriesResults, result] }));
+          }
           if (get().shouldStop) break;
         }
       } catch (error) {
@@ -334,7 +484,9 @@ export const useSandboxStore = create((set, get) => ({
       if (get().shouldStop) break;
       set({ currentGameIndex: gameIndex });
 
-      const result = await get().playOneGame({ gameIndex, player1BotName, player2BotName });
+      const result = await get().playOneGame({
+        gameIndex, player1BotName, player2BotName, player1Rank, player2Rank, player1Name, player2Name
+      });
       if (!result) break; // stopped mid-game
 
       set(state => ({ seriesResults: [...state.seriesResults, result] }));

@@ -9,7 +9,18 @@ import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { ThemeContext } from '../../App';
 import styles from './Sandbox.module.css';
 
-const BOT_OPTIONS = ['Theo', 'Tess', 'Intermediate'];
+const BOT_OPTIONS = ['Theo', 'Tess', 'Static'];
+
+// Mirrors sandboxStore.js's own ordinal() - kept as a tiny local duplicate
+// here purely for the UI hint ("5th") rather than exporting an internal
+// store helper.
+const ordinal = (n) => {
+  const j = n % 10, k = n % 100;
+  if (j === 1 && k !== 11) return `${n}st`;
+  if (j === 2 && k !== 12) return `${n}nd`;
+  if (j === 3 && k !== 13) return `${n}rd`;
+  return `${n}th`;
+};
 
 const SandboxPlayerInfo = React.memo(() => {
   const { lightMode } = useContext(ThemeContext);
@@ -17,7 +28,14 @@ const SandboxPlayerInfo = React.memo(() => {
 
   const player1BotName = useSandboxStore(state => state.player1BotName);
   const player2BotName = useSandboxStore(state => state.player2BotName);
+  const player1StaticRank = useSandboxStore(state => state.player1StaticRank);
+  const player2StaticRank = useSandboxStore(state => state.player2StaticRank);
   const totalGames = useSandboxStore(state => state.totalGames);
+  // Any static-bot matchup (Theo or a chosen Nth static, either side) runs
+  // server-side in bulk and can handle far more games than the per-move
+  // client loop Tess still needs - mirrors sandboxStore.js's getMaxGamesForBots.
+  const isStatic = (name) => name === 'Theo' || name === 'Static';
+  const maxGames = (isStatic(player1BotName) && isStatic(player2BotName)) ? 500 : 30;
   const isRunning = useSandboxStore(state => state.isRunning);
   const currentGameIndex = useSandboxStore(state => state.currentGameIndex);
   const seriesResults = useSandboxStore(state => state.seriesResults);
@@ -38,6 +56,8 @@ const SandboxPlayerInfo = React.memo(() => {
   const {
     setPlayer1BotName,
     setPlayer2BotName,
+    setPlayer1StaticRank,
+    setPlayer2StaticRank,
     setTotalGames,
     startSeries,
     stopSeries,
@@ -96,7 +116,7 @@ const SandboxPlayerInfo = React.memo(() => {
       {/* Setup */}
       <Box sx={sectionSx}>
         <Box sx={labelSx}>Series Setup</Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: player1BotName === 'Static' || player2BotName === 'Static' ? '6px' : '10px' }}>
           <Select
             size="small"
             value={player1BotName}
@@ -117,16 +137,46 @@ const SandboxPlayerInfo = React.memo(() => {
             {BOT_OPTIONS.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}
           </Select>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        {(player1BotName === 'Static' || player2BotName === 'Static') && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', visibility: player1BotName === 'Static' ? 'visible' : 'hidden' }}>
+              <TextField
+                size="small"
+                type="number"
+                value={player1StaticRank}
+                onChange={(e) => setPlayer1StaticRank(parseInt(e.target.value, 10))}
+                disabled={isRunning}
+                inputProps={{ min: 1, max: 15, style: { fontSize: '13px', color: textColor, width: '36px' } }}
+              />
+              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{ordinal(player1StaticRank)} static</Box>
+            </Box>
+            <Box sx={{ width: '20px' }} />
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', visibility: player2BotName === 'Static' ? 'visible' : 'hidden' }}>
+              <TextField
+                size="small"
+                type="number"
+                value={player2StaticRank}
+                onChange={(e) => setPlayer2StaticRank(parseInt(e.target.value, 10))}
+                disabled={isRunning}
+                inputProps={{ min: 1, max: 15, style: { fontSize: '13px', color: textColor, width: '36px' } }}
+              />
+              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{ordinal(player2StaticRank)} static</Box>
+            </Box>
+          </Box>
+        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Box sx={{ fontSize: '12px', color: textColor }}>Number of games</Box>
           <TextField
             size="small"
             type="number"
             value={totalGames}
-            onChange={(e) => setTotalGames(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            onChange={(e) => setTotalGames(parseInt(e.target.value, 10))}
             disabled={isRunning}
-            inputProps={{ min: 1, max: 100, style: { fontSize: '13px', color: textColor, width: '50px' } }}
+            inputProps={{ min: 1, max: maxGames, style: { fontSize: '13px', color: textColor, width: '50px' } }}
           />
+        </Box>
+        <Box sx={{ fontSize: '10px', color: mutedTextColor, opacity: 0.8, marginBottom: '12px', lineHeight: 1.4 }}>
+          Note: series with Tess are capped at 30 games; series with only static bots (Theo or Nth static, either side) are capped at 500.
         </Box>
         <Button
           fullWidth

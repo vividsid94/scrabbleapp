@@ -159,11 +159,15 @@ const runTessOpponentSims = async (movesToEvaluate, boardCoords, pool) => {
 };
 
 // Picks a move for whichever bot personality is playing, from an
-// already-sorted (by totalValue) move list. Only the three bots Sandbox
-// currently supports: Theo (best move, the default/fallback for anything
-// else), Tess (defense-adjusted, see above), Intermediate (5th-best,
-// matching botFunctions.js's existing index convention).
-export const pickBotMove = async ({ sortedMoves, botName, boardCoords, pool }) => {
+// already-sorted (by totalValue) move list. Two kinds: Tess (defense-
+// adjusted, see above) and every "static" bot - Theo (rank 1) or a
+// user-chosen Nth-ranked static bot - which just takes the (rank-1)th
+// entry, falling back to the best move if the rack doesn't have enough
+// legal options to reach that rank this turn. Mirrors the same rank-pick
+// logic (and the same fallback) as simulate.go's Go-side implementation,
+// used here only when Tess is on one side and the series can't take the
+// bulk endpoint.
+export const pickBotMove = async ({ sortedMoves, botName, rank, boardCoords, pool }) => {
   if (!sortedMoves || sortedMoves.length === 0) return null;
 
   if (botName === 'Tess') {
@@ -177,9 +181,9 @@ export const pickBotMove = async ({ sortedMoves, botName, boardCoords, pool }) =
     return evaluated[0];
   }
 
-  if (botName === 'Intermediate' && sortedMoves.length >= 5) {
-    return sortedMoves[4];
+  const idx = (rank || 1) - 1;
+  if (idx >= 0 && idx < sortedMoves.length) {
+    return sortedMoves[idx];
   }
-
-  return sortedMoves[0]; // Theo / default
+  return sortedMoves[0]; // fallback: rank exceeds available candidates
 };
