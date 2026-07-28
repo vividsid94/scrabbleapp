@@ -4,8 +4,8 @@ import { Tooltip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import FoxIcon from '../../../components/icons/FoxIcon';
 import styles from '../Play.module.css';
-import sidenavStyles from '../../../components/AppContent/Sidenav/Sidenav.module.css';
 import { formatMoveLocation } from '../../../functions/play/moveDisplayUtils';
 
 const TopMoves = ({
@@ -180,22 +180,16 @@ const TopMoves = ({
           ) : (
             <>
               <Box sx={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '6px',
+                width: '20px',
+                height: '20px',
+                borderRadius: '4px',
                 backgroundColor: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0,
-                overflow: 'hidden'
+                flexShrink: 0
               }}>
-                <img 
-                  src="/images/theomascot.png" 
-                  alt="Theo" 
-                  className={sidenavStyles.sidenavFoxStencil}
-                  style={{ width: '28px', height: '28px', objectFit: 'contain' }}
-                />
+                <FoxIcon size={14} color={textColor} />
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Box sx={{ fontSize: '13px', fontWeight: '600', color: textColor }}>
