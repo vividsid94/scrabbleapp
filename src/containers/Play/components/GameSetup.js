@@ -19,9 +19,13 @@ const MORE_BOTS = [
   { name: 'Intermediate', desc: 'A bit more challenging, but still beatable.', icon: <Robot size={18} color="#3D5A80" /> },
 ];
 
+// This is only ever shown as a 20px recap badge (after a bot's already been
+// chosen) - it used to load the full mascot PNG (1.6-3.7MB each) just to
+// show a 20px thumbnail. A plain icon costs nothing and looks identical at
+// this size.
 const mascotIcon = (name) => {
-  const file = { Theo: 'theomascot', Tess: 'tessmascot', Tope: 'topemascot' }[name];
-  return file ? <img src={`/images/${file}.png`} alt={name} width={20} height={20} /> : <Robot size={20} color="#9CA3AF" />;
+  const color = { Theo: '#4CAF50', Tess: '#2563EB', Tope: '#F59E0B' }[name] || '#9CA3AF';
+  return <Robot size={20} weight="fill" color={color} />;
 };
 
 // Helper functions to build/parse letter-count pools for the Variable Pool editor
@@ -465,7 +469,7 @@ export default function GameSetup({ onSelectBot, onStartGame }) {
               <div className={styles.sectionLabel}>Analysis Mode</div>
               <div className={styles.toggleRow}>
                 <span className={styles.toggleLabel}>
-                  <img src="/images/theomascot.png" alt="Theo" width={16} height={16} style={{ borderRadius: 3 }} />
+                  <Robot size={16} weight="fill" color="#4CAF50" />
                   Have Theo Yell at You
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
