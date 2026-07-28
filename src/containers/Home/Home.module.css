@@ -74,6 +74,15 @@
   z-index: 1;
 }
 
+/* The drop-shadow + bottom-fade vignette were tuned to sit on the dark
+   theme's backdrop - on the light theme's warm/bright background they just
+   read as a muddy smudge, so light mode drops both entirely. */
+.signTheoImageLight {
+  filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 .signPost {
   position: absolute;
   width: 10px;

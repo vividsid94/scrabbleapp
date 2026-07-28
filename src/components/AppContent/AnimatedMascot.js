@@ -16,10 +16,10 @@ const topeImages = [
   "/images/topemascot.png"
 ];
 
-export default function AnimatedMascot({ about = 'theo' }) {
+export default function AnimatedMascot({ about = 'theo', enableStencilMode = true, onPoseIndexChange, initialPoseIndex = 0 }) {
   const mascotImages = about === 'tess' ? tessImages : about === 'tope' ? topeImages : theoImages;
-  const [current, setCurrent] = useState(0);
-  const [prev, setPrev] = useState(0);
+  const [current, setCurrent] = useState(initialPoseIndex);
+  const [prev, setPrev] = useState(initialPoseIndex);
   const [crossfade, setCrossfade] = useState(false);
   const [stencilMode, setStencilMode] = useState(false);
   const poseTimeoutRef = useRef();
@@ -38,13 +38,24 @@ export default function AnimatedMascot({ about = 'theo' }) {
     return () => clearInterval(poseTimeoutRef.current);
   }, [current]);
 
-  // Switch between stencil and color mode every 6 seconds
+  // Report the active pose index back to the parent - lets a caller react to
+  // which specific pose is showing (e.g. only pairing page-specific decor
+  // with one particular pose) without this component needing to know
+  // anything about that decor itself.
   useEffect(() => {
+    onPoseIndexChange?.(current);
+  }, [current, onPoseIndexChange]);
+
+  // Switch between stencil and color mode every 6 seconds - opt-out for
+  // callers (like the homepage hero) that want Theo to always stay
+  // full-color rather than periodically flash grayscale.
+  useEffect(() => {
+    if (!enableStencilMode) return;
     modeTimeoutRef.current = setInterval(() => {
       setStencilMode((prev) => !prev);
     }, 6000);
     return () => clearInterval(modeTimeoutRef.current);
-  }, []);
+  }, [enableStencilMode]);
 
   // Choose class for stencil or color
   const mascotClass = `${styles.mascot} ${stencilMode ? styles.stencilEffect : ''}`;
@@ -56,7 +67,15 @@ export default function AnimatedMascot({ about = 'theo' }) {
         alt="Theo the mascot previous pose"
         className={mascotClass}
         style={{
-          opacity: crossfade ? 0 : 1,
+          // crossfade=true is the ~700ms transition window: prev fades OUT
+          // (visible -> hidden) while current fades IN below. At rest
+          // (crossfade=false) prev must stay hidden - current is the one
+          // actually showing. These two opacity values were swapped, which
+          // made the display settle on showing prev (the pose *before* the
+          // one current had already advanced to) for the entire ~1.8s
+          // between transitions, one full pose behind what current/
+          // onPoseIndexChange reported.
+          opacity: crossfade ? 1 : 0,
           zIndex: 1,
           position: "absolute",
           top: 0,
@@ -73,7 +92,7 @@ export default function AnimatedMascot({ about = 'theo' }) {
         alt="Theo the mascot current pose"
         className={mascotClass}
         style={{
-          opacity: crossfade ? 1 : 0,
+          opacity: crossfade ? 0 : 1,
           zIndex: 2,
           position: "absolute",
           top: 0,
