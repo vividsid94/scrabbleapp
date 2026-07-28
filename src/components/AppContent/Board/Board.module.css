@@ -316,9 +316,10 @@ td {
   inset: 2px;
   z-index: 4;
   pointer-events: none;
-  background: rgba(76, 175, 80, 0.35);
-  border: 2px solid rgba(76, 175, 80, 0.9);
+  background: rgba(255, 235, 59, 0.6);
+  border: 3px solid rgba(255, 171, 0, 1);
   border-radius: 3px;
+  box-shadow: 0 0 8px rgba(255, 171, 0, 0.9);
 }
 
 

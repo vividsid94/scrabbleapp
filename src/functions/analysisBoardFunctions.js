@@ -128,6 +128,42 @@ export const toggleLaneCell = (laneSelection, selectedMove, boardCoords, cell) =
   return [...laneSelection, cell];
 };
 
+// Computes a fresh lane selection for a drag gesture from an anchor cell
+// (where the mouse/touch went down) to wherever it currently is - snapped to
+// whichever axis (row or column) has moved further, so small wobble in a real
+// mouse or finger drag doesn't accidentally break the straight-line
+// requirement. Only empty cells are included (gaps over existing tiles are
+// skipped, same as a real move would skip over them), capped at 7 like a
+// rack. Replaces the whole selection rather than toggling, since a drag is
+// "draw this line," not "add one more square" - that's still what a plain
+// click (via toggleLaneCell) is for.
+export const computeLaneDragSpan = (anchor, current, selectedMove, boardCoords) => {
+  if (!selectedMove) return [];
+
+  const combinedBoard = buildSelectedMoveFrame(selectedMove, boardCoords).board;
+  const isOccupied = (row, col) => typeof combinedBoard[row]?.[col] === 'string' && combinedBoard[row][col] !== '';
+
+  const rowDelta = Math.abs(current.row - anchor.row);
+  const colDelta = Math.abs(current.col - anchor.col);
+
+  const cells = [];
+  if (rowDelta >= colDelta) {
+    const startRow = Math.min(anchor.row, current.row);
+    const endRow = Math.max(anchor.row, current.row);
+    for (let r = startRow; r <= endRow && cells.length < 7; r++) {
+      if (!isOccupied(r, anchor.col)) cells.push({ row: r, col: anchor.col });
+    }
+  } else {
+    const startCol = Math.min(anchor.col, current.col);
+    const endCol = Math.max(anchor.col, current.col);
+    for (let c = startCol; c <= endCol && cells.length < 7; c++) {
+      if (!isOccupied(anchor.row, c)) cells.push({ row: anchor.row, col: c });
+    }
+  }
+
+  return cells;
+};
+
 // Is this Lane Isolation selection a legal move shape? Same three geometric
 // rules as validatePlacement: single row/col, gaps only where the combined
 // board (real board + candidate move) already has a tile, and the whole

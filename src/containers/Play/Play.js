@@ -188,6 +188,7 @@ export default function Play({ isMultiplayer = false }) {
     runAnalysisHeatMap,
     runAnalysisOpponentResponses,
     toggleAnalysisLaneCell,
+    setAnalysisLaneDragSelection,
     clearAnalysisLaneSelection,
     runAnalysisLaneIsolation,
 
@@ -1032,6 +1033,8 @@ export default function Play({ isMultiplayer = false }) {
             analysisHeatGrid={analysisHeatGrid}
             analysisHeatMaxCount={analysis.heatMap?.maxCount}
             analysisLaneSelection={analysis.layer === 'laneIsolation' ? analysis.laneSelection : null}
+            analysisLaneSelectable={analysis.active && analysis.layer === 'laneIsolation' && !!analysis.selectedMove}
+            onAnalysisLaneDrag={(ar, ac, cr, cc) => setAnalysisLaneDragSelection({ row: ar, col: ac }, { row: cr, col: cc })}
             showSlip={false}
             showDictionary={false}
             dictionary=""

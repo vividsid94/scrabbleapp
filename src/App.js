@@ -128,9 +128,9 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 function App() {
   const [appState, setAppState] = useState('VIEWER');
   const [lightMode, setLightMode] = useState(() => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     const stored = window.localStorage.getItem('lightMode');
-    return stored === 'light' || stored === 'dark' ? stored : 'dark';
+    return stored === 'light' || stored === 'dark' ? stored : 'light';
   });
   
   // Get the colors and settings from the stores

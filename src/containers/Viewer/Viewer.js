@@ -126,6 +126,7 @@ export default function Viewer({ onChange }){
     runAnalysisHeatMap,
     runAnalysisOpponentResponses,
     toggleAnalysisLaneCell,
+    setAnalysisLaneDragSelection,
     clearAnalysisLaneSelection,
     runAnalysisLaneIsolation,
     fetchAnalysisTopMoves,
@@ -526,6 +527,8 @@ export default function Viewer({ onChange }){
                 analysisHeatGrid={analysisHeatGrid}
                 analysisHeatMaxCount={analysis.heatMap?.maxCount}
                 analysisLaneSelection={analysis.layer === 'laneIsolation' ? analysis.laneSelection : null}
+                analysisLaneSelectable={analysis.active && analysis.layer === 'laneIsolation' && !!analysis.selectedMove}
+                onAnalysisLaneDrag={(ar, ac, cr, cc) => setAnalysisLaneDragSelection({ row: ar, col: ac }, { row: cr, col: cc })}
               />
             </Box>
           </Box>

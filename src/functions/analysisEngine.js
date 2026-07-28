@@ -329,15 +329,16 @@ export const runLaneIsolationEngine = async ({ move, boardCoords, laneSelection,
           matchCount++;
           matchScoreSum += opponentMove.score;
 
-          if (!sampleFrame) {
-            const iterBoard = baseBoard.map(row => [...row]);
-            const iterOwnership = baselineFrame.tileOwnership.map(row => [...row]);
-            newTiles.forEach(tile => {
-              iterBoard[tile.row][tile.col] = tile.letter;
-              iterOwnership[tile.row][tile.col] = 'opponent';
-            });
-            sampleFrame = { board: iterBoard, tileOwnership: iterOwnership, move: 'opponent', iteration: null };
-          }
+          // Always take the latest match, not just the first one found - so
+          // the board visualization keeps advancing to a fresh example as
+          // more iterations come in, instead of freezing on the very first hit.
+          const iterBoard = baseBoard.map(row => [...row]);
+          const iterOwnership = baselineFrame.tileOwnership.map(row => [...row]);
+          newTiles.forEach(tile => {
+            iterBoard[tile.row][tile.col] = tile.letter;
+            iterOwnership[tile.row][tile.col] = 'opponent';
+          });
+          sampleFrame = { board: iterBoard, tileOwnership: iterOwnership, move: 'opponent', iteration: null };
         }
       }
 

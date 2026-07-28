@@ -8,7 +8,7 @@ import { createRack } from '../functions/rackFunctions';
 import { calculatePoolFromBoard } from '../functions/poolFunctions';
 import { markBlanksLowercase } from '../functions/play/boardApiUtils';
 import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine, runLaneIsolationEngine } from '../functions/analysisEngine';
-import { toggleLaneCell } from '../functions/analysisBoardFunctions';
+import { toggleLaneCell, computeLaneDragSpan } from '../functions/analysisBoardFunctions';
 
 // --- Analysis Mode's own move-list fetch (deliberately a separate copy from
 // Viewer/components/TopMoves.js's internal fetch, which owns its own local
@@ -892,6 +892,12 @@ export const useViewerStore = create((set, get) => {
       const newSelection = toggleLaneCell(analysis.laneSelection, analysis.selectedMove, boardCoords, cell);
       if (newSelection === analysis.laneSelection) return;
       set(state => ({ analysis: { ...state.analysis, laneSelection: newSelection, laneResult: null } }));
+    },
+
+    setAnalysisLaneDragSelection: (anchor, current) => {
+      const { analysis, boardCoords } = get();
+      const cells = computeLaneDragSpan(anchor, current, analysis.selectedMove, boardCoords);
+      set(state => ({ analysis: { ...state.analysis, laneSelection: cells, laneResult: null } }));
     },
 
     clearAnalysisLaneSelection: () => set(state => ({ analysis: { ...state.analysis, laneSelection: [], laneResult: null } })),

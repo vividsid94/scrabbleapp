@@ -440,7 +440,17 @@ export default function AnalysisPanel({
           </Box>
 
           {isRunning ? (
-            <LinearProgress sx={{ flex: 1, borderRadius: '6px', height: '8px' }} />
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(100, ((laneResult?.totalIterations || 0) / LANE_ISOLATION_ITERATIONS) * 100)}
+              sx={{
+                flex: 1,
+                borderRadius: '6px',
+                height: '8px',
+                backgroundColor: 'rgba(61, 90, 128, 0.25)',
+                '& .MuiLinearProgress-bar': { backgroundColor: '#3D5A80' }
+              }}
+            />
           ) : (
             <Box
               component="button"

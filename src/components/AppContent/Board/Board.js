@@ -32,7 +32,9 @@ export default function Board({
     analysisGhostDashedBorder = true,
     analysisHeatGrid = null,
     analysisHeatMaxCount = 1,
-    analysisLaneSelection = null
+    analysisLaneSelection = null,
+    analysisLaneSelectable = false,
+    onAnalysisLaneDrag
 }) {
     const { lightMode } = useContext(ThemeContext);
     const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
@@ -56,6 +58,12 @@ export default function Board({
     const [boardHeight, setBoardHeight] = useState(0);
     const boardRef = useRef(null);
     const telestratorRef = useRef(null);
+    // Lane Isolation's click-and-drag line selection - refs, not state, since
+    // nothing here needs to re-render the component itself; the actual
+    // selection only changes (and re-renders) via onAnalysisLaneDrag's
+    // parent-side state update.
+    const laneDragAnchorRef = useRef(null);
+    const laneDragActiveRef = useRef(false);
     const [isDrawing, setIsDrawing] = useState(false);
     const [telestratorStrokes, setTelestratorStrokes] = useState([]);
     const handleClose = () => setOpen(false);
@@ -150,6 +158,51 @@ export default function Board({
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [isDragging, dragStart]);
+
+    // Lane Isolation drag-select: mousedown/touchstart on a cell (per-cell
+    // handlers below) sets the anchor; this effect tracks movement globally
+    // so the gesture still resolves correctly even if the pointer leaves the
+    // exact cell it started on. touchmove fires on the original touch target
+    // rather than whatever's currently under the finger, so it needs
+    // elementFromPoint to find the actual cell - mousemove doesn't need this
+    // since onMouseEnter on each cell already does the job.
+    useEffect(() => {
+        if (!analysisLaneSelectable) return undefined;
+
+        const finishGesture = () => {
+            if (laneDragAnchorRef.current && !laneDragActiveRef.current) {
+                onBoardChildClick && onBoardChildClick(laneDragAnchorRef.current.row, laneDragAnchorRef.current.col);
+            }
+            laneDragAnchorRef.current = null;
+            laneDragActiveRef.current = false;
+        };
+
+        const handleWindowTouchMove = (e) => {
+            if (!laneDragAnchorRef.current) return;
+            const touch = e.touches[0];
+            if (!touch) return;
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            const cellEl = el && el.closest ? el.closest('[data-lane-row]') : null;
+            if (!cellEl) return;
+            const row = Number(cellEl.dataset.laneRow);
+            const col = Number(cellEl.dataset.laneCol);
+            if (row !== laneDragAnchorRef.current.row || col !== laneDragAnchorRef.current.col) {
+                laneDragActiveRef.current = true;
+                onAnalysisLaneDrag && onAnalysisLaneDrag(laneDragAnchorRef.current.row, laneDragAnchorRef.current.col, row, col);
+                e.preventDefault();
+            }
+        };
+
+        window.addEventListener('mouseup', finishGesture);
+        window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
+        window.addEventListener('touchend', finishGesture);
+
+        return () => {
+            window.removeEventListener('mouseup', finishGesture);
+            window.removeEventListener('touchmove', handleWindowTouchMove);
+            window.removeEventListener('touchend', finishGesture);
+        };
+    }, [analysisLaneSelectable, onBoardChildClick, onAnalysisLaneDrag]);
 
     const handlePanMouseDown = (e) => {
         e.preventDefault();
@@ -521,9 +574,28 @@ export default function Board({
                                         {letterLookup[Object.keys(letterLookup)[rowIndex]]}
                                     </td>
                                     {row.map((col, colIndex) => (
-                                        <td 
+                                        <td
                                             key={colIndex}
-                                            onClick={() => onBoardChildClick && onBoardChildClick(rowIndex, colIndex)}
+                                            data-lane-row={analysisLaneSelectable ? rowIndex : undefined}
+                                            data-lane-col={analysisLaneSelectable ? colIndex : undefined}
+                                            onClick={() => { if (!analysisLaneSelectable) onBoardChildClick && onBoardChildClick(rowIndex, colIndex); }}
+                                            onMouseDown={() => {
+                                                if (!analysisLaneSelectable) return;
+                                                laneDragAnchorRef.current = { row: rowIndex, col: colIndex };
+                                                laneDragActiveRef.current = false;
+                                            }}
+                                            onMouseEnter={() => {
+                                                if (!analysisLaneSelectable || !laneDragAnchorRef.current) return;
+                                                if (rowIndex !== laneDragAnchorRef.current.row || colIndex !== laneDragAnchorRef.current.col) {
+                                                    laneDragActiveRef.current = true;
+                                                    onAnalysisLaneDrag && onAnalysisLaneDrag(laneDragAnchorRef.current.row, laneDragAnchorRef.current.col, rowIndex, colIndex);
+                                                }
+                                            }}
+                                            onTouchStart={() => {
+                                                if (!analysisLaneSelectable) return;
+                                                laneDragAnchorRef.current = { row: rowIndex, col: colIndex };
+                                                laneDragActiveRef.current = false;
+                                            }}
                                         >
                                             {col}
                                             {analysisHeatGrid && (
