@@ -115,6 +115,14 @@ export const fetchSandboxMoves = async ({ boardCoords, rack, pool }) => {
 const runTessOpponentSims = async (movesToEvaluate, boardCoords, pool) => {
   const tilePoolString = [...pool].join('');
 
+  // Late-game the bag genuinely empties out - there's no random rack left to
+  // simulate an opponent reply from, and bulk-move-gen rejects an empty
+  // tilePool outright (400 "TilePool is required"). Treat "nothing left to
+  // draw" as "no simulated threat" rather than making a doomed request.
+  if (tilePoolString === '') {
+    return movesToEvaluate.map(() => 0);
+  }
+
   return Promise.all(movesToEvaluate.map(async (move) => {
     try {
       const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
