@@ -34,10 +34,8 @@ async function loadDictionary() {
     console.log('📖 Attempting to load dictionary from /files/nwl2023.txt...');
     try {
       const response = await fetch('/files/nwl2023.txt');
-      console.log('📖 Response status:', response.status, response.statusText);
       if (response.ok) {
         const text = await response.text();
-        console.log('📖 File loaded, text length:', text.length, 'characters');
 
         // Check if we got HTML instead of the text file (routing issue)
         if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
@@ -72,13 +70,9 @@ async function loadDictionary() {
           .map(line => line.trim().toUpperCase())
           .filter(word => word.length > 0 && !word.startsWith('<'));
         
-        console.log('📖 Parsed words:', words.length);
         if (words.length > 0) {
           dictionarySet = new Set(words);
           console.log(`✅ Local dictionary loaded from /files/nwl2023.txt: ${dictionarySet.size} words`);
-          // Log a sample of words to verify
-          const sampleWords = Array.from(dictionarySet).slice(0, 5);
-          console.log('📖 Sample words:', sampleWords);
           return dictionarySet;
         } else {
           console.warn('⚠️ nwl2023.txt loaded but no words found after parsing');
