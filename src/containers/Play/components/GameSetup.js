@@ -10,7 +10,7 @@ import styles from './GameSetup.module.css';
 const PRIMARY_BOTS = [
   { name: 'Theo', desc: 'Clever and quick, Theo prefers bold, aggressive moves.' },
   { name: 'Tess', desc: 'Calm and strategic, Tess loves defense. Outfox her if you can!' },
-  { name: 'Tope', desc: 'Reasons like an expert - retrieves similar positions from real annotated games and explains its thinking.' },
+  { name: 'Tope', desc: 'LLM trained using annotated game commentary! Tope is around 1800 level.' },
 ];
 
 const MORE_BOTS = [

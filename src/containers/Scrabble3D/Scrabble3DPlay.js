@@ -112,7 +112,7 @@ preloadProtiles();
 const bots = [
   { name: 'Theo', img: '/images/theomascot.png', desc: 'Clever and quick, Theo prefers bold, aggressive moves.' },
   { name: 'Tess', img: '/images/tessmascot.png', desc: 'Calm and strategic, Tess loves defense.' },
-  { name: 'Tope', img: '/images/topemascot.png', desc: 'Reasons like an expert using similar annotated games.' },
+  { name: 'Tope', img: '/images/topemascot.png', desc: 'LLM trained using annotated game commentary! Tope is around 1800 level.' },
   { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={20} color="#60A5FA" /> },
   { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={20} color="#8B7355" /> },
   { name: 'Intermediate', desc: 'A bit more challenging.', icon: <Robot size={20} color="#3D5A80" /> },
