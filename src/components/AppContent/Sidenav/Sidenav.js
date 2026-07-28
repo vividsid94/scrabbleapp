@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -21,8 +20,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
-import Collapse from "@mui/material/Collapse";
 import { Tooltip, Select, FormControl, Divider } from "@mui/material";
 
 import {
@@ -39,16 +36,61 @@ import {
   User,
   SignOut,
   SpeakerHigh,
-  CaretRight,
-  CaretDown,
   GameController,
-  Gear
+  X,
+  Check
 } from '@phosphor-icons/react';
 import CircleIcon from '@mui/icons-material/Circle';
 import AppleIcon from '@mui/icons-material/Apple';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 import styles from './Sidenav.module.css';
+
+// A route row in the mobile slide-in menu. Icons render via currentColor
+// (Phosphor icons default to it; MUI icons pick it up too without an
+// explicit color), so setting color once on the MenuItem colors both the
+// icon and label consistently.
+const MobileMenuItem = ({ to, label, active, onClick, colors, children }) => (
+  <MenuItem
+    component={Link}
+    to={to}
+    onClick={onClick}
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '10px 16px',
+      backgroundColor: active ? colors.activeBg : 'transparent',
+      color: active ? colors.accent : colors.text,
+      fontWeight: active ? 600 : 400,
+      '&:hover': { backgroundColor: active ? colors.activeBg : colors.hover }
+    }}
+  >
+    {children}
+    <Box sx={{ flex: 1 }}>{label}</Box>
+    {active && <Check size={16} weight="bold" />}
+  </MenuItem>
+);
+
+// Same row styling as MobileMenuItem but for actions that aren't a route
+// link (Colors/Decorations/Sound/Light-Dark toggle) - label is passed as a
+// child alongside the icon instead of a separate prop, since these don't
+// have a single fixed label (e.g. the light/dark toggle's text changes).
+const MobileMenuAction = ({ onClick, colors, children }) => (
+  <MenuItem
+    onClick={onClick}
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '10px 16px',
+      color: colors.text,
+      '&:hover': { backgroundColor: colors.hover }
+    }}
+  >
+    {children}
+  </MenuItem>
+);
 
 export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -62,8 +104,6 @@ export default function MiniDrawer() {
   const [isModesExpanded, setIsModesExpanded] = React.useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = React.useState(false);
   const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
-  const [mobileModesExpanded, setMobileModesExpanded] = React.useState(false);
-  const [mobileSettingsExpanded, setMobileSettingsExpanded] = React.useState(false);
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('signin');
@@ -96,6 +136,34 @@ export default function MiniDrawer() {
     return '#fff';
   };
 
+  // Mobile topbar + its slide-in menu, redesigned to be independent of the
+  // desktop sidebar's getBackgroundColor/getTextColor (which are deliberately
+  // dark-always) - this should actually flip light/dark like the rest of the
+  // app, not stay permanently dark.
+  const mobileMenuBg = lightMode === 'dark' ? '#1F2937' : '#FFFFFF';
+  const mobileMenuText = lightMode === 'dark' ? '#FFFFFF' : '#1F2937';
+  const mobileMenuMuted = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.55)' : 'rgba(31, 41, 55, 0.55)';
+  const mobileMenuBorder = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const mobileMenuHover = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
+  const mobileMenuAccent = lightMode === 'dark' ? '#10B981' : '#059669';
+  const mobileMenuActiveBg = lightMode === 'dark' ? 'rgba(16, 185, 129, 0.18)' : 'rgba(5, 150, 105, 0.12)';
+
+  const mobileMenuColors = {
+    text: mobileMenuText,
+    hover: mobileMenuHover,
+    accent: mobileMenuAccent,
+    activeBg: mobileMenuActiveBg,
+  };
+
+  const mobileMenuSectionLabelSx = {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: mobileMenuMuted,
+    padding: '10px 16px 4px'
+  };
+
   const drawerMixin = () => ({
     width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '160px' : '52px',
     overflowX: 'hidden',
@@ -124,7 +192,7 @@ export default function MiniDrawer() {
 
   const MyAppBar = styled(AppBar)({
     position: 'fixed',
-    background: getBackgroundColor(),
+    background: mobileMenuBg,
     display: "flex",
     justifyContent: "space-between"
   });
@@ -273,7 +341,7 @@ export default function MiniDrawer() {
         <MyToolbar>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             <IconButton color="inherit" onClick={handleClick}>
-              <MenuIcon sx={{ color: getTextColor() }}/>
+              <MenuIcon sx={{ color: mobileMenuText }}/>
             </IconButton>
             {!user ? (
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -306,299 +374,121 @@ export default function MiniDrawer() {
               </Box>
             )}
           </Box>
-          <Menu
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            PaperProps={{
-              sx: {
-                backgroundColor: getBackgroundColor(),
-                color: getTextColor(),
-                minWidth: '240px',
-                maxWidth: '280px'
-              }
-            }}
-          >
-            {/* Home */}
-            <MenuItem
-              onClick={handleClose}
-              component={Link}
-              to="/"
-              sx={{
-                backgroundColor: isCurrentPage('/') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                fontWeight: isCurrentPage('/') ? '600' : '400',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}
-            >
-              <House size={20} weight={isCurrentPage('/') ? "fill" : "regular"} />
-              Home {isCurrentPage('/') && '✓'}
-            </MenuItem>
-
-            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
-            
-            {/* Modes Section */}
-            <ListItemButton
-              onClick={() => setMobileModesExpanded(!mobileModesExpanded)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '8px 16px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                }
-              }}
-            >
-              <GameController size={20} weight={mobileModesExpanded ? "fill" : "regular"} />
-              <Box sx={{ flex: 1, fontWeight: mobileModesExpanded ? '600' : '400' }}>
-                Modes
-              </Box>
-              {mobileModesExpanded ? (
-                <CaretDown size={16} />
-              ) : (
-                <CaretRight size={16} />
-              )}
-            </ListItemButton>
-            
-            <Collapse in={mobileModesExpanded} timeout="auto" unmountOnExit>
-              <Box sx={{ paddingLeft: '32px', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/play" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/play') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/play') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <SmartToyIcon sx={{ fontSize: 18 }} />
-                  Play {isCurrentPage('/play') && '✓'}
-                </MenuItem>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/puzzle" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/puzzle') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/puzzle') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <PuzzlePiece size={18} weight={isCurrentPage('/puzzle') ? "fill" : "regular"} />
-                  Puzzle {isCurrentPage('/puzzle') && '✓'}
-                </MenuItem>
-                <MenuItem
-                  onClick={handleClose}
-                  component={Link}
-                  to="/sandbox"
-                  sx={{
-                    backgroundColor: isCurrentPage('/sandbox') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/sandbox') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Flask size={18} weight={isCurrentPage('/sandbox') ? "fill" : "regular"} />
-                  Sandbox {isCurrentPage('/sandbox') && '✓'}
-                </MenuItem>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/viewer" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/viewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/viewer') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Binoculars size={18} weight={isCurrentPage('/viewer') ? "fill" : "regular"} />
-                  Viewer {isCurrentPage('/viewer') && '✓'}
-                </MenuItem>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/3dviewer" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/3dviewer') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/3dviewer') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Cube size={18} weight={isCurrentPage('/3dviewer') ? "fill" : "regular"} />
-                  3D Viewer {isCurrentPage('/3dviewer') && '✓'}
-                </MenuItem>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/3dplay" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/3dplay') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/3dplay') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <GameController size={18} weight={isCurrentPage('/3dplay') ? "fill" : "regular"} />
-                  3D Play {isCurrentPage('/3dplay') && '✓'}
-                </MenuItem>
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/submit-game" 
-                  sx={{ 
-                    backgroundColor: isCurrentPage('/submit-game') ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    fontWeight: isCurrentPage('/submit-game') ? '600' : '400',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Upload size={18} weight={isCurrentPage('/submit-game') ? "fill" : "regular"} />
-                  Submit Game {isCurrentPage('/submit-game') && '✓'}
-                </MenuItem>
-              </Box>
-            </Collapse>
-            
-            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
-            
-            {/* Settings Section */}
-            <ListItemButton
-              onClick={() => setMobileSettingsExpanded(!mobileSettingsExpanded)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '8px 16px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                }
-              }}
-            >
-              <Gear size={20} weight={mobileSettingsExpanded ? "fill" : "regular"} />
-              <Box sx={{ flex: 1, fontWeight: mobileSettingsExpanded ? '600' : '400' }}>
-                Settings
-              </Box>
-              {mobileSettingsExpanded ? (
-                <CaretDown size={16} />
-              ) : (
-                <CaretRight size={16} />
-              )}
-            </ListItemButton>
-            
-            <Collapse in={mobileSettingsExpanded} timeout="auto" unmountOnExit>
-              <Box sx={{ paddingLeft: '32px', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
-                <MenuItem 
-                  onClick={() => {
-                    handleClose();
-                    toggleColorPicker();
-                  }} 
-                  sx={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Palette size={18} weight={isColorSectionExpanded ? "fill" : "regular"} />
-                  Colors
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => {
-                    handleClose();
-                    toggleDecorations();
-                  }} 
-                  sx={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <Star size={18} weight={isDecorationSectionExpanded ? "fill" : "regular"} />
-                  Decorations
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => {
-                    handleClose();
-                    toggleSoundOptions();
-                  }} 
-                  sx={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingLeft: '40px'
-                  }}
-                >
-                  <SpeakerHigh size={18} weight={isSoundSectionExpanded ? "fill" : "regular"} />
-                  Sound
-                </MenuItem>
-              </Box>
-            </Collapse>
-            
-            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
-            
-            {/* About */}
-            <MenuItem 
-              onClick={handleClose} 
-              component={Link} 
-              to="/about" 
-              sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}
-            >
-              <CircleIcon sx={{ fontSize: 20 }} />
-              About
-            </MenuItem>
-            
-            {/* Light/Dark Mode (hidden when signed in) */}
-            {!user && (
-              <MenuItem 
-                onClick={() => {
-                  handleClose();
-                  toggleLightMode();
-                }} 
-                sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}
-              >
-                {lightMode === 'dark' ? (
-                  <Sun size={20} weight="fill" />
-                ) : (
-                  <Moon size={20} weight="fill" />
-                )}
-                {lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
-              </MenuItem>
-            )}
-          </Menu>
           <img src={'/images/fox-icon.svg'} className={styles.sidenavFoxStencil} id="logo" width="50" height="50"/>
         </MyToolbar>
       </MyAppBar>
+
+      <MuiDrawer
+        anchor="right"
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            width: 'min(85vw, 300px)',
+            backgroundColor: mobileMenuBg,
+            color: mobileMenuText,
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }}
+      >
+        {/* Header */}
+        <Box sx={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px', borderBottom: `1px solid ${mobileMenuBorder}`, flexShrink: 0
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src={'/images/fox-icon.svg'} width="28" height="28" alt="" />
+            <Box sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Syne, sans-serif' }}>Tile Turnover</Box>
+          </Box>
+          <IconButton size="small" onClick={handleClose}>
+            <X size={20} color={mobileMenuText} />
+          </IconButton>
+        </Box>
+
+        {/* Auth */}
+        <Box sx={{ padding: '12px 16px', borderBottom: `1px solid ${mobileMenuBorder}`, flexShrink: 0 }}>
+          {!user ? (
+            <button
+              onClick={() => { handleClose(); setAuthMode('signin'); setShowAuthModal(true); }}
+              className={styles.navAuthButton}
+              style={{ width: '100%' }}
+            >
+              Sign In
+            </button>
+          ) : (
+            <Box sx={{ display: 'flex', gap: '8px' }}>
+              <Link to="/profile" className={styles.navAuthLink} style={{ flex: 1 }} onClick={handleClose}>
+                <button className={styles.navAuthButton} style={{ width: '100%' }}>
+                  {profile?.display_name || profile?.username || 'Profile'}
+                </button>
+              </Link>
+              <button
+                onClick={async () => { handleClose(); await signOut(); navigate('/'); }}
+                className={styles.navAuthButton}
+                style={{ flex: 1 }}
+              >
+                Sign Out
+              </button>
+            </Box>
+          )}
+        </Box>
+
+        {/* Nav */}
+        <Box sx={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+          <MobileMenuItem to="/" label="Home" active={isCurrentPage('/')} onClick={handleClose} colors={mobileMenuColors}>
+            <House size={20} weight={isCurrentPage('/') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+
+          <Box sx={mobileMenuSectionLabelSx}>Play</Box>
+          <MobileMenuItem to="/play" label="Play" active={isCurrentPage('/play')} onClick={handleClose} colors={mobileMenuColors}>
+            <SmartToyIcon sx={{ fontSize: 20 }} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/puzzle" label="Puzzle" active={isCurrentPage('/puzzle')} onClick={handleClose} colors={mobileMenuColors}>
+            <PuzzlePiece size={20} weight={isCurrentPage('/puzzle') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/sandbox" label="Sandbox" active={isCurrentPage('/sandbox')} onClick={handleClose} colors={mobileMenuColors}>
+            <Flask size={20} weight={isCurrentPage('/sandbox') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/viewer" label="Viewer" active={isCurrentPage('/viewer')} onClick={handleClose} colors={mobileMenuColors}>
+            <Binoculars size={20} weight={isCurrentPage('/viewer') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/3dviewer" label="3D Viewer" active={isCurrentPage('/3dviewer')} onClick={handleClose} colors={mobileMenuColors}>
+            <Cube size={20} weight={isCurrentPage('/3dviewer') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/3dplay" label="3D Play" active={isCurrentPage('/3dplay')} onClick={handleClose} colors={mobileMenuColors}>
+            <GameController size={20} weight={isCurrentPage('/3dplay') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+          <MobileMenuItem to="/submit-game" label="Submit Game" active={isCurrentPage('/submit-game')} onClick={handleClose} colors={mobileMenuColors}>
+            <Upload size={20} weight={isCurrentPage('/submit-game') ? 'fill' : 'regular'} />
+          </MobileMenuItem>
+
+          <Divider sx={{ borderColor: mobileMenuBorder, margin: '8px 0' }} />
+
+          <Box sx={mobileMenuSectionLabelSx}>Settings</Box>
+          <MobileMenuAction onClick={() => { handleClose(); toggleColorPicker(); }} colors={mobileMenuColors}>
+            <Palette size={20} weight={isColorSectionExpanded ? 'fill' : 'regular'} />
+            <Box sx={{ flex: 1 }}>Colors</Box>
+          </MobileMenuAction>
+          <MobileMenuAction onClick={() => { handleClose(); toggleDecorations(); }} colors={mobileMenuColors}>
+            <Star size={20} weight={isDecorationSectionExpanded ? 'fill' : 'regular'} />
+            <Box sx={{ flex: 1 }}>Decorations</Box>
+          </MobileMenuAction>
+          <MobileMenuAction onClick={() => { handleClose(); toggleSoundOptions(); }} colors={mobileMenuColors}>
+            <SpeakerHigh size={20} weight={isSoundSectionExpanded ? 'fill' : 'regular'} />
+            <Box sx={{ flex: 1 }}>Sound</Box>
+          </MobileMenuAction>
+          <MobileMenuItem to="/about" label="About" active={isCurrentPage('/about')} onClick={handleClose} colors={mobileMenuColors}>
+            <CircleIcon sx={{ fontSize: 20 }} />
+          </MobileMenuItem>
+          {!user && (
+            <MobileMenuAction onClick={() => { handleClose(); toggleLightMode(); }} colors={mobileMenuColors}>
+              {lightMode === 'dark' ? <Sun size={20} weight="fill" /> : <Moon size={20} weight="fill" />}
+              <Box sx={{ flex: 1 }}>{lightMode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Box>
+            </MobileMenuAction>
+          )}
+        </Box>
+      </MuiDrawer>
       <Drawer 
         className={styles.myDrawer} 
         variant="permanent"
