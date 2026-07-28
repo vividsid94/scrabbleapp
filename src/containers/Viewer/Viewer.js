@@ -342,7 +342,16 @@ export default function Viewer({ onChange }){
     wooglesMode,
     randomizeWooglesGame,
     lightMode
-  ), [lightMode, parsedMoves, mode, wooglesMode, currentMoveRef]);
+  // handleMoveWrapper is a fresh closure every render that captures the
+  // current boardCoords directly (Viewer.js's handleMoveWrapper body, above).
+  // It has to be a dependency here: without it, this memo only recomputes
+  // when lightMode/parsedMoves/mode/wooglesMode change - so the toolbar's
+  // CaretLeft/CaretRight buttons could keep calling a handleMoveWrapper
+  // closure captured from whatever boardCoords existed the last time this
+  // recomputed, silently building the next move on top of a stale board
+  // (e.g. right after beginningOfGame resets boardCoords but before anything
+  // else forces a recompute).
+  ), [lightMode, parsedMoves, mode, wooglesMode, currentMoveRef, handleMoveWrapper]);
 
   const groupedIcons = useMemo(() => createGroupedIcons(
     handleGamesHistoryOpen,
