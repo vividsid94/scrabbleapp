@@ -141,9 +141,9 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
             <Robot
               weight="fill"
+              size={20}
               className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
               style={{
-                fontSize: 20,
                 cursor: isBotThinking ? 'not-allowed' : 'pointer',
                 color: lightMode === 'dark'
                   ? (gameStarted ? '#FF9800' : '#4CAF50')
@@ -155,10 +155,10 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         </Tooltip>
         <Tooltip title="Puzzle Mode">
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <GridFour 
+            <GridFour
+              size={20}
               className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''}`}
-              style={{ 
-                fontSize: 20, 
+              style={{
                 cursor: 'pointer',
                 marginRight: '4px',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
@@ -193,10 +193,10 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         </Tooltip>
         <Tooltip title={isFastPlayMode ? "Fast Play On" : "Fast Play Off"}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <Lightning 
+            <Lightning
+              size={20}
               className={`${styles.keyBtn} ${isFastPlayMode ? styles.active : ''}`}
-              style={{ 
-                fontSize: 20, 
+              style={{
                 cursor: 'pointer',
                 color: lightMode === 'dark' 
                   ? (isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)')
@@ -221,9 +221,9 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         {gameStarted && (
           <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
             <ScribbleLoop
+              size={20}
               className={`${styles.keyBtn} ${telestratorEnabled ? styles.active : ''}`}
               style={{
-                fontSize: 20,
                 cursor: 'pointer',
                 marginRight: '4px',
                 color: telestratorEnabled
@@ -237,20 +237,20 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         {gameStarted && (
           <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
               {isManuallyPaused ? (
-              <Play 
+              <Play
+                size={20}
                 className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
-                style={{ 
-                  fontSize: 20, 
+                style={{
                   cursor: 'pointer',
                   color: lightMode === 'dark' ? '#fff' : '#1F2937'
                 }}
                 onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
               />
             ) : (
-              <Pause 
+              <Pause
+                size={20}
                 className={`${styles.keyBtn} ${styles.pauseIcon}`}
-                style={{ 
-                  fontSize: 20, 
+                style={{
                   cursor: 'pointer',
                   color: lightMode === 'dark' ? '#fff' : '#1F2937'
                 }}
@@ -261,10 +261,10 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
         )}
         {gameStarted && (
           <Tooltip title="Reset Rack">
-            <ArrowClockwise 
+            <ArrowClockwise
+              size={20}
               className={`${styles.keyBtn} ${styles.resetIcon}`}
-              style={{ 
-                fontSize: 20, 
+              style={{
                 cursor: 'pointer',
                 color: lightMode === 'dark' ? '#fff' : '#1F2937'
               }}
