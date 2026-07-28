@@ -198,8 +198,7 @@ export default function GameSetup({ onSelectBot, onStartGame }) {
       {step === 'opponent' ? (
         <div className={styles.panel} key="opponent">
           <div className={styles.header}>
-            <h2 className={styles.heading}>Scouting Report</h2>
-            <div className={styles.subheading}>Choose your opponent</div>
+            <h2 className={styles.heading}>Choose your opponent</h2>
           </div>
 
           <div className={styles.primaryGrid}>

@@ -1777,16 +1777,6 @@ const Scrabble3DPlay = () => {
                   textShadow: '0 1px 12px rgba(217, 119, 6, 0.35)',
                 }}
               >
-                Scouting Report
-              </Typography>
-              <Box sx={{
-                mt: 1,
-                mx: 'auto',
-                width: 96,
-                height: '2px',
-                background: 'linear-gradient(90deg, transparent, #D97706, transparent)',
-              }} />
-              <Typography sx={{ mt: 1, fontSize: 11.5, color: 'rgba(253, 230, 138, 0.55)', letterSpacing: '0.03em' }}>
                 Choose your opponent
               </Typography>
             </Box>
