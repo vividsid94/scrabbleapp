@@ -375,11 +375,13 @@ const TopMoves = ({
         <Box className={styles.topMoveWord} style={{ color: textColor }}>{move.word}</Box>
         <Box className={styles.topMoveDetails}>
           <Box className={styles.topMoveScore}>{move.score}</Box>
-          <Tooltip title="Leave">
-            <Box className={styles.topMoveLeaveValue} sx={{ color: textColor, background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
-              {Math.round(leaveValue)} ({leaveString})
-            </Box>
-          </Tooltip>
+          {leaveString && (
+            <Tooltip title="Leave">
+              <Box className={styles.topMoveLeaveValue} sx={{ color: textColor, background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
+                {Math.round(leaveValue)} ({leaveString})
+              </Box>
+            </Tooltip>
+          )}
         </Box>
       </Box>
     );
@@ -504,8 +506,11 @@ const TopMoves = ({
 
   return (
     <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '8px' }}>
+      <Box sx={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: mutedTextColor, opacity: 0.7, marginBottom: '4px', paddingLeft: '2px' }}>
+        Candidates
+      </Box>
       {/* Card Header */}
-      <Box 
+      <Box
         onClick={topMoves && topMoves.length > 0 ? handleExpandClick : handleGetTopMoves}
         sx={{
           display: 'flex',
@@ -541,10 +546,10 @@ const TopMoves = ({
               </Box>
               <Box className={styles.topMoveDetails}>
                 <Box className={styles.topMoveScore}>{topScore}</Box>
-                {topMoves[0].leaveValue !== undefined && (
+                {topMoves[0].leave && (
                   <Tooltip title="Leave">
                     <Box className={styles.topMoveLeaveValue} sx={{ color: textColor, background: leaveValueBgColor, border: `1px solid ${borderColor}` }}>
-                      {Math.round(topMoves[0].leaveValue || 0)} ({topMoves[0].leave || ''})
+                      {Math.round(topMoves[0].leaveValue || 0)} ({topMoves[0].leave})
                     </Box>
                   </Tooltip>
                 )}

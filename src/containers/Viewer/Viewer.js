@@ -342,7 +342,7 @@ export default function Viewer({ onChange }){
     wooglesMode,
     randomizeWooglesGame,
     lightMode
-  ), [lightMode, parsedMoves, mode, wooglesMode]);
+  ), [lightMode, parsedMoves, mode, wooglesMode, currentMoveRef]);
 
   const groupedIcons = useMemo(() => createGroupedIcons(
     handleGamesHistoryOpen,
@@ -662,9 +662,9 @@ export default function Viewer({ onChange }){
                       transition: 'transform 0.2s ease'
                     }}
                   >
-                    <DotsThree 
-                      size={20} 
-                      color="#fff" 
+                    <DotsThree
+                      size={20}
+                      color={lightMode === 'dark' ? '#fff' : '#1F2937'}
                       weight={hoveredIcon === 'dots' ? 'fill' : 'regular'}
                       onMouseEnter={() => setHoveredIcon('dots')}
                       onMouseLeave={() => setHoveredIcon(null)}
@@ -692,7 +692,7 @@ export default function Viewer({ onChange }){
                       <Brain
                         size={20}
                         weight={analysisModeActive ? 'fill' : 'regular'}
-                        color={analysisModeActive ? '#10B981' : '#fff'}
+                        color={analysisModeActive ? '#10B981' : (lightMode === 'dark' ? '#fff' : '#1F2937')}
                       />
                     </Box>
                   </Tooltip>
@@ -755,7 +755,7 @@ export default function Viewer({ onChange }){
                   
                   {/* Tier 2 - Additional Controls */}
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                    <Box sx={{ fontSize: '12px', color: '#fff', opacity: 0.7, fontWeight: 500 }}>Additional</Box>
+                    <Box sx={{ fontSize: '12px', color: lightMode === 'dark' ? '#fff' : '#1F2937', opacity: 0.7, fontWeight: 500 }}>Additional</Box>
                     <Box sx={{ display: 'flex', gap: '50px', justifyContent: 'center' }}>
                       {/* First group of icons */}
                       <Box sx={{ display: 'flex', gap: '4px' }}>

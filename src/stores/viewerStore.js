@@ -695,9 +695,19 @@ export const useViewerStore = create((set, get) => {
     // Game control functions
     beginningOfGame: () => {
       let parsedOrigBoardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-      set({ 
+      // Mutate currentMoveRef in place (like every other nav action - CaretLeft/
+      // CaretRight, Backspace) rather than replacing the object. The toolbar's
+      // iconList closures (Viewer.js) capture this ref directly and aren't kept
+      // in their useMemo's dependency array, so swapping in a new object here
+      // orphans those closures - the next nav click would silently operate on
+      // the old, pre-reset ref/board instead of the one just reset below.
+      get().currentMoveRef.current = -1;
+      set({
         boardCoords: parsedOrigBoardCoords,
-        currentMoveRef: { current: -1 },
+        currentMoveCoords: [],
+        player1points: 0,
+        player2points: 0,
+        pointsScored: 0
       });
     },
     

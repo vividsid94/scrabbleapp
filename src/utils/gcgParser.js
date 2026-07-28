@@ -40,12 +40,54 @@ const parseMoveLine = (line) => {
   
   // Parse remaining fields by content
   const remainingParts = parts.slice(2).map(part => part.trim());
-  
+
+  // In valid GCG, the field right after the rack is always the "play" -
+  // a real position (8F, H7), a bare '-' for a pass, or a '-' followed by
+  // either the specific tiles exchanged ('-EOUUY') or, when the tiles aren't
+  // recorded, just a count ('-3'). The generic per-token classifiers below
+  // can't tell any of these apart from each other (or from a negative score),
+  // since e.g. '-3' matches the score pattern just as well as an exchange
+  // count - so passes and exchanges must be special-cased here, checking
+  // only this fixed position, before falling through to the normal word-play
+  // parsing for everything else.
+  const playField = remainingParts[0];
+  const restParts = remainingParts.slice(1);
+  const scorePart = restParts.find(isScore);
+  const totalPart = [...restParts].reverse().find(isTotal);
+
+  if (playField === '-') {
+    return {
+      player,
+      rack,
+      location: null,
+      word: 'Pass',
+      score: scorePart ? parseInt(scorePart) : 0,
+      total: totalPart ? parseInt(totalPart) : null
+    };
+  }
+
+  const exchangeTilesMatch = /^-([A-Za-z?]+)$/.exec(playField);
+  const exchangeCountMatch = /^-(\d+)$/.exec(playField);
+  if (exchangeTilesMatch || exchangeCountMatch) {
+    const tilesExchanged = exchangeTilesMatch ? exchangeTilesMatch[1].split('') : null;
+    const exchangeCount = tilesExchanged ? tilesExchanged.length : parseInt(exchangeCountMatch[1]);
+    return {
+      player,
+      rack,
+      location: null,
+      word: `Exchange ${tilesExchanged ? tilesExchanged.join('') : exchangeCount}`,
+      tilesExchanged,
+      exchangeCount,
+      score: scorePart ? parseInt(scorePart) : 0,
+      total: totalPart ? parseInt(totalPart) : null
+    };
+  }
+
   let location = null;
   let word = null;
   let score = null;
   let total = null;
-  
+
   for (let i = 0; i < remainingParts.length; i++) {
     const part = remainingParts[i];
     

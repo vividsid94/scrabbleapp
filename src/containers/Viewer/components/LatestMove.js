@@ -147,7 +147,10 @@ const LatestMove = ({
 
   return (
     <Box sx={{ width: '100%', padding: 0, margin: 0, marginTop: '16px' }}>
-      <Box 
+      <Box sx={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: mutedTextColor, opacity: 0.7, marginBottom: '4px', paddingLeft: '2px' }}>
+        Move History
+      </Box>
+      <Box
         onClick={parsedMoves.length > 1 ? handleExpandClick : undefined}
         sx={{
           display: 'flex',
