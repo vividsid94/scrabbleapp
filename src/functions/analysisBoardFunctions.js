@@ -51,6 +51,37 @@ export const getHeatColor = (heatValue, maxCount) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+// The shared "selected move" baseline frame - our candidate move applied to
+// the real board, tagged 'selected' so it renders as silver/grey. Used both
+// by Preview/Heat Map's engines (as the first frame of their run) and by the
+// move list's selection handler (so the grey tiles show up on the board the
+// instant a row is clicked, without waiting for Run).
+export const buildSelectedMoveFrame = (move, boardCoords) => {
+  const board = Array(15).fill().map(() => Array(15).fill(''));
+  boardCoords.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (typeof cell === 'string' && cell !== '') {
+        board[rowIndex][colIndex] = cell;
+      }
+    });
+  });
+  move.tiles.forEach(tile => {
+    if (tile.isNew) {
+      board[tile.row][tile.col] = tile.letter;
+    }
+  });
+
+  const tileOwnership = board.map((row, rowIndex) =>
+    row.map((cell, colIndex) => {
+      if (typeof cell !== 'string' || cell === '') return null;
+      const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
+      return isOurMove ? 'selected' : 'existing';
+    })
+  );
+
+  return { board, tileOwnership, move: 'selected', iteration: null };
+};
+
 // Builds a 15x15 grid of ghost tiles to overlay on the real board for a given
 // simulated frame - null where the real committed board already has a tile
 // there (so we never draw a ghost on top of a real, already-placed letter)

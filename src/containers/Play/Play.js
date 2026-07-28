@@ -30,7 +30,7 @@ import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
-import { buildGhostOverlayGrid, buildIterationLabel } from '../../functions/analysisBoardFunctions';
+import { buildGhostOverlayGrid, buildSelectedMoveFrame } from '../../functions/analysisBoardFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
 import MobileKeyboardOverlay from '../../components/MobileKeyboardOverlay';
@@ -677,32 +677,27 @@ export default function Play({ isMultiplayer = false }) {
   // Ghost-tile overlay for Analysis Mode's move preview - built from the
   // current step's simulated frame, never from real board state, so it can
   // never leak into boardCoords/tempBoardCoords or the active-game snapshot.
-  // Gated on preview/heatmap specifically so switching to Opponent Responses
-  // doesn't leave stale ghost tiles showing alongside its own layer. Heat Map
-  // only ever has a single baseline "selected" frame (no plies of its own),
-  // so this doubles as showing our committed move on the board there too.
+  // Visualize and Heat Map share one "visualize" layer/tab (a move is either
+  // stepped through or heat-mapped, never both), so this is gated purely on
+  // that layer being active, not on which of the two actually ran. Heat Map
+  // only ever produces a single baseline "selected" frame (no plies of its
+  // own), so this doubles as showing our committed move on the board there.
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || (analysis.layer !== 'preview' && analysis.layer !== 'heatmap') || !analysis.frames || analysis.frames.length === 0) {
+    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.frames || analysis.frames.length === 0) {
       return null;
     }
     return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
   }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
 
-  // Heat-map tint overlay for Analysis Mode - same gating rule as the ghost
-  // grid above, keyed to the "heatmap" layer.
+  // Heat-map tint overlay - shown whenever heatMap data exists and Visualize
+  // hasn't since produced its own multi-ply frames (which take priority and
+  // would otherwise show ghost tiles overlapping the heat tint underneath).
   const analysisHeatGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'heatmap' || !analysis.heatMap) {
+    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.heatMap || (analysis.frames && analysis.frames.length > 1)) {
       return null;
     }
     return analysis.heatMap.grid;
-  }, [analysis.active, analysis.layer, analysis.heatMap]);
-
-  // Single board-level "Iteration X of Y" badge for the Preview layer -
-  // replaces per-tile badges, shown once in the board's top-left corner.
-  const analysisIterationLabel = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'preview') return null;
-    return buildIterationLabel(analysis.frames, analysis.stepIndex);
-  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex]);
+  }, [analysis.active, analysis.layer, analysis.heatMap, analysis.frames]);
 
   // Update player time states when gameTime changes
   useEffect(() => {
@@ -1017,10 +1012,9 @@ export default function Play({ isMultiplayer = false }) {
             animate={false}
             enableTelestrator={telestratorEnabled}
             analysisGhostGrid={analysisGhostGrid}
-            analysisGhostDashedBorder={analysis.layer === 'preview'}
+            analysisGhostDashedBorder={analysis.frames && analysis.frames.length > 1}
             analysisHeatGrid={analysisHeatGrid}
             analysisHeatMaxCount={analysis.heatMap?.maxCount}
-            analysisIterationLabel={analysisIterationLabel}
             showSlip={false}
             showDictionary={false}
             dictionary=""
@@ -1114,7 +1108,7 @@ export default function Play({ isMultiplayer = false }) {
             onToggleAnalysisMode={handleToggleAnalysisMode}
             analysisState={analysis}
             onAnalysisSelectMove={runAnalysisMovePreview}
-            onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
+            onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null })}
             onAnalysisSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
             onAnalysisStep={(stepIndex) => setAnalysisState({ stepIndex })}
             onAnalysisRunHeatMap={runAnalysisHeatMap}

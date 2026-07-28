@@ -48,7 +48,7 @@ import SubmittedGamesModal from './components/SubmittedGamesModal';
 import Typography from '@mui/material/Typography';
 import BrowsePlayersModal from './components/BrowsePlayersModal';
 import AnalysisPanel from '../../components/Analysis/AnalysisPanel';
-import { buildGhostOverlayGrid, buildIterationLabel } from '../../functions/analysisBoardFunctions';
+import { buildGhostOverlayGrid, buildSelectedMoveFrame } from '../../functions/analysisBoardFunctions';
 
 export default function Viewer({ onChange }){ 
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
@@ -423,19 +423,14 @@ export default function Viewer({ onChange }){
   }, [currentMoveRef.current]);
 
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || (analysis.layer !== 'preview' && analysis.layer !== 'heatmap') || !analysis.frames?.length) return null;
+    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.frames?.length) return null;
     return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
   }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
 
   const analysisHeatGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'heatmap' || !analysis.heatMap) return null;
+    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.heatMap || (analysis.frames && analysis.frames.length > 1)) return null;
     return analysis.heatMap.grid;
-  }, [analysis.active, analysis.layer, analysis.heatMap]);
-
-  const analysisIterationLabel = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'preview') return null;
-    return buildIterationLabel(analysis.frames, analysis.stepIndex);
-  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex]);
+  }, [analysis.active, analysis.layer, analysis.heatMap, analysis.frames]);
 
   return (
     <Box className={styles.container}>
@@ -512,10 +507,9 @@ export default function Viewer({ onChange }){
                 animate={false}
                 enableTelestrator={telestratorEnabled}
                 analysisGhostGrid={analysisGhostGrid}
-                analysisGhostDashedBorder={analysis.layer === 'preview'}
+                analysisGhostDashedBorder={analysis.frames && analysis.frames.length > 1}
                 analysisHeatGrid={analysisHeatGrid}
                 analysisHeatMaxCount={analysis.heatMap?.maxCount}
-                analysisIterationLabel={analysisIterationLabel}
               />
             </Box>
           </Box>
@@ -937,7 +931,7 @@ export default function Viewer({ onChange }){
                 <AnalysisPanel
                   analysisState={analysis}
                   onSelectMove={runAnalysisMovePreview}
-                  onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [], stepIndex: 0, heatMap: null, error: null })}
+                  onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null })}
                   onSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
                   onStep={(stepIndex) => setAnalysisState({ stepIndex })}
                   onRunHeatMap={runAnalysisHeatMap}

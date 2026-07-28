@@ -510,11 +510,15 @@ export const useGameStore = create((set, get) => {
         boardCoords,
         origBoardCoords,
         isDictionaryLoading,
-        gameTime
+        gameTime,
+        exitAnalysisMode
       } = get();
-      
+
       if (isDictionaryLoading) return;
-      
+
+      // A fresh game invalidates any in-progress analysis of the old position.
+      exitAnalysisMode();
+
       // Reset game ended state for new game
       setGameEnded(false);
       setShowVictoryOverlay(false);
@@ -1052,7 +1056,7 @@ export const useGameStore = create((set, get) => {
       await runMovePreviewEngine({ move, boardCoords, rack, pool }, setAnalysisState);
     },
 
-    runAnalysisHeatMap: async (move, numSimulations = 20) => {
+    runAnalysisHeatMap: async (move, numSimulations = 200) => {
       const { setAnalysisState, boardCoords, pool } = get();
       await runHeatMapEngine({ move, boardCoords, pool, numSimulations }, setAnalysisState);
     },

@@ -5,13 +5,14 @@
 // touches zustand directly, so it has no idea which store is calling it.
 
 import { calculateLeave } from './play/leaveFunctions';
+import { buildSelectedMoveFrame } from './analysisBoardFunctions';
 
 // Analysis Mode: a single self-contained slice rather than flat top-level
 // fields, so exiting/resetting is one assignment and nothing here can leak
 // into the real board/rack/timer state it's meant to preview alongside.
 export const DEFAULT_ANALYSIS_STATE = {
   active: false,
-  layer: 'preview', // 'preview' | 'heatmap' | 'opponentResponses'
+  layer: 'visualize', // 'visualize' | 'heatmap' | 'opponentResponses'
   selectedMove: null,
   frames: [], // array of {board, tileOwnership, move, iteration} snapshots, one per preview ply
   stepIndex: 0,
@@ -47,19 +48,9 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
   setAnalysisState({ isRunning: true, error: null });
 
   try {
-    const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
-    boardCoords.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        if (typeof cell === 'string' && cell !== '') {
-          baseBoard[rowIndex][colIndex] = cell;
-        }
-      });
-    });
-    move.tiles.forEach(tile => {
-      if (tile.isNew) {
-        baseBoard[tile.row][tile.col] = tile.letter;
-      }
-    });
+    const baselineFrame = buildSelectedMoveFrame(move, boardCoords);
+    const baseBoard = baselineFrame.board;
+    const baselineOwnership = baselineFrame.tileOwnership;
 
     // pool arrives as an Array from gameStore (after the first move) or a
     // string from viewerStore (always recomputed via calculatePoolFromBoard) -
@@ -84,15 +75,7 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
 
     const data = await response.json();
 
-    const baselineOwnership = baseBoard.map((row, rowIndex) =>
-      row.map((cell, colIndex) => {
-        if (typeof cell !== 'string' || cell === '') return null;
-        const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
-        return isOurMove ? 'selected' : 'existing';
-      })
-    );
-
-    const frames = [{ board: baseBoard, tileOwnership: baselineOwnership, move: 'selected', iteration: null }];
+    const frames = [baselineFrame];
 
     (data.iterationDetails || []).forEach((detail, iterationIndex) => {
       const iterBoard = baseBoard.map(row => [...row]);
@@ -142,35 +125,16 @@ export const runMovePreviewEngine = async ({ move, boardCoords, rack, pool, numS
 // coloring is intentionally "underheated" until the last step, which lines up
 // with the true final intensities.
 export const runHeatMapEngine = async ({ move, boardCoords, pool, numSimulations = 200 }, setAnalysisState) => {
-  const baseBoard = Array(15).fill().map(() => Array(15).fill(''));
-  boardCoords.forEach((row, rowIndex) => {
-    row.forEach((cell, colIndex) => {
-      if (typeof cell === 'string' && cell !== '') {
-        baseBoard[rowIndex][colIndex] = cell;
-      }
-    });
-  });
-  move.tiles.forEach(tile => {
-    if (tile.isNew) {
-      baseBoard[tile.row][tile.col] = tile.letter;
-    }
-  });
-
   // Same silver/grey "selected" ghost frame Preview uses for our committed
   // move, so it shows on the board here too instead of only the heat tint.
-  const baselineOwnership = baseBoard.map((row, rowIndex) =>
-    row.map((cell, colIndex) => {
-      if (typeof cell !== 'string' || cell === '') return null;
-      const isOurMove = move.tiles.some(t => t.row === rowIndex && t.col === colIndex && t.isNew);
-      return isOurMove ? 'selected' : 'existing';
-    })
-  );
+  const baselineFrame = buildSelectedMoveFrame(move, boardCoords);
+  const baseBoard = baselineFrame.board;
 
   setAnalysisState({
     isRunning: true,
     error: null,
     selectedMove: move,
-    frames: [{ board: baseBoard, tileOwnership: baselineOwnership, move: 'selected', iteration: null }],
+    frames: [baselineFrame],
     stepIndex: 0
   });
 

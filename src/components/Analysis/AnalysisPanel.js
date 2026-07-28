@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
+import Tooltip from '@mui/material/Tooltip';
+import LinearProgress from '@mui/material/LinearProgress';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { PlayIcon, PauseIcon, FireIcon } from '@phosphor-icons/react';
 import styles from './AnalysisPanel.module.css';
 import { formatMoveLocation } from '../../functions/play/moveDisplayUtils';
 import { buildIterationLabel } from '../../functions/analysisBoardFunctions';
 
 const LAYERS = [
-  { key: 'preview', label: 'Preview' },
-  { key: 'heatmap', label: 'Heat Map' },
-  { key: 'opponentResponses', label: 'Opponent Responses' }
+  { key: 'visualize', label: 'Visualize/Heat Maps' },
+  { key: 'opponentResponses', label: 'Responses' }
 ];
+
+const HEATMAP_ITERATIONS = 200;
 
 const FRAME_LABELS = {
   selected: 'Selected move',
@@ -41,12 +45,13 @@ export default function AnalysisPanel({
   const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)';
   const bgColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
 
-  const [heatMapIterations, setHeatMapIterations] = useState(200);
-  const [opponentResponsesIterations, setOpponentResponsesIterations] = useState(20);
+  const [opponentResponsesIterations, setOpponentResponsesIterations] = useState(500);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   const { layer, selectedMove, frames, stepIndex, isRunning, error, heatMap, opponentResponses } = analysisState;
 
-  // Auto-play through a freshly-run Preview: whenever a new `frames` array
+  // Auto-play through a freshly-run Visualize: whenever a new `frames` array
   // arrives, step through it on a timer instead of requiring manual Prev/Next
   // clicks. `frames` is a new array reference each time a run completes, so
   // this effect fires exactly once per Run click, not on every re-render.
@@ -57,24 +62,52 @@ export default function AnalysisPanel({
       clearTimeout(autoPlayTimeoutRef.current);
       autoPlayTimeoutRef.current = null;
     }
+    setIsAutoPlaying(false);
+  };
+
+  const runAutoPlayFrom = (startIndex, totalFrames) => {
+    setIsAutoPlaying(true);
+    let i = startIndex;
+    const advance = () => {
+      onStep(i);
+      i += 1;
+      if (i < totalFrames) {
+        autoPlayTimeoutRef.current = setTimeout(advance, 250);
+      } else {
+        autoPlayTimeoutRef.current = null;
+        setIsAutoPlaying(false);
+      }
+    };
+    advance();
   };
 
   useEffect(() => {
     if (!frames || frames.length === 0) return undefined;
 
-    let i = 0;
-    const advance = () => {
-      onStep(i);
-      i += 1;
-      if (i < frames.length) {
-        autoPlayTimeoutRef.current = setTimeout(advance, 250);
-      }
-    };
-    advance();
+    setIsPaused(false);
+    runAutoPlayFrom(0, frames.length);
 
     return stopAutoPlay;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frames]);
+
+  // Pause/resume toggle for the row currently being visualized - pausing just
+  // cancels the pending timeout (current frame stays on screen); resuming
+  // continues the same auto-play chain from wherever it left off.
+  const toggleVisualizePause = () => {
+    if (isAutoPlaying) {
+      stopAutoPlay();
+      setIsPaused(true);
+    } else if (isPaused) {
+      setIsPaused(false);
+      runAutoPlayFrom(stepIndex, frames.length);
+    }
+  };
+
+  // While any Visualize/Heat Map action is running, paused, or mid-playback,
+  // every other move's icons are blocked - the sole exception is the active
+  // row's own Play/Pause toggle, handled separately per-row below.
+  const isVisualizeBusy = isRunning || isAutoPlaying || isPaused;
 
   const renderLayerTabs = () => (
     <Box sx={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
@@ -125,8 +158,17 @@ export default function AnalysisPanel({
         )
       )}
       {topMoves && topMoves.map((move, index) => {
-        const isSelected = selectedMove && selectedMove.word === move.word && selectedMove.score === move.score;
+        const isSelected = selectedMove === move;
         const response = layer === 'opponentResponses' ? opponentResponses?.[move.word] : null;
+
+        // This row is the one actually being stepped through right now (as
+        // opposed to just selected) - its Play icon becomes a Pause/Resume
+        // toggle instead of being blocked like every other row's icons.
+        const isThisRowVisualizing = isSelected && frames && frames.length > 1;
+        const playDisabled = isVisualizeBusy && !isThisRowVisualizing;
+        const fireDisabled = isVisualizeBusy;
+        const showRowProgress = isSelected && isVisualizeBusy;
+        const showDeterminateProgress = isThisRowVisualizing && !isRunning;
 
         return (
           <Box
@@ -150,6 +192,83 @@ export default function AnalysisPanel({
             </Box>
             <Box className={styles.topMoveDetails}>
               <Box className={styles.topMoveScore}>{move.score}</Box>
+              {layer !== 'opponentResponses' && (
+                <>
+                  <Tooltip title={isThisRowVisualizing ? (isAutoPlaying ? 'Pause' : 'Resume') : 'Visualize'} placement="top">
+                    <Box
+                      component="button"
+                      disabled={playDisabled}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isThisRowVisualizing) {
+                          toggleVisualizePause();
+                          return;
+                        }
+                        onSetLayer('visualize');
+                        onSetSelectedMove(move);
+                        onSelectMove(move);
+                      }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '22px',
+                        height: '22px',
+                        padding: 0,
+                        borderRadius: '4px',
+                        border: `1px solid ${borderColor}`,
+                        background: bgColor,
+                        color: textColor,
+                        cursor: playDisabled ? 'not-allowed' : 'pointer',
+                        opacity: playDisabled ? 0.4 : 1
+                      }}
+                    >
+                      {isThisRowVisualizing && isAutoPlaying ? <PauseIcon size={13} weight="fill" /> : <PlayIcon size={13} weight="fill" />}
+                    </Box>
+                  </Tooltip>
+                  <Tooltip title="Heat Map" placement="top">
+                    <Box
+                      component="button"
+                      disabled={fireDisabled}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSetLayer('visualize');
+                        onSetSelectedMove(move);
+                        onRunHeatMap(move, HEATMAP_ITERATIONS);
+                      }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '22px',
+                        height: '22px',
+                        padding: 0,
+                        borderRadius: '4px',
+                        border: `1px solid ${borderColor}`,
+                        background: bgColor,
+                        color: textColor,
+                        cursor: fireDisabled ? 'not-allowed' : 'pointer',
+                        opacity: fireDisabled ? 0.4 : 1
+                      }}
+                    >
+                      <FireIcon size={13} weight="fill" />
+                    </Box>
+                  </Tooltip>
+                  {showRowProgress && (
+                    <LinearProgress
+                      variant={showDeterminateProgress ? 'determinate' : 'indeterminate'}
+                      value={showDeterminateProgress ? ((stepIndex + 1) / frames.length) * 100 : undefined}
+                      sx={{
+                        width: '36px',
+                        height: '4px',
+                        borderRadius: '2px',
+                        backgroundColor: 'rgba(76, 175, 80, 0.25)',
+                        '& .MuiLinearProgress-bar': { backgroundColor: '#4CAF50' }
+                      }}
+                    />
+                  )}
+                </>
+              )}
               {response?.data && (
                 <>
                   <Box sx={{ fontSize: '11px', color: secondaryTextColor, backgroundColor: bgColor, border: `1px solid ${borderColor}`, borderRadius: '4px', padding: '2px 6px' }}>
@@ -170,21 +289,16 @@ export default function AnalysisPanel({
     </Box>
   );
 
-  const renderPreviewLayer = () => {
+  // Visualize and Heat Map share one tab/one board (a move can only be
+  // stepped through OR heat-mapped at a time, never both), so which content
+  // to show here is driven by which data actually came back - a full
+  // multi-ply `frames` array means Visualize ran and takes priority (it's
+  // the more specific view); otherwise fall back to `heatMap`, then a hint.
+  const renderVisualizeLayer = () => {
     if (!selectedMove) {
       return (
         <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
-          Select a move above to preview it step by step.
-        </Box>
-      );
-    }
-
-    if (isRunning) {
-      return (
-        <Box className={styles.thinkingDots}>
-          <div></div>
-          <div></div>
-          <div></div>
+          Click the play icon next to a move to visualize it, or the heat icon to run its heat map.
         </Box>
       );
     }
@@ -193,23 +307,25 @@ export default function AnalysisPanel({
       return <Box sx={{ fontSize: '12px', color: '#EF4444' }}>{error}</Box>;
     }
 
-    if (!frames || frames.length === 0) {
+    if (isRunning) {
       return (
-        <Box
-          component="button"
-          onClick={() => onSelectMove(selectedMove)}
-          sx={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: `1px solid ${borderColor}`,
-            background: '#3D5A80',
-            color: '#fff',
-            fontWeight: 600,
-            fontSize: '12px',
-            cursor: 'pointer'
-          }}
-        >
-          Run Preview for {selectedMove.word}
+        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
+          Running {selectedMove.word}...
+        </Box>
+      );
+    }
+
+    if (!frames || frames.length <= 1) {
+      if (heatMap) {
+        return (
+          <Box sx={{ fontSize: '12px', color: secondaryTextColor }}>
+            {selectedMove.word} - heat map shown on the board.
+          </Box>
+        );
+      }
+      return (
+        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
+          Click the play icon next to {selectedMove.word} to visualize it, or the heat icon to run its heat map.
         </Box>
       );
     }
@@ -226,7 +342,7 @@ export default function AnalysisPanel({
         <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Box
             component="button"
-            onClick={() => { stopAutoPlay(); onStep(stepIndex - 1); }}
+            onClick={() => { stopAutoPlay(); setIsPaused(true); onStep(stepIndex - 1); }}
             disabled={stepIndex <= 0}
             sx={{
               display: 'flex',
@@ -246,7 +362,7 @@ export default function AnalysisPanel({
           </Box>
           <Box
             component="button"
-            onClick={() => { stopAutoPlay(); onStep(stepIndex + 1); }}
+            onClick={() => { stopAutoPlay(); setIsPaused(true); onStep(stepIndex + 1); }}
             disabled={stepIndex >= frames.length - 1}
             sx={{
               display: 'flex',
@@ -265,68 +381,6 @@ export default function AnalysisPanel({
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
         </Box>
-      </Box>
-    );
-  };
-
-  const renderHeatMapLayer = () => {
-    if (!selectedMove) {
-      return (
-        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
-          Select a move above to run a heat map for it.
-        </Box>
-      );
-    }
-
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
-          {selectedMove.word} - where opponent replies land over {heatMapIterations} simulated iterations
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Box sx={{ fontSize: '12px', color: secondaryTextColor, minWidth: '70px' }}>
-            Iterations: {heatMapIterations}
-          </Box>
-          <Slider
-            value={heatMapIterations}
-            onChange={(e, value) => setHeatMapIterations(value)}
-            min={5}
-            max={200}
-            step={5}
-            disabled={isRunning}
-            sx={{ flex: 1 }}
-          />
-        </Box>
-
-        <Box
-          component="button"
-          onClick={() => onRunHeatMap(selectedMove, heatMapIterations)}
-          disabled={isRunning}
-          sx={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: `1px solid ${borderColor}`,
-            background: isRunning ? bgColor : '#3D5A80',
-            color: isRunning ? secondaryTextColor : '#fff',
-            fontWeight: 600,
-            fontSize: '12px',
-            cursor: isRunning ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isRunning ? 'Running...' : (heatMap ? 'Run Again' : 'Run Heat Map')}
-        </Box>
-
-        {error && <Box sx={{ fontSize: '12px', color: '#EF4444' }}>{error}</Box>}
-
-        {heatMap && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: secondaryTextColor }}>
-            <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: 'rgba(140, 180, 255, 0.8)' }} />
-            Never
-            <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: 'rgba(255, 50, 50, 0.9)', marginLeft: '8px' }} />
-            Frequent
-          </Box>
-        )}
       </Box>
     );
   };
@@ -358,7 +412,7 @@ export default function AnalysisPanel({
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
-          Opponent Responses: expected score & bingo rate for each move above, over {opponentResponsesIterations} simulated continuations
+          Responses: expected score & bingo rate for each move above, over {opponentResponsesIterations} simulated continuations
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -368,31 +422,34 @@ export default function AnalysisPanel({
           <Slider
             value={opponentResponsesIterations}
             onChange={(e, value) => setOpponentResponsesIterations(value)}
-            min={5}
-            max={100}
-            step={5}
+            min={500}
+            max={1000}
+            step={50}
             disabled={isRunning}
             sx={{ flex: 1 }}
           />
         </Box>
 
-        <Box
-          component="button"
-          onClick={() => onRunOpponentResponses(topMoves, opponentResponsesIterations)}
-          disabled={isRunning}
-          sx={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: `1px solid ${borderColor}`,
-            background: isRunning ? bgColor : '#3D5A80',
-            color: isRunning ? secondaryTextColor : '#fff',
-            fontWeight: 600,
-            fontSize: '12px',
-            cursor: isRunning ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isRunning ? 'Running...' : (opponentResponses ? 'Run Again' : 'Run')}
-        </Box>
+        {isRunning ? (
+          <LinearProgress sx={{ borderRadius: '6px', height: '8px' }} />
+        ) : (
+          <Box
+            component="button"
+            onClick={() => onRunOpponentResponses(topMoves, opponentResponsesIterations)}
+            sx={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: `1px solid ${borderColor}`,
+              background: '#3D5A80',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            {opponentResponses ? 'Run Again' : 'Run'}
+          </Box>
+        )}
 
         {error && <Box sx={{ fontSize: '12px', color: '#EF4444' }}>{error}</Box>}
 
@@ -407,10 +464,8 @@ export default function AnalysisPanel({
 
   const renderLayerBody = () => {
     switch (layer) {
-      case 'preview':
-        return renderPreviewLayer();
-      case 'heatmap':
-        return renderHeatMapLayer();
+      case 'visualize':
+        return renderVisualizeLayer();
       case 'opponentResponses':
         return renderOpponentResponsesLayer();
       default:
