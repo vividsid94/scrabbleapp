@@ -7,7 +7,8 @@ import { getRandomWooglesGame } from '../components/AppContent/References/woogle
 import { createRack } from '../functions/rackFunctions';
 import { calculatePoolFromBoard } from '../functions/poolFunctions';
 import { markBlanksLowercase } from '../functions/play/boardApiUtils';
-import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine } from '../functions/analysisEngine';
+import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine, runLaneIsolationEngine } from '../functions/analysisEngine';
+import { toggleLaneCell } from '../functions/analysisBoardFunctions';
 
 // --- Analysis Mode's own move-list fetch (deliberately a separate copy from
 // Viewer/components/TopMoves.js's internal fetch, which owns its own local
@@ -884,6 +885,21 @@ export const useViewerStore = create((set, get) => {
       const { boardCoords, setAnalysisState } = get();
       const pool = calculatePoolFromBoard(boardCoords, origPool);
       await runOpponentResponsesEngine({ moves, boardCoords, pool, iterations }, setAnalysisState);
+    },
+
+    toggleAnalysisLaneCell: (cell) => {
+      const { analysis, boardCoords } = get();
+      const newSelection = toggleLaneCell(analysis.laneSelection, analysis.selectedMove, boardCoords, cell);
+      if (newSelection === analysis.laneSelection) return;
+      set(state => ({ analysis: { ...state.analysis, laneSelection: newSelection, laneResult: null } }));
+    },
+
+    clearAnalysisLaneSelection: () => set(state => ({ analysis: { ...state.analysis, laneSelection: [], laneResult: null } })),
+
+    runAnalysisLaneIsolation: async (numSimulations = 200) => {
+      const { boardCoords, analysis, setAnalysisState } = get();
+      const pool = calculatePoolFromBoard(boardCoords, origPool);
+      await runLaneIsolationEngine({ move: analysis.selectedMove, boardCoords, laneSelection: analysis.laneSelection, pool, numSimulations }, setAnalysisState);
     },
 
     // A scoped port of Viewer/components/TopMoves.js's own getTopMoves fetch -

@@ -12,14 +12,16 @@ import { buildSelectedMoveFrame } from './analysisBoardFunctions';
 // into the real board/rack/timer state it's meant to preview alongside.
 export const DEFAULT_ANALYSIS_STATE = {
   active: false,
-  layer: 'visualize', // 'visualize' | 'heatmap' | 'opponentResponses'
+  layer: 'visualize', // 'visualize' | 'heatmap' | 'opponentResponses' | 'laneIsolation'
   selectedMove: null,
   frames: [], // array of {board, tileOwnership, move, iteration} snapshots, one per preview ply
   stepIndex: 0,
   isRunning: false,
   error: null,
   heatMap: null, // heat map layer's occupancy grid
-  opponentResponses: null // opponent responses layer's per-move {avgScore, bingoPercent, ...} map
+  opponentResponses: null, // opponent responses layer's per-move {avgScore, bingoPercent, ...} map
+  laneSelection: [], // lane isolation's user-picked empty {row, col} squares
+  laneResult: null // lane isolation's {percentage, averageScore, matchCount, totalIterations, sampleFrame}
 };
 
 // Preview shows exactly 2 plies per run (opponent's reply, then our reply),
@@ -261,6 +263,103 @@ export const runOpponentResponsesEngine = async ({ moves, boardCoords, pool, ite
     setAnalysisState({ opponentResponses: resultsMap, isRunning: false });
   } catch (error) {
     console.error('Error running opponent response analysis:', error);
+    setAnalysisState({ isRunning: false, error: error.message });
+  }
+};
+
+// Lane Isolation: how often does the opponent's reply land in EXACTLY this
+// set of squares (same footprint, not a subset/superset/overlap), and what's
+// their average score when it does? Same bulk-move-gen call as Heat Map, but
+// instead of accumulating a per-cell occupancy grid, each iteration's
+// opponentMove is checked against the exact `laneSelection` cell set - its
+// newly-placed tiles must match that set exactly. Animates through in the
+// same step-batches as Heat Map, but faster (40ms vs 100ms) since there's
+// only a running percentage/average to reveal, not a full 15x15 grid of
+// colors settling in.
+export const runLaneIsolationEngine = async ({ move, boardCoords, laneSelection, pool, numSimulations = 200 }, setAnalysisState) => {
+  const baselineFrame = buildSelectedMoveFrame(move, boardCoords);
+  const baseBoard = baselineFrame.board;
+
+  setAnalysisState({
+    isRunning: true,
+    error: null,
+    selectedMove: move,
+    frames: [baselineFrame],
+    stepIndex: 0,
+    laneResult: null
+  });
+
+  try {
+    const tilePoolString = [...pool].join('');
+
+    const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ board: baseBoard, tilePool: tilePoolString, iterations: numSimulations, includeMoveDetails: true })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const iterationDetails = data.iterationDetails || [];
+
+    const laneKeys = new Set(laneSelection.map(c => `${c.row},${c.col}`));
+
+    let matchCount = 0;
+    let matchScoreSum = 0;
+    let sampleFrame = null;
+
+    const totalSteps = Math.max(1, Math.min(25, iterationDetails.length));
+
+    for (let step = 0; step < totalSteps; step++) {
+      const rangeStart = Math.floor((step * iterationDetails.length) / totalSteps);
+      const rangeEnd = Math.floor(((step + 1) * iterationDetails.length) / totalSteps);
+
+      for (let i = rangeStart; i < rangeEnd; i++) {
+        const opponentMove = iterationDetails[i]?.opponentMove;
+        if (!opponentMove) continue;
+
+        const newTiles = opponentMove.tiles.filter(tile => tile.isNew);
+        const isExactMatch = newTiles.length === laneKeys.size &&
+          newTiles.every(tile => laneKeys.has(`${tile.row},${tile.col}`));
+
+        if (isExactMatch) {
+          matchCount++;
+          matchScoreSum += opponentMove.score;
+
+          if (!sampleFrame) {
+            const iterBoard = baseBoard.map(row => [...row]);
+            const iterOwnership = baselineFrame.tileOwnership.map(row => [...row]);
+            newTiles.forEach(tile => {
+              iterBoard[tile.row][tile.col] = tile.letter;
+              iterOwnership[tile.row][tile.col] = 'opponent';
+            });
+            sampleFrame = { board: iterBoard, tileOwnership: iterOwnership, move: 'opponent', iteration: null };
+          }
+        }
+      }
+
+      const iterationsSoFar = rangeEnd;
+      setAnalysisState({
+        laneResult: {
+          matchCount,
+          totalIterations: iterationsSoFar,
+          percentage: iterationsSoFar > 0 ? (matchCount / iterationsSoFar) * 100 : 0,
+          averageScore: matchCount > 0 ? matchScoreSum / matchCount : null,
+          sampleFrame
+        }
+      });
+
+      if (step < totalSteps - 1) {
+        await new Promise(resolve => setTimeout(resolve, 40));
+      }
+    }
+
+    setAnalysisState({ isRunning: false });
+  } catch (error) {
+    console.error('Error running analysis lane isolation:', error);
     setAnalysisState({ isRunning: false, error: error.message });
   }
 };

@@ -104,6 +104,100 @@ export const buildGhostOverlayGrid = (frame, boardCoords) => {
   );
 };
 
+// Toggles one cell in/out of a Lane Isolation selection. Rules adapted from
+// the real move-shape validator (src/functions/play/validateMoveClient.js's
+// validatePlacement) but applied to plain clicked coordinates instead of a
+// diffed before/after board, since there's no letter here yet - the user is
+// picking empty target squares, not placing tiles. Occupied cells (real board
+// or the candidate move's tentative tiles) are silently ignored; the 7-tile
+// cap matches rack size. Returns the same array reference when nothing
+// changes, so callers can skip a state update.
+export const toggleLaneCell = (laneSelection, selectedMove, boardCoords, cell) => {
+  if (!selectedMove) return laneSelection;
+
+  const combinedBoard = buildSelectedMoveFrame(selectedMove, boardCoords).board;
+  if (typeof combinedBoard[cell.row]?.[cell.col] === 'string' && combinedBoard[cell.row][cell.col] !== '') {
+    return laneSelection;
+  }
+
+  const exists = laneSelection.some(c => c.row === cell.row && c.col === cell.col);
+  if (exists) {
+    return laneSelection.filter(c => !(c.row === cell.row && c.col === cell.col));
+  }
+  if (laneSelection.length >= 7) return laneSelection;
+  return [...laneSelection, cell];
+};
+
+// Is this Lane Isolation selection a legal move shape? Same three geometric
+// rules as validatePlacement: single row/col, gaps only where the combined
+// board (real board + candidate move) already has a tile, and the whole
+// selection must connect to something existing (or cover the center star).
+export const validateLaneSelection = (cells, combinedBoard) => {
+  if (!cells || cells.length === 0) {
+    return { isValid: false, reason: 'Select at least one empty square' };
+  }
+  if (cells.length > 7) {
+    return { isValid: false, reason: 'A move can place at most 7 tiles' };
+  }
+
+  const isOccupied = (row, col) => typeof combinedBoard[row]?.[col] === 'string' && combinedBoard[row][col] !== '';
+
+  if (cells.length > 1) {
+    const firstRow = cells[0].row;
+    const firstCol = cells[0].col;
+    const allSameRow = cells.every(c => c.row === firstRow);
+    const allSameCol = cells.every(c => c.col === firstCol);
+
+    if (!allSameRow && !allSameCol) {
+      return { isValid: false, reason: 'Squares must form a single line' };
+    }
+
+    if (allSameRow) {
+      const cols = cells.map(c => c.col).sort((a, b) => a - b);
+      for (let i = 0; i < cols.length - 1; i++) {
+        if (cols[i + 1] - cols[i] > 1) {
+          for (let c = cols[i] + 1; c < cols[i + 1]; c++) {
+            if (!isOccupied(firstRow, c)) {
+              return { isValid: false, reason: 'Gaps must be filled by existing tiles' };
+            }
+          }
+        }
+      }
+    } else {
+      const rows = cells.map(c => c.row).sort((a, b) => a - b);
+      for (let i = 0; i < rows.length - 1; i++) {
+        if (rows[i + 1] - rows[i] > 1) {
+          for (let r = rows[i] + 1; r < rows[i + 1]; r++) {
+            if (!isOccupied(r, firstCol)) {
+              return { isValid: false, reason: 'Gaps must be filled by existing tiles' };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  let isAdjacent = false;
+  let isOnStar = false;
+  for (const { row, col } of cells) {
+    const deltas = [{ dr: 0, dc: 1 }, { dr: 0, dc: -1 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 }];
+    for (const { dr, dc } of deltas) {
+      const nr = row + dr;
+      const nc = col + dc;
+      if (nr >= 0 && nr < 15 && nc >= 0 && nc < 15 && isOccupied(nr, nc)) {
+        isAdjacent = true;
+        break;
+      }
+    }
+    if (row === 7 && col === 7) isOnStar = true;
+  }
+  if (!isAdjacent && !isOnStar) {
+    return { isValid: false, reason: 'Must connect to an existing tile (or cover the center square)' };
+  }
+
+  return { isValid: true, reason: null };
+};
+
 // "Iteration 3 of 5" for whichever frame is currently shown - null for the
 // shared baseline "selected move" frame (iteration null) or when there's
 // nothing to show yet. Shared so the board-level badge (one label, shown

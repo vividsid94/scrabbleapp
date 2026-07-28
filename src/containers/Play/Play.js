@@ -187,7 +187,10 @@ export default function Play({ isMultiplayer = false }) {
     runAnalysisMovePreview,
     runAnalysisHeatMap,
     runAnalysisOpponentResponses,
-    
+    toggleAnalysisLaneCell,
+    clearAnalysisLaneSelection,
+    runAnalysisLaneIsolation,
+
     // Move Coach
     showMoveCoach,
     moveCoachData,
@@ -682,12 +685,21 @@ export default function Play({ isMultiplayer = false }) {
   // that layer being active, not on which of the two actually ran. Heat Map
   // only ever produces a single baseline "selected" frame (no plies of its
   // own), so this doubles as showing our committed move on the board there.
+  // Lane Isolation shows that same baseline (the grey candidate move, so lane
+  // clicks have something to click around) until a run finds a matching
+  // sample, at which point the opponent's actual play in that lane takes over.
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.frames || analysis.frames.length === 0) {
-      return null;
+    if (!analysis.active) return null;
+    if (analysis.layer === 'visualize') {
+      if (!analysis.frames || analysis.frames.length === 0) return null;
+      return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
     }
-    return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
-  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
+    if (analysis.layer === 'laneIsolation') {
+      const frame = analysis.laneResult?.sampleFrame || analysis.frames?.[0] || null;
+      return buildGhostOverlayGrid(frame, boardCoords);
+    }
+    return null;
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, analysis.laneResult, boardCoords]);
 
   // Heat-map tint overlay - shown whenever heatMap data exists and Visualize
   // hasn't since produced its own multi-ply frames (which take priority and
@@ -975,6 +987,10 @@ export default function Play({ isMultiplayer = false }) {
             lightMode={lightMode}
             showNoCommentaryLabel={false}
             onBoardChildClick={(row, col) => {
+              if (analysis.active && analysis.layer === 'laneIsolation') {
+                toggleAnalysisLaneCell({ row, col });
+                return;
+              }
               // Nothing gets pressed/committed while analyzing
               if (analysis.active) return;
               // Run the existing selection logic (only works on non-occupied cells)
@@ -1015,6 +1031,7 @@ export default function Play({ isMultiplayer = false }) {
             analysisGhostDashedBorder={analysis.frames && analysis.frames.length > 1}
             analysisHeatGrid={analysisHeatGrid}
             analysisHeatMaxCount={analysis.heatMap?.maxCount}
+            analysisLaneSelection={analysis.layer === 'laneIsolation' ? analysis.laneSelection : null}
             showSlip={false}
             showDictionary={false}
             dictionary=""
@@ -1108,11 +1125,13 @@ export default function Play({ isMultiplayer = false }) {
             onToggleAnalysisMode={handleToggleAnalysisMode}
             analysisState={analysis}
             onAnalysisSelectMove={runAnalysisMovePreview}
-            onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null })}
+            onAnalysisSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null, laneSelection: [], laneResult: null })}
             onAnalysisSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
             onAnalysisStep={(stepIndex) => setAnalysisState({ stepIndex })}
             onAnalysisRunHeatMap={runAnalysisHeatMap}
             onAnalysisRunOpponentResponses={runAnalysisOpponentResponses}
+            onAnalysisClearLaneSelection={clearAnalysisLaneSelection}
+            onAnalysisRunLaneIsolation={runAnalysisLaneIsolation}
           />
 
           {showTimeSlider && !gameStarted && (

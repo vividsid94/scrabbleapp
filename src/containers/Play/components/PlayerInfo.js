@@ -345,7 +345,9 @@ export default function PlayerInfo({
   onAnalysisSetLayer,
   onAnalysisStep,
   onAnalysisRunHeatMap,
-  onAnalysisRunOpponentResponses
+  onAnalysisRunOpponentResponses,
+  onAnalysisClearLaneSelection,
+  onAnalysisRunLaneIsolation
 }) {
   const [showBestMove, setShowBestMove] = useState(false);
   const [showTopePrompt, setShowTopePrompt] = useState(false);
@@ -493,10 +495,13 @@ export default function PlayerInfo({
           onStep={onAnalysisStep}
           onRunHeatMap={onAnalysisRunHeatMap}
           onRunOpponentResponses={onAnalysisRunOpponentResponses}
+          onClearLaneSelection={onAnalysisClearLaneSelection}
+          onRunLaneIsolation={onAnalysisRunLaneIsolation}
           onGetTopMoves={onGetTopMoves}
           topMoves={topMoves}
           isLoadingTopMoves={isLoadingTopMoves}
           lightMode={lightMode}
+          boardCoords={boardCoords}
         />
       ) : (
       <>

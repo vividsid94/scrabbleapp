@@ -8,14 +8,16 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { PlayIcon, PauseIcon, FireIcon } from '@phosphor-icons/react';
 import styles from './AnalysisPanel.module.css';
 import { formatMoveLocation } from '../../functions/play/moveDisplayUtils';
-import { buildIterationLabel } from '../../functions/analysisBoardFunctions';
+import { buildIterationLabel, buildSelectedMoveFrame, validateLaneSelection } from '../../functions/analysisBoardFunctions';
 
 const LAYERS = [
   { key: 'visualize', label: 'Visualize/Heat Maps' },
+  { key: 'laneIsolation', label: 'Lane Isolation' },
   { key: 'opponentResponses', label: 'Responses' }
 ];
 
 const HEATMAP_ITERATIONS = 200;
+const LANE_ISOLATION_ITERATIONS = 200;
 
 const FRAME_LABELS = {
   selected: 'Selected move',
@@ -35,10 +37,13 @@ export default function AnalysisPanel({
   onStep,
   onRunHeatMap,
   onRunOpponentResponses,
+  onClearLaneSelection,
+  onRunLaneIsolation,
   onGetTopMoves,
   topMoves,
   isLoadingTopMoves,
-  lightMode = 'dark'
+  lightMode = 'dark',
+  boardCoords
 }) {
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
   const secondaryTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563';
@@ -49,7 +54,7 @@ export default function AnalysisPanel({
   const [isPaused, setIsPaused] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
-  const { layer, selectedMove, frames, stepIndex, isRunning, error, heatMap, opponentResponses } = analysisState;
+  const { layer, selectedMove, frames, stepIndex, isRunning, error, heatMap, opponentResponses, laneSelection, laneResult } = analysisState;
 
   // Auto-play through a freshly-run Visualize: whenever a new `frames` array
   // arrives, step through it on a timer instead of requiring manual Prev/Next
@@ -192,7 +197,7 @@ export default function AnalysisPanel({
             </Box>
             <Box className={styles.topMoveDetails}>
               <Box className={styles.topMoveScore}>{move.score}</Box>
-              {layer !== 'opponentResponses' && (
+              {layer === 'visualize' && (
                 <>
                   <Tooltip title={isThisRowVisualizing ? (isAutoPlaying ? 'Pause' : 'Resume') : 'Visualize'} placement="top">
                     <Box
@@ -385,6 +390,96 @@ export default function AnalysisPanel({
     );
   };
 
+  // Lane Isolation: pick a candidate move (row click, same as the other
+  // tabs), then click empty squares directly on the board to build a legal
+  // move shape - validated live against the same geometric rules as a real
+  // placement (single line, gaps only over existing tiles, connects to the
+  // board), just adapted to work on plain clicked coordinates since there's
+  // no letter yet. Running compares every opponent reply's exact footprint
+  // against that shape.
+  const renderLaneIsolationLayer = () => {
+    if (!selectedMove) {
+      return (
+        <Box sx={{ fontSize: '12px', color: secondaryTextColor, padding: '8px 0' }}>
+          Select a move above, then click empty squares on the board to isolate a lane.
+        </Box>
+      );
+    }
+
+    const combinedBoard = buildSelectedMoveFrame(selectedMove, boardCoords).board;
+    const validation = validateLaneSelection(laneSelection, combinedBoard);
+
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
+          Click empty squares on the board to select a lane ({laneSelection.length}/7 selected)
+        </Box>
+
+        {laneSelection.length > 0 && !validation.isValid && (
+          <Box sx={{ fontSize: '12px', color: '#EF4444' }}>{validation.reason}</Box>
+        )}
+
+        <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <Box
+            component="button"
+            onClick={onClearLaneSelection}
+            disabled={laneSelection.length === 0}
+            sx={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: `1px solid ${borderColor}`,
+              background: bgColor,
+              color: textColor,
+              fontWeight: 600,
+              fontSize: '12px',
+              cursor: laneSelection.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: laneSelection.length === 0 ? 0.4 : 1
+            }}
+          >
+            Clear
+          </Box>
+
+          {isRunning ? (
+            <LinearProgress sx={{ flex: 1, borderRadius: '6px', height: '8px' }} />
+          ) : (
+            <Box
+              component="button"
+              onClick={() => onRunLaneIsolation(LANE_ISOLATION_ITERATIONS)}
+              disabled={!validation.isValid}
+              sx={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: `1px solid ${borderColor}`,
+                background: validation.isValid ? '#3D5A80' : bgColor,
+                color: validation.isValid ? '#fff' : secondaryTextColor,
+                fontWeight: 600,
+                fontSize: '12px',
+                cursor: validation.isValid ? 'pointer' : 'not-allowed'
+              }}
+            >
+              {laneResult ? 'Run Again' : 'Run'}
+            </Box>
+          )}
+        </Box>
+
+        {error && <Box sx={{ fontSize: '12px', color: '#EF4444' }}>{error}</Box>}
+
+        {laneResult && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <Box sx={{ fontSize: '13px', fontWeight: 600, color: textColor }}>
+              Opponent plays exactly here: {laneResult.percentage.toFixed(1)}% of {laneResult.totalIterations} iterations
+            </Box>
+            <Box sx={{ fontSize: '12px', color: secondaryTextColor }}>
+              {laneResult.matchCount > 0
+                ? `Average score when they do: ${laneResult.averageScore.toFixed(1)}`
+                : 'No matching plays found yet'}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
   const renderOpponentResponsesLayer = () => {
     if (!topMoves || topMoves.length === 0) {
       return isLoadingTopMoves ? (
@@ -466,6 +561,8 @@ export default function AnalysisPanel({
     switch (layer) {
       case 'visualize':
         return renderVisualizeLayer();
+      case 'laneIsolation':
+        return renderLaneIsolationLayer();
       case 'opponentResponses':
         return renderOpponentResponsesLayer();
       default:

@@ -125,6 +125,9 @@ export default function Viewer({ onChange }){
     runAnalysisMovePreview,
     runAnalysisHeatMap,
     runAnalysisOpponentResponses,
+    toggleAnalysisLaneCell,
+    clearAnalysisLaneSelection,
+    runAnalysisLaneIsolation,
     fetchAnalysisTopMoves,
     resetAnalysisTopMoves,
 
@@ -423,9 +426,17 @@ export default function Viewer({ onChange }){
   }, [currentMoveRef.current]);
 
   const analysisGhostGrid = useMemo(() => {
-    if (!analysis.active || analysis.layer !== 'visualize' || !analysis.frames?.length) return null;
-    return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
-  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, boardCoords]);
+    if (!analysis.active) return null;
+    if (analysis.layer === 'visualize') {
+      if (!analysis.frames?.length) return null;
+      return buildGhostOverlayGrid(analysis.frames[analysis.stepIndex], boardCoords);
+    }
+    if (analysis.layer === 'laneIsolation') {
+      const frame = analysis.laneResult?.sampleFrame || analysis.frames?.[0] || null;
+      return buildGhostOverlayGrid(frame, boardCoords);
+    }
+    return null;
+  }, [analysis.active, analysis.layer, analysis.frames, analysis.stepIndex, analysis.laneResult, boardCoords]);
 
   const analysisHeatGrid = useMemo(() => {
     if (!analysis.active || analysis.layer !== 'visualize' || !analysis.heatMap || (analysis.frames && analysis.frames.length > 1)) return null;
@@ -500,7 +511,11 @@ export default function Viewer({ onChange }){
                 move={currentMoveRef.current >= 0 ? getMove(parsedMoves[currentMoveRef.current], currentMoveCoords, parsedMoves, currentMoveRef.current) : "N/A"}
                 moveDirection={moveDirection} 
                 dictionary={gameDictionary} 
-                onBoardChildClick={() => {}}
+                onBoardChildClick={(row, col) => {
+                  if (analysis.active && analysis.layer === 'laneIsolation') {
+                    toggleAnalysisLaneCell({ row, col });
+                  }
+                }}
                 showDictionary={false}
                 commentary={notes.find(([note, moveNumber]) => currentMoveRef.current + 1 === moveNumber && (mode === "VIEWER" || ELOCommentary === "YES"))?.[0]?.trim()}
                 lightMode={lightMode}
@@ -510,6 +525,7 @@ export default function Viewer({ onChange }){
                 analysisGhostDashedBorder={analysis.frames && analysis.frames.length > 1}
                 analysisHeatGrid={analysisHeatGrid}
                 analysisHeatMaxCount={analysis.heatMap?.maxCount}
+                analysisLaneSelection={analysis.layer === 'laneIsolation' ? analysis.laneSelection : null}
               />
             </Box>
           </Box>
@@ -931,15 +947,18 @@ export default function Viewer({ onChange }){
                 <AnalysisPanel
                   analysisState={analysis}
                   onSelectMove={runAnalysisMovePreview}
-                  onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null })}
+                  onSetSelectedMove={(move) => setAnalysisState({ selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0, heatMap: null, error: null, laneSelection: [], laneResult: null })}
                   onSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
                   onStep={(stepIndex) => setAnalysisState({ stepIndex })}
                   onRunHeatMap={runAnalysisHeatMap}
                   onRunOpponentResponses={runAnalysisOpponentResponses}
+                  onClearLaneSelection={clearAnalysisLaneSelection}
+                  onRunLaneIsolation={runAnalysisLaneIsolation}
                   onGetTopMoves={fetchAnalysisTopMoves}
                   topMoves={analysisTopMoves}
                   isLoadingTopMoves={isLoadingAnalysisTopMoves}
                   lightMode={lightMode}
+                  boardCoords={boardCoords}
                 />
               ) : (
               <>

@@ -4,7 +4,8 @@ import { alphabetizeRack } from '../functions/play/rackFunctions';
 import { getBoardDiff } from '../functions/play/boardUtils';
 import { markBlanksLowercase } from '../functions/play/boardApiUtils';
 import { saveActiveGameSnapshot, clearActiveGameSnapshot } from '../utils/activeGamePersistence';
-import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine } from '../functions/analysisEngine';
+import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine, runLaneIsolationEngine } from '../functions/analysisEngine';
+import { toggleLaneCell } from '../functions/analysisBoardFunctions';
 
 export const useGameStore = create((set, get) => {
   // Initial state
@@ -1064,6 +1065,20 @@ export const useGameStore = create((set, get) => {
     runAnalysisOpponentResponses: async (moves, iterations = 20) => {
       const { setAnalysisState, boardCoords, pool } = get();
       await runOpponentResponsesEngine({ moves, boardCoords, pool, iterations }, setAnalysisState);
+    },
+
+    toggleAnalysisLaneCell: (cell) => {
+      const { analysis, boardCoords } = get();
+      const newSelection = toggleLaneCell(analysis.laneSelection, analysis.selectedMove, boardCoords, cell);
+      if (newSelection === analysis.laneSelection) return;
+      set(state => ({ analysis: { ...state.analysis, laneSelection: newSelection, laneResult: null } }));
+    },
+
+    clearAnalysisLaneSelection: () => set(state => ({ analysis: { ...state.analysis, laneSelection: [], laneResult: null } })),
+
+    runAnalysisLaneIsolation: async (numSimulations = 200) => {
+      const { setAnalysisState, boardCoords, pool, analysis } = get();
+      await runLaneIsolationEngine({ move: analysis.selectedMove, boardCoords, laneSelection: analysis.laneSelection, pool, numSimulations }, setAnalysisState);
     },
 
     handleGetTopMovesForExpandable: () => {
