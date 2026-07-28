@@ -515,6 +515,17 @@
   .continueSlot {
     padding: 9px 10px;
   }
+  /* Match .signButton's (Classic/3D Play) mobile sizing exactly - these
+     (Puzzles/Viewer/Snakes/Sandbox) had no mobile override at all before,
+     so they stayed at desktop size while the sign buttons above them
+     shrank, making them look oversized by comparison. */
+  .secondaryButton {
+    font-size: 12px;
+    padding: 10px 6px;
+  }
+  .secondaryButtonContent {
+    gap: 5px;
+  }
 }
 
 @keyframes float {

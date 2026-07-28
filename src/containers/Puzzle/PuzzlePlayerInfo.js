@@ -138,42 +138,48 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
   return (
     <Box className={styles.playerPanel}>
       <Box className={styles.playerToggle}>
+        {/* Icons below are unstyled by any CSS class on purpose - matches
+            Play.js's PlayerInfo.js exactly (plain flex Box + Phosphor size
+            prop, no width/height-setting class) so they render at a fixed
+            20px everywhere, including mobile. The old .keyBtn class's mobile
+            media query set width/height:32px, which (being a real CSS
+            property, not just font-size) silently overrode the size prop's
+            SVG width/height attribute - that's why these looked bigger than
+            Play's icons on mobile even after the size prop was added. */}
         <Tooltip title={gameStarted ? "Start New Theo vs Theo Game" : "Start Theo vs Theo Game"}>
+          <Box
+            sx={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginRight: '4px',
+              opacity: isBotThinking ? 0.5 : 1,
+              cursor: isBotThinking ? 'not-allowed' : 'pointer',
+              pointerEvents: isBotThinking ? 'none' : 'auto'
+            }}
+            onClick={() => !isBotThinking && handleBotModeToggle()}
+          >
             <Robot
-              weight="fill"
               size={20}
-              className={`${styles.keyBtn} ${styles.botIcon} ${styles.startIcon} ${gameStarted ? styles.active : ''} ${isBotThinking ? styles.thinking : ''}`}
-              style={{
-                cursor: isBotThinking ? 'not-allowed' : 'pointer',
-                color: lightMode === 'dark'
-                  ? (gameStarted ? '#FF9800' : '#4CAF50')
-                  : (gameStarted ? '#EA580C' : '#059669'),
-                marginRight: '4px',
-              }}
-              onClick={() => !isBotThinking && handleBotModeToggle()}
+              weight="fill"
+              color={lightMode === 'dark'
+                ? (gameStarted ? '#FF9800' : '#4CAF50')
+                : (gameStarted ? '#EA580C' : '#059669')}
             />
+          </Box>
         </Tooltip>
         <Tooltip title="Puzzle Mode">
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <GridFour
-              size={20}
-              className={`${styles.keyBtn} ${styles.settingsIcon} ${showSettingsPanel ? styles.active : ''}`}
-              style={{
-                cursor: 'pointer',
-                marginRight: '4px',
-                color: lightMode === 'dark' ? '#fff' : '#1F2937'
-              }}
-              onClick={() => {
-                const newShowSettings = !showSettingsPanel;
-                setShowSettingsPanelLocal(newShowSettings);
-                // Pause game when settings open, resume when closed
-                setIsManuallyPausedLocal(newShowSettings);
-              }}
-            />
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px', cursor: 'pointer' }}
+            onClick={() => {
+              const newShowSettings = !showSettingsPanel;
+              setShowSettingsPanelLocal(newShowSettings);
+              // Pause game when settings open, resume when closed
+              setIsManuallyPausedLocal(newShowSettings);
+            }}
+          >
+            <GridFour size={20} color={lightMode === 'dark' ? '#fff' : '#1F2937'} />
             <div style={{
               position: 'absolute',
-              top: '-2px',
-              right: '-2px',
+              top: '-6px',
+              right: '-6px',
               backgroundColor: '#4CAF50',
               color: 'white',
               borderRadius: '50%',
@@ -185,25 +191,21 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
               fontSize: '10px',
               fontWeight: 'bold'
             }}>
-              {puzzleMode === 'bingo' ? '1' : 
-               puzzleMode === 'only-bingo' ? '2' : 
+              {puzzleMode === 'bingo' ? '1' :
+               puzzleMode === 'only-bingo' ? '2' :
                puzzleMode === 'significant-best' ? '3' : '4'}
             </div>
-          </div>
+          </Box>
         </Tooltip>
         <Tooltip title={isFastPlayMode ? "Fast Play On" : "Fast Play Off"}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px', cursor: 'pointer' }}
+            onClick={() => setIsFastPlayMode(!isFastPlayMode)}
+          >
             <Lightning
               size={20}
-              className={`${styles.keyBtn} ${isFastPlayMode ? styles.active : ''}`}
-              style={{
-                cursor: 'pointer',
-                color: lightMode === 'dark' 
-                  ? (isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)')
-                  : (isFastPlayMode ? '#EA580C' : 'rgba(31, 41, 55, 0.7)'),
-                marginRight: '4px'
-              }}
-              onClick={() => setIsFastPlayMode(!isFastPlayMode)}
+              color={lightMode === 'dark'
+                ? (isFastPlayMode ? '#FF9800' : 'rgba(255, 255, 255, 0.7)')
+                : (isFastPlayMode ? '#EA580C' : 'rgba(31, 41, 55, 0.7)')}
             />
             {isFastPlayMode && (
               <div style={{
@@ -216,62 +218,45 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
                 height: '12px'
               }} />
             )}
-          </div>
+          </Box>
         </Tooltip>
         {gameStarted && (
           <Tooltip title={telestratorEnabled ? "Disable drawing" : "Enable drawing"}>
-            <ScribbleLoop
-              size={20}
-              className={`${styles.keyBtn} ${telestratorEnabled ? styles.active : ''}`}
-              style={{
-                cursor: 'pointer',
-                marginRight: '4px',
-                color: telestratorEnabled
-                  ? (lightMode === 'dark' ? '#10B981' : '#059669')
-                  : (lightMode === 'dark' ? '#fff' : '#1F2937')
-              }}
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px', cursor: 'pointer' }}
               onClick={() => onToggleTelestrator && onToggleTelestrator(!telestratorEnabled)}
-            />
+            >
+              <ScribbleLoop
+                size={20}
+                color={telestratorEnabled
+                  ? (lightMode === 'dark' ? '#10B981' : '#059669')
+                  : (lightMode === 'dark' ? '#fff' : '#1F2937')}
+              />
+            </Box>
           </Tooltip>
         )}
         {gameStarted && (
           <Tooltip title={isManuallyPaused ? "Resume Game" : "Pause Game"}>
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '4px', cursor: 'pointer' }}
+              onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
+            >
               {isManuallyPaused ? (
-              <Play
-                size={20}
-                className={`${styles.keyBtn} ${styles.pauseIcon} ${styles.active}`}
-                style={{
-                  cursor: 'pointer',
-                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
-                }}
-                onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
-              />
-            ) : (
-              <Pause
-                size={20}
-                className={`${styles.keyBtn} ${styles.pauseIcon}`}
-                style={{
-                  cursor: 'pointer',
-                  color: lightMode === 'dark' ? '#fff' : '#1F2937'
-                }}
-                onClick={() => setIsManuallyPausedLocal(!isManuallyPaused)}
-              />
+                <Play size={20} color={lightMode === 'dark' ? '#fff' : '#1F2937'} />
+              ) : (
+                <Pause size={20} color={lightMode === 'dark' ? '#fff' : '#1F2937'} />
               )}
+            </Box>
           </Tooltip>
         )}
         {gameStarted && (
           <Tooltip title="Reset Rack">
-            <ArrowClockwise
-              size={20}
-              className={`${styles.keyBtn} ${styles.resetIcon}`}
-              style={{
-                cursor: 'pointer',
-                color: lightMode === 'dark' ? '#fff' : '#1F2937'
-              }}
-              onClick={() => {
-                clearPuzzlePlacement();
-              }}
-            />
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              onClick={() => clearPuzzlePlacement()}
+            >
+              <ArrowClockwise size={20} color={lightMode === 'dark' ? '#fff' : '#1F2937'} />
+            </Box>
           </Tooltip>
         )}
       </Box>
@@ -444,25 +429,31 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
               justifyContent: 'center',
               flexWrap: 'wrap'
             }}>
-              <button 
-                onClick={handleResume} 
+              <button
+                onClick={handleResume}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.14), rgba(0,0,0,0.08))';
                   e.target.style.transform = 'scale(1.05) translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04))';
                   e.target.style.transform = 'scale(1) translateY(0)';
                 }}
-                style={{ 
+                style={{
                   flex: '1',
                   minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
+                  fontSize: 12,
+                  padding: '8px 12px',
+                  borderRadius: 0,
                   cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                  color: 'white',
+                  background: lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04))',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',
@@ -498,22 +489,28 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
                   submitPuzzleGuess();
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.3), rgba(76,175,80,0.2))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(76,175,80,0.3), rgba(76,175,80,0.2))'
+                    : 'linear-gradient(145deg, rgba(5,150,105,0.28), rgba(5,150,105,0.18))';
                   e.target.style.transform = 'scale(1.05) translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))'
+                    : 'linear-gradient(145deg, rgba(5,150,105,0.18), rgba(5,150,105,0.1))';
                   e.target.style.transform = 'scale(1) translateY(0)';
                 }}
-                style={{ 
+                style={{
                   flex: '1',
                   minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
+                  fontSize: 12,
+                  padding: '8px 12px',
+                  borderRadius: 0,
                   cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))',
-                  color: 'white',
+                  background: lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1))'
+                    : 'linear-gradient(145deg, rgba(5,150,105,0.18), rgba(5,150,105,0.1))',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',
@@ -525,25 +522,31 @@ const PuzzlePlayerInfo = React.memo(({ telestratorEnabled, onToggleTelestrator }
               >
                 Submit Guess
               </button>
-              <button 
+              <button
                 onClick={() => setShowAllBingos(!showAllBingos)}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.14), rgba(0,0,0,0.08))';
                   e.target.style.transform = 'scale(1.05) translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+                  e.target.style.background = lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04))';
                   e.target.style.transform = 'scale(1) translateY(0)';
                 }}
-                style={{ 
+                style={{
                   flex: '1',
                   minWidth: '120px',
-                  fontSize: 12, 
-                  padding: '8px 12px', 
-                  borderRadius: 0, 
+                  fontSize: 12,
+                  padding: '8px 12px',
+                  borderRadius: 0,
                   cursor: 'pointer',
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                  color: 'white',
+                  background: lightMode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+                    : 'linear-gradient(145deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04))',
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
                   border: 'none',
                   fontWeight: 'bold',
                   backdropFilter: 'blur(5px)',

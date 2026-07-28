@@ -192,7 +192,7 @@ export default function MiniDrawer() {
 
   const MyAppBar = styled(AppBar)({
     position: 'fixed',
-    background: mobileMenuBg,
+    background: getBackgroundColor(),
     display: "flex",
     justifyContent: "space-between"
   });
@@ -341,7 +341,7 @@ export default function MiniDrawer() {
         <MyToolbar>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             <IconButton color="inherit" onClick={handleClick}>
-              <MenuIcon sx={{ color: mobileMenuText }}/>
+              <MenuIcon sx={{ color: getTextColor() }}/>
             </IconButton>
             {!user ? (
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
