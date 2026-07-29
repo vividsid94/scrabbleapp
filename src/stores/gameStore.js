@@ -696,15 +696,15 @@ export const useGameStore = create((set, get) => {
     
     // Get top moves for expandable section
     getTopMovesForExpandable: () => {
-      const { 
-        gameEnded, 
-        currentPlayer, 
-        player1Rack, 
-        player2Rack, 
+      const {
+        gameEnded,
+        currentPlayer,
+        player1Rack,
+        player2Rack,
         tempBoardCoords,
         boardCoords,
         selectedTiles,
-        leaveValues,
+        pool,
         blankTiles,
         setPlayer1Rack,
         setPlayer2Rack,
@@ -714,7 +714,6 @@ export const useGameStore = create((set, get) => {
         setIsLoadingTopMoves,
         setIsDictionaryLoading,
         setTopMoves,
-        setLeaveValues,
         setSnackbarMessage,
         setSnackbarSeverity,
         setSnackbarOpen
@@ -764,14 +763,15 @@ export const useGameStore = create((set, get) => {
           
           const requestBody = {
             board: markBlanksLowercase(boardCoords, blankTiles),
-            letters: apiRack
+            letters: apiRack,
+            pool: pool.length
           };
 
           // Add premiumSquares if available
           if (premiumSquares && premiumSquares.length > 0) {
             requestBody.premiumSquares = premiumSquares;
           }
-          
+
           const response = await fetch('/.netlify/functions/getTopMoves', {
             method: 'POST',
             headers: {
@@ -798,50 +798,11 @@ export const useGameStore = create((set, get) => {
           
           setIsDictionaryLoading(false);
 
-          // Import required functions
-          const [
-            { generateExchangeCombinations },
-            { calculateExchangeLeave, fetchLeaveValues }
-          ] = await Promise.all([
-            import('../functions/play/moveFunctions'),
-            import('../functions/play/leaveFunctions')
-          ]);
-
-          // Generate exchange moves
-          const exchangeCombinations = generateExchangeCombinations(newRack);
-          const exchangeMoves = exchangeCombinations.map(tiles => {
-            const leave = calculateExchangeLeave(newRack, tiles);
-            return {
-              word: `Exchange ${tiles.join('')}`,
-              score: 0,
-              tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-              direction: 'exchange',
-              startPosition: 'Exchange',
-              leave: leave,
-              isExchange: true,
-              currentRack: newRack
-            };
-          });
-
-          // First, fetch leave values for all moves
-          const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-          const updatedLeaveValues = await fetchLeaveValues(allMoves, leaveValues, setLeaveValues);
-
-          // Then calculate total values and sort
-          const movesWithValues = allMoves
-            .map(move => {
-              const leaveValue = updatedLeaveValues[move.leave] || 0;
-              const totalValue = move.isExchange ? 
-                leaveValue : // For exchanges, total value is just the leave value
-                (move.score + leaveValue); // Just points + leave, no control value
-              return {
-                ...move,
-                totalValue,
-                leaveValue, // Add the leave value to the move object
-              };
-            })
-            .sort((a, b) => b.totalValue - a.totalValue)
-            .slice(0, 15); // Show top 15 moves
+          // Moves are already leave-scored and sorted server-side (word plays
+          // + exchanges, exchanges only present when pool.length >= 7 was sent).
+          const movesWithValues = data.moves
+            .map(move => ({ ...move, currentRack: newRack }))
+            .slice(0, 15); // Show top 15 moves (Go already sorted by totalValue)
 
           setTopMoves(movesWithValues);
         } catch (error) {
@@ -1138,17 +1099,6 @@ export const useGameStore = create((set, get) => {
       } else {
         setPreviewScore(null);
         setPreviewScorePosition(null);
-      }
-    },
-
-    fetchLeaveValuesForTopMoves: () => {
-      const { topMoves } = get();
-      if (topMoves.length > 0) {
-        console.log('Top moves updated, fetching leave values');
-        // Dynamic import to avoid circular dependency
-        import('../functions/play/leaveFunctions').then(({ fetchLeaveValues }) => {
-          fetchLeaveValues(topMoves);
-        });
       }
     },
 

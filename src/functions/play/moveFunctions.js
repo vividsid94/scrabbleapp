@@ -1,5 +1,3 @@
-import { calculateExchangeLeave } from './leaveFunctions';
-import { fetchLeaveValues } from './leaveFunctions';
 import { alphabetizeRack, removeTilesByCount } from './rackFunctions';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
@@ -179,7 +177,8 @@ export const handleGetTopMoves = async ({
     try {
       const requestBody = {
         board: markBlanksLowercase(boardCoords, blankTiles),
-        letters: apiRack
+        letters: apiRack,
+        pool: pool.length
       };
 
       // Add premiumSquares if available
@@ -270,52 +269,26 @@ export const handleGetTopMoves = async ({
     
     setIsDictionaryLoading(false);
 
-    // Generate exchange moves
-    const exchangeCombinations = generateExchangeCombinations(newRack);
-    const exchangeMoves = exchangeCombinations.map(tiles => {
-      const leave = calculateExchangeLeave(newRack, tiles);
-      return {
-        word: `Exchange ${tiles.join('')}`,
-        score: 0,
-        tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-        direction: 'exchange',
-        startPosition: 'Exchange',
-        leave: leave,
-        isExchange: true,
-        currentRack: newRack
-      };
-    });
-
-    // First, fetch leave values for all moves
-    const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-    const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-      fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-      fetchBoardControl(boardCoords, allMoves)
-    ]);
+    // Moves are already leave-scored and sorted server-side (word plays +
+    // exchanges) - only board control (a client-only concern) is left to add.
+    const allMoves = data.moves.map(move => ({ ...move, currentRack: newRack }));
+    const boardControlMetrics = await fetchBoardControl(boardCoords, allMoves);
 
     // Create a map of move words to their control metrics
     const controlMap = new Map(
       boardControlMetrics.map(metric => [metric.move, metric])
     );
 
-    // Then calculate total values and sort
     const movesWithValues = allMoves
       .map(move => {
-        const leaveValue = updatedLeaveValues[move.leave] || 0;
         const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
-        const totalValue = move.isExchange ? 
-          leaveValue : // For exchanges, total value is just the leave value
-          (move.score + leaveValue); // Just points + leave, no control value
         return {
           ...move,
-          totalValue,
-          leaveValue,
           defensiveValue: controlMetrics.defensiveValue,
           boardControl: controlMetrics.boardControl,
         };
       })
-      .sort((a, b) => b.totalValue - a.totalValue)
-      .slice(0, 15); // Show top 15 moves
+      .slice(0, 15); // Show top 15 moves (Go already sorted by totalValue)
 
     setTopMoves(movesWithValues);
   } catch (error) {
@@ -366,7 +339,6 @@ export const handleGetTopMoves = async ({
  * @param {Function} params.setSnackbarSeverity - Function to update snackbar severity
  * @param {Function} params.setSnackbarOpen - Function to update snackbar visibility
  * @param {Function} params.setIsDictionaryLoading - Function to update dictionary loading state
- * @param {Function} params.setLeaveValues - Function to update leave values
  * @param {Function} params.setArrowDirection - Function to update arrow direction
  * @returns {Promise<void>}
  */
@@ -387,7 +359,6 @@ export const handlePlayTopMove = async () => {
     player2Name,
     blankTiles,
     moveHistory,
-    leaveValues,
     setPlayer1Rack,
     setPlayer2Rack,
     setTempBoardCoords,
@@ -405,7 +376,6 @@ export const handlePlayTopMove = async () => {
     setSnackbarSeverity,
     setSnackbarOpen,
     setIsDictionaryLoading,
-    setLeaveValues,
     setArrowDirection,
     getBoardDiff
   } = useGameStore.getState();
@@ -460,7 +430,8 @@ export const handlePlayTopMove = async () => {
     try {
       const requestBody = {
         board: markBlanksLowercase(boardCoords, blankTiles),
-        letters: apiRack
+        letters: apiRack,
+        pool: pool.length
       };
 
       // Add premiumSquares if available
@@ -526,50 +497,25 @@ export const handlePlayTopMove = async () => {
     
     setIsDictionaryLoading(false);
 
-    // Generate exchange moves only if we have enough tiles in the pool
-    const exchangeMoves = pool.length >= 7 ? generateExchangeCombinations(newRack).map(tiles => {
-      const leave = calculateExchangeLeave(newRack, tiles);
-      return {
-        word: `Exchange ${tiles.join('')}`,
-        score: 0,
-        tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-        direction: 'exchange',
-        startPosition: 'Exchange',
-        leave: leave,
-        isExchange: true,
-        currentRack: newRack
-      };
-    }) : [];
-
-    // First, fetch leave values and board control for all moves
-    const allMoves = [...data.moves.map(move => ({ ...move, currentRack: newRack })), ...exchangeMoves];
-    const [updatedLeaveValues, boardControlMetrics] = await Promise.all([
-      fetchLeaveValues(allMoves, leaveValues, setLeaveValues),
-      fetchBoardControl(boardCoords, allMoves)
-    ]);
+    // Moves are already leave-scored and sorted server-side (word plays +
+    // exchanges, exchanges only present when pool.length >= 7 was sent) -
+    // only board control (a client-only concern) is left to add.
+    const allMoves = data.moves.map(move => ({ ...move, currentRack: newRack }));
+    const boardControlMetrics = await fetchBoardControl(boardCoords, allMoves);
 
     // Create a map of move words to their control metrics
     const controlMap = new Map(
       boardControlMetrics.map(metric => [metric.move, metric])
     );
 
-    // Then calculate total values and sort
-    const movesWithValues = allMoves
-      .map(move => {
-        const leaveValue = updatedLeaveValues[move.leave] || 0;
-        const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
-        const totalValue = move.isExchange ? 
-          leaveValue : // For exchanges, total value is just the leave value
-          (move.score + leaveValue); // For regular moves, add score and leave value
-        return {
-          ...move,
-          totalValue,
-          leaveValue,
-          defensiveValue: controlMetrics.defensiveValue,
-          boardControl: controlMetrics.boardControl,
-        };
-      })
-      .sort((a, b) => b.totalValue - a.totalValue);
+    const movesWithValues = allMoves.map(move => {
+      const controlMetrics = controlMap.get(move.word) || { defensiveValue: 0, boardControl: 0, totalControl: 0 };
+      return {
+        ...move,
+        defensiveValue: controlMetrics.defensiveValue,
+        boardControl: controlMetrics.boardControl,
+      };
+    }); // Already sorted by totalValue server-side
 
     if (movesWithValues.length > 0) {
       const bestMove = movesWithValues[0];

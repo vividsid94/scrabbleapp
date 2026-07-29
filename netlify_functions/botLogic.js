@@ -8,43 +8,16 @@
  */
 
 const { normalizeBoard } = require('./normalizeBoard');
-const fs = require('fs');
-const path = require('path');
 const https = require('https');
 const http = require('http');
 
 // Import the common word display utility
 const { convertWordWithDots } = require('../src/functions/play/wordDisplayUtils');
 
-// Cache for leave values
-let leaveValues = {};
-try {
-  const leavesPath = path.join(__dirname, 'leaves.json');
-  const leaves = JSON.parse(fs.readFileSync(leavesPath, 'utf8'));
-  console.log('Loaded leaves from JSON file, count:', Object.keys(leaves).length);
-  // Convert leaves to the same format as getLeaveValues
-  leaveValues = leaves;
-} catch (err) {
-  console.error('Failed to load leaves:', err);
-  leaveValues = {};
-}
-
-/**
- * Get leave value for a given leave string
- */
-const getLeaveValue = (leave) => {
-  const value = leaveValues[leave];
-  if (value === undefined) {
-    console.log('Leave not found:', leave);
-    return 0;
-  }
-  return value;
-};
-
 /**
  * Call the Go generateMoves function via HTTP
  */
-async function callGoGenerateMoves(board, letters, premiumSquares = null) {
+async function callGoGenerateMoves(board, letters, premiumSquares = null, poolSize = 0) {
   try {
     // Call the Go service
     const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves'; // Go service running on Railway
@@ -75,7 +48,8 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null) {
     const requestBody = {
       board: boardData, // Already in correct format with empty strings
       rack: rackData, // Convert * to ? for Macondo
-      topN: 100 // Get top 100 moves
+      topN: 100, // Get top 100 moves
+      poolSize // Go only generates exchange candidates when this is >= 7
     };
     
     // Add premiumSquares if provided
@@ -130,6 +104,23 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null) {
               
               // Convert Go service response format to expected JavaScript format
               const convertedMoves = result.moves.map(goMove => {
+                // Exchange candidates arrive already fully shaped by Go
+                // (tiles/direction/startPosition/leave/leaveValue/totalValue) -
+                // no position parsing or dot-conversion applies to them.
+                if (goMove.isExchange) {
+                  return {
+                    word: goMove.word,
+                    score: 0,
+                    tiles: (goMove.tiles || []).map(t => ({ letter: t.letter, isNew: false })),
+                    direction: 'exchange',
+                    startPosition: 'Exchange',
+                    leave: goMove.leave || '',
+                    leaveValue: goMove.leaveValue || 0,
+                    totalValue: goMove.totalValue || 0,
+                    isExchange: true
+                  };
+                }
+
                 // Parse position like "8D" or "D8" to get row and column
                 const position = goMove.position;
                 let row, col;
@@ -246,6 +237,8 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null) {
                   direction: direction,
                   startPosition: goMove.position || '8H',
                   leave: goMove.leave || '',
+                  leaveValue: goMove.leaveValue || 0,
+                  totalValue: goMove.totalValue || 0,
                   isExchange: false
                 };
               });
@@ -325,118 +318,25 @@ exports.handler = async function (event) {
     }
 
     const board = normalizeBoard(rawBoard);
+    const poolSize = Array.isArray(pool) ? pool.length : 0;
 
-    // Get all possible moves from Go function
+    // Get all possible moves from Go function - already leave-scored and
+    // sorted server-side (word plays + exchanges), nothing left to compute here.
     console.log('Generating moves with Go...');
-    const allMoves = await callGoGenerateMoves(board, letters, premiumSquares);
+    const allMoves = await callGoGenerateMoves(board, letters, premiumSquares, poolSize);
     console.log(`Generated ${allMoves.length} possible moves`);
 
-    // Calculate leave for regular moves
-    for (const move of allMoves) {
-      const rackCopy = [...letters];
-      
-      // Remove tiles used in the move
-      for (const tile of move.tiles) {
-        if (tile.isNew) {
-          if (tile.isBlank) {
-            // For blank tiles, we need to find the specific blank that was used
-            // Look for the blank in the rack
-            const blankIndex = rackCopy.indexOf('*');
-            if (blankIndex !== -1) {
-              rackCopy.splice(blankIndex, 1);
-            }
-          } else {
-            // For regular tiles, find and remove the letter
-            const tileIndex = rackCopy.indexOf(tile.letter);
-            if (tileIndex !== -1) {
-              rackCopy.splice(tileIndex, 1);
-            }
-          }
-        }
-      }
-      // Sort remaining tiles to create leave
-      move.leave = rackCopy.map(tile => tile === '*' ? '?' : tile).sort().join('');
-    }
-
-    // Generate exchange moves
-    const exchangeMoves = [];
-    // Only generate exchange moves if there are at least 7 tiles in the pool
-    if (Array.isArray(pool) && pool.length >= 7) {
-      // Generate all possible combinations of 1-7 tiles
-      for (let i = 1; i <= Math.min(letters.length, 7); i++) {
-        const generateCombos = (current, start, remaining) => {
-          if (current.length === i) {
-            // For exchanges, the leave is what we keep (remaining)
-            // Convert any * to ? for leave lookup
-            const leave = remaining.map(tile => tile === '*' ? '?' : tile).sort().join('');
-            
-            // Calculate the new rack after exchange
-            const newRack = [...remaining];
-            // Draw new tiles from pool if available
-            const tilesToDraw = current.length;
-            let newTiles = [];
-            if (Array.isArray(pool) && pool.length >= tilesToDraw) {
-              // Shuffle pool and take tiles
-              const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
-              newTiles = shuffledPool.slice(0, tilesToDraw);
-              newRack.push(...newTiles);
-              // Sort the new rack
-              newRack.sort();
-            }
-            
-            exchangeMoves.push({
-              word: `Exchange ${current.join('')}`,
-              score: 0,
-              tiles: current.map(letter => ({ letter: letter === '?' ? '*' : letter, isNew: false })),
-              direction: 'exchange',
-              startPosition: 'Exchange',
-              leave: leave, // The leave is what we keep BEFORE drawing new tiles
-              isExchange: true,
-              newTiles: newTiles, // Store the new tiles to be drawn
-              tilesToExchange: [...current] // Store the tiles being exchanged
-            });
-            return;
-          }
-          for (let j = start; j < remaining.length; j++) {
-            const nextRemaining = [...remaining];
-            nextRemaining.splice(j, 1);
-            current.push(remaining[j]);
-            generateCombos(current, j, nextRemaining);
-            current.pop();
-          }
-        };
-        generateCombos([], 0, [...letters]);
-      }
-    }
-
-    // Combine regular moves and exchange moves
-    const combinedMoves = [...allMoves, ...exchangeMoves];
-
-    // Process moves to add leave values but don't sort
-    const processedMoves = combinedMoves.map(move => {
-      const leaveValue = getLeaveValue(move.leave);
-      const totalValue = move.isExchange ? 
-        leaveValue : // For exchanges, total value is just the leave value
-        (move.score + leaveValue); // For regular moves, add score and leave value
-      
-      return {
-        ...move,
-        leaveValue,
-        totalValue
-      };
-    });
-
-    if (processedMoves.length === 0) {
+    if (allMoves.length === 0) {
       return {
         statusCode: 200,
         body: JSON.stringify({ message: 'No valid move found' })
       };
     }
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        moves: processedMoves // Return ALL moves, let frontend handle sorting
+        moves: allMoves // Already sorted by totalValue server-side
       })
     };
 

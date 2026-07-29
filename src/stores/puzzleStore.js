@@ -1314,18 +1314,6 @@ export const usePuzzleStore = create((set, get) => {
       setFastPlayMoves([]);
     },
 
-    // Fetch leave values for top moves
-    fetchLeaveValuesForTopMoves: () => {
-      const { topMoves } = get();
-      if (topMoves.length > 0) {
-        console.log('Top moves updated, fetching leave values');
-        // Dynamic import to avoid circular dependency
-        import('../functions/play/leaveFunctions').then(({ fetchLeaveValues }) => {
-          fetchLeaveValues(topMoves);
-        });
-      }
-    },
-
     // Fast play mode - group moves together until pause conditions are met
     makeFastBotMove: async (botMoveSound, gameStartSound) => {
       const {

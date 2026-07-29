@@ -130,7 +130,6 @@ export default function Puzzle() {
     initializePuzzle,
     continueBingoMove,
     setLeaveValues,
-    fetchLeaveValuesForTopMoves,
     setPuzzleMode,
     setIsFastPlayMode,
     makeFastBotMove,
@@ -181,11 +180,6 @@ export default function Puzzle() {
       setPool(origPool);
     }
   }, [sounds]);
-
-  // Fetch leave values for top moves
-  useEffect(() => {
-    fetchLeaveValuesForTopMoves();
-  }, [topMoves]);
 
   // Start new game function - use the same as Play.js
   const startNewGame = () => {

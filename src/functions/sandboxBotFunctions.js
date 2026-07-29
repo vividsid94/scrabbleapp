@@ -7,51 +7,15 @@
 // to gameStore.js's asymmetric human-vs-bot shape and carry side effects
 // inappropriate for an unattended simulation.
 
-// All non-empty subsets of the rack, grouped by size ascending (1-tile
-// exchanges first, up to a full exchange) - deliberately uncapped. An
-// earlier session bug found capping this list made large/valuable exchanges
-// (e.g. swapping 5-6 tiles to keep just 1-2 good ones) structurally
-// unreachable no matter how good they'd score.
-const generateExchangeCombinations = (rack) => {
-  const combinations = [];
-  const n = rack.length;
-  for (let size = 1; size <= n; size++) {
-    const combo = [];
-    const backtrack = (start) => {
-      if (combo.length === size) {
-        combinations.push([...combo]);
-        return;
-      }
-      for (let i = start; i < n; i++) {
-        combo.push(rack[i]);
-        backtrack(i + 1);
-        combo.pop();
-      }
-    };
-    backtrack(0);
-  }
-  return combinations;
-};
-
-const calculateExchangeLeave = (rack, tilesToExchange) => {
-  const remaining = [...rack];
-  tilesToExchange.forEach(tile => {
-    const index = remaining.indexOf(tile);
-    if (index !== -1) remaining.splice(index, 1);
-  });
-  return remaining.sort().join('');
-};
-
-// Fetches word plays (via the existing, already-proven getTopMoves pipeline,
-// which computes leave/leaveValue/totalValue server-side) and merges in
-// client-side exchange candidates (which getTopMoves never generates),
-// ranked together by totalValue - same pipeline shape as
-// viewerStore.js's fetchAnalysisTopMoves.
+// Fetches word plays + exchange candidates in one already-sorted,
+// already-leave-scored list via the getTopMoves pipeline, which now computes
+// leave/leaveValue/totalValue and generates exchanges server-side (Go's
+// generateMovesHandler, reusing simulate.go's allExchangeCandidates).
 export const fetchSandboxMoves = async ({ boardCoords, rack, pool }) => {
   const response = await fetch('/.netlify/functions/getTopMoves', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ board: boardCoords, letters: rack })
+    body: JSON.stringify({ board: boardCoords, letters: rack, pool: (pool || []).length })
   });
 
   if (!response.ok) {
@@ -59,48 +23,7 @@ export const fetchSandboxMoves = async ({ boardCoords, rack, pool }) => {
   }
 
   const data = await response.json();
-  const wordMoves = (data.moves || []).filter(move => move.word && move.word.trim() !== '');
-
-  let exchangeMoves = [];
-  if (pool && pool.length >= 7) {
-    const combos = generateExchangeCombinations(rack);
-    const leaves = combos.map(tiles => calculateExchangeLeave(rack, tiles));
-    const uniqueLeaves = [...new Set(leaves)];
-
-    let leaveValues = {};
-    try {
-      const leaveResponse = await fetch('/.netlify/functions/getLeaveValues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leaves: uniqueLeaves })
-      });
-      if (leaveResponse.ok) {
-        const leaveData = await leaveResponse.json();
-        leaveValues = leaveData.leaveValues || {};
-      }
-    } catch (error) {
-      console.error('Error fetching exchange leave values for sandbox move:', error);
-    }
-
-    exchangeMoves = combos.map((tiles, i) => {
-      const leave = leaves[i];
-      const leaveValue = leaveValues[leave] || 0;
-      return {
-        word: `Exchange ${tiles.join('')}`,
-        score: 0,
-        tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-        direction: 'exchange',
-        startPosition: 'Exchange',
-        leave,
-        leaveValue,
-        totalValue: leaveValue,
-        isExchange: true,
-        tilesExchanged: tiles
-      };
-    });
-  }
-
-  return [...wordMoves, ...exchangeMoves].sort((a, b) => (b.totalValue || 0) - (a.totalValue || 0));
+  return (data.moves || []).filter(move => move.word && move.word.trim() !== '');
 };
 
 // Tess's exact defense-adjusted formula, duplicated from botFunctions.js/

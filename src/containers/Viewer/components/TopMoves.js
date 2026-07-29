@@ -131,7 +131,8 @@ const TopMoves = ({
           },
           body: JSON.stringify({
             board: markBlanksLowercase(boardCoords, blankTiles),
-            letters: apiRack
+            letters: apiRack,
+            pool: pool.length
           }),
           signal: controller.signal
         });
@@ -174,40 +175,11 @@ const TopMoves = ({
         data.moves = data.moves.filter(move => move.word && move.word.trim() !== '');
       }
       
-      // Generate exchange moves only if we have enough tiles in the pool
-      const exchangeMoves = (pool && pool.length >= 7) ? generateExchangeCombinations(currentRack).map(tiles => {
-        const leave = calculateExchangeLeave(currentRack, tiles);
-        return {
-          word: `Exchange ${tiles.join('')}`,
-          score: 0,
-          tiles: tiles.map(tile => ({ letter: tile, isNew: false })),
-          direction: 'exchange',
-          startPosition: 'Exchange',
-          leave: leave,
-          isExchange: true,
-          currentRack: currentRack
-        };
-      }) : [];
-
-      // First, fetch leave values for all moves
-      const allMoves = [...data.moves.map(move => ({ ...move, currentRack })), ...exchangeMoves];
-      const updatedLeaveValues = await fetchLeaveValues(allMoves);
-
-      // Then calculate total values and sort
-      const movesWithValues = allMoves
-        .map(move => {
-          const leaveValue = updatedLeaveValues[move.leave] || 0;
-          const totalValue = move.isExchange ? 
-            leaveValue : // For exchanges, total value is just the leave value
-            (move.score + leaveValue); // Just points + leave
-          return {
-            ...move,
-            totalValue,
-            leaveValue,
-          };
-        })
-        .sort((a, b) => b.totalValue - a.totalValue)
-        .slice(0, 15); // Show top 15 moves
+      // Moves are already leave-scored and sorted server-side (word plays +
+      // exchanges, exchanges only present when pool.length >= 7 was sent).
+      const movesWithValues = data.moves
+        .map(move => ({ ...move, currentRack }))
+        .slice(0, 15); // Go already sorted by totalValue
 
       setTopMoves(movesWithValues);
     } catch (error) {
@@ -217,137 +189,6 @@ const TopMoves = ({
       setIsLoadingTopMoves(false);
     }
   };
-
-  // Helper function to generate exchange combinations
-  const generateExchangeCombinations = (rack) => {
-    const combinations = [];
-    // Generate all possible combinations of 1-7 tiles
-    for (let i = 1; i <= Math.min(rack.length, 7); i++) {
-      const generateCombos = (current, start, remaining) => {
-        if (current.length === i) {
-          combinations.push([...current]);
-          return;
-        }
-        for (let j = start; j < remaining.length; j++) {
-          current.push(remaining[j]);
-          generateCombos(current, j + 1, remaining);
-          current.pop();
-        }
-      };
-      generateCombos([], 0, rack);
-    }
-    // No slice here - combos are generated size-ascending (all 1-tile combos,
-    // then all 2-tile, etc.), so an early cap made larger exchanges (e.g.
-    // exchanging 5-6 tiles to keep just 1-2 good ones) unreachable no matter
-    // how good they'd score. A 7-tile rack has at most 127 combos total
-    // (2^7 - 1), cheap enough to keep in full - matches Play's own
-    // generateExchangeCombinations (src/functions/play/moveFunctions.js),
-    // which never had this cap.
-    return combinations;
-  };
-
-  // Helper function to calculate exchange leave
-  const calculateExchangeLeave = (rack, tilesToExchange) => {
-    // Convert any '*' to '?' for consistency
-    const tilesToRemove = tilesToExchange.map(tile => tile === '*' ? '?' : tile);
-    
-    // Remove tiles using count method (similar to Play.js)
-    const remainingTiles = rack.filter(tile => {
-      const index = tilesToRemove.indexOf(tile);
-      if (index !== -1) {
-        tilesToRemove.splice(index, 1);
-        return false;
-      }
-      return true;
-    });
-    
-    return remainingTiles.sort().join('');
-  };
-
-
-
-  // Helper function to calculate leave for a move
-  const calculateLeave = (move, currentRack) => {
-    if (move.isExchange) {
-      return move.leave;
-    }
-    
-    // Create a copy of the current rack
-    const rackCopy = [...currentRack];
-    
-    // Remove tiles used in the move
-    for (const tile of move.tiles) {
-      if (tile.isNew) {
-        if (tile.isBlank) {
-          // For blank tiles, we need to find the specific blank that was used
-          // Look for the blank in the rack (could be '?' or '*')
-          const blankIndex = rackCopy.indexOf('?') !== -1 ? rackCopy.indexOf('?') : rackCopy.indexOf('*');
-          if (blankIndex !== -1) {
-            rackCopy.splice(blankIndex, 1);
-          }
-        } else {
-          // For regular tiles, find and remove the letter
-          const tileIndex = rackCopy.indexOf(tile.letter);
-          if (tileIndex !== -1) {
-            rackCopy.splice(tileIndex, 1);
-          }
-        }
-      }
-    }
-    
-    // Convert any '*' to '?' for consistency and sort
-    const leave = rackCopy.map(tile => tile === '*' ? '?' : tile).sort().join('');
-    return leave;
-  };
-
-  // Helper function to fetch leave values
-  const fetchLeaveValues = async (moves) => {
-    try {
-      // Calculate leave values for each move
-      const leavesToFetch = new Map();
-      const leavesArray = [];
-      
-      for (const move of moves) {
-        // For regular moves, calculate the leave after playing the word
-        const leaveStr = move.isExchange ? move.leave : calculateLeave(move, move.currentRack);
-        move.leave = leaveStr; // Add leave to the move object
-        
-        // Only fetch if we don't already have this leave value
-        if (!leavesToFetch.has(leaveStr)) {
-          leavesToFetch.set(leaveStr, true);
-          leavesArray.push(leaveStr);
-        }
-      }
-
-      // Only make the API call if we have leaves to fetch
-      if (leavesToFetch.size > 0) {
-        const response = await fetch('/.netlify/functions/getLeaveValues', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ leaves: leavesArray }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch leave values');
-        }
-
-        const data = await response.json();
-        
-        // Return the leave values
-        return data.leaveValues || {};
-      }
-
-      // If no leaves to fetch, return empty object
-      return {};
-    } catch (error) {
-      console.error('Error fetching leave values:', error);
-      return {};
-    }
-  };
-
-
 
   const renderMoveItem = (move, index) => {
     const location = formatLocation(move);

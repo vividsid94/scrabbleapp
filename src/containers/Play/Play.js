@@ -154,7 +154,6 @@ export default function Play({ isMultiplayer = false }) {
     // Utility functions
     limitMoveHistory,
     updatePreviewScore,
-    fetchLeaveValuesForTopMoves,
     checkDictionary,
     
     // Keyboard event handlers
@@ -740,11 +739,6 @@ export default function Play({ isMultiplayer = false }) {
       setGameEnded(false); // Reset game ended state
     };
   }, []);
-
-  // Modify the existing code that sets topMoves to also fetch leave values
-  useEffect(() => {
-    fetchLeaveValuesForTopMoves();
-  }, [topMoves]);
 
   // Add effect to limit move history size more aggressively
   useEffect(() => {
