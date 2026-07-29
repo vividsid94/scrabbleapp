@@ -253,8 +253,8 @@ export const makeBotMove = async (botMoveSound) => {
       return;
     }
 
-    // Sort moves by totalValue (points + leave) from the backend
-    const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
+    // Already sorted by totalValue server-side (Go)
+    const sortedMoves = data.moves;
     let botToUse = useGameStore.getState().selectedBot;
     const playingTope = isTopeBot(botToUse, player2Name);
     console.warn('=== BOT PICK v5 ===', {
@@ -615,8 +615,8 @@ export const makeBotMove = async (botMoveSound) => {
         
         console.log('✅ Railway service retry successful!');
         
-        // Sort moves by totalValue (points + leave) from the backend
-        const sortedMoves = retryData.moves.sort((a, b) => b.totalValue - a.totalValue);
+        // Already sorted by totalValue server-side (Go)
+        const sortedMoves = retryData.moves;
         let botToUse = useGameStore.getState().selectedBot;
         let botMove;
         if (botToUse && botToUse.customRank && sortedMoves.length >= botToUse.customRank) {

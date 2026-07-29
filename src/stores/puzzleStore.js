@@ -1003,8 +1003,8 @@ export const usePuzzleStore = create((set, get) => {
             setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
             setConsecutivePasses(prev => prev + 1);
           } else {
-            // Sort moves by totalValue (points + leave) from the backend
-            const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
+            // Already sorted by totalValue server-side (Go)
+            const sortedMoves = data.moves;
             const bestMove = sortedMoves[0];
 
             // Check if the best move is a bingo (7 tiles) AND NONE of the other moves are bingos
@@ -1420,8 +1420,8 @@ export const usePuzzleStore = create((set, get) => {
             break;
           }
 
-          // Sort moves by totalValue
-          const sortedMoves = data.moves.sort((a, b) => b.totalValue - a.totalValue);
+          // Already sorted by totalValue server-side (Go)
+          const sortedMoves = data.moves;
           const bestMove = sortedMoves[0];
 
           // Check pause conditions
