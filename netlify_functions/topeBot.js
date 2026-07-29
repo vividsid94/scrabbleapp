@@ -265,12 +265,6 @@ exports.handler = async function (event) {
     const rawResponse = await callGemini(prompt, apiKey);
     const chosenIndex = parseChoice(rawResponse, candidateMoves.length);
 
-    console.log('=== TOPE SERVER: LLM PROMPT ===');
-    console.log(prompt);
-    console.log('=== TOPE SERVER: LLM RESPONSE ===');
-    console.log(rawResponse);
-    console.log('=== TOPE SERVER: chose index ===', chosenIndex);
-
     return {
       statusCode: 200,
       body: JSON.stringify({ chosenIndex, prompt, rawResponse })

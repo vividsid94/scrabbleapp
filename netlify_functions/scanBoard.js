@@ -79,6 +79,5 @@ exports.handler = async (event) => {
 
   const board     = parseBoard(boardStr);
   const tileCount = board.flat().filter(Boolean).length;
-  console.log(`scanBoard: ${tileCount} tiles detected`);
   return ok({ board, tileCount });
 };

@@ -240,18 +240,9 @@ async function handleMove(gameCode, playerId, moveData) {
   const playerRack = playerNumber === 1 ? game.player1_rack : game.player2_rack;
   const beforeBoard = game.board_state;
 
-  console.log('📋 Before board state:', {
-    type: typeof beforeBoard,
-    isArray: Array.isArray(beforeBoard),
-    length: beforeBoard?.length,
-    hasTiles: beforeBoard?.some(row => row?.some(cell => typeof cell === 'string'))
-  });
-
   // Apply move to board
   const afterBoard = JSON.parse(JSON.stringify(beforeBoard));
   const placedTiles = moveData.tiles || [];
-
-  console.log('🎯 Placing tiles:', placedTiles.map(t => `${t.letter} at (${t.row},${t.col})`));
 
   // Validate player has the tiles
   const rackCopy = [...playerRack];
@@ -275,20 +266,6 @@ async function handleMove(gameCode, playerId, moveData) {
     actual: afterBoard[t.row][t.col],
     match: afterBoard[t.row][t.col] === t.letter
   }));
-  
-  const afterHasTiles = afterBoard?.some(row => row?.some(cell => typeof cell === 'string'));
-  const afterStringCells = afterBoard?.flat().filter(cell => typeof cell === 'string') || [];
-  
-  console.log('📋 After board state:', {
-    type: typeof afterBoard,
-    isArray: Array.isArray(afterBoard),
-    length: afterBoard?.length,
-    hasTiles: afterHasTiles,
-    stringCellsCount: afterStringCells.length,
-    stringCells: afterStringCells.slice(0, 10),
-    placedCells,
-    allPlacedCorrectly: placedCells.every(c => c.match)
-  });
   
   // If tiles weren't placed correctly, this is a critical error
   if (!placedCells.every(c => c.match)) {
@@ -352,13 +329,6 @@ async function handleMove(gameCode, playerId, moveData) {
 
   // Build update object - use afterBoard directly (it's already clean)
   // Don't clean it again as that might remove tiles
-  console.log('🧹 Board state before update:', {
-    length: afterBoard.length,
-    hasTiles: afterBoard.some(row => row.some(cell => typeof cell === 'string')),
-    sampleTiles: afterBoard.flat().filter(cell => typeof cell === 'string').slice(0, 5),
-    placedTiles: placedTiles.map(t => ({ row: t.row, col: t.col, letter: afterBoard[t.row][t.col] }))
-  });
-
   const updateData = {
     board_state: afterBoard, // Use afterBoard directly - it already has the tiles placed
     pool: newPool,
@@ -387,18 +357,6 @@ async function handleMove(gameCode, playerId, moveData) {
     updateData.completed_at = new Date().toISOString();
   }
 
-  // Update the game
-  console.log('📝 Updating game with:', {
-    boardStateLength: updateData.board_state?.length,
-    boardStateType: typeof updateData.board_state,
-    boardStateIsArray: Array.isArray(updateData.board_state),
-    boardStateHasTiles: updateData.board_state?.some(row => row?.some(cell => typeof cell === 'string')),
-    currentPlayer: updateData.current_player,
-    player1RackLength: updateData.player1_rack?.length,
-    player2RackLength: updateData.player2_rack?.length,
-    poolLength: updateData.pool?.length
-  });
-
   const { data: updatedGame, error: updateError } = await supabase
     .from('multiplayer_games')
     .update(updateData)
@@ -414,22 +372,7 @@ async function handleMove(gameCode, playerId, moveData) {
   // Check what was actually stored
   const storedBoard = updatedGame.board_state;
   const storedHasTiles = storedBoard?.some(row => row?.some(cell => typeof cell === 'string'));
-  const storedStringCells = storedBoard?.flat().filter(cell => typeof cell === 'string') || [];
-  
-  console.log('✅ Game updated successfully:', {
-    boardStateLength: storedBoard?.length,
-    boardStateType: typeof storedBoard,
-    boardStateIsArray: Array.isArray(storedBoard),
-    boardStateHasTiles: storedHasTiles,
-    boardStateFirstRow: storedBoard?.[0]?.slice(0, 5),
-    stringCellsCount: storedStringCells.length,
-    stringCells: storedStringCells.slice(0, 10),
-    retrievedBoardState: JSON.stringify(storedBoard).substring(0, 500),
-    // Compare what we sent vs what we got
-    sentHasTiles: afterBoard.some(row => row.some(cell => typeof cell === 'string')),
-    retrievedHasTiles: storedHasTiles
-  });
-  
+
   // If board state was lost, log a warning
   if (afterBoard.some(row => row.some(cell => typeof cell === 'string')) && !storedHasTiles) {
     console.error('❌ CRITICAL: Board state was lost during database update!');
@@ -766,8 +709,6 @@ exports.handler = async function (event) {
   try {
     const { action, gameCode, playerId, playerName, moveData, tiles } = JSON.parse(event.body);
 
-    console.log('📨 Received request:', { action, gameCode, playerId, hasMoveData: !!moveData });
-
     let result;
 
     switch (action) {
@@ -784,9 +725,7 @@ exports.handler = async function (event) {
         break;
 
       case 'move':
-        console.log('🎯 Handling move action:', { gameCode, playerId, tilesCount: moveData?.tiles?.length });
         result = await handleMove(gameCode, playerId, moveData);
-        console.log('✅ Move handled, returning result');
         break;
 
       case 'pass':
@@ -807,18 +746,6 @@ exports.handler = async function (event) {
           headers,
           body: JSON.stringify({ error: 'Invalid action' })
         };
-    }
-
-    // Log the response being sent back
-    if (action === 'move' && result.game) {
-      const responseBoard = result.game.boardState || result.game.board_state;
-      const responseHasTiles = responseBoard?.some(row => row?.some(cell => typeof cell === 'string'));
-      console.log('📤 Sending response:', {
-        hasGame: !!result.game,
-        boardStateHasTiles: responseHasTiles,
-        boardStateLength: responseBoard?.length,
-        currentPlayer: result.game.currentPlayer
-      });
     }
 
     return {

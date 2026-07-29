@@ -29,8 +29,6 @@ exports.handler = async function () {
     });
   });
 
-  console.log('Railway keep-alive ping:', result);
-
   // Always return 200 - a failed ping (service already warm, transient
   // network blip, etc.) isn't a function failure worth alerting on.
   return {

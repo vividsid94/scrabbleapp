@@ -6,9 +6,6 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-  console.log('=== GET APPROVED SUBMISSIONS FUNCTION CALLED ===');
-  console.log('HTTP Method:', event.httpMethod);
-  
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',

@@ -22,29 +22,12 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null, poolSi
   try {
     // Call the Go service
     const railwayUrl = 'https://scrabble-move-generator-production.up.railway.app/generate-moves'; // Go service running on Railway
-    
-    console.log('🚀 ATTEMPTING TO USE GO SERVICE for move generation...');
-    console.log('📍 Calling URL:', railwayUrl);
-    
-    // Debug: Log what we're sending to Go service
+
+    // Board/rack conversion: '*' -> '?' for Macondo's blank convention, empty
+    // cells normalized to '' for the wire format the Go service expects.
     const boardData = board.map(row => row.map(cell => cell || ''));
     const rackData = letters.map(letter => letter === '*' ? '?' : letter).join('');
-    
-    // Make board readable
-    console.log('🔍 DEBUG: Board being sent to Go service:');
-    console.log('   A B C D E F G H I J K L M N O');
-    boardData.forEach((row, i) => {
-      const rowNum = (i + 1).toString().padStart(2, ' ');
-      const rowStr = row.map(cell => cell || '.').join(' ');
-      console.log(`${rowNum} ${rowStr}`);
-    });
-    
-    console.log('🔍 DEBUG: Rack being sent to Go service:', rackData);
-    console.log('🔍 DEBUG: Original letters array:', letters);
-    if (premiumSquares) {
-      console.log('🔍 DEBUG: Premium squares being sent to Go service:', premiumSquares);
-    }
-    
+
     // Make HTTP request to Go service
     const requestBody = {
       board: boardData, // Already in correct format with empty strings
@@ -84,29 +67,14 @@ async function callGoGenerateMoves(board, letters, premiumSquares = null, poolSi
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
             try {
-              // Log the raw response for debugging
-              console.log('🔍 Raw response from Go service:', data);
-              console.log('🔍 Response length:', data.length);
-              
               // Check if response is empty
               if (!data || data.trim() === '') {
-                console.log('⚠️ Empty response from Go service');
                 reject(new Error('Empty response from Go service'));
                 return;
               }
-              
+
               const result = JSON.parse(data);
-              console.log(result);
-              console.log('✅ SUCCESS: Go service returned', result.moves ? result.moves.length : 0, 'moves');
-              console.log('🏆 Go service is working!');
-              
-              // Debug: Check what moves we're getting
-              if (result.moves && result.moves.length > 0) {
-                console.log('🔍 DEBUG: First move from Go service:', result.moves[0]);
-                console.log('🔍 DEBUG: Moves with words:', result.moves.filter(m => m.word && m.word.length > 0).length);
-                console.log('🔍 DEBUG: Moves with empty words:', result.moves.filter(m => !m.word || m.word.length === 0).length);
-              }
-              
+
               // Check if Go service returned valid moves with words
               const validMoves = result.moves ? result.moves.filter(move => move.word && move.word.length > 0) : [];
               if (validMoves.length === 0 && result.moves && result.moves.length > 0) {
@@ -343,26 +311,10 @@ exports.handler = async function (event) {
     }
 
     const board = normalizeBoard(rawBoard);
-    
-    // Log premiumSquares for debugging
-    if (premiumSquares) {
-      console.log('📊 Premium squares received:', {
-        count: premiumSquares.length,
-        sample: premiumSquares.slice(0, 3),
-        types: premiumSquares.reduce((acc, sq) => {
-          acc[sq.type] = (acc[sq.type] || 0) + 1;
-          return acc;
-        }, {})
-      });
-    } else {
-      console.log('📊 No premium squares provided, using standard board');
-    }
-    
+
     // Get all possible moves from Go function - already leave-scored and
     // sorted server-side (word plays + exchanges), nothing left to compute here.
-    console.log('Generating moves with Go...');
     const allMoves = await callGoGenerateMoves(board, letters, premiumSquares, poolSize);
-    console.log(`Generated ${allMoves.length} possible moves`);
 
     if (allMoves.length === 0) {
       return {

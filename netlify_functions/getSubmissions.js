@@ -6,10 +6,6 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-  console.log('=== FUNCTION CALLED ===');
-  console.log('HTTP Method:', event.httpMethod);
-  console.log('Environment check - ADMIN_TOKEN:', process.env.ADMIN_TOKEN ? 'SET' : 'NOT SET');
-  
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -45,14 +41,6 @@ exports.handler = async (event, context) => {
 
     const token = authHeader.split(' ')[1];
     // Simple token check - replace with proper JWT validation
-    console.log('=== DEBUG ===');
-    console.log('Received token:', `"${token}"`);
-    console.log('Expected token:', `"${process.env.ADMIN_TOKEN}"`);
-    console.log('Token length:', token.length);
-    console.log('Expected length:', process.env.ADMIN_TOKEN ? process.env.ADMIN_TOKEN.length : 'undefined');
-    console.log('Tokens match:', token === process.env.ADMIN_TOKEN);
-    console.log('=== END DEBUG ===');
-    
     if (token !== process.env.ADMIN_TOKEN) {
       return {
         statusCode: 401,

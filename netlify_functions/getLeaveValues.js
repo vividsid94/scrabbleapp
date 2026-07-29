@@ -10,7 +10,6 @@ let leaves = null;
 try {
   const leavesPath = path.join(__dirname, 'leaves.json');
   leaves = JSON.parse(fs.readFileSync(leavesPath, 'utf8'));
-  console.log('Loaded leaves from JSON file');
 } catch (err) {
   console.error('Failed to load leaves:', err);
   throw err;
@@ -26,11 +25,8 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    console.log('Received request for leave values');
-    
     // Parse the request body
     const { leaves: requestedLeaves } = JSON.parse(event.body);
-    console.log('Requested leaves:', requestedLeaves);
 
     if (!requestedLeaves) {
       console.error('Invalid request: leaves is missing');
@@ -44,7 +40,6 @@ exports.handler = async function(event, context) {
     const uniqueLeaves = Array.isArray(requestedLeaves) ? 
       [...new Set(requestedLeaves)].sort() :
       [...new Set(Object.values(requestedLeaves))].sort();
-    console.log('Unique leaves:', uniqueLeaves);
 
     // Check cache first
     const uncachedLeaves = uniqueLeaves.filter(leave => {
@@ -106,8 +101,6 @@ exports.handler = async function(event, context) {
         }
       }
     }
-
-    console.log('Sending response with leave values:', leaveValues);
 
     return {
       statusCode: 200,
