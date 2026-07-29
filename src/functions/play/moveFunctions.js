@@ -802,13 +802,19 @@ export const handleMoveSelect = ({
         continue;
       }
       
-      // For blank tiles, we need to find the blank in the rack
-      const tileToRemove = tile.isBlank ? '*' : tile.letter;
-      const tileIndex = newRack.indexOf(tileToRemove);
+      // The rack itself uses '?' for blanks (matches origPool and
+      // handlePlayTopMove's own tilesToRemove.push('?')); selectedTiles
+      // uses '*' for blanks (wordSubmitFunctions' documented convention).
+      // These are two different representations of the same tile, not
+      // interchangeable - reusing '*' for the rack lookup below meant
+      // newRack.indexOf() never found anything (the rack never contains
+      // '*'), so the whole tile was silently skipped instead of placed.
+      const rackTileToRemove = tile.isBlank ? '?' : tile.letter;
+      const tileIndex = newRack.indexOf(rackTileToRemove);
       if (tileIndex !== -1) {
         // For blank tiles, we need to show the letter it represents
         newTempBoard[tile.row][tile.col] = tile.letter;
-        tilesToRemove.push(tileToRemove);
+        tilesToRemove.push(rackTileToRemove);
         // Store as object with tile, row, col properties for backspace compatibility
         newSelectedTiles.push({
           tile: tile.isBlank ? '*' : tile.letter,

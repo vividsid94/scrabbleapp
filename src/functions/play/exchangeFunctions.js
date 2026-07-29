@@ -118,8 +118,12 @@ export const handleExchange = () => {
   setTilesToExchange([]);
 
   // Switch to next player (handles 2 turns mode)
-  const { switchToNextPlayer } = useGameStore.getState();
+  const { switchToNextPlayer, setTopMoves } = useGameStore.getState();
   switchToNextPlayer();
+  // Same gap as handleWordSubmit/handlePass - exchanging never cleared the
+  // "Ask Theo" candidate list, so it could stay visible through the bot's
+  // next turn.
+  setTopMoves([]);
 
   // Add exchange move to history
   // NOTE: rack is the PRE-exchange rack (what the player held when choosing

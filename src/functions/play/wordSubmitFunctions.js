@@ -248,11 +248,16 @@ export const handleWordSubmit = async (playerMoveSound) => {
   setPool(newPool);
   
   // Switch to next player (handles 2 turns mode)
-  const { switchToNextPlayer } = useGameStore.getState();
+  const { switchToNextPlayer, setTopMoves } = useGameStore.getState();
   switchToNextPlayer();
   setSelectedBoardPosition(null);
   setSelectedTiles([]);
   setArrowDirection('right');
+  // Unlike handlePlayTopMove/the bot's own turn-end cleanup, this path never
+  // cleared the "Ask Theo" candidate list on commit - so if it was left
+  // expanded, the player's stale pre-move candidates stayed visible straight
+  // through the bot's next turn.
+  setTopMoves([]);
 
   // Prepare move coach data (async, non-blocking) - only if enabled
   // Save board state before move for board control calculation

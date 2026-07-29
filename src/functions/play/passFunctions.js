@@ -80,17 +80,20 @@ export const handlePass = () => {
     setMoveHistory([...currentHistory, newMove]);
 
     // Switch to next player (handles 2 turns mode)
-    const { switchToNextPlayer } = useGameStore.getState();
+    const { switchToNextPlayer, setTopMoves } = useGameStore.getState();
     switchToNextPlayer();
-    
+
     setSnackbarMessage(currentPlayer === 1 ? "You passed your turn" : `${player2Name} passed their turn`);
     setSnackbarSeverity('info');
     setSnackbarOpen(true);
-    
+
     // Reset the board state
     setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
     setSelectedTiles([]);
     setSelectedBoardPosition(null);
+    // Same gap as handleWordSubmit - passing never cleared the "Ask Theo"
+    // candidate list, so it could stay visible through the bot's next turn.
+    setTopMoves([]);
   } catch (error) {
     console.error('Error in pass function:', error);
   }
