@@ -556,6 +556,7 @@ export const handlePlayTopMove = async () => {
           player: currentPlayer === 1 ? player1Name : player2Name,
           score: 0,
           rack: newRack.join(''),
+          tilesExchanged: tilesToExchange.join(''),
           total: stateUpdates.runningTotal,
           word: 'Exchange'
         };

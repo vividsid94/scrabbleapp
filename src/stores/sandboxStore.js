@@ -176,7 +176,8 @@ export const useSandboxStore = create((set, get) => ({
         moveHistory = [...moveHistory, {
           boardDiff: [], player: playerName, score: 0,
           rack: currentRack.join(''), tilesExchanged: tilesToExchange.join(''),
-          total: currentPoints, word: 'Exchange'
+          total: currentPoints, word: 'Exchange',
+          isBot: true // both sides are bots in Sandbox - hide exchanged tiles in display
         }];
 
         if (currentPlayer === 1) player1Rack = newRack; else player2Rack = newRack;
@@ -270,7 +271,8 @@ export const useSandboxStore = create((set, get) => ({
         moveHistory = [...moveHistory, {
           boardDiff: [], player: playerName, score: 0,
           rack: turn.rackBefore, tilesExchanged: turn.tilesExchanged,
-          total: turn.runningTotal, word: 'Exchange'
+          total: turn.runningTotal, word: 'Exchange',
+          isBot: true // both sides are bots in Sandbox - hide exchanged tiles in display
         }];
       } else {
         const newTiles = (turn.tiles || []).filter(t => t.isNew);
@@ -351,7 +353,8 @@ export const useSandboxStore = create((set, get) => ({
         moveHistory.push({
           boardDiff: [], player: playerName, score: 0,
           rack: turn.rackBefore, tilesExchanged: turn.tilesExchanged,
-          total: turn.runningTotal, word: 'Exchange'
+          total: turn.runningTotal, word: 'Exchange',
+          isBot: true // both sides are bots in Sandbox - hide exchanged tiles in display
         });
       } else {
         const newTiles = (turn.tiles || []).filter(t => t.isNew);

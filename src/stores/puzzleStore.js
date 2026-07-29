@@ -1097,8 +1097,10 @@ export const usePuzzleStore = create((set, get) => {
                 player: currentName,
                 score: 0,
                 rack: newRack.join(''),
+                tilesExchanged: tilesToExchange.join(''),
                 total: currentPoints,
-                word: 'Exchange'
+                word: 'Exchange',
+                isBot: true // hides which tiles were exchanged in move history display
               };
               const currentHistory = get().moveHistory || [];
               setMoveHistory([...currentHistory.slice(-49), moveHistoryEntry]);
@@ -1692,8 +1694,10 @@ export const usePuzzleStore = create((set, get) => {
               player: player,
               score: 0,
               rack: newRack.join(''),
+              tilesExchanged: tilesToExchange.join(''),
               total: currentPoints,
-              word: 'Exchange'
+              word: 'Exchange',
+              isBot: true // hides which tiles were exchanged in move history display
             });
           } else {
             // Handle word placement

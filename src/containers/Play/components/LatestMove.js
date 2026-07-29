@@ -63,6 +63,18 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     return sortedTiles.map(tile => tile.value).join('');
   };
 
+  // A bot's exchange hides which tiles were swapped (matches real Scrabble -
+  // you can't see your opponent's tray), showing just a count instead. The
+  // player's own exchange (manual, or auto-played via "3") reveals the exact
+  // tiles since it's the player's own turn. Falls back to plain "Exchange"
+  // if tilesExchanged wasn't recorded (older history entries).
+  const formatExchangeDisplay = (move) => {
+    if (move.isBot) {
+      return move.tilesExchanged ? `Exchange ${move.tilesExchanged.length}` : 'Exchange';
+    }
+    return move.tilesExchanged ? `Exchange ${move.tilesExchanged}` : 'Exchange';
+  };
+
   // Handle download .gcg file
   const handleDownloadGCG = () => {
     if (allMoves.length === 0) {
@@ -127,7 +139,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
       }
     }
     if (score === 0 && (word === 'Exchange' || (word && word.startsWith('Exchange')) || (player && player.includes('exchanged')))) {
-      displayWord = 'Exchange';
+      displayWord = formatExchangeDisplay(move);
     } else if (score === 0 && (!displayWord || displayWord === '')) {
       displayWord = 'Pass';
     }
@@ -172,7 +184,7 @@ const LatestMove = ({ latestMove, player1Name, player2Name, onMoveHistoryClick, 
     }
   }
   if (score === 0 && (word === 'Exchange' || (word && word.startsWith('Exchange')) || (player && player.includes('exchanged')))) {
-    displayWord = 'Exchange';
+    displayWord = formatExchangeDisplay(latestMoveData);
   } else if (score === 0 && (!displayWord || displayWord === '')) {
     displayWord = 'Pass';
   }

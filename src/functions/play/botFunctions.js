@@ -481,7 +481,8 @@ export const makeBotMove = async (botMoveSound) => {
         rack: alphabetizeRack(botRack).join(''),
         tilesExchanged: tilesToExchange.join(''),
         total: player2points,
-        word: 'Exchange'
+        word: 'Exchange',
+        isBot: true // hides which tiles were exchanged in move history display
       };
 
       // Add move to history
@@ -676,7 +677,8 @@ export const makeBotMove = async (botMoveSound) => {
             rack: alphabetizeRack(botRack).join(''),
             tilesExchanged: tilesToExchange.join(''),
             total: player2points,
-            word: 'Exchange'
+            word: 'Exchange',
+            isBot: true // hides which tiles were exchanged in move history display
           };
 
           // Add move to history
@@ -814,7 +816,8 @@ export const makeBotMove = async (botMoveSound) => {
           rack: player2Rack.join(''),
           tilesExchanged: tilesToExchange.join(''),
           total: player2points,
-          word: 'Exchange'
+          word: 'Exchange',
+          isBot: true // hides which tiles were exchanged in move history display
         };
         // Add move to history
         const currentHistory = useGameStore.getState().moveHistory || [];
