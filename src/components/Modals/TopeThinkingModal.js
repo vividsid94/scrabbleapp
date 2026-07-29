@@ -50,7 +50,7 @@ export default function TopeThinkingModal({ open, onClose, topeThinking }) {
           }}
         >
           <img
-            src="/images/topemascot.png"
+            src="/images/compressed/topemascot-compressed.png"
             alt="Tope"
             style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'contain', flexShrink: 0 }}
           />

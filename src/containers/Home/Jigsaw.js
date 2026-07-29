@@ -96,13 +96,13 @@ const JigsawPuzzle = () => {
   const pieceSize = 100;
   const tabSize = pieceSize / 3.5;
   const images = [ 
-    '/images/theomascot.png',
-    '/images/tessmascot.png',
-    '/images/theomascot2.png',
-    '/images/theomascot3.png',
-    '/images/theomascot4.png',
-    '/images/tessmascot2.png',
-    '/images/tessmascot3.png'
+    '/images/compressed/theomascot-compressed.png',
+    '/images/compressed/tessmascot-compressed.png',
+    '/images/compressed/theomascot2-compressed.png',
+    '/images/compressed/theomascot3-compressed.png',
+    '/images/compressed/theomascot4-compressed.png',
+    '/images/compressed/tessmascot2-compressed.png',
+    '/images/compressed/tessmascot3-compressed.png'
   ];
   const [image, setImage] = useState(images[0]);
   const [pieces, setPieces] = useState([]); // {row, col, tabs, id}

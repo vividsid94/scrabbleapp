@@ -110,9 +110,9 @@ preloadProtiles();
 
 // Bot options
 const bots = [
-  { name: 'Theo', img: '/images/theomascot.png', desc: 'Clever and quick, Theo prefers bold, aggressive moves.' },
-  { name: 'Tess', img: '/images/tessmascot.png', desc: 'Calm and strategic, Tess loves defense.' },
-  { name: 'Tope', img: '/images/topemascot.png', desc: 'LLM trained using annotated game commentary! Tope is around 1800 level.' },
+  { name: 'Theo', img: '/images/compressed/theomascot-compressed.png', desc: 'Clever and quick, Theo prefers bold, aggressive moves.' },
+  { name: 'Tess', img: '/images/compressed/tessmascot-compressed.png', desc: 'Calm and strategic, Tess loves defense.' },
+  { name: 'Tope', img: '/images/compressed/topemascot-compressed.png', desc: 'LLM trained using annotated game commentary! Tope is around 1800 level.' },
   { name: 'Novice', desc: 'Makes random moves.', icon: <Smiley size={20} color="#60A5FA" /> },
   { name: 'Beginner', desc: 'Plays simple, easy-to-beat moves.', icon: <UserCircle size={20} color="#8B7355" /> },
   { name: 'Intermediate', desc: 'A bit more challenging.', icon: <Robot size={20} color="#3D5A80" /> },
@@ -487,7 +487,7 @@ const Scrabble3DPlay = () => {
     resourcesRef.current.geometries.push(arrowGeom);
     resourcesRef.current.materials.push(arrowMat);
     resourcesRef.current.meshes.push(arrowMesh);
-    createMascot(scene, selectedBot?.img || '/images/theomascot.png');
+    createMascot(scene, selectedBot?.img || '/images/compressed/theomascot-compressed.png');
     createScoresheet(scene);
     createScoreboard(scene);
     createClock(scene);
@@ -1083,7 +1083,7 @@ const Scrabble3DPlay = () => {
     resourcesRef.current.textures.push(woodTexture);
   };
 
-  const createMascot = (scene, mascotImage = '/images/theomascot.png') => {
+  const createMascot = (scene, mascotImage = '/images/compressed/theomascot-compressed.png') => {
     const loader = new THREE.TextureLoader();
     loader.load(mascotImage, (texture) => {
       const w = 5;
@@ -2037,7 +2037,7 @@ const Scrabble3DPlay = () => {
                     overflow: 'hidden',
                   }}>
                     <img
-                      src="/images/theomascot.png"
+                      src="/images/compressed/theomascot-compressed.png"
                       alt="Theo"
                       style={{ width: '24px', height: '24px', objectFit: 'contain' }}
                     />
@@ -2206,7 +2206,7 @@ const Scrabble3DPlay = () => {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
             <img
-              src={selectedBot?.img || '/images/theomascot.png'}
+              src={selectedBot?.img || '/images/compressed/theomascot-compressed.png'}
               alt=""
               style={{ width: 24, height: 24, borderRadius: 6, objectFit: 'contain' }}
             />
@@ -2388,7 +2388,7 @@ const Scrabble3DPlay = () => {
             }
           }}
         >
-          <img src="/images/topemascot.png" alt="" style={{ width: 22, height: 22, borderRadius: 4 }} />
+          <img src="/images/compressed/topemascot-compressed.png" alt="" style={{ width: 22, height: 22, borderRadius: 4 }} />
           View Tope&apos;s thinking
         </Box>
       )}

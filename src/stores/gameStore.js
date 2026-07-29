@@ -111,7 +111,7 @@ export const useGameStore = create((set, get) => {
     theoYellCriteria: 'bingo', // 'score' or 'bingo'
     theoYellScoreThreshold: 20, // Score threshold for triggering yell
     // Bot selection
-    selectedBot: { name: 'Theo', img: '/images/theomascot.png', mascotImg: '/images/theomascot.png' },
+    selectedBot: { name: 'Theo', img: '/images/compressed/theomascot-compressed.png', mascotImg: '/images/compressed/theomascot-compressed.png' },
     // Tope's most recent decision: exact prompt sent to the LLM + its raw response,
     // shown in the UI so you can see exactly what it's "thinking"
     topeThinking: null,

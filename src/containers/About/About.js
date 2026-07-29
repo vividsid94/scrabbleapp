@@ -80,7 +80,7 @@ export default function About() {
               animation: 'none',
             }}>
               <img
-                src="/images/tessmascot.png"
+                src="/images/compressed/tessmascot-compressed.png"
                 alt="Tess Taylor Mascot"
                 style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#eee', marginBottom: 12, boxShadow: '0 0 0 3px #60A5FA', transition: 'box-shadow 0.2s' }}
               />
@@ -131,7 +131,7 @@ export default function About() {
             animation: 'none',
           }}>
             <img
-              src="/images/theomascot.png"
+              src="/images/compressed/theomascot-compressed.png"
               alt="Theo Townsend Mascot"
               style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#eee', marginBottom: 12, boxShadow: '0 0 0 3px #60A5FA', transition: 'box-shadow 0.2s' }}
             />

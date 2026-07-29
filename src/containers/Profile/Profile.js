@@ -219,11 +219,11 @@ export default function Profile() {
     : 0;
 
   const avatarOptions = [
-    '/images/tessmascot2.png',
-    '/images/tessmascot3.png',
-    '/images/theomascot2.png',
-    '/images/theomascot3.png',
-    '/images/theomascot4.png',
+    '/images/compressed/tessmascot2-compressed.png',
+    '/images/compressed/tessmascot3-compressed.png',
+    '/images/compressed/theomascot2-compressed.png',
+    '/images/compressed/theomascot3-compressed.png',
+    '/images/compressed/theomascot4-compressed.png',
     '/images/t2icon.png',
     '/images/t2icon2.png',
   ];

@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import ShakeableMascot from "../../components/AppContent/ShakeableMascot";
 
-const mascotImg = "/images/theomascot.png";
+const mascotImg = "/images/compressed/theomascot-compressed.png";
 
 export default function TestTheoShake() {
   const mascotRef = useRef();

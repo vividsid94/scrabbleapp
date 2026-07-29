@@ -2,18 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./AnimatedMascot.module.css";
 
 const theoImages = [
-  "/images/theomascot.png",
-  "/images/theomascot2.png",
-  "/images/theomascot3.png",
-  "/images/theomascot4.png"
+  "/images/compressed/theomascot-compressed.png",
+  "/images/compressed/theomascot2-compressed.png",
+  "/images/compressed/theomascot3-compressed.png",
+  "/images/compressed/theomascot4-compressed.png"
 ];
 const tessImages = [
-  "/images/tessmascot.png",
-  "/images/tessmascot2.png",
-  "/images/tessmascot3.png"
+  "/images/compressed/tessmascot-compressed.png",
+  "/images/compressed/tessmascot2-compressed.png",
+  "/images/compressed/tessmascot3-compressed.png"
 ];
 const topeImages = [
-  "/images/topemascot.png"
+  "/images/compressed/topemascot-compressed.png"
 ];
 
 export default function AnimatedMascot({ about = 'theo', enableStencilMode = true, onPoseIndexChange, initialPoseIndex = 0 }) {

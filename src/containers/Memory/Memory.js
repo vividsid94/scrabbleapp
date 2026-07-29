@@ -68,13 +68,13 @@ export default function Memory() {
 
   // Build a dynamic image pool from available assets
   const mascotAndIconImages = [
-    { url: '/images/theomascot.png', description: 'Theo Mascot' },
-    { url: '/images/theomascot2.png', description: 'Theo Mascot 2' },
-    { url: '/images/theomascot3.png', description: 'Theo Mascot 3' },
-    { url: '/images/theomascot4.png', description: 'Theo Mascot 4' },
-    { url: '/images/tessmascot.png', description: 'Tess Mascot' },
-    { url: '/images/tessmascot2.png', description: 'Tess Mascot 2' },
-    { url: '/images/tessmascot3.png', description: 'Tess Mascot 3' },
+    { url: '/images/compressed/theomascot-compressed.png', description: 'Theo Mascot' },
+    { url: '/images/compressed/theomascot2-compressed.png', description: 'Theo Mascot 2' },
+    { url: '/images/compressed/theomascot3-compressed.png', description: 'Theo Mascot 3' },
+    { url: '/images/compressed/theomascot4-compressed.png', description: 'Theo Mascot 4' },
+    { url: '/images/compressed/tessmascot-compressed.png', description: 'Tess Mascot' },
+    { url: '/images/compressed/tessmascot2-compressed.png', description: 'Tess Mascot 2' },
+    { url: '/images/compressed/tessmascot3-compressed.png', description: 'Tess Mascot 3' },
     { url: '/images/player.png', description: 'Player Icon' },
     { url: '/images/t2icon.png', description: 'T2 Icon' },
     { url: '/images/t2icon2.png', description: 'T2 Icon 2' },

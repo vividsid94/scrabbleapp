@@ -287,11 +287,11 @@ export default function Play({ isMultiplayer = false }) {
   const getBotIcon = (botName) => {
     switch (botName) {
       case 'Theo':
-        return <img src="/images/theomascot.png" alt="Theo" width={20} height={20} />;
+        return <img src="/images/compressed/theomascot-compressed.png" alt="Theo" width={20} height={20} />;
       case 'Tess':
-        return <img src="/images/tessmascot.png" alt="Tess" width={20} height={20} />;
+        return <img src="/images/compressed/tessmascot-compressed.png" alt="Tess" width={20} height={20} />;
       case 'Tope':
-        return <img src="/images/topemascot.png" alt="Tope" width={20} height={20} />;
+        return <img src="/images/compressed/topemascot-compressed.png" alt="Tope" width={20} height={20} />;
       case 'Novice':
         return <Smiley size={20} color="#60A5FA" />;
       case 'Beginner':
@@ -1498,7 +1498,7 @@ export default function Play({ isMultiplayer = false }) {
           >
             <ShakeableMascot 
               ref={theoYellMascotRef} 
-              src="/images/theomascot.png" 
+              src="/images/compressed/theomascot-compressed.png" 
               width={200} 
               alt="Theo yelling" 
             />
