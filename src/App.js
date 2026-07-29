@@ -7,6 +7,7 @@ import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
 import Memory from "./containers/Memory/Memory";
 import Footer from "./components/AppContent/Footer/Footer";
+import DevConsoleOverlay from "./components/DevConsole/DevConsoleOverlay";
 import WordTable from "./containers/Words/Words";
 import Series from "./containers/Series/Series";
 import Play from "./containers/Play/Play";
@@ -277,13 +278,14 @@ function App() {
     <ThemeContext.Provider value={{ lightMode, setLightMode }}>
       <AuthProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AppContent 
-            appState={appState} 
-            setAppState={setAppState} 
-            lightMode={lightMode} 
-            setLightMode={setLightMode} 
+          <AppContent
+            appState={appState}
+            setAppState={setAppState}
+            lightMode={lightMode}
+            setLightMode={setLightMode}
           />
         </Router>
+        <DevConsoleOverlay />
       </AuthProvider>
     </ThemeContext.Provider>
   )

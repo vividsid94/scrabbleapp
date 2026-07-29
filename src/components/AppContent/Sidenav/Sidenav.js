@@ -13,6 +13,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
 import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
 import { useGameStore } from '../../../stores/gameStore';
+import { useConsoleLogStore } from '../../../stores/consoleLogStore';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthModal from '../../Auth/AuthModal';
 import { Link as RouterLink } from 'react-router-dom';
@@ -37,6 +38,7 @@ import {
   SignOut,
   SpeakerHigh,
   GameController,
+  Terminal,
   X,
   Check
 } from '@phosphor-icons/react';
@@ -121,6 +123,7 @@ export default function MiniDrawer() {
   const botMoveSoundType = useGameStore(state => state.botMoveSoundType);
   const setPlayerMoveSoundType = useGameStore(state => state.setPlayerMoveSoundType);
   const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
+  const toggleDevConsole = useConsoleLogStore(state => state.toggleOpen);
 
   const getBackgroundColor = () => {
     // Sidebar stays dark in both themes — its text/hover states are white-on-dark.
@@ -477,6 +480,10 @@ export default function MiniDrawer() {
           <MobileMenuAction onClick={() => { handleClose(); toggleSoundOptions(); }} colors={mobileMenuColors}>
             <SpeakerHigh size={20} weight={isSoundSectionExpanded ? 'fill' : 'regular'} />
             <Box sx={{ flex: 1 }}>Sound</Box>
+          </MobileMenuAction>
+          <MobileMenuAction onClick={() => { handleClose(); toggleDevConsole(); }} colors={mobileMenuColors}>
+            <Terminal size={20} />
+            <Box sx={{ flex: 1 }}>Dev Console</Box>
           </MobileMenuAction>
           <MobileMenuItem to="/about" label="About" active={isCurrentPage('/about')} onClick={handleClose} colors={mobileMenuColors}>
             <CircleIcon sx={{ fontSize: 20 }} />
@@ -999,6 +1006,24 @@ export default function MiniDrawer() {
           </Box>
         )}
         
+        {/* Dev Console toggle - At bottom */}
+        <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={toggleDevConsole} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+              <Tooltip title="Dev Console" placement="right">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Terminal style={{ color: getTextColor(), fontSize: '20px' }} />
+                  {sidebarExpanded && (
+                    <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                      Dev Console
+                    </Box>
+                  )}
+                </Box>
+              </Tooltip>
+            </ListItemIcon>
+          </ListItem>
+        </List>
+
         {/* About - At bottom */}
         <List className={`${styles.btnContainer} ${styles.changelogContainer}`}>
           <a id="aboutBtn" className={styles.link} href="/about">

@@ -4,6 +4,11 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import * as serviceWorker from './serviceWorker';
+import { initConsoleLogCapture } from './utils/consoleLogCapture';
+
+// Must run before anything else so early console output (store init,
+// first-render effects) is captured too, not just logs after mount.
+initConsoleLogCapture();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
