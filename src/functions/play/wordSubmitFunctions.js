@@ -160,8 +160,17 @@ export const handleWordSubmit = async (playerMoveSound) => {
     playerMoveSound.play();
   }
 
-  // Get the current player's rack before making any changes
+  // Tiles placed on the board are removed from the rack as soon as they're typed/placed,
+  // so by the time we get here player1Rack/player2Rack is already the post-move LEAVE, not
+  // the pre-move rack GCG needs. Reconstruct the real pre-move rack by adding back the
+  // tiles this move just used (from selectedTiles, converting '*' to '?' to match the
+  // rack's own blank convention) - for a bingo the leave is empty, which is exactly why
+  // the rack field was disappearing entirely for those moves.
   const playerRack = currentPlayer === 1 ? player1Rack : player2Rack;
+  const preMoveRack = alphabetizeRack([
+    ...playerRack,
+    ...selectedTiles.map(t => (t.tile === '*' ? '?' : t.tile))
+  ]).join('');
   // Calculate running total
   const runningTotal = currentPlayer === 1 ? player1points + score : player2points + score;
 
@@ -171,7 +180,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
     boardDiff,
     player: currentPlayer === 1 ? player1Name : player2Name,
     score,
-    rack: playerRack.join(''),
+    rack: preMoveRack,
     total: runningTotal,
     word: result.words ? result.words[0] : 'Unknown'
   };
