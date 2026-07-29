@@ -865,12 +865,15 @@ export const useGameStore = create((set, get) => {
         currentPlayer,
         player1Rack,
         player2Rack,
+        blankTiles,
+        selectedTiles,
         setTempBoardCoords,
         setSelectedTiles,
         setPlayer1Rack,
         setPlayer2Rack,
         setSelectedBoardPosition,
-        setArrowDirection
+        setArrowDirection,
+        setBlankTiles
       } = get();
 
       // Validate move structure
@@ -888,12 +891,15 @@ export const useGameStore = create((set, get) => {
           currentPlayer,
           player1Rack,
           player2Rack,
+          blankTiles,
+          selectedTiles,
           setTempBoardCoords,
           setSelectedTiles,
           setPlayer1Rack,
           setPlayer2Rack,
           setSelectedBoardPosition,
-          setArrowDirection
+          setArrowDirection,
+          setBlankTiles
         });
       });
     },

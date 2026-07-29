@@ -751,12 +751,15 @@ export const handleMoveSelect = ({
   currentPlayer,
   player1Rack,
   player2Rack,
+  blankTiles,
+  selectedTiles,
   setTempBoardCoords,
   setSelectedTiles,
   setPlayer1Rack,
   setPlayer2Rack,
   setSelectedBoardPosition,
-  setArrowDirection
+  setArrowDirection,
+  setBlankTiles
 }) => {
   // Validate move object
   if (!move || !move.tiles || !Array.isArray(move.tiles)) {
@@ -766,22 +769,32 @@ export const handleMoveSelect = ({
 
   // Reset the board to its current state
   setTempBoardCoords(JSON.parse(JSON.stringify(boardCoords)));
-  
+
   // Set the direction - convert from move API format to frontend format
   const directionMap = {
     'horizontal': 'right',
     'vertical': 'down'
   };
   setArrowDirection(directionMap[move.direction] || 'right');
-  
+
   // Get the current rack and restore any tiles that were previously placed on the board
   const currentRack = currentPlayer === 1 ? player1Rack : player2Rack;
-  
-  // First, restore any tiles that were previously placed on the board but not committed
+
+  // First, restore any tiles that were previously placed on the board but not committed.
+  // tempBoardCoords shows a blank's displayed LETTER (e.g. 'X'), not the rack's '?'
+  // representation - pushing that letter straight back into the rack (as the other two
+  // callers of this same restore pattern already know to avoid, via selectedTiles) would
+  // hand the player a phantom real tile and permanently break '?' lookups for the rest of
+  // the turn, since the actual blank never returns to the rack.
   const restoredRack = [...currentRack];
   for (let row = 0; row < 15; row++) {
     for (let col = 0; col < 15; col++) {
       if (typeof tempBoardCoords[row][col] === 'string' && typeof boardCoords[row][col] !== 'string') {
+        const wasBlank = (selectedTiles || []).some(t => t.row === row && t.col === col && t.tile === '*');
+        if (wasBlank) {
+          restoredRack.push('?');
+          continue;
+        }
         // This tile was placed on the board but not committed, so restore it to the rack
         restoredRack.push(tempBoardCoords[row][col]);
       }
@@ -793,7 +806,14 @@ export const handleMoveSelect = ({
   let newRack = [...restoredRack];
   const newSelectedTiles = [];
   const tilesToRemove = [];
-  
+
+  // blankTiles can include a blank from a previously-selected (and never
+  // committed) candidate move - keep only ones actually on the committed
+  // board, so switching candidates doesn't leave stale blank markers behind.
+  const newBlankTiles = (blankTiles || []).filter(
+    bt => typeof boardCoords[bt.row][bt.col] === 'string'
+  );
+
   // Place each tile using the exact positions from the tiles array
   for (const tile of move.tiles) {
     if (tile.isNew) {
@@ -801,7 +821,7 @@ export const handleMoveSelect = ({
       if (typeof boardCoords[tile.row][tile.col] === 'string') {
         continue;
       }
-      
+
       // The rack itself uses '?' for blanks (matches origPool and
       // handlePlayTopMove's own tilesToRemove.push('?')); selectedTiles
       // uses '*' for blanks (wordSubmitFunctions' documented convention).
@@ -821,17 +841,23 @@ export const handleMoveSelect = ({
           row: tile.row,
           col: tile.col
         });
+        if (tile.isBlank) {
+          newBlankTiles.push({ row: tile.row, col: tile.col });
+        }
       }
     }
   }
-  
+
   // Remove all tiles at once using count method
   if (tilesToRemove.length > 0) {
     newRack = removeTilesByCount(newRack, tilesToRemove);
   }
-  
+
   setTempBoardCoords(newTempBoard);
   setSelectedTiles(newSelectedTiles);
+  if (setBlankTiles) {
+    setBlankTiles(newBlankTiles);
+  }
   if (currentPlayer === 1) {
     setPlayer1Rack(alphabetizeRack(newRack));
   } else {

@@ -42,12 +42,12 @@ const TopMoves = ({
     if (topMoves && topMoves.length > 0) {
       // Start slide out animation
       setAnimationClass(styles.slidingOut);
-      
+
       // After slide out, slide in with new moves
       const timer = setTimeout(() => {
         setAnimationClass(styles.slidingIn);
       }, 300); // Match the slideOutUp animation duration
-      
+
       return () => clearTimeout(timer);
     }
   }, [topMoves]);
