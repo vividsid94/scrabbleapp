@@ -16,7 +16,7 @@ const topeImages = [
   "/images/compressed/topemascot-compressed.png"
 ];
 
-export default function AnimatedMascot({ about = 'theo', enableStencilMode = true, onPoseIndexChange, initialPoseIndex = 0 }) {
+export default function AnimatedMascot({ about = 'theo', enableStencilMode = true, enableCycling = true, onPoseIndexChange, initialPoseIndex = 0 }) {
   const mascotImages = about === 'tess' ? tessImages : about === 'tope' ? topeImages : theoImages;
   const [current, setCurrent] = useState(initialPoseIndex);
   const [prev, setPrev] = useState(initialPoseIndex);
@@ -25,8 +25,11 @@ export default function AnimatedMascot({ about = 'theo', enableStencilMode = tru
   const poseTimeoutRef = useRef();
   const modeTimeoutRef = useRef();
 
-  // Crossfade between mascot poses
+  // Crossfade between mascot poses - opt-out for callers (like the "choose
+  // your opponent" cards) that just want a single static pose with no
+  // animation at all.
   useEffect(() => {
+    if (!enableCycling) return;
     poseTimeoutRef.current = setInterval(() => {
       setPrev(current);
       setCrossfade(true);
@@ -36,7 +39,7 @@ export default function AnimatedMascot({ about = 'theo', enableStencilMode = tru
       }, 700); // match fade duration
     }, 2500);
     return () => clearInterval(poseTimeoutRef.current);
-  }, [current]);
+  }, [current, enableCycling]);
 
   // Report the active pose index back to the parent - lets a caller react to
   // which specific pose is showing (e.g. only pairing page-specific decor

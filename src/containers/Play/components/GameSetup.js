@@ -215,7 +215,7 @@ export default function GameSetup({ onSelectBot, onStartGame }) {
                 onClick={() => chooseBot(bot)}
               >
                 <div className={styles.botCardArt}>
-                  <AnimatedMascot about={bot.name.toLowerCase()} />
+                  <AnimatedMascot about={bot.name.toLowerCase()} enableCycling={false} enableStencilMode={false} />
                 </div>
                 <div className={styles.botCardName}>{bot.name}</div>
                 <div className={styles.botCardDesc}>{bot.desc}</div>
