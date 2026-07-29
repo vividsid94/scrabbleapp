@@ -7,6 +7,7 @@ import Pool from "../../components/AppContent/Board/Pool.js";
 import Modal from '@mui/material/Modal';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
+import Popover from '@mui/material/Popover';
 import { 
   DotsThree,
   Book,
@@ -20,9 +21,7 @@ import {
   Cube,
   ScribbleLoop
 } from '@phosphor-icons/react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";  
+import { origPool, origBoard } from "../../components/AppContent/References/staticData.js";
 import { getMove, createBoard, highlightPreviousMove } from "../../functions/boardFunctions.js";
 import { createRack } from "../../functions/rackFunctions.js";
 import { handleMove } from '../../functions/moveHandlers';
@@ -56,7 +55,13 @@ export default function Viewer({ onChange }){
   const [showPlayersModal, setShowPlayersModal] = useState(false);
   const [showSubmittedGamesModal, setShowSubmittedGamesModal] = useState(false);
   const [hoveredIcon, setHoveredIcon] = useState(null);
-  const [poolExpanded, setPoolExpanded] = useState(false);
+  const [poolAnchorEl, setPoolAnchorEl] = useState(null);
+  // Captured separately from poolAnchorEl (which is cleared to null on
+  // close) so the popover's width stays fixed through its closing
+  // animation instead of snapping to undefined and re-flowing wider
+  // mid-transition.
+  const [poolPopoverWidth, setPoolPopoverWidth] = useState(undefined);
+  const poolPopoverOpen = Boolean(poolAnchorEl);
   const [telestratorEnabled, setTelestratorEnabled] = useState(false);
 
   // Helper function to render icons with hover state
@@ -150,6 +155,15 @@ export default function Viewer({ onChange }){
     loadSavedGame
   } = useViewerStore();
 
+  // If the popover is open (or was just closed) right as a different game
+  // loads and replaces the board, poolAnchorEl still points at a DOM node
+  // React is about to detach/replace. MUI's Popover can't get real
+  // coordinates from a detached anchor and falls back to (0,0) - the
+  // popover flashes at the page's top-left corner. Force it closed on
+  // every game-load transition.
+  useEffect(() => {
+    setPoolAnchorEl(null);
+  }, [gameNum, wooglesMode, currentWooglesGame]);
 
 
   // Get global color scheme - subscribe to the current value
@@ -1058,76 +1072,110 @@ export default function Viewer({ onChange }){
             />
               </>
               )}
-            {/* Collapsible Pool Section */}
-            <Box 
-              className={styles.poolBox} 
-              sx={{
-                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                background: lightMode === 'dark' 
-                  ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
-                padding: '10px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                borderRadius: '8px',
-                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                '&:hover': {
-                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
-                },
-                marginTop: '8px',
-                marginBottom: poolExpanded ? '8px' : '0'
-              }}
-              onClick={() => setPoolExpanded(!poolExpanded)}
-            >
-              {/* Pool Header */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                marginBottom: poolExpanded ? '8px' : '0'
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500
-                }}>
+            {/* Pool section - a small enough pool (<=20 unseen tiles, typically
+                endgame) is shown inline directly since it's short and worth
+                glancing at without an extra click; otherwise it's a compact
+                pill that opens a popover on click. */}
+            {parsedMoves && parsedMoves.length > 0 && getCurrentPool().length <= 20 ? (
+              <Box
+                className={styles.poolBox}
+                sx={{
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                  background: lightMode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  marginTop: '8px'
+                }}
+              >
+                <Pool
+                  board={getCurrentPool()}
+                  rack={createRack(currentMoveRef.current + 1, parsedMoves)}
+                />
+              </Box>
+            ) : (
+              <>
+                <Box
+                  className={styles.poolBox}
+                  onClick={(e) => {
+                    setPoolAnchorEl(e.currentTarget);
+                    setPoolPopoverWidth(e.currentTarget.offsetWidth);
+                  }}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    background: lightMode === 'dark'
+                      ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.98) 100%)',
+                    padding: '10px 14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    borderRadius: '999px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    '&:hover': {
+                      boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)'
+                    },
+                    marginTop: '8px'
+                  }}
+                >
                   {parsedMoves && parsedMoves.length > 0 ? (
-                    <span>
-                      {getCurrentPool().length}
-                      {createRack(currentMoveRef.current, parsedMoves).length > 0 && (
-                        <span style={{ opacity: 0.7 }}> • {createRack(currentMoveRef.current, parsedMoves).length} on rack</span>
-                      )}
-                    </span>
+                    <>
+                      <span>
+                        Pool · {getCurrentPool().length}
+                        {createRack(currentMoveRef.current, parsedMoves).length > 0 && (
+                          <span style={{ opacity: 0.7 }}> • {createRack(currentMoveRef.current, parsedMoves).length} on rack</span>
+                        )}
+                      </span>
+                      <span style={{ opacity: 0.6, fontSize: '11px' }}>click to see - inline when under 20</span>
+                    </>
                   ) : (
                     <span>Pool</span>
                   )}
                 </Box>
-                <Box sx={{ color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                  {poolExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
-                </Box>
-              </Box>
-              
-              {/* Pool Content */}
-              {poolExpanded && (
-                <Collapse in={poolExpanded}>
-                  <Box sx={{ 
-                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                    paddingTop: '8px'
-                  }}>
-                    {parsedMoves && parsedMoves.length > 0 ? (
-                      <Pool 
-                        board={getCurrentPool()}
-                        rack={createRack(currentMoveRef.current + 1, parsedMoves)}
-                      />  
-                    ) : (
-                      <div>Loading pool...</div>
-                    )}
-                  </Box>
-                </Collapse>
-              )}
-            </Box>
+
+                <Popover
+                  open={poolPopoverOpen}
+                  anchorEl={poolAnchorEl}
+                  onClose={() => setPoolAnchorEl(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                  disableScrollLock
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        mt: 1,
+                        padding: '12px',
+                        borderRadius: '10px',
+                        width: poolPopoverWidth,
+                        boxSizing: 'border-box',
+                        background: lightMode === 'dark'
+                          ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.97) 0%, rgba(31, 41, 55, 0.98) 100%)'
+                          : '#FFFFFF',
+                        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                        border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+                        boxShadow: lightMode === 'dark' ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 8px 24px rgba(0, 0, 0, 0.15)'
+                      }
+                    }
+                  }}
+                >
+                  {parsedMoves && parsedMoves.length > 0 ? (
+                    <Pool
+                      board={getCurrentPool()}
+                      rack={createRack(currentMoveRef.current + 1, parsedMoves)}
+                    />
+                  ) : (
+                    <div>Loading pool...</div>
+                  )}
+                </Popover>
+              </>
+            )}
           </Box>
         </Box>
         </Box>

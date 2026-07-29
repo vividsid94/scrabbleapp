@@ -47,7 +47,7 @@ const PlayPool = React.memo(({ pool, player1Rack, player2Rack, gameStarted, ligh
   const totalTilesShown = poolTiles.length + player2Rack.length;
 
   return (
-    <div 
+    <div
       className={styles.poolTbl}
       style={{ color: textColor }}
     >

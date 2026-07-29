@@ -25,7 +25,7 @@ export default function Pool(props) {
   const boardArray = [];
   let currentChar = null;
   let currentSpan = [];
-  
+
   for (let i = 0; i < poolString.length; i++) {
     const char = poolString[i];
     if (char !== currentChar) {

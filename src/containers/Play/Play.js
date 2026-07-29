@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useMemo, useState, useContext } from "react";
-import { Snackbar, Alert, Tooltip, Collapse, InputLabel, FormControlLabel, Checkbox, Box, Modal, Typography } from "@mui/material";
+import { Snackbar, Alert, Tooltip, Popover, InputLabel, FormControlLabel, Checkbox, Box, Modal, Typography } from "@mui/material";
 import TuneIcon from '@mui/icons-material/Tune';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import TimerIcon from '@mui/icons-material/Timer';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Smiley, Robot, UserCircle, User, Gear, Lightbulb, DotsThree, Play as PlayIcon } from '@phosphor-icons/react';
 import { useLocation } from 'react-router-dom';
 import { loadActiveGameSnapshot } from '../../utils/activeGamePersistence';
@@ -254,7 +252,22 @@ export default function Play({ isMultiplayer = false }) {
   const mascotRef = useRef();
   const theoYellMascotRef = useRef(); // Separate ref for Theo Yell mascot
   const [isMobile, setIsMobile] = useState(false);
-  const [poolExpanded, setPoolExpanded] = useState(false);
+  const [poolAnchorEl, setPoolAnchorEl] = useState(null);
+  // Captured separately from poolAnchorEl (which is cleared to null on
+  // close) so the popover's width stays fixed through its closing
+  // animation instead of snapping to undefined and re-flowing wider
+  // mid-transition.
+  const [poolPopoverWidth, setPoolPopoverWidth] = useState(undefined);
+  const poolPopoverOpen = Boolean(poolAnchorEl);
+
+  // If the popover is open (or was just closed) right as a new game resets
+  // the board, poolAnchorEl still points at a DOM node React is about to
+  // detach/replace. MUI's Popover can't get real coordinates from a
+  // detached anchor and falls back to (0,0) - the popover flashes at the
+  // page's top-left corner. Force it closed on every new-game transition.
+  useEffect(() => {
+    setPoolAnchorEl(null);
+  }, [gameStarted]);
   const [playNotes, setPlayNotes] = useState('');
   const [telestratorEnabled, setTelestratorEnabled] = useState(false);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
@@ -1171,72 +1184,104 @@ export default function Play({ isMultiplayer = false }) {
           )}
 
           <Box className={styles.playerPanel}>
-            {/* Collapsible Pool Section */}
-            <Box 
-              className={styles.poolBox} 
-              sx={{
-                color: lightMode === 'dark' ? '#fff' : '#1F2937',
-                background: lightMode === 'dark'
-                  ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
-                  : '#FFFFFF',
-                border: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.28)',
-                padding: '10px',
-                      cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                borderRadius: '8px',
-                boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)',
-                '&:hover': {
-                  boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 5px 14px rgba(100, 95, 80, 0.2)'
-                },
-                marginBottom: poolExpanded ? '8px' : '0'
-                    }}
-              onClick={() => setPoolExpanded(!poolExpanded)}
-                  >
-              {/* Pool Header */}
-              <Box sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: poolExpanded ? '8px' : '0'
-              }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500
-                }}>
-                  {gameStarted ? (
-                    <span>
-                      {pool.length + player2Rack.length}
-                    </span>
-                  ) : (
-                    <span>Pool</span>
-                  )}
-                </Box>
-                <Box sx={{ color: lightMode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#4B5563', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                  {poolExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
-                </Box>
+            {/* Pool section - a small enough pool (<=20 unseen tiles, typically
+                endgame) is shown inline directly since it's short and worth
+                glancing at without an extra click; otherwise it's a compact
+                pill that opens a popover on click. */}
+            {gameStarted && (pool.length + player2Rack.length) <= 20 ? (
+              <Box
+                className={styles.poolBox}
+                sx={{
+                  color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                  background: lightMode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                    : '#FFFFFF',
+                  border: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.28)',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                <PlayPool
+                  pool={pool}
+                  player1Rack={player1Rack}
+                  player2Rack={player2Rack}
+                  gameStarted={gameStarted}
+                  lightMode={lightMode}
+                />
               </Box>
-              
-              {/* Pool Content */}
-              {poolExpanded && (
-                <Collapse in={poolExpanded}>
-                  <Box sx={{
-                    borderTop: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.18)',
-                    paddingTop: '8px'
-                  }}>
-                    <PlayPool 
-                      pool={pool} 
-                      player1Rack={player1Rack} 
-                      player2Rack={player2Rack}
-                      gameStarted={gameStarted}
-                      lightMode={lightMode}
-                    />  
-                  </Box>
-                </Collapse>
-              )}
-            </Box>
+            ) : (
+              <>
+                <Box
+                  className={styles.poolBox}
+                  onClick={(e) => {
+                    setPoolAnchorEl(e.currentTarget);
+                    setPoolPopoverWidth(e.currentTarget.offsetWidth);
+                  }}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    color: lightMode === 'dark' ? '#fff' : '#1F2937',
+                    background: lightMode === 'dark'
+                      ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
+                      : '#FFFFFF',
+                    border: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.28)',
+                    padding: '10px 14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    borderRadius: '999px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    boxShadow: lightMode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)',
+                    '&:hover': {
+                      boxShadow: lightMode === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 5px 14px rgba(100, 95, 80, 0.2)'
+                    }
+                  }}
+                >
+                  {gameStarted ? (
+                    <>
+                      <span>Pool · {pool.length + player2Rack.length}</span>
+                      <span style={{ opacity: 0.6, fontSize: '11px' }}>click to see - inline when under 20</span>
+                    </>
+                  ) : <span>Pool</span>}
+                </Box>
+
+                <Popover
+                  open={poolPopoverOpen}
+                  anchorEl={poolAnchorEl}
+                  onClose={() => setPoolAnchorEl(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                  disableScrollLock
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        mt: 1,
+                        padding: '12px',
+                        borderRadius: '10px',
+                        width: poolPopoverWidth,
+                        boxSizing: 'border-box',
+                        background: lightMode === 'dark'
+                          ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.97) 0%, rgba(31, 41, 55, 0.98) 100%)'
+                          : '#FFFFFF',
+                        border: lightMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(140, 130, 110, 0.28)',
+                        boxShadow: lightMode === 'dark' ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 8px 24px rgba(100, 95, 80, 0.2)'
+                      }
+                    }
+                  }}
+                >
+                  <PlayPool
+                    pool={pool}
+                    player1Rack={player1Rack}
+                    player2Rack={player2Rack}
+                    gameStarted={gameStarted}
+                    lightMode={lightMode}
+                  />
+                </Popover>
+              </>
+            )}
 
             {/* Notes area - separate from pool */}
             <Box 
