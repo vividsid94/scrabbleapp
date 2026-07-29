@@ -1065,8 +1065,7 @@ export const usePuzzleStore = create((set, get) => {
             if (bestMove.isExchange) {
               // Handle exchange move
               const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
-              const newTiles = bestMove.newTiles || [];
-              
+
               // Remove exchanged tiles from rack
               tilesToExchange.forEach(tile => {
                 const index = newRack.indexOf(tile);
@@ -1074,13 +1073,20 @@ export const usePuzzleStore = create((set, get) => {
                   newRack.splice(index, 1);
                 }
               });
-              
-              // Add new tiles to rack
-              newRack.push(...newTiles);
-              
+
               // Add exchanged tiles back to pool
               newPool.push(...tilesToExchange);
-              
+
+              // Draw replacement tiles - Go's exchange candidates don't supply
+              // pre-drawn newTiles, so draw here the same way the word-placement
+              // branch below does.
+              const tilesToDraw = Math.min(7 - newRack.length, newPool.length);
+              for (let i = 0; i < tilesToDraw; i++) {
+                const randomIndex = Math.floor(Math.random() * newPool.length);
+                newRack.push(newPool[randomIndex]);
+                newPool.splice(randomIndex, 1);
+              }
+
               // Update state
               setCurrentRack(newRack);
               setPool(newPool);
@@ -1464,17 +1470,25 @@ export const usePuzzleStore = create((set, get) => {
             if (bestMove.isExchange) {
               // Handle exchange simulation
               const tilesToExchange = bestMove.tilesToExchange || bestMove.tiles.map(t => t.letter);
-              const newTiles = bestMove.newTiles || [];
-              
+
               // Update rack
               const newRack = currentRack.filter(tile => !tilesToExchange.includes(tile));
-              newRack.push(...newTiles);
-              
-              console.log(`🔄 Exchange simulation - Old rack: ${currentRack.join('')} (${currentRack.length}), New rack: ${newRack.join('')} (${newRack.length})`);
-              
+
               // Update pool
               currentState.pool.push(...tilesToExchange);
-              
+
+              // Draw replacement tiles - Go's exchange candidates don't supply
+              // pre-drawn newTiles, so draw here the same way the word-placement
+              // branch below does.
+              const tilesToDraw = Math.min(7 - newRack.length, currentState.pool.length);
+              for (let i = 0; i < tilesToDraw; i++) {
+                const randomIndex = Math.floor(Math.random() * currentState.pool.length);
+                newRack.push(currentState.pool[randomIndex]);
+                currentState.pool.splice(randomIndex, 1);
+              }
+
+              console.log(`🔄 Exchange simulation - Old rack: ${currentRack.join('')} (${currentRack.length}), New rack: ${newRack.join('')} (${newRack.length})`);
+
               if (currentPlayer === 1) {
                 currentState.player1Rack = newRack;
               } else {
@@ -1650,15 +1664,23 @@ export const usePuzzleStore = create((set, get) => {
           if (move.isExchange) {
             // Handle exchange
             const tilesToExchange = move.tilesToExchange || move.tiles.map(t => t.letter);
-            const newTiles = move.newTiles || [];
-            
+
             // Update rack
             const newRack = currentRack.filter(tile => !tilesToExchange.includes(tile));
-            newRack.push(...newTiles);
-            
+
             // Update pool
             currentPool.push(...tilesToExchange);
-            
+
+            // Draw replacement tiles - Go's exchange candidates don't supply
+            // pre-drawn newTiles, so draw here the same way the word-placement
+            // branch below does.
+            const tilesToDraw = Math.min(7 - newRack.length, currentPool.length);
+            for (let i = 0; i < tilesToDraw; i++) {
+              const randomIndex = Math.floor(Math.random() * currentPool.length);
+              newRack.push(currentPool[randomIndex]);
+              currentPool.splice(randomIndex, 1);
+            }
+
             if (movePlayer === 1) {
               currentPlayer1Rack = newRack;
             } else {

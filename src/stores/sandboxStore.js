@@ -168,7 +168,7 @@ export const useSandboxStore = create((set, get) => ({
         }];
       } else if (chosenMove.isExchange) {
         consecutiveScorelessTurns += 1;
-        const tilesToExchange = chosenMove.tilesExchanged;
+        const tilesToExchange = chosenMove.tilesExchanged || chosenMove.tiles.map(t => t.letter);
         const rackAfterRemoval = removeTilesByCount(currentRack, tilesToExchange);
         const { rack: newRack, pool: poolAfterDraw } = drawUpTo7(rackAfterRemoval, pool);
         pool = [...poolAfterDraw, ...tilesToExchange];
