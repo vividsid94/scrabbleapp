@@ -45,6 +45,31 @@ const MAX_GAMES_STATIC = 500;
 const MAX_GAMES_WITH_TESS = 30;
 const REPLAY_GAME_LIMIT = 30;
 
+// /simulate-series returns one complete JSON response (not a stream), so
+// there's no real per-game progress to report while it's in flight - these
+// are an empirically measured linear fit (base overhead + ms/game) against
+// the deployed Railway endpoint, used only to drive an approximate,
+// time-based progress fill for that wait. Re-measure if the Go service's
+// per-game cost changes meaningfully.
+const SIMULATE_SERIES_BASE_MS = 150;
+const SIMULATE_SERIES_PER_GAME_MS = 90;
+// Never let the time-based estimate alone claim completion - real per-game
+// progress (from the finalize/replay loop below) always takes over for the
+// final stretch once the response actually lands.
+const ESTIMATED_PROGRESS_CAP = 97;
+
+// Tracks the one live estimate timer so it can be cleared from stopSeries
+// too, not just the fetch's own success/error paths - module-level (not
+// store state) since it's an implementation detail, not something any
+// component needs to read.
+let estimateIntervalId = null;
+const clearEstimateInterval = () => {
+  if (estimateIntervalId) {
+    clearInterval(estimateIntervalId);
+    estimateIntervalId = null;
+  }
+};
+
 const isStaticBot = (botName) => botName === 'Theo' || botName === 'Static';
 
 const getMaxGamesForBots = (player1BotName, player2BotName) =>
@@ -159,8 +184,14 @@ export const useSandboxStore = create((set, get) => ({
   currentGameIndex: 0,
   seriesResults: [],
   shouldStop: false,
+  // Time-based approximate progress (0-100) while the single bulk
+  // /simulate-series request is in flight - see SIMULATE_SERIES_BASE_MS.
+  estimatedProgressPercent: 0,
 
-  stopSeries: () => set({ shouldStop: true, isRunning: false }),
+  stopSeries: () => {
+    clearEstimateInterval();
+    set({ shouldStop: true, isRunning: false });
+  },
 
   // Plays exactly one game to completion, mutating local variables and
   // periodically syncing them to the store (not batched at the end, unlike
@@ -457,7 +488,7 @@ export const useSandboxStore = create((set, get) => ({
     // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
     // but this is the last checkpoint before anything actually runs).
     const totalGames = Math.min(get().totalGames, getMaxGamesForBots(player1BotName, player2BotName));
-    set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false, totalGames });
+    set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false, totalGames, estimatedProgressPercent: 0 });
 
     // Single source of truth for both display names (with same-bot
     // disambiguation) and ranks - computed once here and threaded through
@@ -479,6 +510,21 @@ export const useSandboxStore = create((set, get) => ({
     const useBulkPath = isStaticBot(player1BotName) && isStaticBot(player2BotName);
 
     if (useBulkPath) {
+      // The whole series comes back as one JSON response, not a stream, so
+      // there's nothing to report real progress on until it lands - fake it
+      // with a timer against the empirically measured per-game cost. Capped
+      // below 100 so it never claims to finish before the response actually
+      // arrives; real per-game progress (below) takes over for the last
+      // stretch once results start coming in.
+      const estimatedDurationMs = SIMULATE_SERIES_BASE_MS + SIMULATE_SERIES_PER_GAME_MS * totalGames;
+      const fetchStartTime = Date.now();
+      clearEstimateInterval();
+      estimateIntervalId = setInterval(() => {
+        const elapsed = Date.now() - fetchStartTime;
+        const percent = Math.min(ESTIMATED_PROGRESS_CAP, Math.round((elapsed / estimatedDurationMs) * 100));
+        set({ estimatedProgressPercent: percent });
+      }, 150);
+
       try {
         const player1Bot = { rank: player1Rank, leaveRules: sanitizeLeaveRules(player1LeaveRules) };
         const player2Bot = { rank: player2Rank, leaveRules: sanitizeLeaveRules(player2LeaveRules) };
@@ -487,6 +533,7 @@ export const useSandboxStore = create((set, get) => ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ games: totalGames, player1Bot, player2Bot })
         });
+        clearEstimateInterval();
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -522,6 +569,7 @@ export const useSandboxStore = create((set, get) => ({
           if (get().shouldStop) break;
         }
       } catch (error) {
+        clearEstimateInterval();
         console.error('Sandbox bulk series error:', error);
       }
 

@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
 import Box from '@mui/material/Box';
-import { TextField, Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui/material';
+import { Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui/material';
 import { Play, Stop, Download } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import SandboxLeaveRules from './SandboxLeaveRules.js';
+import SandboxNumberField from './SandboxNumberField.js';
 import { useSandboxStore } from '../../stores/sandboxStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { ThemeContext } from '../../App';
@@ -37,6 +38,7 @@ const SandboxPlayerInfo = React.memo(() => {
   const isRunning = useSandboxStore(state => state.isRunning);
   const currentGameIndex = useSandboxStore(state => state.currentGameIndex);
   const seriesResults = useSandboxStore(state => state.seriesResults);
+  const estimatedProgressPercent = useSandboxStore(state => state.estimatedProgressPercent);
 
   const gameStarted = useSandboxStore(state => state.gameStarted);
   const currentPlayer = useSandboxStore(state => state.currentPlayer);
@@ -65,8 +67,11 @@ const SandboxPlayerInfo = React.memo(() => {
     downloadGameGCG,
   } = useSandboxStore();
 
+  // mutedTextColor matches Play's own "secondary" tier (not its faintest
+  // one) - the previous #6B7280/0.5 pairing read as too washed out to
+  // comfortably read against the light-mode cards.
   const textColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1F2937';
-  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#6B7280';
+  const mutedTextColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.65)' : '#4B5563';
   const borderColor = lightMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.18)';
   const panelBackground = lightMode === 'dark'
     ? 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%)'
@@ -142,7 +147,11 @@ const SandboxPlayerInfo = React.memo(() => {
   };
 
   const gamesCompleted = seriesResults.length;
-  const seriesProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
+  const realProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
+  // Whichever signal is further along wins - the time-based estimate covers
+  // the network/compute wait before any game result exists yet, then real
+  // per-game progress overtakes it once results start arriving.
+  const seriesProgressPercent = Math.max(realProgressPercent, estimatedProgressPercent);
 
   return (
     <Box className={styles.playerPanel}>
@@ -222,19 +231,20 @@ const SandboxPlayerInfo = React.memo(() => {
       <Box sx={{ ...sectionSx, marginTop: '10px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Box sx={{ fontSize: '12px', color: textColor }}>Number of games</Box>
-          <TextField
-            size="small"
-            type="number"
+          <SandboxNumberField
             value={totalGames}
-            onChange={(e) => setTotalGames(parseInt(e.target.value, 10))}
+            onCommit={setTotalGames}
+            parse={(s) => parseInt(s, 10)}
+            min={1}
+            max={maxGames}
             disabled={isRunning}
-            inputProps={{ min: 1, max: maxGames, style: { fontSize: '13px', color: textColor, width: '50px' } }}
+            sx={{ '& .MuiInputBase-input': { fontSize: '13px', color: textColor, width: '50px' } }}
           />
         </Box>
-        <Box sx={{ fontSize: '10px', color: mutedTextColor, opacity: 0.8, marginBottom: '4px', lineHeight: 1.4 }}>
+        <Box sx={{ fontSize: '11px', color: mutedTextColor, marginBottom: '4px', lineHeight: 1.4 }}>
           Note: series with Tess are capped at 30 games; series with only static bots (Theo or Speedy, either side) are capped at 500.
         </Box>
-        <Box sx={{ fontSize: '10px', color: mutedTextColor, opacity: 0.8, marginBottom: '12px', lineHeight: 1.4 }}>
+        <Box sx={{ fontSize: '11px', color: mutedTextColor, marginBottom: '12px', lineHeight: 1.4 }}>
           Series over 30 games skip the move-by-move animation and jump straight to the final board and results - every game still gets its own downloadable GCG.
         </Box>
         <Button

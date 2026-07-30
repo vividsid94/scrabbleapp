@@ -2,6 +2,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { IconButton, MenuItem, Select, TextField } from '@mui/material';
 import { Plus, Trash } from '@phosphor-icons/react';
+import SandboxNumberField from './SandboxNumberField.js';
 
 // Mirrors simulate.go's LeaveRule.Type values exactly - see that file's
 // comment for what each does to the running leave value.
@@ -42,6 +43,10 @@ export default function SandboxLeaveRules({
     '& .MuiInputBase-input': { fontSize: '11px', color: textColor, padding: '4px 6px' },
     '& .MuiSelect-select': { fontSize: '11px', color: textColor, padding: '4px 20px 4px 6px' },
     '& .MuiOutlinedInput-notchedOutline': { borderColor },
+    // Placeholders (e.g. the example "S") must read as unmistakably NOT a
+    // real value - full-strength textColor is reserved for what's actually
+    // typed, so a placeholder can't be mistaken for an entered letter.
+    '& .MuiInputBase-input::placeholder': { color: mutedTextColor, opacity: 0.6, fontStyle: 'italic' },
   };
 
   return (
@@ -104,36 +109,33 @@ export default function SandboxLeaveRules({
           )}
 
           {needsCount(rule.type) && (
-            <TextField
-              size="small"
-              type="number"
+            <SandboxNumberField
               value={rule.count ?? 0}
+              onCommit={(n) => onUpdate(index, { count: n })}
+              parse={(s) => parseInt(s, 10)}
               disabled={disabled}
-              onChange={(e) => onUpdate(index, { count: parseInt(e.target.value, 10) || 0 })}
               sx={{ ...fieldSx, width: '48px' }}
             />
           )}
 
           {needsBonus(rule.type) && (
-            <TextField
-              size="small"
-              type="number"
-              placeholder="bonus"
+            <SandboxNumberField
               value={rule.bonus ?? 0}
+              onCommit={(n) => onUpdate(index, { bonus: n })}
+              parse={(s) => parseFloat(s)}
+              placeholder="bonus"
               disabled={disabled}
-              onChange={(e) => onUpdate(index, { bonus: parseFloat(e.target.value) || 0 })}
               sx={{ ...fieldSx, width: '58px' }}
             />
           )}
 
           {needsMultiplier(rule.type) && (
-            <TextField
-              size="small"
-              type="number"
-              placeholder="x1"
+            <SandboxNumberField
               value={rule.multiplier ?? 1}
+              onCommit={(n) => onUpdate(index, { multiplier: n })}
+              parse={(s) => parseFloat(s)}
+              placeholder="x1"
               disabled={disabled}
-              onChange={(e) => onUpdate(index, { multiplier: parseFloat(e.target.value) || 0 })}
               sx={{ ...fieldSx, width: '52px' }}
             />
           )}
@@ -148,6 +150,12 @@ export default function SandboxLeaveRules({
           </IconButton>
         </Box>
       ))}
+
+      {rules.length > 0 && (
+        <Box sx={{ fontSize: '10px', color: mutedTextColor, lineHeight: 1.4, marginBottom: '6px' }}>
+          Bonus: a positive number adds to the leave's table value, a negative number subtracts from it. Multiplier scales the running total instead (2 doubles it, 0.5 halves it).
+        </Box>
+      )}
 
       <Box
         onClick={disabled ? undefined : onAdd}
