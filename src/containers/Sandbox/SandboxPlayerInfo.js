@@ -158,6 +158,14 @@ const SandboxPlayerInfo = React.memo(() => {
   // the network/compute wait before any game result exists yet, then real
   // per-game progress overtakes it once results start arriving.
   const seriesProgressPercent = Math.max(realProgressPercent, estimatedProgressPercent);
+  // The "X/Y" count is meaningless while no game has finished yet (it just
+  // sits at "0/500" for the whole bulk-request wait) - fall back to the
+  // same time-based estimate driving the fill until real results exist.
+  const progressLabel = gamesCompleted > 0
+    ? `${gamesCompleted}/${totalGames}`
+    : (isRunning && estimatedProgressPercent > 0)
+      ? `~${estimatedProgressPercent}%`
+      : `${gamesCompleted}/${totalGames}`;
 
   return (
     <Box className={styles.playerPanel}>
@@ -263,9 +271,15 @@ const SandboxPlayerInfo = React.memo(() => {
             fontFamily: 'Syne, sans-serif',
             position: 'relative',
             overflow: 'hidden',
-            backgroundColor: isRunning ? 'rgba(220, 38, 38, 0.22)' : '#059669',
-            color: isRunning ? '#DC2626' : '#fff',
-            '&:hover': { backgroundColor: isRunning ? 'rgba(220, 38, 38, 0.32)' : '#047857' },
+            // Text stays white throughout instead of matching the fill's
+            // red - text and fill being the same #DC2626 meant the label
+            // visually vanished into itself wherever the fill had already
+            // swept past it. Track and fill are now two different
+            // dark-enough reds (not a pale tint) so white reads clearly
+            // against both the unfilled and filled portions.
+            backgroundColor: isRunning ? '#991B1B' : '#059669',
+            color: '#fff',
+            '&:hover': { backgroundColor: isRunning ? '#7F1D1D' : '#047857' },
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -280,7 +294,7 @@ const SandboxPlayerInfo = React.memo(() => {
         >
           <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
             {isRunning ? <Stop weight="fill" size={16} /> : <Play weight="fill" size={16} />}
-            {isRunning ? `Stop (${gamesCompleted}/${totalGames})` : 'Start Series'}
+            {isRunning ? `Stop (${progressLabel})` : 'Start Series'}
           </Box>
         </Button>
       </Box>
