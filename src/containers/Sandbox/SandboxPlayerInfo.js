@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui/material';
+import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox } from '@mui/material';
 import { Play, Stop, Download, CaretDown, CaretUp } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
@@ -35,6 +35,8 @@ const SandboxPlayerInfo = React.memo(() => {
   const player2StaticRank = useSandboxStore(state => state.player2StaticRank);
   const player1LeaveRules = useSandboxStore(state => state.player1LeaveRules);
   const player2LeaveRules = useSandboxStore(state => state.player2LeaveRules);
+  const player1BingoAversion = useSandboxStore(state => state.player1BingoAversion);
+  const player2BingoAversion = useSandboxStore(state => state.player2BingoAversion);
   const totalGames = useSandboxStore(state => state.totalGames);
   // Any static-bot matchup (Theo or a chosen Nth static, either side) runs
   // server-side in bulk and can handle far more games than the per-move
@@ -67,6 +69,7 @@ const SandboxPlayerInfo = React.memo(() => {
     addLeaveRule,
     updateLeaveRule,
     removeLeaveRule,
+    setBingoAversion,
     setTotalGames,
     startSeries,
     stopSeries,
@@ -152,6 +155,11 @@ const SandboxPlayerInfo = React.memo(() => {
     },
   };
 
+  const checkboxSx = {
+    padding: '2px', color: mutedTextColor,
+    '&.Mui-checked': { color: accentColor },
+  };
+
   const gamesCompleted = seriesResults.length;
   const realProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
   // Whichever signal is further along wins - the time-based estimate covers
@@ -178,10 +186,12 @@ const SandboxPlayerInfo = React.memo(() => {
         {
           botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1',
           leaveRules: player1LeaveRules, addRule: () => addLeaveRule(1), updateRule: (i, patch) => updateLeaveRule(1, i, patch), removeRule: (i) => removeLeaveRule(1, i),
+          bingoAversion: player1BingoAversion, setBingoAv: (patch) => setBingoAversion(1, patch),
         },
         {
           botName: player2BotName, setBotName: setPlayer2BotName, rank: player2StaticRank, setRank: setPlayer2StaticRank, label: 'Player 2',
           leaveRules: player2LeaveRules, addRule: () => addLeaveRule(2), updateRule: (i, patch) => updateLeaveRule(2, i, patch), removeRule: (i) => removeLeaveRule(2, i),
+          bingoAversion: player2BingoAversion, setBingoAv: (patch) => setBingoAversion(2, patch),
         },
       ].map((side, i) => (
         <React.Fragment key={side.label}>
@@ -241,6 +251,75 @@ const SandboxPlayerInfo = React.memo(() => {
                 borderColor={borderColor}
                 accentColor={accentColor}
               />
+            )}
+            {/* Comedically self-defeating: excludes 7-tile plays from this
+                bot's own candidate pool before ranking, so she'll pass up
+                a bingo even if it's the best move on the board. simulate.go
+                actually applies this uniformly regardless of Tess/rank-based
+                (it filters the pool before either selection mechanism sees
+                it) - hidden for Tess here anyway, UI-only for now. */}
+            {side.botName !== 'Tess' && (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <Checkbox
+                    size="small"
+                    checked={side.bingoAversion.probabilityEnabled}
+                    disabled={isRunning}
+                    onChange={(e) => side.setBingoAv({ probabilityEnabled: e.target.checked })}
+                    sx={checkboxSx}
+                  />
+                  <Box sx={{ fontSize: '11px', color: textColor }}>Avoid bingos</Box>
+                </Box>
+                {side.bingoAversion.probabilityEnabled && (
+                  <Box sx={{ padding: '0 10px 4px' }}>
+                    <Box sx={{ fontSize: '10px', color: mutedTextColor, marginBottom: '2px' }}>
+                      Chance to skip a bingo: {Math.round(side.bingoAversion.probability * 100)}%
+                    </Box>
+                    <Slider
+                      size="small"
+                      value={side.bingoAversion.probability}
+                      onChange={(e, val) => side.setBingoAv({ probability: val })}
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      disabled={isRunning}
+                      valueLabelDisplay="auto"
+                      valueLabelFormat={(v) => `${Math.round(v * 100)}%`}
+                      sx={sliderSx}
+                    />
+                  </Box>
+                )}
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <Checkbox
+                    size="small"
+                    checked={side.bingoAversion.rankLimitEnabled}
+                    disabled={isRunning}
+                    onChange={(e) => side.setBingoAv({ rankLimitEnabled: e.target.checked })}
+                    sx={checkboxSx}
+                  />
+                  <Box sx={{ fontSize: '11px', color: textColor }}>Limit bingo vocabulary</Box>
+                </Box>
+                {side.bingoAversion.rankLimitEnabled && (
+                  <Box sx={{ padding: '0 10px 4px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Only knows the top</Box>
+                      <SandboxNumberField
+                        value={side.bingoAversion.maxProbabilityRank}
+                        onCommit={(n) => side.setBingoAv({ maxProbabilityRank: n })}
+                        parse={(s) => parseInt(s, 10)}
+                        min={1}
+                        disabled={isRunning}
+                        sx={{ '& .MuiInputBase-input': { fontSize: '11px', color: textColor, width: '56px', padding: '3px 6px' } }}
+                      />
+                      <Box sx={{ fontSize: '10px', color: mutedTextColor }}>most common 7s/8s</Box>
+                    </Box>
+                    <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '4px', lineHeight: 1.4 }}>
+                      Ranked by NWL23 probability order, separately for 7s and 8s. 9+ letter bingos are never restricted by this.
+                    </Box>
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         </React.Fragment>

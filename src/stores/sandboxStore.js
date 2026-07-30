@@ -151,6 +151,21 @@ const sanitizeLeaveRules = (rules) => (rules || [])
     return rule;
   });
 
+// Converts the UI's two independent checkboxes (probabilityEnabled,
+// rankLimitEnabled) into simulate.go's BingoAversionRule shape - each
+// mechanism's value is only sent if its own checkbox is on, so a
+// half-configured/unchecked mechanism sends as 0 (which BingoAversionRule
+// already treats as "disabled") rather than accidentally firing with a
+// stale leftover value. Returns undefined (send nothing) if neither
+// mechanism is enabled.
+const buildBingoAversionPayload = (bingoAversion) => {
+  if (!bingoAversion.probabilityEnabled && !bingoAversion.rankLimitEnabled) return undefined;
+  return {
+    probability: bingoAversion.probabilityEnabled ? bingoAversion.probability : 0,
+    maxProbabilityRank: bingoAversion.rankLimitEnabled ? (bingoAversion.maxProbabilityRank || 0) : 0,
+  };
+};
+
 export const useSandboxStore = create((set, get) => ({
   // Live single-game state
   boardCoords: [],
@@ -195,8 +210,8 @@ export const useSandboxStore = create((set, get) => ({
 
   // Per-side leave-value rules (see simulate.go's LeaveRule) that let a
   // Theo/Static bot's candidate ranking diverge from the plain leaves.json
-  // table - only meaningful on the bulk (/simulate-series) path, ignored
-  // entirely for Tess since she never reaches that endpoint.
+  // table - Tess ignores these entirely (simulate.go's pickTessCandidate
+  // always uses baselineTotal), the UI hides the editor for her to match.
   player1LeaveRules: [],
   player2LeaveRules: [],
   addLeaveRule: (side) => set(state => ({
@@ -211,6 +226,21 @@ export const useSandboxStore = create((set, get) => ({
   removeLeaveRule: (side, index) => set(state => {
     const key = `player${side}LeaveRules`;
     return { [key]: state[key].filter((_, i) => i !== index) };
+  }),
+
+  // Per-side bingo aversion (see simulate.go's BingoAversionRule) - two
+  // independently-toggleable, composable mechanisms that exclude 7-tile
+  // plays from this bot's own candidate pool before ranking:
+  // probabilityEnabled (a per-turn coin flip, 1 = always) and
+  // rankLimitEnabled (deterministically refuses any bingo whose word
+  // ranks worse than maxProbabilityRank in its own length's NWL23
+  // probability-order list). Both apply to rank-based and Tess selection
+  // alike, since they filter the shared pool before either one runs.
+  player1BingoAversion: { probabilityEnabled: false, probability: 1, rankLimitEnabled: false, maxProbabilityRank: 8000 },
+  player2BingoAversion: { probabilityEnabled: false, probability: 1, rankLimitEnabled: false, maxProbabilityRank: 8000 },
+  setBingoAversion: (side, patch) => set(state => {
+    const key = `player${side}BingoAversion`;
+    return { [key]: { ...state[key], ...patch } };
   }),
 
   // Series run state
@@ -518,7 +548,7 @@ export const useSandboxStore = create((set, get) => ({
   startSeries: async () => {
     const {
       player1BotName, player2BotName, player1StaticRank, player2StaticRank,
-      player1LeaveRules, player2LeaveRules
+      player1LeaveRules, player2LeaveRules, player1BingoAversion, player2BingoAversion
     } = get();
     // Defensive re-clamp in case bot selection changed after totalGames was
     // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
@@ -574,8 +604,14 @@ export const useSandboxStore = create((set, get) => ({
         // harmless either way, since pickTessCandidate ignores LeaveRules
         // entirely server-side. The UI itself hides the rule editor once
         // Tess is selected so this shouldn't normally happen.
-        const player1Bot = { rank: player1Rank || 1, leaveRules: sanitizeLeaveRules(player1LeaveRules), isTess: player1BotName === 'Tess' };
-        const player2Bot = { rank: player2Rank || 1, leaveRules: sanitizeLeaveRules(player2LeaveRules), isTess: player2BotName === 'Tess' };
+        const player1Bot = {
+          rank: player1Rank || 1, leaveRules: sanitizeLeaveRules(player1LeaveRules), isTess: player1BotName === 'Tess',
+          bingoAversion: buildBingoAversionPayload(player1BingoAversion),
+        };
+        const player2Bot = {
+          rank: player2Rank || 1, leaveRules: sanitizeLeaveRules(player2LeaveRules), isTess: player2BotName === 'Tess',
+          bingoAversion: buildBingoAversionPayload(player2BingoAversion),
+        };
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
