@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import { Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui/material';
-import { Play, Stop, Download } from '@phosphor-icons/react';
+import { Play, Stop, Download, CaretDown, CaretUp } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import SandboxLeaveRules from './SandboxLeaveRules.js';
@@ -22,6 +22,12 @@ const BOT_OPTIONS = [
 const SandboxPlayerInfo = React.memo(() => {
   const { lightMode } = useContext(ThemeContext);
   const color = useColorSchemeStore(state => state.color);
+  const [expandedGames, setExpandedGames] = useState(() => new Set());
+  const toggleExpandedGame = (gameIndex) => setExpandedGames(prev => {
+    const next = new Set(prev);
+    if (next.has(gameIndex)) next.delete(gameIndex); else next.add(gameIndex);
+    return next;
+  });
 
   const player1BotName = useSandboxStore(state => state.player1BotName);
   const player2BotName = useSandboxStore(state => state.player2BotName);
@@ -337,41 +343,74 @@ const SandboxPlayerInfo = React.memo(() => {
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Avg {seriesResults[0]?.player2Name}</Box>
             </Box>
           </Box>
-          <Box sx={{ maxHeight: '220px', overflowY: 'auto' }}>
-            {seriesResults.map((result) => (
-              <Box
-                key={result.gameIndex}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 0',
-                  borderBottom: `1px solid ${borderColor}`,
-                  fontSize: '12px',
-                  color: textColor,
-                }}
-              >
-                <Box>Game {result.gameIndex + 1}</Box>
-                <Box sx={{ color: mutedTextColor }}>
-                  {result.player1Score} - {result.player2Score}
-                  {result.winner ? '' : ' (tie)'}
-                </Box>
+          <Box sx={{ maxHeight: '260px', overflowY: 'auto' }}>
+            {seriesResults.map((result) => {
+              const impactedCount = result.impactedTurns?.length || 0;
+              const isExpanded = expandedGames.has(result.gameIndex);
+              return (
                 <Box
-                  onClick={() => downloadGameGCG(result)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    cursor: 'pointer',
-                    color: mutedTextColor,
-                    '&:hover': { color: textColor }
-                  }}
+                  key={result.gameIndex}
+                  sx={{ padding: '6px 0', borderBottom: `1px solid ${borderColor}` }}
                 >
-                  <Download size={14} />
-                  GCG
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '12px',
+                      color: textColor,
+                    }}
+                  >
+                    <Box>Game {result.gameIndex + 1}</Box>
+                    <Box sx={{ color: mutedTextColor }}>
+                      {result.player1Score} - {result.player2Score}
+                      {result.winner ? '' : ' (tie)'}
+                    </Box>
+                    <Box
+                      onClick={() => downloadGameGCG(result)}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        color: mutedTextColor,
+                        '&:hover': { color: textColor }
+                      }}
+                    >
+                      <Download size={14} />
+                      GCG
+                    </Box>
+                  </Box>
+
+                  {impactedCount > 0 && (
+                    <Box sx={{ marginTop: '4px' }}>
+                      <Box
+                        onClick={() => toggleExpandedGame(result.gameIndex)}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                          fontSize: '10px', fontWeight: 600, color: accentColor,
+                        }}
+                      >
+                        {isExpanded ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
+                        Plays impacted ({impactedCount})
+                      </Box>
+                      {isExpanded && (
+                        <Box sx={{ marginTop: '4px', paddingLeft: '6px', borderLeft: `2px solid ${borderColor}` }}>
+                          {result.impactedTurns.map((t) => (
+                            <Box
+                              key={t.turnIndex}
+                              sx={{ fontSize: '10px', color: mutedTextColor, lineHeight: 1.5, marginBottom: '3px' }}
+                            >
+                              Turn {t.turnIndex + 1} ({t.playerName}): played <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.actual}</Box> instead of <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.baseline}</Box> (no rule)
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
                 </Box>
-              </Box>
-            ))}
+              );
+            })}
           </Box>
         </Box>
       )}

@@ -25,6 +25,27 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // hundred turns in one synchronous burst.
 const REPLAY_DELAY_MS = 0;
 
+// Turns simulate.go's per-turn ruleImpacted flags into a display-ready
+// list: which turns a custom leave rule actually changed the outcome of,
+// vs. what a plain rule-free bot at the same rank would have played
+// instead - the A/B is computed server-side against the identical
+// candidate list (see simulate.go's sameCandidate), this just formats it.
+const extractImpactedTurns = (gameData, player1Name, player2Name) =>
+  (gameData.turns || [])
+    .map((turn, turnIndex) => ({ turn, turnIndex }))
+    .filter(({ turn }) => turn.ruleImpacted)
+    .map(({ turn, turnIndex }) => ({
+      turnIndex,
+      player: turn.player,
+      playerName: turn.player === 1 ? player1Name : player2Name,
+      actual: turn.type === 'exchange'
+        ? `Exchange ${turn.tilesExchanged}`
+        : `${turn.word} (${turn.score})`,
+      baseline: turn.baselineType === 'exchange'
+        ? `Exchange ${turn.baselineTilesExchanged}`
+        : `${turn.baselineWord} (${turn.baselineScore})`,
+    }));
+
 const drawUpTo7 = (rack, pool) => {
   const newRack = [...rack];
   const newPool = [...pool];
@@ -404,7 +425,8 @@ export const useSandboxStore = create((set, get) => ({
       winner,
       player1Name,
       player2Name,
-      gcgContent
+      gcgContent,
+      impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name)
     };
   },
 
@@ -465,7 +487,8 @@ export const useSandboxStore = create((set, get) => ({
         gameIndex,
         player1Score: gameData.player1Score,
         player2Score: gameData.player2Score,
-        winner, player1Name, player2Name, gcgContent
+        winner, player1Name, player2Name, gcgContent,
+        impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name)
       },
       finalDisplayState: {
         boardCoords, blankTiles, moveHistory,
