@@ -396,12 +396,23 @@ const SandboxPlayerInfo = React.memo(() => {
                       </Box>
                       {isExpanded && (
                         <Box sx={{ marginTop: '4px', paddingLeft: '6px', borderLeft: `2px solid ${borderColor}` }}>
+                          {/* A single run-on sentence per row wrapped at a
+                              different point on every row (line length
+                              depends on the words/scores involved), which
+                              read as random left indents. A fixed two-line
+                              block per turn - label line, then a flex row
+                              that wraps as whole chips instead of mid-word -
+                              keeps every row's left edge identical. */}
                           {result.impactedTurns.map((t) => (
-                            <Box
-                              key={t.turnIndex}
-                              sx={{ fontSize: '10px', color: mutedTextColor, lineHeight: 1.5, marginBottom: '3px' }}
-                            >
-                              Turn {t.turnIndex + 1} ({t.playerName}): played <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.actual}</Box> instead of <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.baseline}</Box> (no rule)
+                            <Box key={t.turnIndex} sx={{ marginBottom: '6px' }}>
+                              <Box sx={{ fontSize: '9px', color: mutedTextColor, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                Turn {t.turnIndex + 1} · {t.playerName}
+                              </Box>
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '1px' }}>
+                                <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.actual}</Box>
+                                <Box component="span" sx={{ color: mutedTextColor }}>instead of</Box>
+                                <Box component="span" sx={{ color: mutedTextColor, textDecoration: 'line-through' }}>{t.baseline}</Box>
+                              </Box>
                             </Box>
                           ))}
                         </Box>
