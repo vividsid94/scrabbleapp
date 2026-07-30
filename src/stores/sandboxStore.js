@@ -57,11 +57,14 @@ const drawUpTo7 = (rack, pool) => {
   return { rack: alphabetizeRack(newRack), pool: newPool };
 };
 
-// Any matchup of "static" bots (Theo, or a user-chosen Nth-ranked static
-// bot) runs entirely server-side in one call, so it can handle a much
-// bigger series than the per-move client loop Tess still needs. Above this
-// many games the bulk path also skips the animated replay (see
-// startSeries) - nobody's watching 30+ games play out turn by turn.
+// Both matchup kinds now run entirely server-side in one call (see
+// pickTessCandidate in simulate.go), but a Tess bot's per-turn cost is
+// dramatically higher than a rank-based bot's (~20 in-process opponent
+// simulations x top 15 candidates, every turn), so a series involving her
+// stays capped much lower - empirically ~6-12s/game vs ~90ms/game for a
+// static-only matchup. Above MAX_GAMES_STATIC/30 games the bulk path also
+// skips the animated replay (see startSeries) - nobody's watching 30+
+// games play out turn by turn.
 const MAX_GAMES_STATIC = 500;
 const MAX_GAMES_WITH_TESS = 30;
 const REPLAY_GAME_LIMIT = 30;
@@ -74,6 +77,16 @@ const REPLAY_GAME_LIMIT = 30;
 // per-game cost changes meaningfully.
 const SIMULATE_SERIES_BASE_MS = 150;
 const SIMULATE_SERIES_PER_GAME_MS = 90;
+// A Tess bot's per-turn cost is nothing like a rank-based bot's - her
+// server-side pick (simulate.go's pickTessCandidate) runs ~20 in-process
+// opponent simulations for each of the top 15 candidates, every turn.
+// Measured against the deployed endpoint: ~6-12s/game with one Tess side,
+// ~11-12s/game with both sides Tess (the two costs stack). Using the
+// static-bot constant here would fill the bar to ~97% in a few seconds and
+// then sit there doing nothing for the several minutes the real request
+// still has left - actively misleading, not just imprecise.
+const SIMULATE_SERIES_PER_GAME_MS_ONE_TESS = 7000;
+const SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS = 12000;
 // Never let the time-based estimate alone claim completion - real per-game
 // progress (from the finalize/replay loop below) always takes over for the
 // final stretch once the response actually lands.
@@ -525,12 +538,15 @@ export const useSandboxStore = create((set, get) => ({
     const player1Rank = getBotRank(player1BotName, player1StaticRank);
     const player2Rank = getBotRank(player2BotName, player2StaticRank);
 
-    // Any matchup where neither side is Tess can be decided entirely
-    // server-side in one call - Theo/Static picks are just "the Nth-ranked
-    // candidate," which needs no client-side simulation loop. Tess (defense
-    // sims) isn't ported server-side, so a series involving her still uses
-    // the per-move client loop.
-    const useBulkPath = isStaticBot(player1BotName) && isStaticBot(player2BotName);
+    // Every matchup, Tess included, can now be decided entirely server-side
+    // in one call: Theo/Static picks are just "the Nth-ranked candidate,"
+    // and Tess's opponent-simulation selection (simulate.go's
+    // pickTessCandidate) now runs in-process there too, instead of 15
+    // separate /bulk-move-gen round-trips per turn from the browser. The
+    // old per-move client loop (playOneGame, below) is kept as a fallback
+    // but is currently unreachable - remove it once this path is verified
+    // to actually work end to end.
+    const useBulkPath = true;
 
     if (useBulkPath) {
       // The whole series comes back as one JSON response, not a stream, so
@@ -539,7 +555,11 @@ export const useSandboxStore = create((set, get) => ({
       // below 100 so it never claims to finish before the response actually
       // arrives; real per-game progress (below) takes over for the last
       // stretch once results start coming in.
-      const estimatedDurationMs = SIMULATE_SERIES_BASE_MS + SIMULATE_SERIES_PER_GAME_MS * totalGames;
+      const tessSideCount = (player1BotName === 'Tess' ? 1 : 0) + (player2BotName === 'Tess' ? 1 : 0);
+      const perGameMs = tessSideCount === 2 ? SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS
+        : tessSideCount === 1 ? SIMULATE_SERIES_PER_GAME_MS_ONE_TESS
+        : SIMULATE_SERIES_PER_GAME_MS;
+      const estimatedDurationMs = SIMULATE_SERIES_BASE_MS + perGameMs * totalGames;
       const fetchStartTime = Date.now();
       clearEstimateInterval();
       estimateIntervalId = setInterval(() => {
@@ -549,8 +569,13 @@ export const useSandboxStore = create((set, get) => ({
       }, 150);
 
       try {
-        const player1Bot = { rank: player1Rank, leaveRules: sanitizeLeaveRules(player1LeaveRules) };
-        const player2Bot = { rank: player2Rank, leaveRules: sanitizeLeaveRules(player2LeaveRules) };
+        // leaveRules is sent even for a Tess bot (e.g. if rules were added
+        // while a different bot was selected, then switched to Tess) -
+        // harmless either way, since pickTessCandidate ignores LeaveRules
+        // entirely server-side. The UI itself hides the rule editor once
+        // Tess is selected so this shouldn't normally happen.
+        const player1Bot = { rank: player1Rank || 1, leaveRules: sanitizeLeaveRules(player1LeaveRules), isTess: player1BotName === 'Tess' };
+        const player2Bot = { rank: player2Rank || 1, leaveRules: sanitizeLeaveRules(player2LeaveRules), isTess: player2BotName === 'Tess' };
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

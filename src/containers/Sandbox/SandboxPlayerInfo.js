@@ -225,6 +225,10 @@ const SandboxPlayerInfo = React.memo(() => {
                 />
               </Box>
             )}
+            {/* Tess ignores LeaveRules entirely server-side (simulate.go's
+                pickTessCandidate always uses the plain baselineTotal) -
+                hiding the editor for her keeps the UI honest instead of
+                letting someone configure rules that silently do nothing. */}
             {side.botName !== 'Tess' && (
               <SandboxLeaveRules
                 rules={side.leaveRules}
