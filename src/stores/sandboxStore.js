@@ -25,26 +25,46 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // hundred turns in one synchronous burst.
 const REPLAY_DELAY_MS = 0;
 
-// Turns simulate.go's per-turn ruleImpacted flags into a display-ready
-// list: which turns a custom leave rule actually changed the outcome of,
-// vs. what a plain rule-free bot at the same rank would have played
-// instead - the A/B is computed server-side against the identical
-// candidate list (see simulate.go's sameCandidate), this just formats it.
+// Turns simulate.go's per-turn ruleImpacted/bingoAversionImpacted flags
+// into a display-ready list: which turns a custom leave rule and/or bingo
+// aversion actually changed the outcome of, vs. what this bot would have
+// played without that specific mechanism - each A/B is computed
+// server-side against the identical candidate list (see simulate.go's
+// sameCandidate), this just formats it. A turn can be impacted by both at
+// once, each with its own separate "instead of" counterfactual, since
+// they answer different what-if questions.
 const extractImpactedTurns = (gameData, player1Name, player2Name) =>
   (gameData.turns || [])
     .map((turn, turnIndex) => ({ turn, turnIndex }))
-    .filter(({ turn }) => turn.ruleImpacted)
-    .map(({ turn, turnIndex }) => ({
-      turnIndex,
-      player: turn.player,
-      playerName: turn.player === 1 ? player1Name : player2Name,
-      actual: turn.type === 'exchange'
-        ? `Exchange ${turn.tilesExchanged}`
-        : `${turn.word} (${turn.score})`,
-      baseline: turn.baselineType === 'exchange'
-        ? `Exchange ${turn.baselineTilesExchanged}`
-        : `${turn.baselineWord} (${turn.baselineScore})`,
-    }));
+    .filter(({ turn }) => turn.ruleImpacted || turn.bingoAversionImpacted)
+    .map(({ turn, turnIndex }) => {
+      const reasons = [];
+      if (turn.ruleImpacted) {
+        reasons.push({
+          label: 'leave rule',
+          without: turn.baselineType === 'exchange'
+            ? `Exchange ${turn.baselineTilesExchanged}`
+            : `${turn.baselineWord} (${turn.baselineScore})`,
+        });
+      }
+      if (turn.bingoAversionImpacted) {
+        reasons.push({
+          label: 'bingo aversion',
+          without: turn.withoutAversionType === 'exchange'
+            ? `Exchange ${turn.withoutAversionTilesExchanged}`
+            : `${turn.withoutAversionWord} (${turn.withoutAversionScore})`,
+        });
+      }
+      return {
+        turnIndex,
+        player: turn.player,
+        playerName: turn.player === 1 ? player1Name : player2Name,
+        actual: turn.type === 'exchange'
+          ? `Exchange ${turn.tilesExchanged}`
+          : `${turn.word} (${turn.score})`,
+        reasons,
+      };
+    });
 
 const drawUpTo7 = (rack, pool) => {
   const newRack = [...rack];
@@ -187,8 +207,8 @@ export const useSandboxStore = create((set, get) => ({
   player2BotName: 'Theo',
   // Only meaningful when the corresponding botName is 'Static' - which
   // ranked candidate (1-15) that side plays every turn.
-  player1StaticRank: 5,
-  player2StaticRank: 5,
+  player1StaticRank: 1,
+  player2StaticRank: 1,
   totalGames: 5,
   // Switching either side re-clamps totalGames immediately, so the input
   // never silently shows a number bigger than what'll actually run (e.g.

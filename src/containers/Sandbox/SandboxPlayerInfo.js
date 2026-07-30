@@ -507,9 +507,22 @@ const SandboxPlayerInfo = React.memo(() => {
                               </Box>
                               <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '1px' }}>
                                 <Box component="span" sx={{ color: textColor, fontWeight: 600 }}>{t.actual}</Box>
-                                <Box component="span" sx={{ color: mutedTextColor }}>instead of</Box>
-                                <Box component="span" sx={{ color: mutedTextColor, textDecoration: 'line-through' }}>{t.baseline}</Box>
                               </Box>
+                              {/* A turn can be flagged by more than one
+                                  mechanism at once (a leave rule AND bingo
+                                  aversion) - each gets its own "instead of"
+                                  line, since they're separate what-if
+                                  questions with separate answers. */}
+                              {t.reasons.map((r) => (
+                                <Box
+                                  key={r.label}
+                                  sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '1px' }}
+                                >
+                                  <Box component="span" sx={{ color: mutedTextColor }}>instead of</Box>
+                                  <Box component="span" sx={{ color: mutedTextColor, textDecoration: 'line-through' }}>{r.without}</Box>
+                                  <Box component="span" sx={{ color: mutedTextColor, fontStyle: 'italic' }}>({r.label})</Box>
+                                </Box>
+                              ))}
                             </Box>
                           ))}
                         </Box>
