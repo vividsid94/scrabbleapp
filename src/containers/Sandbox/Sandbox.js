@@ -1,7 +1,6 @@
 import React, { useContext, useMemo, useRef } from "react";
 import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Box from '@mui/material/Box';
-import { Flask } from '@phosphor-icons/react';
 import styles from './Sandbox.module.css';
 import Board from "../../components/AppContent/Board/Board.js";
 import { useSandboxStore } from '../../stores/sandboxStore';
@@ -48,13 +47,13 @@ export default function Sandbox() {
     <Box className={styles.container}>
       <Sidenav/>
       <Box className={styles.page}>
-        <Box className={styles.mainPanel}>
-          <Box className={styles.leftContainer}>
-            <Box
-              className={`${styles.mainBox} ${styles.mainBoxContent}`}
-              component="main"
-            >
-              {gameStarted ? (
+        {gameStarted ? (
+          <Box className={styles.mainPanel}>
+            <Box className={styles.leftContainer}>
+              <Box
+                className={`${styles.mainBox} ${styles.mainBoxContent}`}
+                component="main"
+              >
                 <Board
                   board={board}
                   boardMode="STANDARD"
@@ -70,20 +69,19 @@ export default function Sandbox() {
                   arrowDirection="right"
                   lightMode={lightMode}
                 />
-              ) : (
-                <Box className={styles.emptyBoardState}>
-                  <Flask size={40} weight="duotone" style={{ opacity: 0.5 }} />
-                  <Box className={styles.emptyBoardStateText}>
-                    Set up a series and press Start to watch it play out
-                  </Box>
-                </Box>
-              )}
+              </Box>
+            </Box>
+            <Box className={styles.rightPanel}>
+              <SandboxPlayerInfo />
             </Box>
           </Box>
-          <Box className={styles.rightPanel}>
-            <SandboxPlayerInfo />
+        ) : (
+          <Box className={styles.setupOnlyPanel}>
+            <Box className={styles.rightPanel}>
+              <SandboxPlayerInfo />
+            </Box>
           </Box>
-        </Box>
+        )}
       </Box>
     </Box>
   );

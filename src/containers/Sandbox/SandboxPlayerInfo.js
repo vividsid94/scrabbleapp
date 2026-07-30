@@ -4,6 +4,7 @@ import { TextField, Button, ToggleButton, ToggleButtonGroup, Slider } from '@mui
 import { Play, Stop, Download } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
+import SandboxLeaveRules from './SandboxLeaveRules.js';
 import { useSandboxStore } from '../../stores/sandboxStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { ThemeContext } from '../../App';
@@ -25,6 +26,8 @@ const SandboxPlayerInfo = React.memo(() => {
   const player2BotName = useSandboxStore(state => state.player2BotName);
   const player1StaticRank = useSandboxStore(state => state.player1StaticRank);
   const player2StaticRank = useSandboxStore(state => state.player2StaticRank);
+  const player1LeaveRules = useSandboxStore(state => state.player1LeaveRules);
+  const player2LeaveRules = useSandboxStore(state => state.player2LeaveRules);
   const totalGames = useSandboxStore(state => state.totalGames);
   // Any static-bot matchup (Theo or a chosen Nth static, either side) runs
   // server-side in bulk and can handle far more games than the per-move
@@ -53,6 +56,9 @@ const SandboxPlayerInfo = React.memo(() => {
     setPlayer2BotName,
     setPlayer1StaticRank,
     setPlayer2StaticRank,
+    addLeaveRule,
+    updateLeaveRule,
+    removeLeaveRule,
     setTotalGames,
     startSeries,
     stopSeries,
@@ -140,22 +146,31 @@ const SandboxPlayerInfo = React.memo(() => {
 
   return (
     <Box className={styles.playerPanel}>
-      {/* Setup */}
-      <Box sx={sectionSx}>
-        <Box sx={labelSx}>Series Setup</Box>
-        {[
-          { botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1' },
-          { botName: player2BotName, setBotName: setPlayer2BotName, rank: player2StaticRank, setRank: setPlayer2StaticRank, label: 'Player 2' },
-        ].map((side, i) => (
-          <React.Fragment key={side.label}>
-            {i === 1 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
-                <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
-                <Box sx={{ fontSize: '10px', fontWeight: 700, color: mutedTextColor }}>VS</Box>
-                <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
-              </Box>
-            )}
-            <Box sx={{ fontSize: '10px', color: mutedTextColor, marginBottom: '4px' }}>{side.label}</Box>
+      {/* Setup - each player and the run controls get their own card, same
+          pattern as the Live/Results sections below, instead of one giant
+          block - matches how the rest of the app (e.g. Play's Candidates
+          panel) stacks distinct elevated cards rather than one flat sheet. */}
+      <Box sx={labelSx}>Series Setup</Box>
+      {[
+        {
+          botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1',
+          leaveRules: player1LeaveRules, addRule: () => addLeaveRule(1), updateRule: (i, patch) => updateLeaveRule(1, i, patch), removeRule: (i) => removeLeaveRule(1, i),
+        },
+        {
+          botName: player2BotName, setBotName: setPlayer2BotName, rank: player2StaticRank, setRank: setPlayer2StaticRank, label: 'Player 2',
+          leaveRules: player2LeaveRules, addRule: () => addLeaveRule(2), updateRule: (i, patch) => updateLeaveRule(2, i, patch), removeRule: (i) => removeLeaveRule(2, i),
+        },
+      ].map((side, i) => (
+        <React.Fragment key={side.label}>
+          {i === 1 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0' }}>
+              <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
+              <Box sx={{ fontSize: '10px', fontWeight: 700, color: mutedTextColor }}>VS</Box>
+              <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
+            </Box>
+          )}
+          <Box sx={i === 0 ? sectionSx : { ...sectionSx, marginTop: '10px' }}>
+            <Box sx={{ fontSize: '10px', fontWeight: 600, color: mutedTextColor, marginBottom: '6px' }}>{side.label}</Box>
             <ToggleButtonGroup
               value={side.botName}
               exclusive
@@ -187,8 +202,24 @@ const SandboxPlayerInfo = React.memo(() => {
                 />
               </Box>
             )}
-          </React.Fragment>
-        ))}
+            {side.botName !== 'Tess' && (
+              <SandboxLeaveRules
+                rules={side.leaveRules}
+                onAdd={side.addRule}
+                onUpdate={side.updateRule}
+                onRemove={side.removeRule}
+                disabled={isRunning}
+                textColor={textColor}
+                mutedTextColor={mutedTextColor}
+                borderColor={borderColor}
+                accentColor={accentColor}
+              />
+            )}
+          </Box>
+        </React.Fragment>
+      ))}
+
+      <Box sx={{ ...sectionSx, marginTop: '10px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Box sx={{ fontSize: '12px', color: textColor }}>Number of games</Box>
           <TextField

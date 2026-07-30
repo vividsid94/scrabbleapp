@@ -65,6 +65,33 @@ const getBotRank = (botName, staticRank) => {
 const getBotDisplayName = (botName, staticRank) =>
   botName === 'Static' ? `Speedy${staticRank}` : botName;
 
+// Converts the UI's editable rule rows (all fields optional/string-typed
+// while being edited) into the exact shape simulate.go's LeaveRule expects -
+// dropping any rule that's missing the letter(s) its type needs, so a
+// half-filled row just gets ignored server-side rather than sent as a
+// no-op or rejected.
+const sanitizeLeaveRules = (rules) => (rules || [])
+  .filter((r) => {
+    if (r.type === 'containsLetter' || r.type === 'containsCount') return !!r.letter;
+    if (r.type === 'containsAny' || r.type === 'containsAll') return !!r.letters;
+    return true;
+  })
+  .map((r) => {
+    const rule = { type: r.type };
+    if (r.letter) rule.letter = r.letter;
+    if (r.letters) rule.letters = r.letters;
+    if (r.comparator) rule.comparator = r.comparator;
+    if (r.type === 'containsCount' || r.type === 'vowelCount' || r.type === 'consonantCount' || r.type === 'lengthEquals') {
+      rule.count = Number(r.count) || 0;
+    }
+    if (r.type === 'multiplier') {
+      rule.multiplier = Number(r.multiplier) || 1;
+    } else {
+      rule.bonus = Number(r.bonus) || 0;
+    }
+    return rule;
+  });
+
 export const useSandboxStore = create((set, get) => ({
   // Live single-game state
   boardCoords: [],
@@ -106,6 +133,26 @@ export const useSandboxStore = create((set, get) => ({
   setTotalGames: (n) => set(state => ({
     totalGames: Math.min(Math.max(1, n || 1), getMaxGamesForBots(state.player1BotName, state.player2BotName))
   })),
+
+  // Per-side leave-value rules (see simulate.go's LeaveRule) that let a
+  // Theo/Static bot's candidate ranking diverge from the plain leaves.json
+  // table - only meaningful on the bulk (/simulate-series) path, ignored
+  // entirely for Tess since she never reaches that endpoint.
+  player1LeaveRules: [],
+  player2LeaveRules: [],
+  addLeaveRule: (side) => set(state => ({
+    [`player${side}LeaveRules`]: [...state[`player${side}LeaveRules`], { type: 'containsLetter', letter: '', bonus: 0 }]
+  })),
+  updateLeaveRule: (side, index, patch) => set(state => {
+    const key = `player${side}LeaveRules`;
+    const rules = state[key].slice();
+    rules[index] = { ...rules[index], ...patch };
+    return { [key]: rules };
+  }),
+  removeLeaveRule: (side, index) => set(state => {
+    const key = `player${side}LeaveRules`;
+    return { [key]: state[key].filter((_, i) => i !== index) };
+  }),
 
   // Series run state
   isRunning: false,
@@ -402,7 +449,10 @@ export const useSandboxStore = create((set, get) => ({
   },
 
   startSeries: async () => {
-    const { player1BotName, player2BotName, player1StaticRank, player2StaticRank } = get();
+    const {
+      player1BotName, player2BotName, player1StaticRank, player2StaticRank,
+      player1LeaveRules, player2LeaveRules
+    } = get();
     // Defensive re-clamp in case bot selection changed after totalGames was
     // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
     // but this is the last checkpoint before anything actually runs).
@@ -430,10 +480,12 @@ export const useSandboxStore = create((set, get) => ({
 
     if (useBulkPath) {
       try {
+        const player1Bot = { rank: player1Rank, leaveRules: sanitizeLeaveRules(player1LeaveRules) };
+        const player2Bot = { rank: player2Rank, leaveRules: sanitizeLeaveRules(player2LeaveRules) };
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ games: totalGames, player1Rank, player2Rank })
+          body: JSON.stringify({ games: totalGames, player1Bot, player2Bot })
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
