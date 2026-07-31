@@ -102,6 +102,27 @@ const SandboxPlayerInfo = React.memo(() => {
     ? Math.round(seriesResults.reduce((sum, r) => sum + r.player2Score, 0) / gamesPlayed)
     : 0;
 
+  // Pythagorean (Pythagenpat) expected record - same idea sabermetrics uses
+  // for runs scored/allowed, applied to Scrabble points scored/allowed.
+  // Unlike the fixed exponent of 2 in the classic Pythagorean formula,
+  // Pythagenpat's exponent adapts to the actual scoring environment
+  // ((totalPoints/games)^0.287), so it stays well-calibrated whether a
+  // matchup is low- or high-scoring. Answers "how many games should this
+  // record have been, based on points alone" - a big gap from the actual
+  // tally above is a signal of close-game luck (or a personality trait
+  // like bingo aversion costing points without costing as many wins).
+  const totalPlayer1Points = seriesResults.reduce((sum, r) => sum + r.player1Score, 0);
+  const totalPlayer2Points = seriesResults.reduce((sum, r) => sum + r.player2Score, 0);
+  let pythPlayer1Wins = gamesPlayed / 2;
+  let pythPlayer2Wins = gamesPlayed / 2;
+  if (gamesPlayed > 0 && (totalPlayer1Points > 0 || totalPlayer2Points > 0)) {
+    const exponent = Math.pow((totalPlayer1Points + totalPlayer2Points) / gamesPlayed, 0.287);
+    const player1WinPct = Math.pow(totalPlayer1Points, exponent)
+      / (Math.pow(totalPlayer1Points, exponent) + Math.pow(totalPlayer2Points, exponent));
+    pythPlayer1Wins = player1WinPct * gamesPlayed;
+    pythPlayer2Wins = gamesPlayed - pythPlayer1Wins;
+  }
+
   const sectionSx = {
     padding: '12px',
     background: panelBackground,
@@ -426,16 +447,20 @@ const SandboxPlayerInfo = React.memo(() => {
       {gamesPlayed > 0 && (
         <Box sx={{ ...sectionSx, marginTop: '16px' }}>
           <Box sx={labelSx}>Series Results</Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px', fontSize: '12px', color: textColor }}>
-            <Box sx={{ textAlign: 'center' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: '8px', marginBottom: '10px', fontSize: '12px', color: textColor }}>
+            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
               <Box sx={{ fontWeight: 'bold' }}>{player1Wins}-{player2Wins}{ties > 0 ? `-${ties}` : ''}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Tally</Box>
             </Box>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
+              <Box sx={{ fontWeight: 'bold' }}>{pythPlayer1Wins.toFixed(1)}-{pythPlayer2Wins.toFixed(1)}</Box>
+              <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Pyth. W-L</Box>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
               <Box sx={{ fontWeight: 'bold' }}>{avgPlayer1Score}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Avg {seriesResults[0]?.player1Name}</Box>
             </Box>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
               <Box sx={{ fontWeight: 'bold' }}>{avgPlayer2Score}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Avg {seriesResults[0]?.player2Name}</Box>
             </Box>
