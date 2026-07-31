@@ -5,6 +5,7 @@ import { getBoardDiff } from '../functions/play/boardUtils';
 import { generateGCGContent, downloadGCGFile, formatPlayerName } from '../functions/gcgUtils';
 import { fetchSandboxMoves, pickBotMove } from '../functions/sandboxBotFunctions';
 import { checkGameEnd, computeFinalScores } from '../functions/sandboxGameFunctions';
+import { buildSandboxViewState } from '../functions/sandboxViewFunctions';
 
 const dealRackFrom = (pool) => {
   const rack = [];
@@ -350,6 +351,20 @@ export const useSandboxStore = create((set, get) => ({
   // /simulate-series request is in flight - see SIMULATE_SERIES_BASE_MS.
   estimatedProgressPercent: 0,
 
+  // "View" mode: replays one already-finished seriesResults game on the
+  // board via buildSandboxViewState (sandboxViewFunctions.js), reusing the
+  // exact same display fields (boardCoords/racks/etc) the live game writes
+  // - see viewGame's comment below for why. viewingGameIndex is a
+  // seriesResults[].gameIndex, or null when not viewing anything.
+  viewingGameIndex: null,
+  viewingTurnIndex: -1,
+  // Snapshot of the display fields from right before viewGame first ran,
+  // restored verbatim by exitViewGame - only captured on the FIRST
+  // viewGame call (see there), so switching between two already-viewed
+  // games never overwrites this with viewing data instead of the true
+  // pre-viewing state.
+  preViewState: null,
+
   stopSeries: () => {
     clearEstimateInterval();
     set({ shouldStop: true, isRunning: false });
@@ -497,7 +512,7 @@ export const useSandboxStore = create((set, get) => ({
       gameStarted: true, player1Name, player2Name
     });
 
-    for (const turn of (gameData.turns || [])) {
+    for (const [turnIndex, turn] of (gameData.turns || []).entries()) {
       if (get().shouldStop) return null;
 
       const playerName = turn.player === 1 ? player1Name : player2Name;
@@ -521,7 +536,11 @@ export const useSandboxStore = create((set, get) => ({
         boardDiff.forEach(d => { newBoard[d.row][d.col] = d.value; });
         boardCoords = newBoard;
 
-        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col }));
+        // turnIndex tags which point in the game each blank was placed at -
+        // needed so a later turn-by-turn "View" replay of this finished game
+        // (sandboxViewFunctions.js) knows which blanks existed as of any
+        // given turn, not just the final set.
+        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col, turnIndex }));
         blankTiles = [...blankTiles, ...newBlanks];
 
         moveHistory = [...moveHistory, {
@@ -545,19 +564,16 @@ export const useSandboxStore = create((set, get) => ({
     }
 
     const winner = gameData.winner === 1 ? player1Name : gameData.winner === 2 ? player2Name : null;
+    const player1FinalRack = (gameData.player1FinalRack || '').split('');
+    const player2FinalRack = (gameData.player2FinalRack || '').split('');
+    const finalPool = (gameData.finalPool || '').split('');
 
     const gcgContent = generateGCGContent(
       moveHistory, player1Name, player2Name, blankTiles,
-      (gameData.player1FinalRack || '').split(''),
-      (gameData.player2FinalRack || '').split(''),
-      (gameData.finalPool || '').split('')
+      player1FinalRack, player2FinalRack, finalPool
     );
 
-    set({
-      player1Rack: (gameData.player1FinalRack || '').split(''),
-      player2Rack: (gameData.player2FinalRack || '').split(''),
-      pool: (gameData.finalPool || '').split('')
-    });
+    set({ player1Rack: player1FinalRack, player2Rack: player2FinalRack, pool: finalPool });
 
     return {
       gameIndex,
@@ -567,7 +583,11 @@ export const useSandboxStore = create((set, get) => ({
       player1Name,
       player2Name,
       gcgContent,
-      impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name)
+      impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name),
+      // Full per-turn history, kept (not just used to build the GCG string
+      // and discarded) so a "View" action can replay this exact game
+      // turn-by-turn later - see sandboxViewFunctions.js.
+      moveHistory, blankTiles, player1FinalRack, player2FinalRack, finalPool
     };
   },
 
@@ -582,7 +602,7 @@ export const useSandboxStore = create((set, get) => ({
     let blankTiles = [];
     let moveHistory = [];
 
-    (gameData.turns || []).forEach(turn => {
+    (gameData.turns || []).forEach((turn, turnIndex) => {
       const playerName = turn.player === 1 ? player1Name : player2Name;
 
       if (turn.type === 'pass') {
@@ -604,7 +624,11 @@ export const useSandboxStore = create((set, get) => ({
         boardDiff.forEach(d => { newBoard[d.row][d.col] = d.value; });
         boardCoords = newBoard;
 
-        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col }));
+        // turnIndex tags which point in the game each blank was placed at -
+        // needed so a later turn-by-turn "View" replay of this finished game
+        // (sandboxViewFunctions.js) knows which blanks existed as of any
+        // given turn, not just the final set.
+        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col, turnIndex }));
         blankTiles = [...blankTiles, ...newBlanks];
 
         moveHistory.push({
@@ -615,12 +639,13 @@ export const useSandboxStore = create((set, get) => ({
     });
 
     const winner = gameData.winner === 1 ? player1Name : gameData.winner === 2 ? player2Name : null;
+    const player1FinalRack = (gameData.player1FinalRack || '').split('');
+    const player2FinalRack = (gameData.player2FinalRack || '').split('');
+    const finalPool = (gameData.finalPool || '').split('');
 
     const gcgContent = generateGCGContent(
       moveHistory, player1Name, player2Name, blankTiles,
-      (gameData.player1FinalRack || '').split(''),
-      (gameData.player2FinalRack || '').split(''),
-      (gameData.finalPool || '').split('')
+      player1FinalRack, player2FinalRack, finalPool
     );
 
     return {
@@ -629,13 +654,17 @@ export const useSandboxStore = create((set, get) => ({
         player1Score: gameData.player1Score,
         player2Score: gameData.player2Score,
         winner, player1Name, player2Name, gcgContent,
-        impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name)
+        impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name),
+        // Full per-turn history, kept (not just used to build the GCG
+        // string and discarded) so a "View" action can replay this exact
+        // game turn-by-turn later - see sandboxViewFunctions.js.
+        moveHistory, blankTiles, player1FinalRack, player2FinalRack, finalPool
       },
       finalDisplayState: {
         boardCoords, blankTiles, moveHistory,
-        player1Rack: (gameData.player1FinalRack || '').split(''),
-        player2Rack: (gameData.player2FinalRack || '').split(''),
-        pool: (gameData.finalPool || '').split(''),
+        player1Rack: player1FinalRack,
+        player2Rack: player2FinalRack,
+        pool: finalPool,
         player1points: gameData.player1Score,
         player2points: gameData.player2Score,
         player1Name, player2Name
@@ -653,7 +682,17 @@ export const useSandboxStore = create((set, get) => ({
     // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
     // but this is the last checkpoint before anything actually runs).
     const totalGames = Math.min(get().totalGames, getMaxGamesForBots(player1BotName, player2BotName));
-    set({ isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false, totalGames, estimatedProgressPercent: 0 });
+    // Clearing viewingGameIndex/viewingTurnIndex/preViewState here matters:
+    // seriesResults is wiped on the same line, so a stale "Viewing Game N"
+    // panel left pointing at an index that no longer exists would otherwise
+    // stick around with dead back/forward buttons - nothing else in this
+    // function ever touches those 3 fields, since the live loop's own
+    // set() calls only ever overwrite the shared DISPLAY fields (which is
+    // fine either way), never the viewing-mode flags themselves.
+    set({
+      isRunning: true, seriesResults: [], currentGameIndex: 0, shouldStop: false, totalGames, estimatedProgressPercent: 0,
+      viewingGameIndex: null, viewingTurnIndex: -1, preViewState: null
+    });
 
     // Single source of truth for both display names (with same-bot
     // disambiguation) and ranks - computed once here and threaded through
@@ -784,6 +823,63 @@ export const useSandboxStore = create((set, get) => ({
     }
 
     set({ isRunning: false });
+  },
+
+  // Loads a finished seriesResults game onto the board at its final turn.
+  // Guarded against isRunning so it can never race the live per-turn set()
+  // calls in playOneGame/replayBulkGame/startSeries's own loop - both would
+  // be writing the exact same display fields (boardCoords, racks, etc) at
+  // the same time otherwise. Populates those fields from
+  // buildSandboxViewState (sandboxViewFunctions.js) instead of a live sim,
+  // which is why Sandbox.js's <Board> and SandboxPlayerInfo.js's Live
+  // section need no changes at all to support viewing - they only ever
+  // read from the store, never care how those fields got there.
+  viewGame: (gameIndex) => {
+    const state = get();
+    if (state.isRunning) return;
+    const result = state.seriesResults.find(r => r.gameIndex === gameIndex);
+    if (!result || !result.moveHistory) return;
+
+    // Only snapshot on the very first viewGame call (preViewState still
+    // null) - switching from viewing game A straight to game B must not
+    // clobber the original pre-viewing snapshot with A's (already-viewing)
+    // state, or exitViewGame would "restore" into the middle of game A
+    // instead of back to whatever was showing before viewing started.
+    const preViewState = state.viewingGameIndex === null ? {
+      boardCoords: state.boardCoords, blankTiles: state.blankTiles, moveHistory: state.moveHistory,
+      player1Rack: state.player1Rack, player2Rack: state.player2Rack,
+      player1points: state.player1points, player2points: state.player2points,
+      currentPlayer: state.currentPlayer, gameStarted: state.gameStarted,
+      player1Name: state.player1Name, player2Name: state.player2Name, pool: state.pool,
+    } : state.preViewState;
+
+    const turnIndex = result.moveHistory.length - 1;
+    set({
+      viewingGameIndex: gameIndex, viewingTurnIndex: turnIndex, preViewState,
+      gameStarted: true, player1Name: result.player1Name, player2Name: result.player2Name,
+      ...buildSandboxViewState(result, turnIndex)
+    });
+  },
+
+  viewStepBack: () => {
+    const state = get();
+    const result = state.seriesResults.find(r => r.gameIndex === state.viewingGameIndex);
+    if (!result) return; // stale reference (e.g. a new series started) - nothing to step through
+    const turnIndex = Math.max(-1, state.viewingTurnIndex - 1);
+    set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+  },
+
+  viewStepForward: () => {
+    const state = get();
+    const result = state.seriesResults.find(r => r.gameIndex === state.viewingGameIndex);
+    if (!result) return;
+    const turnIndex = Math.min(result.moveHistory.length - 1, state.viewingTurnIndex + 1);
+    set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+  },
+
+  exitViewGame: () => {
+    const { preViewState } = get();
+    set({ ...(preViewState || {}), viewingGameIndex: null, viewingTurnIndex: -1, preViewState: null });
   },
 
   downloadGameGCG: (result) => {

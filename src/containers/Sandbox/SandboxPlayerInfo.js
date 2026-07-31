@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio } from '@mui/material';
-import { Play, Stop, Download, CaretDown, CaretUp } from '@phosphor-icons/react';
+import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio, IconButton } from '@mui/material';
+import { Play, Stop, Download, CaretDown, CaretUp, Eye, ArrowLeft, ArrowRight, X } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
 import SandboxLeaveRules from './SandboxLeaveRules.js';
@@ -89,6 +89,8 @@ const SandboxPlayerInfo = React.memo(() => {
   const currentGameIndex = useSandboxStore(state => state.currentGameIndex);
   const seriesResults = useSandboxStore(state => state.seriesResults);
   const estimatedProgressPercent = useSandboxStore(state => state.estimatedProgressPercent);
+  const viewingGameIndex = useSandboxStore(state => state.viewingGameIndex);
+  const viewingTurnIndex = useSandboxStore(state => state.viewingTurnIndex);
 
   const gameStarted = useSandboxStore(state => state.gameStarted);
   const currentPlayer = useSandboxStore(state => state.currentPlayer);
@@ -118,6 +120,10 @@ const SandboxPlayerInfo = React.memo(() => {
     startSeries,
     stopSeries,
     downloadGameGCG,
+    viewGame,
+    viewStepBack,
+    viewStepForward,
+    exitViewGame,
   } = useSandboxStore();
 
   // mutedTextColor matches Play's own "secondary" tier (not its faintest
@@ -134,6 +140,9 @@ const SandboxPlayerInfo = React.memo(() => {
     : '0 3px 10px rgba(100, 95, 80, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)';
 
   const latestMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+  const currentViewedResult = viewingGameIndex === null
+    ? null
+    : seriesResults.find(r => r.gameIndex === viewingGameIndex) || null;
 
   const gamesPlayed = seriesResults.length;
   const player1Wins = seriesResults.filter(r => r.winner === r.player1Name).length;
@@ -630,8 +639,10 @@ const SandboxPlayerInfo = React.memo(() => {
         </Button>
       </Box>
 
-      {/* Live */}
-      {gameStarted && (
+      {/* Live - hidden while viewing a past game (below) instead of the
+          two ever showing at once, since both drive the same board/rack
+          store fields and would just fight each other visually. */}
+      {gameStarted && viewingGameIndex === null && (
         <Box sx={{ ...sectionSx, marginTop: '16px' }}>
           <Box sx={labelSx}>
             Game {currentGameIndex + 1} of {totalGames}
@@ -651,6 +662,75 @@ const SandboxPlayerInfo = React.memo(() => {
           </Box>
           <Box className={styles.Rack} sx={{ marginBottom: '4px' }}>
             <Rack rack={currentPlayer === 1 ? player1Rack : player2Rack} color={color.current} selectedTiles={[]} />
+          </Box>
+        </Box>
+      )}
+
+      {/* Viewing a finished game (sandboxStore.js's viewGame/viewStepBack/
+          viewStepForward) - unlike Live above, both racks are always shown
+          rather than just the current mover's, since Sandbox is bot-vs-bot
+          with no hidden information to preserve. */}
+      {gameStarted && viewingGameIndex !== null && currentViewedResult && (
+        <Box sx={{ ...sectionSx, marginTop: '16px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <Box sx={labelSx}>
+              Viewing Game {currentViewedResult.gameIndex + 1}
+            </Box>
+            <Box
+              onClick={exitViewGame}
+              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: mutedTextColor, '&:hover': { color: textColor } }}
+            >
+              <X size={14} weight="bold" />
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{player1Name}</Box>
+              <Box sx={{ fontSize: '16px', fontWeight: 'bold', color: '#D97706' }}>{player1points}</Box>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ fontSize: '11px', color: mutedTextColor }}>{player2Name}</Box>
+              <Box sx={{ fontSize: '16px', fontWeight: 'bold', color: '#D97706' }}>{player2points}</Box>
+            </Box>
+          </Box>
+          {/* Stacked rather than side by side - two full racks side by
+              side don't fit the 380px sidebar (7 tiles each plus labels
+              way exceeds it), so each gets its own row instead. */}
+          <Box sx={{ marginBottom: '4px' }}>
+            <Box sx={{ fontSize: '10px', color: mutedTextColor, textAlign: 'center', marginBottom: '2px' }}>{player1Name}</Box>
+            <Box className={styles.Rack}>
+              <Rack rack={player1Rack} color={color.current} selectedTiles={[]} />
+            </Box>
+          </Box>
+          <Box sx={{ marginBottom: '10px' }}>
+            <Box sx={{ fontSize: '10px', color: mutedTextColor, textAlign: 'center', marginBottom: '2px' }}>{player2Name}</Box>
+            <Box className={styles.Rack}>
+              <Rack rack={player2Rack} color={color.current} selectedTiles={[]} />
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <IconButton
+              size="small"
+              disabled={viewingTurnIndex <= -1}
+              onClick={viewStepBack}
+              sx={{ color: viewingTurnIndex <= -1 ? mutedTextColor : accentColor, opacity: viewingTurnIndex <= -1 ? 0.4 : 1 }}
+            >
+              <ArrowLeft size={16} weight="bold" />
+            </IconButton>
+            <Box sx={{ fontSize: '11px', color: textColor, minWidth: '76px', textAlign: 'center' }}>
+              {viewingTurnIndex === -1 ? 'Start' : `Turn ${viewingTurnIndex + 1} / ${currentViewedResult.moveHistory.length}`}
+            </Box>
+            <IconButton
+              size="small"
+              disabled={viewingTurnIndex >= currentViewedResult.moveHistory.length - 1}
+              onClick={viewStepForward}
+              sx={{
+                color: viewingTurnIndex >= currentViewedResult.moveHistory.length - 1 ? mutedTextColor : accentColor,
+                opacity: viewingTurnIndex >= currentViewedResult.moveHistory.length - 1 ? 0.4 : 1,
+              }}
+            >
+              <ArrowRight size={16} weight="bold" />
+            </IconButton>
           </Box>
         </Box>
       )}
@@ -738,23 +818,46 @@ const SandboxPlayerInfo = React.memo(() => {
                     }}
                   >
                     <Box>Game {result.gameIndex + 1}</Box>
-                    <Box sx={{ color: mutedTextColor }}>
-                      {result.player1Score} - {result.player2Score}
-                      {result.winner ? '' : ' (tie)'}
-                    </Box>
-                    <Box
-                      onClick={() => downloadGameGCG(result)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        cursor: 'pointer',
-                        color: mutedTextColor,
-                        '&:hover': { color: textColor }
-                      }}
-                    >
-                      <Download size={14} />
-                      GCG
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Box sx={{ color: mutedTextColor }}>
+                        {result.player1Score} - {result.player2Score}
+                        {result.winner ? '' : ' (tie)'}
+                      </Box>
+                      {/* Requires the full per-turn history View replays -
+                          absent for anything simulated before this feature
+                          shipped, hence the result.moveHistory guard rather
+                          than just isRunning. Highlighted in accentColor
+                          while this exact game is the one being viewed, so
+                          it's obvious which row's board you're looking at. */}
+                      <Box
+                        onClick={(isRunning || !result.moveHistory) ? undefined : () => viewGame(result.gameIndex)}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          cursor: (isRunning || !result.moveHistory) ? 'default' : 'pointer',
+                          color: viewingGameIndex === result.gameIndex ? accentColor : mutedTextColor,
+                          opacity: (isRunning || !result.moveHistory) ? 0.5 : 1,
+                          '&:hover': (isRunning || !result.moveHistory) ? undefined : { color: textColor }
+                        }}
+                      >
+                        <Eye size={14} />
+                        View
+                      </Box>
+                      <Box
+                        onClick={() => downloadGameGCG(result)}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          cursor: 'pointer',
+                          color: mutedTextColor,
+                          '&:hover': { color: textColor }
+                        }}
+                      >
+                        <Download size={14} />
+                        GCG
+                      </Box>
                     </Box>
                   </Box>
 
