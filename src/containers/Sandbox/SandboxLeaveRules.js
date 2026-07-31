@@ -43,10 +43,6 @@ export default function SandboxLeaveRules({
     '& .MuiInputBase-input': { fontSize: '11px', color: textColor, padding: '4px 6px' },
     '& .MuiSelect-select': { fontSize: '11px', color: textColor, padding: '4px 20px 4px 6px' },
     '& .MuiOutlinedInput-notchedOutline': { borderColor },
-    // Placeholders (e.g. the example "S") must read as unmistakably NOT a
-    // real value - full-strength textColor is reserved for what's actually
-    // typed, so a placeholder can't be mistaken for an entered letter.
-    '& .MuiInputBase-input::placeholder': { color: mutedTextColor, opacity: 0.6, fontStyle: 'italic' },
   };
 
   return (
@@ -55,11 +51,22 @@ export default function SandboxLeaveRules({
         <Box
           key={index}
           sx={{
-            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px',
-            marginBottom: '4px', padding: '4px', borderRadius: '6px',
-            border: `1px dashed ${borderColor}`,
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px',
+            marginBottom: '8px', padding: '8px', borderRadius: '8px',
+            border: `1px solid ${borderColor}`,
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.06)',
+            transition: 'border-color 0.15s ease',
+            '&:hover': { borderColor: accentColor },
           }}
         >
+          <Box
+            sx={{
+              fontSize: '9px', fontWeight: 700, color: mutedTextColor,
+              minWidth: '14px', textAlign: 'center', opacity: 0.7,
+            }}
+          >
+            {index + 1}
+          </Box>
           <Select
             size="small"
             value={rule.type}
@@ -75,7 +82,6 @@ export default function SandboxLeaveRules({
           {needsLetter(rule.type) && (
             <TextField
               size="small"
-              placeholder="S"
               value={rule.letter || ''}
               disabled={disabled}
               onChange={(e) => onUpdate(index, { letter: e.target.value.slice(0, 1).toUpperCase() })}
@@ -86,7 +92,6 @@ export default function SandboxLeaveRules({
           {needsLetters(rule.type) && (
             <TextField
               size="small"
-              placeholder="AEIOU"
               value={rule.letters || ''}
               disabled={disabled}
               onChange={(e) => onUpdate(index, { letters: e.target.value.toUpperCase() })}
@@ -123,7 +128,6 @@ export default function SandboxLeaveRules({
               value={rule.bonus ?? 0}
               onCommit={(n) => onUpdate(index, { bonus: n })}
               parse={(s) => parseFloat(s)}
-              placeholder="bonus"
               disabled={disabled}
               sx={{ ...fieldSx, width: '58px' }}
             />
@@ -134,7 +138,6 @@ export default function SandboxLeaveRules({
               value={rule.multiplier ?? 1}
               onCommit={(n) => onUpdate(index, { multiplier: n })}
               parse={(s) => parseFloat(s)}
-              placeholder="x1"
               disabled={disabled}
               sx={{ ...fieldSx, width: '52px' }}
             />
@@ -144,7 +147,11 @@ export default function SandboxLeaveRules({
             size="small"
             disabled={disabled}
             onClick={() => onRemove(index)}
-            sx={{ color: mutedTextColor, padding: '2px', marginLeft: 'auto' }}
+            sx={{
+              color: mutedTextColor, padding: '2px', marginLeft: 'auto',
+              transition: 'color 0.15s ease, background-color 0.15s ease',
+              '&:hover': { color: '#DC2626', backgroundColor: 'rgba(220, 38, 38, 0.08)' },
+            }}
           >
             <Trash size={13} />
           </IconButton>
@@ -152,7 +159,12 @@ export default function SandboxLeaveRules({
       ))}
 
       {rules.length > 0 && (
-        <Box sx={{ fontSize: '10px', color: mutedTextColor, lineHeight: 1.4, marginBottom: '6px' }}>
+        <Box
+          sx={{
+            fontSize: '10px', color: mutedTextColor, lineHeight: 1.4, marginBottom: '8px',
+            padding: '6px 8px', borderRadius: '6px', backgroundColor: 'rgba(128, 128, 128, 0.08)',
+          }}
+        >
           Bonus: a positive number adds to the leave's table value, a negative number subtracts from it. Multiplier scales the running total instead (2 doubles it, 0.5 halves it).
         </Box>
       )}
@@ -161,6 +173,7 @@ export default function SandboxLeaveRules({
         onClick={disabled ? undefined : onAdd}
         sx={{
           display: 'flex', alignItems: 'center', gap: '4px',
+          paddingLeft: '4px',
           cursor: disabled ? 'default' : 'pointer',
           fontSize: '11px', fontWeight: 600,
           color: disabled ? mutedTextColor : accentColor,

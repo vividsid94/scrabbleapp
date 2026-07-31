@@ -426,7 +426,7 @@ const SandboxPlayerInfo = React.memo(() => {
                   )}
                 </Box>
                 {expandedWordRules.has(i) && (
-                  <Box sx={{ marginTop: '6px' }}>
+                  <Box sx={{ padding: '8px', marginTop: '6px', borderRadius: '6px', border: `1px dashed ${borderColor}` }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Checkbox
                         size="small"
