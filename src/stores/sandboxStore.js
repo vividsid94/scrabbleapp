@@ -78,13 +78,15 @@ const drawUpTo7 = (rack, pool) => {
 };
 
 // Both matchup kinds now run entirely server-side in one call (see
-// pickTessCandidate in simulate.go), but a Tess bot's per-turn cost is
-// dramatically higher than a rank-based bot's (~20 in-process opponent
-// simulations x top 15 candidates, every turn), so a series involving her
-// stays capped much lower - empirically ~6-12s/game vs ~90ms/game for a
-// static-only matchup. Above MAX_GAMES_STATIC/30 games the bulk path also
-// skips the animated replay (see startSeries) - nobody's watching 30+
-// games play out turn by turn.
+// pickTessCandidate in simulate.go), and simulateSeriesHandler now runs
+// games concurrently across a worker pool too - but a Tess bot's per-turn
+// cost is still dramatically higher than a rank-based bot's (~20
+// in-process opponent simulations x top 15 candidates, every turn), so a
+// series involving her stays capped much lower - empirically settling
+// around ~1.8-2.6s/game (Tess on one/both sides) vs ~22ms/game steady-state
+// for a static-only matchup, post-parallelization. Above MAX_GAMES_STATIC/
+// 30 games the bulk path also skips the animated replay (see startSeries) -
+// nobody's watching 30+ games play out turn by turn.
 const MAX_GAMES_STATIC = 500;
 const MAX_GAMES_WITH_TESS = 30;
 const REPLAY_GAME_LIMIT = 30;
@@ -93,20 +95,29 @@ const REPLAY_GAME_LIMIT = 30;
 // there's no real per-game progress to report while it's in flight - these
 // are an empirically measured linear fit (base overhead + ms/game) against
 // the deployed Railway endpoint, used only to drive an approximate,
-// time-based progress fill for that wait. Re-measure if the Go service's
-// per-game cost changes meaningfully.
-const SIMULATE_SERIES_BASE_MS = 150;
-const SIMULATE_SERIES_PER_GAME_MS = 90;
+// time-based progress fill for that wait. Re-measured after
+// simulateSeriesHandler started running games concurrently across a worker
+// pool (~4x throughput on this deployment) - the true relationship isn't
+// perfectly linear anymore (small game counts get more parallelism benefit,
+// since there's no queueing until games > worker count, so per-game cost is
+// lower there than at steady state), but a straight-line fit is still a
+// reasonable approximation for a progress bar. Re-measure again if the Go
+// service's per-game cost or worker count changes meaningfully.
+const SIMULATE_SERIES_BASE_MS = 90;
+const SIMULATE_SERIES_PER_GAME_MS = 22;
 // A Tess bot's per-turn cost is nothing like a rank-based bot's - her
 // server-side pick (simulate.go's pickTessCandidate) runs ~20 in-process
-// opponent simulations for each of the top 15 candidates, every turn.
-// Measured against the deployed endpoint: ~6-12s/game with one Tess side,
-// ~11-12s/game with both sides Tess (the two costs stack). Using the
-// static-bot constant here would fill the bar to ~97% in a few seconds and
-// then sit there doing nothing for the several minutes the real request
-// still has left - actively misleading, not just imprecise.
-const SIMULATE_SERIES_PER_GAME_MS_ONE_TESS = 7000;
-const SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS = 12000;
+// opponent simulations for each of the top 15 candidates, every turn - and
+// unlike the static case, this cost doesn't shrink much from
+// parallelization (Tess's own inner-candidate loop still runs sequentially
+// within a game; only whole games run concurrently with each other).
+// Measured post-parallelization: ~1.8-2s/game steady-state with one Tess
+// side, ~2.6-3s/game with both sides Tess. Using the static-bot constant
+// here would fill the bar to ~97% in a couple seconds and then sit there
+// doing nothing for the rest of the wait - actively misleading, not just
+// imprecise.
+const SIMULATE_SERIES_PER_GAME_MS_ONE_TESS = 1800;
+const SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS = 2900;
 // Never let the time-based estimate alone claim completion - real per-game
 // progress (from the finalize/replay loop below) always takes over for the
 // final stretch once the response actually lands.
