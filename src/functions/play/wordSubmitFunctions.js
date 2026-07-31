@@ -2,8 +2,6 @@ import { alphabetizeRack, removeTilesByCount } from './rackFunctions.js';
 import { useGameStore } from '../../stores/gameStore';
 import { handleGameEnd } from './gameEndFunctions';
 import { validateMoveClient } from './validateMoveClient.js';
-import { calculateLeave } from './leaveFunctions.js';
-import { analyzeMove } from './moveCoachAnalysis.js';
 
 /**
  * Handles the submission of a word to the board
@@ -269,193 +267,58 @@ export const handleWordSubmit = async (playerMoveSound) => {
   setTopMoves([]);
 
   // Prepare move coach data (async, non-blocking) - only if enabled
-  // Save board state before move for board control calculation
-  const boardBeforeMove = JSON.parse(JSON.stringify(boardCoords));
-  
   // Capture tile count BEFORE clearing selectedTiles (for bingo detection)
   // Count all tiles placed, including blanks (blanks are represented as '*' in selectedTiles)
   // selectedTiles structure: [{ tile: 'A' or '*', row, col }, ...]
   // A bingo uses all 7 tiles from the rack, so we just need to count selectedTiles.length
   const tilesPlacedCount = selectedTiles.length;
-  
-  // Debug: log what tiles were placed
-  console.log('🎯 Tiles placed for bingo check:', {
-    tilesPlacedCount,
-    selectedTiles: selectedTiles.map(t => ({ tile: t.tile, row: t.row, col: t.col })),
-    hasBlanks: selectedTiles.some(t => t.tile === '*')
-  });
-  
-  setTimeout(async () => {
+
+  setTimeout(() => {
     try {
-      const { setMoveCoachData, setShowMoveCoach, topMoves, leaveValues, moveCoachEnabled, theoYellEnabled } = useGameStore.getState();
-      
-      // Only proceed if Move Coach OR Theo Yell is enabled
-      if (!moveCoachEnabled && !theoYellEnabled) {
+      const { topMoves, theoYellEnabled, theoYellCriteria, theoYellScoreThreshold } = useGameStore.getState();
+
+      if (!theoYellEnabled) {
         return;
       }
-      
-      // Calculate leave for the move
-      // Use the captured selectedTiles from closure (before it was cleared)
-      const moveForLeave = {
-        tiles: selectedTiles.map(t => ({
-          letter: t.tile === '*' ? '?' : t.tile, // Convert blank representation
-          isNew: true,
-          row: t.row,
-          col: t.col,
-          isBlank: t.tile === '*' // Mark if it's a blank
-        })),
-        word: result.words ? result.words[0] : 'Unknown'
-      };
-      
-      const leave = calculateLeave(moveForLeave, playerRack);
-      
-      // Fetch leave value if not cached
-      let leaveValue = leaveValues[leave] || 0;
-      if (!leaveValues[leave]) {
-        try {
-          const leaveResponse = await fetch('/.netlify/functions/getLeaveValues', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ leaves: [leave] })
-          });
-          if (leaveResponse.ok) {
-            const leaveData = await leaveResponse.json();
-            leaveValue = leaveData.leaveValues?.[leave] || 0;
-          }
-        } catch (err) {
-          console.warn('Could not fetch leave value for coach:', err);
-        }
-      }
 
-      // Fetch board control for this move (use board state before move)
-      let boardControl = 0;
-      try {
-        const controlResponse = await fetch('/.netlify/functions/getBoardControl', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            board: boardBeforeMove,
-            moves: [{
-              word: result.words ? result.words[0] : 'Unknown',
-              tiles: moveForLeave.tiles
-            }]
-          })
-        });
-        if (controlResponse.ok) {
-          const controlData = await controlResponse.json();
-          const metrics = controlData.moveMetrics?.[0];
-          if (metrics) {
-            boardControl = metrics.boardControl || 0;
-          }
-        }
-      } catch (err) {
-        console.warn('Could not fetch board control for coach:', err);
-      }
-
-      // Prepare move coach data
-      const coachData = {
-        score,
-        word: result.words ? result.words[0] : 'Unknown',
-        leave,
-        leaveValue,
-        boardControl,
-        player1points: currentPlayer === 1 ? runningTotal : player1points,
-        player2points: currentPlayer === 2 ? runningTotal : player2points,
-        currentPlayer,
-        moveNumber: (useGameStore.getState().moveHistory || []).length
-      };
-
-      // Analyze the move to get rating
-      const analysis = analyzeMove(coachData, topMoves, {
-        player1points: coachData.player1points,
-        player2points: coachData.player2points,
-        currentPlayer: coachData.currentPlayer,
-        moveHistory: useGameStore.getState().moveHistory || []
-      });
-
-      // Add analysis to coach data
-      coachData.overallRating = analysis.overallRating;
-      coachData.analysisScore = analysis.score;
-
-      setMoveCoachData(coachData);
-      // Auto-show the coach only if Move Coach is enabled (not just Theo Yell)
-      if (moveCoachEnabled) {
-        setShowMoveCoach(true);
-      }
-      
-      // Trigger Theo yell if enabled based on criteria
-      const { 
-        theoYellEnabled: theoYellEnabledState,
-        theoYellCriteria,
-        theoYellScoreThreshold
-      } = useGameStore.getState();
-      
       let shouldYell = false;
-      
-      if (theoYellEnabledState) {
-        if (theoYellCriteria === 'score') {
-          // Check if move score is below threshold
-          shouldYell = score < theoYellScoreThreshold;
-          console.log('🎯 Score-based check:', { 
-            score, 
-            threshold: theoYellScoreThreshold, 
-            shouldYell 
-          });
-        } else if (theoYellCriteria === 'bingo') {
-          // Check if player missed a bingo
-          // A bingo is when you use all 7 tiles from your rack
-          // Use the captured count from before selectedTiles was cleared
-          const playerMoveIsBingo = tilesPlacedCount === 7;
-          
-          // Check if there's a bingo available in top moves
-          // A bingo move uses exactly 7 tiles from the rack
-          const hasBingoAvailable = topMoves && topMoves.some(move => {
-            if (!move.tiles) return false;
-            // Count only new tiles (tiles from the rack)
-            // This includes both regular tiles and blanks
-            const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
-            return newTilesCount === 7;
-          });
-          
-          shouldYell = hasBingoAvailable && !playerMoveIsBingo;
-          console.log('🎯 Bingo-based check:', { 
-            playerMoveIsBingo,
-            playerTilesUsed: tilesPlacedCount,
-            hasBingoAvailable,
-            topMovesLength: topMoves?.length,
-            topMovesSample: topMoves?.slice(0, 3).map(m => ({
-              word: m.word,
-              tilesCount: m.tiles?.length,
-              newTilesCount: m.tiles?.filter(t => t.isNew !== false).length
-            })),
-            shouldYell 
-          });
-        }
+
+      if (theoYellCriteria === 'score') {
+        // Check if move score is below threshold
+        shouldYell = score < theoYellScoreThreshold;
+      } else if (theoYellCriteria === 'bingo') {
+        // Check if player missed a bingo
+        // A bingo is when you use all 7 tiles from your rack
+        // Use the captured count from before selectedTiles was cleared
+        const playerMoveIsBingo = tilesPlacedCount === 7;
+
+        // Check if there's a bingo available in top moves
+        // A bingo move uses exactly 7 tiles from the rack
+        const hasBingoAvailable = topMoves && topMoves.some(move => {
+          if (!move.tiles) return false;
+          // Count only new tiles (tiles from the rack)
+          // This includes both regular tiles and blanks
+          const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
+          return newTilesCount === 7;
+        });
+
+        shouldYell = hasBingoAvailable && !playerMoveIsBingo;
       }
-      
-      console.log('🎯 Move Coach Analysis:', { 
-        rating: analysis.overallRating, 
-        score: analysis.score, 
-        theoYellEnabled: theoYellEnabledState,
-        theoYellCriteria,
-        shouldYell 
-      });
-      
+
       if (shouldYell) {
         // Signal that Theo should yell (we'll handle this in Play component)
-        const isBingoMiss = theoYellCriteria === 'bingo' && 
+        const isBingoMiss = theoYellCriteria === 'bingo' &&
           topMoves && topMoves.some(move => {
             if (!move.tiles) return false;
             const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
             return newTilesCount === 7;
-          }) && 
+          }) &&
           selectedTiles.length !== 7;
-        
-        console.log('🔊 Setting shouldTheoYell to true!', { isBingoMiss });
+
         useGameStore.getState().setShouldTheoYell(true, isBingoMiss);
       }
     } catch (error) {
-      console.warn('Error preparing move coach data:', error);
+      console.warn('Error checking Theo yell criteria:', error);
     }
   }, 500); // Small delay to let UI update first
-}; 
+};

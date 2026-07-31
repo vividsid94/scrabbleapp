@@ -11,7 +11,6 @@ import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
-import MoveCoach from './components/MoveCoach';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
 import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
@@ -176,11 +175,6 @@ export default function Play({ isMultiplayer = false }) {
     setAnalysisLaneDragSelection,
     clearAnalysisLaneSelection,
     runAnalysisLaneIsolation,
-
-    // Move Coach
-    showMoveCoach,
-    moveCoachData,
-    setShowMoveCoach,
 
     // Theo Yell
     theoYellEnabled,
@@ -1449,19 +1443,6 @@ export default function Play({ isMultiplayer = false }) {
           </Box>
         </Modal>
 
-        <MoveCoach
-          open={showMoveCoach}
-          onClose={() => setShowMoveCoach(false)}
-          moveData={moveCoachData}
-          topMoves={topMoves}
-          gameState={{
-            player1points,
-            player2points,
-            currentPlayer,
-            moveHistory
-          }}
-        />
-        
         {/* Theo Yell Mascot - appears in center when yelling */}
         {isTheoYelling && (
           <Box

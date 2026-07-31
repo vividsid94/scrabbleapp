@@ -106,7 +106,6 @@ export const useGameStore = create((set, get) => {
     // Settings state
     playerMoveSoundType: 'puzzle',
     botMoveSoundType: 'puzzle',
-    moveCoachEnabled: false, // Move Coach feature toggle
     theoYellEnabled: false, // Theo yell feature toggle
     theoYellCriteria: 'bingo', // 'score' or 'bingo'
     theoYellScoreThreshold: 20, // Score threshold for triggering yell
@@ -120,9 +119,6 @@ export const useGameStore = create((set, get) => {
     tessOpponentSims: {},
     tessIsRunningSims: false,
     
-    // Move Coach state
-    showMoveCoach: false,
-    moveCoachData: null,
     shouldTheoYell: false, // Signal to trigger Theo yell
     theoYellIsBingoMiss: false, // Whether the yell is for missing a bingo
     theoYellPhrase: '', // The phrase Theo said
@@ -287,7 +283,6 @@ export const useGameStore = create((set, get) => {
     // Actions - Settings
     setPlayerMoveSoundType: (type) => set({ playerMoveSoundType: type }),
     setBotMoveSoundType: (type) => set({ botMoveSoundType: type }),
-    setMoveCoachEnabled: (enabled) => set({ moveCoachEnabled: enabled }),
     setTheoYellEnabled: (enabled) => set({ theoYellEnabled: enabled }),
     setTheoYellCriteria: (criteria) => set({ theoYellCriteria: criteria }),
     setTheoYellScoreThreshold: (threshold) => set({ theoYellScoreThreshold: threshold }),
@@ -321,9 +316,6 @@ export const useGameStore = create((set, get) => {
       gameEnded: false
     }),
     
-    // Move Coach actions
-    setShowMoveCoach: (show) => set({ showMoveCoach: show }),
-    setMoveCoachData: (data) => set({ moveCoachData: data }),
     setShouldTheoYell: (should, isBingoMiss = false) => set({ 
       shouldTheoYell: should,
       theoYellIsBingoMiss: isBingoMiss 

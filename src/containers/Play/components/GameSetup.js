@@ -516,7 +516,6 @@ export default function GameSetup({ onSelectBot, onStartGame }) {
                   </div>
                 </div>
               </Collapse>
-              {/* Move Coach toggle removed — non-functional; wire back up when the feature ships */}
             </div>
 
             <div className={styles.footer}>

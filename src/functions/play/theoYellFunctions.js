@@ -214,19 +214,3 @@ export const makeTheoYell = (mascotRef, isBingoMiss = false) => {
   return phrase;
 };
 
-/**
- * Check if we should trigger Theo's yell based on move coach score
- */
-export const shouldTheoYell = (moveCoachData, theoYellEnabled) => {
-  if (!theoYellEnabled || !moveCoachData) {
-    return false;
-  }
-
-  // Get the analysis score (0-100)
-  // Trigger yell if score is "poor" (< 40) or "fair" (< 60)
-  const score = moveCoachData.score || 0;
-  const rating = moveCoachData.overallRating || 'good';
-  
-  // Yell if rating is poor or fair
-  return rating === 'poor' || (rating === 'fair' && score < 50);
-};
