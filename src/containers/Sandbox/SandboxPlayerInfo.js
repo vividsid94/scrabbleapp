@@ -308,22 +308,35 @@ const SandboxPlayerInfo = React.memo(() => {
                   { value: '', label: 'Normal' },
                   { value: 'longestWord', label: 'Longest word' },
                   { value: 'mostTiles', label: 'Most tiles' },
-                ].map((opt) => (
-                  <Box
-                    key={opt.value || 'normal'}
-                    onClick={() => !isRunning && side.setSpecialSelection(opt.value)}
-                    sx={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: isRunning ? 'default' : 'pointer' }}
-                  >
-                    <Radio
-                      size="small"
-                      checked={side.specialSelection === opt.value}
-                      disabled={isRunning}
-                      onChange={() => side.setSpecialSelection(opt.value)}
-                      sx={checkboxSx}
-                    />
-                    <Box sx={{ fontSize: '11px', color: textColor }}>{opt.label}</Box>
-                  </Box>
-                ))}
+                ].map((opt) => {
+                  // Entering a special-selection mode also actually clears
+                  // (not just visually disables) both bingo-aversion
+                  // checkboxes - leaving them checked-but-disabled would
+                  // look like they're still in effect when they're not.
+                  const selectOpt = () => {
+                    if (isRunning) return;
+                    side.setSpecialSelection(opt.value);
+                    if (opt.value !== '') {
+                      side.setBingoAv({ probabilityEnabled: false, rankLimitEnabled: false });
+                    }
+                  };
+                  return (
+                    <Box
+                      key={opt.value || 'normal'}
+                      onClick={selectOpt}
+                      sx={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: isRunning ? 'default' : 'pointer' }}
+                    >
+                      <Radio
+                        size="small"
+                        checked={side.specialSelection === opt.value}
+                        disabled={isRunning}
+                        onChange={selectOpt}
+                        sx={checkboxSx}
+                      />
+                      <Box sx={{ fontSize: '11px', color: textColor }}>{opt.label}</Box>
+                    </Box>
+                  );
+                })}
               </Box>
             )}
             {/* Tess ignores LeaveRules entirely server-side (simulate.go's
