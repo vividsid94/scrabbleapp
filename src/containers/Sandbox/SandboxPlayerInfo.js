@@ -278,7 +278,9 @@ const SandboxPlayerInfo = React.memo(() => {
               {BOT_OPTIONS.map(opt => (
                 <ToggleButton key={opt.value} value={opt.value} sx={toggleButtonSx}>
                   {opt.value === 'Static' && side.botName === 'Static'
-                    ? `Speedy${side.rank}${side.rank === 1 ? ' (Theo)' : ''}`
+                    ? (side.specialSelection === 'longestWord' ? 'Longest Word'
+                      : side.specialSelection === 'mostTiles' ? 'Most Tiles'
+                        : `Speedy${side.rank}${side.rank === 1 ? ' (Theo)' : ''}`)
                     : opt.label}
                 </ToggleButton>
               ))}

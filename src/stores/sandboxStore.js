@@ -151,9 +151,16 @@ const getBotRank = (botName, staticRank) => {
 
 // "Static" is the internal botName (matches the rank-based mechanism in
 // simulate.go/sandboxBotFunctions.js); "SpeedyN" is just how it's displayed/
-// named in the UI, GCGs, and results.
-const getBotDisplayName = (botName, staticRank) =>
-  botName === 'Static' ? `Speedy${staticRank}` : botName;
+// named in the UI, GCGs, and results - unless a SpecialSelection override
+// mode is active, in which case rank is irrelevant (simulate.go ignores it
+// entirely under SpecialSelection) so the name reflects the mode instead,
+// everywhere a bot name shows up (toggle button, series labels, GCGs).
+const getBotDisplayName = (botName, staticRank, specialSelection) => {
+  if (botName !== 'Static') return botName;
+  if (specialSelection === 'longestWord') return 'Longest Word';
+  if (specialSelection === 'mostTiles') return 'Most Tiles';
+  return `Speedy${staticRank}`;
+};
 
 // Converts the UI's editable rule rows (all fields optional/string-typed
 // while being edited) into the exact shape simulate.go's LeaveRule expects -
@@ -607,8 +614,8 @@ export const useSandboxStore = create((set, get) => ({
     // disambiguation) and ranks - computed once here and threaded through
     // playOneGame/replayBulkGame/finalizeBulkGame rather than each
     // re-deriving it.
-    const player1BaseName = getBotDisplayName(player1BotName, player1StaticRank);
-    const player2BaseName = getBotDisplayName(player2BotName, player2StaticRank);
+    const player1BaseName = getBotDisplayName(player1BotName, player1StaticRank, player1SpecialSelection);
+    const player2BaseName = getBotDisplayName(player2BotName, player2StaticRank, player2SpecialSelection);
     const sameBotName = player1BaseName === player2BaseName;
     const player1Name = sameBotName ? `${formatPlayerName(player1BaseName)}_1` : formatPlayerName(player1BaseName);
     const player2Name = sameBotName ? `${formatPlayerName(player2BaseName)}_2` : formatPlayerName(player2BaseName);
