@@ -13,10 +13,15 @@ import styles from './Sandbox.module.css';
 
 // 'Static' stays the internal botName (matches sandboxStore.js/
 // sandboxBotFunctions.js's rank mechanism) - "Speedy" is just its label here.
+// Theo is dropped as its own selectable option - mechanically she's just
+// Speedy at rank 1 (getBotRank already returns 1 for 'Theo' and for
+// 'Static' rank 1 alike), so rather than a separate button, "(Theo)" is
+// appended to the label only when Speedy's rank is 1 - purely a display
+// hint in this one spot, not the bot's actual name/identity (leaves
+// getBotDisplayName, player names, and GCGs untouched).
 const BOT_OPTIONS = [
-  { value: 'Theo', label: 'Theo' },
-  { value: 'Tess', label: 'Tess' },
   { value: 'Static', label: 'Speedy' },
+  { value: 'Tess', label: 'Tess' },
 ];
 
 const SandboxPlayerInfo = React.memo(() => {
@@ -260,7 +265,9 @@ const SandboxPlayerInfo = React.memo(() => {
             >
               {BOT_OPTIONS.map(opt => (
                 <ToggleButton key={opt.value} value={opt.value} sx={toggleButtonSx}>
-                  {opt.value === 'Static' && side.botName === 'Static' ? `Speedy${side.rank}` : opt.label}
+                  {opt.value === 'Static' && side.botName === 'Static'
+                    ? `Speedy${side.rank}${side.rank === 1 ? ' (Theo)' : ''}`
+                    : opt.label}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>

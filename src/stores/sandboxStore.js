@@ -214,8 +214,13 @@ export const useSandboxStore = create((set, get) => ({
   player2Name: 'Theo_2',
 
   // Series configuration - editable while not running
-  player1BotName: 'Theo',
-  player2BotName: 'Theo',
+  // 'Theo' is no longer offered as its own UI toggle option (she's
+  // mechanically just Speedy at rank 1 - see SandboxPlayerInfo.js's
+  // BOT_OPTIONS comment), so the default selection is 'Static' at rank 1
+  // instead - same bot, just selected through the option that's actually
+  // still in the UI.
+  player1BotName: 'Static',
+  player2BotName: 'Static',
   // Only meaningful when the corresponding botName is 'Static' - which
   // ranked candidate (1-15) that side plays every turn.
   player1StaticRank: 1,
