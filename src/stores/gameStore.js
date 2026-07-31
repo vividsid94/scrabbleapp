@@ -122,7 +122,11 @@ export const useGameStore = create((set, get) => {
     shouldTheoYell: false, // Signal to trigger Theo yell
     theoYellIsBingoMiss: false, // Whether the yell is for missing a bingo
     theoYellPhrase: '', // The phrase Theo said
-    
+    // Populated by TheoYellOverlay's own background check (not the shared
+    // "Ask Theo" topMoves) so bingo-miss detection works without requiring
+    // the player to have manually opened the top-moves panel first.
+    theoYellBingoAvailable: false,
+
     // Premium squares for randomized bonus squares mode
     premiumSquares: null, // Array of {row, col, type} objects, null means use standard board
     
@@ -321,6 +325,7 @@ export const useGameStore = create((set, get) => {
       theoYellIsBingoMiss: isBingoMiss 
     }),
     setTheoYellPhrase: (phrase) => set({ theoYellPhrase: phrase }),
+    setTheoYellBingoAvailable: (available) => set({ theoYellBingoAvailable: available }),
     
     // Tess opponent simulation actions
     setTessOpponentSims: (sims) => set({ tessOpponentSims: sims }),

@@ -13,7 +13,7 @@ import Rack from "../../components/AppContent/Board/Rack.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
-import ShakeableMascot from '../../components/AppContent/ShakeableMascot';
+import TheoYellOverlay from './components/TheoYellOverlay';
 import { ThemeContext } from '../../App';
 import { origPool, origBoard, letterLookup } from "../../components/AppContent/References/staticData.js";
 import { createBoard } from "../../functions/boardFunctions.js";
@@ -21,7 +21,6 @@ import { handleTileClick } from '../../functions/play/tileFunctions';
 import { handleBoardPositionSelect } from "../../functions/play/boardFunctions.js";
 import { formatTime } from '../../functions/play/timeUtils';
 import { initializeSounds, updateSoundType } from '../../functions/play/soundFunctions';
-import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
@@ -176,14 +175,6 @@ export default function Play({ isMultiplayer = false }) {
     clearAnalysisLaneSelection,
     runAnalysisLaneIsolation,
 
-    // Theo Yell
-    theoYellEnabled,
-    shouldTheoYell,
-    setShouldTheoYell,
-    theoYellIsBingoMiss,
-    theoYellPhrase,
-    setTheoYellPhrase,
-
     // Premium squares
     premiumSquares,
     setPremiumSquares,
@@ -232,7 +223,6 @@ export default function Play({ isMultiplayer = false }) {
   const timerRef = useRef(null);
   const botMoveMadeRef = useRef(false);
   const mascotRef = useRef();
-  const theoYellMascotRef = useRef(); // Separate ref for Theo Yell mascot
   const [isMobile, setIsMobile] = useState(false);
   const [poolAnchorEl, setPoolAnchorEl] = useState(null);
   // Captured separately from poolAnchorEl (which is cleared to null on
@@ -760,184 +750,12 @@ export default function Play({ isMultiplayer = false }) {
     }
   }, [snackbarMessage, snackbarSeverity, setMoveStatus]);
 
-  // State for dramatic effects
-  const [isTheoYelling, setIsTheoYelling] = useState(false);
-
-  // Trigger Theo yell when shouldTheoYell is set to true
-  useEffect(() => {
-    if (shouldTheoYell && theoYellEnabled) {
-      console.log('🔊 Theo is about to yell!', { shouldTheoYell, theoYellEnabled, mascotRef: !!theoYellMascotRef.current, isBingoMiss: theoYellIsBingoMiss });
-      
-      // Trigger dramatic effects
-      setIsTheoYelling(true);
-      
-      // Small delay to ensure mascot is rendered
-      setTimeout(() => {
-        const phrase = makeTheoYell(theoYellMascotRef, theoYellIsBingoMiss);
-        if (phrase) {
-          setTheoYellPhrase(phrase);
-        }
-      }, 100);
-      
-      // Reset effects after animation completes
-      setTimeout(() => {
-        setIsTheoYelling(false);
-        setTheoYellPhrase('');
-      }, 2000); // Match the duration of effects
-      
-      setShouldTheoYell(false); // Reset the flag
-    }
-  }, [shouldTheoYell, theoYellEnabled, theoYellIsBingoMiss, setShouldTheoYell, setTheoYellPhrase]);
-
   return (
     <Box className={styles.container}>
-      {/* Dramatic Red Background Overlay with multiple layers */}
-      {isTheoYelling && (
-        <>
-          {/* Main red flash overlay */}
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(239, 68, 68, 0.5)',
-              zIndex: 1400,
-              pointerEvents: 'none',
-              animation: 'redFlash 2s ease-out',
-              '@keyframes redFlash': {
-                '0%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0)',
-                  backdropFilter: 'blur(0px)',
-                  opacity: 0
-                },
-                '10%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                  backdropFilter: 'blur(3px)',
-                  opacity: 1
-                },
-                '25%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                  backdropFilter: 'blur(2px)',
-                  opacity: 1
-                },
-                '40%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0.5)',
-                  backdropFilter: 'blur(1px)',
-                  opacity: 0.8
-                },
-                '60%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0.3)',
-                  backdropFilter: 'blur(0.5px)',
-                  opacity: 0.6
-                },
-                '80%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  backdropFilter: 'blur(0px)',
-                  opacity: 0.3
-                },
-                '100%': { 
-                  backgroundColor: 'rgba(239, 68, 68, 0)',
-                  backdropFilter: 'blur(0px)',
-                  opacity: 0
-                }
-              }
-            }}
-          />
-          {/* Pulsing red ring effect - multiple rings */}
-          {[0, 1, 2].map((i) => (
-            <Box
-              key={i}
-              sx={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '200px',
-                height: '200px',
-                borderRadius: '50%',
-                border: '4px solid rgba(239, 68, 68, 0.6)',
-                zIndex: 1401,
-                pointerEvents: 'none',
-                animation: `redPulse 2s ease-out ${i * 0.2}s`,
-                '@keyframes redPulse': {
-                  '0%': { 
-                    transform: 'translate(-50%, -50%) scale(0.5)',
-                    opacity: 1,
-                    borderWidth: '8px',
-                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.8)'
-                  },
-                  '50%': { 
-                    transform: 'translate(-50%, -50%) scale(3)',
-                    opacity: 0.5,
-                    borderWidth: '2px',
-                    boxShadow: '0 0 40px rgba(239, 68, 68, 0.4)'
-                  },
-                  '100%': { 
-                    transform: 'translate(-50%, -50%) scale(5)',
-                    opacity: 0,
-                    borderWidth: '1px',
-                    boxShadow: '0 0 60px rgba(239, 68, 68, 0)'
-                  }
-                }
-              }}
-            />
-          ))}
-          
-          {/* Screen flash effect */}
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.3) 0%, transparent 70%)',
-              zIndex: 1402,
-              pointerEvents: 'none',
-              animation: 'screenFlash 2s ease-out',
-              '@keyframes screenFlash': {
-                '0%': { opacity: 0 },
-                '5%': { opacity: 1 },
-                '15%': { opacity: 0.8 },
-                '30%': { opacity: 0.4 },
-                '50%': { opacity: 0.2 },
-                '100%': { opacity: 0 }
-              }
-            }}
-          />
-        </>
-      )}
-      
+      <TheoYellOverlay />
       <Sidenav/>
-      <Box 
+      <Box
         className={styles.page}
-        sx={isTheoYelling ? {
-          animation: 'boardShake 2s ease-out',
-          '@keyframes boardShake': {
-            '0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
-            '2%': { transform: 'translate(-15px, -8px) rotate(-2deg) scale(1.02)' },
-            '4%': { transform: 'translate(15px, 8px) rotate(2deg) scale(0.98)' },
-            '6%': { transform: 'translate(-12px, -6px) rotate(-1.5deg) scale(1.01)' },
-            '8%': { transform: 'translate(12px, 6px) rotate(1.5deg) scale(0.99)' },
-            '10%': { transform: 'translate(-10px, -5px) rotate(-1deg) scale(1.01)' },
-            '12%': { transform: 'translate(10px, 5px) rotate(1deg) scale(0.99)' },
-            '14%': { transform: 'translate(-8px, -4px) rotate(-0.8deg) scale(1)' },
-            '16%': { transform: 'translate(8px, 4px) rotate(0.8deg) scale(1)' },
-            '18%': { transform: 'translate(-6px, -3px) rotate(-0.5deg) scale(1)' },
-            '20%': { transform: 'translate(6px, 3px) rotate(0.5deg) scale(1)' },
-            '22%': { transform: 'translate(-4px, -2px) rotate(-0.3deg) scale(1)' },
-            '24%': { transform: 'translate(4px, 2px) rotate(0.3deg) scale(1)' },
-            '26%': { transform: 'translate(-3px, -1px) rotate(-0.2deg) scale(1)' },
-            '28%': { transform: 'translate(3px, 1px) rotate(0.2deg) scale(1)' },
-            '30%': { transform: 'translate(-2px, -1px) rotate(-0.1deg) scale(1)' },
-            '32%': { transform: 'translate(2px, 1px) rotate(0.1deg) scale(1)' },
-            '34%': { transform: 'translate(-1px, 0) rotate(0deg) scale(1)' },
-            '36%': { transform: 'translate(1px, 0) rotate(0deg) scale(1)' },
-            '38%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' }
-          }
-        } : {}}
       >
         <Box className={styles.mainPanel} sx={{
           gridTemplateColumns: gameStarted ? '1fr 380px' : '1fr',
@@ -945,34 +763,9 @@ export default function Play({ isMultiplayer = false }) {
         }}>
 
           <Box className={styles.leftContainer}>
-            <Box 
-              className={`${styles.mainBox} ${styles.mainBoxContent}`} 
+            <Box
+              className={`${styles.mainBox} ${styles.mainBoxContent}`}
               component="main"
-              sx={isTheoYelling ? {
-                animation: 'boardShakeIntense 2s ease-out',
-                '@keyframes boardShakeIntense': {
-                  '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-                  '2%': { transform: 'translate(-20px, -10px) rotate(-3deg)' },
-                  '4%': { transform: 'translate(20px, 10px) rotate(3deg)' },
-                  '6%': { transform: 'translate(-18px, -8px) rotate(-2.5deg)' },
-                  '8%': { transform: 'translate(18px, 8px) rotate(2.5deg)' },
-                  '10%': { transform: 'translate(-15px, -6px) rotate(-2deg)' },
-                  '12%': { transform: 'translate(15px, 6px) rotate(2deg)' },
-                  '14%': { transform: 'translate(-12px, -5px) rotate(-1.5deg)' },
-                  '16%': { transform: 'translate(12px, 5px) rotate(1.5deg)' },
-                  '18%': { transform: 'translate(-10px, -4px) rotate(-1deg)' },
-                  '20%': { transform: 'translate(10px, 4px) rotate(1deg)' },
-                  '22%': { transform: 'translate(-8px, -3px) rotate(-0.8deg)' },
-                  '24%': { transform: 'translate(8px, 3px) rotate(0.8deg)' },
-                  '26%': { transform: 'translate(-6px, -2px) rotate(-0.5deg)' },
-                  '28%': { transform: 'translate(6px, 2px) rotate(0.5deg)' },
-                  '30%': { transform: 'translate(-4px, -1px) rotate(-0.3deg)' },
-                  '32%': { transform: 'translate(4px, 1px) rotate(0.3deg)' },
-                  '34%': { transform: 'translate(-2px, 0) rotate(-0.1deg)' },
-                  '36%': { transform: 'translate(2px, 0) rotate(0.1deg)' },
-                  '38%, 100%': { transform: 'translate(0, 0) rotate(0deg)' }
-                }
-              } : {}}
             >
           {gameStarted ? (
           <Board 
@@ -1443,84 +1236,7 @@ export default function Play({ isMultiplayer = false }) {
           </Box>
         </Modal>
 
-        {/* Theo Yell Mascot - appears in center when yelling */}
-        {isTheoYelling && (
-          <Box
-                    sx={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 1500,
-              pointerEvents: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-              animation: 'theoAppear 2s ease-out',
-              '@keyframes theoAppear': {
-                '0%': { 
-                  transform: 'translate(-50%, -50%) scale(0.3)',
-                  opacity: 0,
-                  filter: 'brightness(1.5) drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))'
-                      },
-                '10%': { 
-                  transform: 'translate(-50%, -50%) scale(1.2)',
-                  opacity: 1,
-                  filter: 'brightness(1.3) drop-shadow(0 0 30px rgba(239, 68, 68, 1))'
-                },
-                '20%': { 
-                  transform: 'translate(-50%, -50%) scale(1)',
-                  opacity: 1,
-                  filter: 'brightness(1.2) drop-shadow(0 0 25px rgba(239, 68, 68, 0.9))'
-                },
-                '50%': { 
-                  transform: 'translate(-50%, -50%) scale(1)',
-                  opacity: 1,
-                  filter: 'brightness(1.1) drop-shadow(0 0 20px rgba(239, 68, 68, 0.7))'
-                },
-                '80%': { 
-                  transform: 'translate(-50%, -50%) scale(0.95)',
-                  opacity: 0.8,
-                  filter: 'brightness(1) drop-shadow(0 0 15px rgba(239, 68, 68, 0.5))'
-                },
-                '100%': { 
-                  transform: 'translate(-50%, -50%) scale(0.8)',
-                  opacity: 0,
-                  filter: 'brightness(1) drop-shadow(0 0 10px rgba(239, 68, 68, 0))'
-                }
-              }
-            }}
-          >
-            <ShakeableMascot 
-              ref={theoYellMascotRef} 
-              src="/images/compressed/theomascot-compressed.png" 
-              width={200} 
-              alt="Theo yelling" 
-            />
-            {theoYellPhrase && (
-              <Box
-                className={styles.theoYellPhrase}
-                sx={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.95)',
-                    color: '#fff',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  textAlign: 'center',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  maxWidth: '300px'
-                }}
-              >
-                {theoYellPhrase}
-              </Box>
-            )}
-          </Box>
-        )}
-
-      <Snackbar 
+      <Snackbar
         open={snackbarOpen} 
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}

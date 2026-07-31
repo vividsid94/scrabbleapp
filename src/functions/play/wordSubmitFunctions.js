@@ -266,59 +266,33 @@ export const handleWordSubmit = async (playerMoveSound) => {
   // through the bot's next turn.
   setTopMoves([]);
 
-  // Prepare move coach data (async, non-blocking) - only if enabled
-  // Capture tile count BEFORE clearing selectedTiles (for bingo detection)
-  // Count all tiles placed, including blanks (blanks are represented as '*' in selectedTiles)
-  // selectedTiles structure: [{ tile: 'A' or '*', row, col }, ...]
-  // A bingo uses all 7 tiles from the rack, so we just need to count selectedTiles.length
-  const tilesPlacedCount = selectedTiles.length;
+  // Theo Yell check - runs synchronously right here (no artificial delay -
+  // everything it needs, including bingo availability, is already computed
+  // by the time a move is submitted; see TheoYellOverlay.js for the
+  // background bingo-availability check that keeps this instant).
+  try {
+    const { theoYellEnabled, theoYellCriteria, theoYellScoreThreshold, theoYellBingoAvailable } = useGameStore.getState();
 
-  setTimeout(() => {
-    try {
-      const { topMoves, theoYellEnabled, theoYellCriteria, theoYellScoreThreshold } = useGameStore.getState();
-
-      if (!theoYellEnabled) {
-        return;
-      }
-
+    if (theoYellEnabled) {
       let shouldYell = false;
 
       if (theoYellCriteria === 'score') {
         // Check if move score is below threshold
         shouldYell = score < theoYellScoreThreshold;
       } else if (theoYellCriteria === 'bingo') {
-        // Check if player missed a bingo
-        // A bingo is when you use all 7 tiles from your rack
-        // Use the captured count from before selectedTiles was cleared
-        const playerMoveIsBingo = tilesPlacedCount === 7;
-
-        // Check if there's a bingo available in top moves
-        // A bingo move uses exactly 7 tiles from the rack
-        const hasBingoAvailable = topMoves && topMoves.some(move => {
-          if (!move.tiles) return false;
-          // Count only new tiles (tiles from the rack)
-          // This includes both regular tiles and blanks
-          const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
-          return newTilesCount === 7;
-        });
-
-        shouldYell = hasBingoAvailable && !playerMoveIsBingo;
+        // A bingo uses all 7 tiles from the rack. theoYellBingoAvailable is
+        // set by TheoYellOverlay's own background check at the start of
+        // this turn (using the player's full starting rack), independent
+        // of whether the player ever opened the "Ask Theo" panel.
+        const playerMoveIsBingo = selectedTiles.length === 7;
+        shouldYell = theoYellBingoAvailable && !playerMoveIsBingo;
       }
 
       if (shouldYell) {
-        // Signal that Theo should yell (we'll handle this in Play component)
-        const isBingoMiss = theoYellCriteria === 'bingo' &&
-          topMoves && topMoves.some(move => {
-            if (!move.tiles) return false;
-            const newTilesCount = move.tiles.filter(tile => tile.isNew !== false).length;
-            return newTilesCount === 7;
-          }) &&
-          selectedTiles.length !== 7;
-
-        useGameStore.getState().setShouldTheoYell(true, isBingoMiss);
+        useGameStore.getState().setShouldTheoYell(true, theoYellCriteria === 'bingo');
       }
-    } catch (error) {
-      console.warn('Error checking Theo yell criteria:', error);
     }
-  }, 500); // Small delay to let UI update first
+  } catch (error) {
+    console.warn('Error checking Theo yell criteria:', error);
+  }
 };
