@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox } from '@mui/material';
+import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, RadioGroup, Radio, FormControlLabel } from '@mui/material';
 import { Play, Stop, Download, CaretDown, CaretUp } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
@@ -43,6 +43,8 @@ const SandboxPlayerInfo = React.memo(() => {
   const player2LeaveRules = useSandboxStore(state => state.player2LeaveRules);
   const player1BingoAversion = useSandboxStore(state => state.player1BingoAversion);
   const player2BingoAversion = useSandboxStore(state => state.player2BingoAversion);
+  const player1SpecialSelection = useSandboxStore(state => state.player1SpecialSelection);
+  const player2SpecialSelection = useSandboxStore(state => state.player2SpecialSelection);
   const totalGames = useSandboxStore(state => state.totalGames);
   // Any static-bot matchup (Theo or a chosen Nth static, either side) runs
   // server-side in bulk and can handle far more games than the per-move
@@ -76,6 +78,8 @@ const SandboxPlayerInfo = React.memo(() => {
     updateLeaveRule,
     removeLeaveRule,
     setBingoAversion,
+    setPlayer1SpecialSelection,
+    setPlayer2SpecialSelection,
     setTotalGames,
     startSeries,
     stopSeries,
@@ -210,6 +214,16 @@ const SandboxPlayerInfo = React.memo(() => {
     '&.Mui-checked': { color: accentColor },
   };
 
+  const radioSx = {
+    padding: '2px 4px', color: mutedTextColor,
+    '&.Mui-checked': { color: accentColor },
+  };
+
+  const radioLabelSx = {
+    marginRight: '6px',
+    '& .MuiFormControlLabel-label': { fontSize: '11px', color: textColor },
+  };
+
   const gamesCompleted = seriesResults.length;
   const realProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
   // Whichever signal is further along wins - the time-based estimate covers
@@ -237,13 +251,21 @@ const SandboxPlayerInfo = React.memo(() => {
           botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1',
           leaveRules: player1LeaveRules, addRule: () => addLeaveRule(1), updateRule: (i, patch) => updateLeaveRule(1, i, patch), removeRule: (i) => removeLeaveRule(1, i),
           bingoAversion: player1BingoAversion, setBingoAv: (patch) => setBingoAversion(1, patch),
+          specialSelection: player1SpecialSelection, setSpecialSelection: setPlayer1SpecialSelection,
         },
         {
           botName: player2BotName, setBotName: setPlayer2BotName, rank: player2StaticRank, setRank: setPlayer2StaticRank, label: 'Player 2',
           leaveRules: player2LeaveRules, addRule: () => addLeaveRule(2), updateRule: (i, patch) => updateLeaveRule(2, i, patch), removeRule: (i) => removeLeaveRule(2, i),
           bingoAversion: player2BingoAversion, setBingoAv: (patch) => setBingoAversion(2, patch),
+          specialSelection: player2SpecialSelection, setSpecialSelection: setPlayer2SpecialSelection,
         },
-      ].map((side, i) => (
+      ].map((side, i) => {
+        // "Longest word"/"Most tiles" are absolute overrides (simulate.go's
+        // BotConfig.SpecialSelection) - no conjunction with rank, leave
+        // rules, or bingo aversion is allowed, so those controls are
+        // disabled outright rather than trying to reconcile them.
+        const specialActive = side.specialSelection !== '';
+        return (
         <React.Fragment key={side.label}>
           {i === 1 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0' }}>
@@ -280,11 +302,49 @@ const SandboxPlayerInfo = React.memo(() => {
                   min={1}
                   max={15}
                   step={1}
-                  disabled={isRunning}
+                  disabled={isRunning || specialActive}
                   valueLabelDisplay="on"
                   valueLabelFormat={(v) => `Speedy${v}`}
                   sx={sliderSx}
                 />
+              </Box>
+            )}
+            {/* Speedy-only override modes (simulate.go's
+                BotConfig.SpecialSelection) - absolute, no conjunction with
+                rank/leave rules/bingo aversion, so selecting either one
+                disables all of those below instead of trying to combine
+                them. */}
+            {side.botName === 'Static' && (
+              <Box sx={{ marginBottom: '10px' }}>
+                <Box sx={{ fontSize: '10px', fontWeight: 600, color: textColor, marginBottom: '2px' }}>
+                  Play style
+                </Box>
+                <RadioGroup
+                  row
+                  value={side.specialSelection}
+                  onChange={(e) => side.setSpecialSelection(e.target.value)}
+                  sx={{ flexWrap: 'wrap' }}
+                >
+                  {[
+                    { value: '', label: 'Normal' },
+                    { value: 'longestWord', label: 'Longest word' },
+                    { value: 'mostTiles', label: 'Most tiles' },
+                  ].map((opt) => (
+                    <FormControlLabel
+                      key={opt.value || 'normal'}
+                      value={opt.value}
+                      disabled={isRunning}
+                      control={<Radio size="small" sx={radioSx} />}
+                      label={opt.label}
+                      sx={radioLabelSx}
+                    />
+                  ))}
+                </RadioGroup>
+                {specialActive && (
+                  <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '2px', lineHeight: 1.4 }}>
+                    Ignores rank, leave rules, and bingo aversion - picks purely by {side.specialSelection === 'longestWord' ? 'word length' : 'tiles played'}, then score, then leave, then randomly among ties.
+                  </Box>
+                )}
               </Box>
             )}
             {/* Tess ignores LeaveRules entirely server-side (simulate.go's
@@ -297,7 +357,7 @@ const SandboxPlayerInfo = React.memo(() => {
                 onAdd={side.addRule}
                 onUpdate={side.updateRule}
                 onRemove={side.removeRule}
-                disabled={isRunning}
+                disabled={isRunning || specialActive}
                 textColor={textColor}
                 mutedTextColor={mutedTextColor}
                 borderColor={borderColor}
@@ -316,7 +376,7 @@ const SandboxPlayerInfo = React.memo(() => {
                   <Checkbox
                     size="small"
                     checked={side.bingoAversion.probabilityEnabled}
-                    disabled={isRunning}
+                    disabled={isRunning || specialActive}
                     onChange={(e) => side.setBingoAv({ probabilityEnabled: e.target.checked })}
                     sx={checkboxSx}
                   />
@@ -334,7 +394,7 @@ const SandboxPlayerInfo = React.memo(() => {
                       min={0}
                       max={1}
                       step={0.05}
-                      disabled={isRunning}
+                      disabled={isRunning || specialActive}
                       valueLabelDisplay="auto"
                       valueLabelFormat={(v) => `${Math.round(v * 100)}%`}
                       sx={sliderSx}
@@ -346,7 +406,7 @@ const SandboxPlayerInfo = React.memo(() => {
                   <Checkbox
                     size="small"
                     checked={side.bingoAversion.rankLimitEnabled}
-                    disabled={isRunning}
+                    disabled={isRunning || specialActive}
                     onChange={(e) => side.setBingoAv({ rankLimitEnabled: e.target.checked })}
                     sx={checkboxSx}
                   />
@@ -361,7 +421,7 @@ const SandboxPlayerInfo = React.memo(() => {
                         onCommit={(n) => side.setBingoAv({ maxProbabilityRank: n })}
                         parse={(s) => parseInt(s, 10)}
                         min={1}
-                        disabled={isRunning}
+                        disabled={isRunning || specialActive}
                         sx={{ '& .MuiInputBase-input': { fontSize: '11px', color: textColor, width: '56px', padding: '3px 6px' } }}
                       />
                       <Box sx={{ fontSize: '10px', color: mutedTextColor }}>most common 7s/8s</Box>
@@ -375,7 +435,8 @@ const SandboxPlayerInfo = React.memo(() => {
             )}
           </Box>
         </React.Fragment>
-      ))}
+        );
+      })}
 
       <Box sx={{ ...sectionSx, marginTop: '10px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>

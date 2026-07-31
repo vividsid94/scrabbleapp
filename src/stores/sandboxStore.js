@@ -244,6 +244,16 @@ export const useSandboxStore = create((set, get) => ({
     totalGames: Math.min(Math.max(1, n || 1), getMaxGamesForBots(state.player1BotName, state.player2BotName))
   })),
 
+  // Speedy-only override modes (see simulate.go's BotConfig.SpecialSelection) -
+  // '' (normal), 'longestWord', or 'mostTiles'. Deliberately mutually
+  // exclusive with rank, LeaveRules, and BingoAversion (no conjunction
+  // allowed), so the UI disables those controls whenever this is set
+  // rather than trying to reconcile them.
+  player1SpecialSelection: '',
+  player2SpecialSelection: '',
+  setPlayer1SpecialSelection: (value) => set({ player1SpecialSelection: value }),
+  setPlayer2SpecialSelection: (value) => set({ player2SpecialSelection: value }),
+
   // Per-side leave-value rules (see simulate.go's LeaveRule) that let a
   // Theo/Static bot's candidate ranking diverge from the plain leaves.json
   // table - Tess ignores these entirely (simulate.go's pickTessCandidate
@@ -584,7 +594,8 @@ export const useSandboxStore = create((set, get) => ({
   startSeries: async () => {
     const {
       player1BotName, player2BotName, player1StaticRank, player2StaticRank,
-      player1LeaveRules, player2LeaveRules, player1BingoAversion, player2BingoAversion
+      player1LeaveRules, player2LeaveRules, player1BingoAversion, player2BingoAversion,
+      player1SpecialSelection, player2SpecialSelection
     } = get();
     // Defensive re-clamp in case bot selection changed after totalGames was
     // set (setPlayer1BotName/setPlayer2BotName already re-clamp on change,
@@ -643,10 +654,12 @@ export const useSandboxStore = create((set, get) => ({
         const player1Bot = {
           rank: player1Rank || 1, leaveRules: sanitizeLeaveRules(player1LeaveRules), isTess: player1BotName === 'Tess',
           bingoAversion: buildBingoAversionPayload(player1BingoAversion),
+          specialSelection: player1SpecialSelection || undefined,
         };
         const player2Bot = {
           rank: player2Rank || 1, leaveRules: sanitizeLeaveRules(player2LeaveRules), isTess: player2BotName === 'Tess',
           bingoAversion: buildBingoAversionPayload(player2BingoAversion),
+          specialSelection: player2SpecialSelection || undefined,
         };
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',
