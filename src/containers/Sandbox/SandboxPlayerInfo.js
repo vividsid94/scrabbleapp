@@ -41,6 +41,27 @@ const SandboxPlayerInfo = React.memo(() => {
     return next;
   });
   const [showAdvancedStats, setShowAdvancedStats] = useState(false);
+  // Keyed by side index (0/1) since Player 1 and Player 2 each get their
+  // own independent collapsible sections - all collapsed by default, same
+  // as Advanced stats below.
+  const [expandedLeaveRules, setExpandedLeaveRules] = useState(() => new Set());
+  const toggleLeaveRules = (sideIndex) => setExpandedLeaveRules(prev => {
+    const next = new Set(prev);
+    if (next.has(sideIndex)) next.delete(sideIndex); else next.add(sideIndex);
+    return next;
+  });
+  const [expandedWordRules, setExpandedWordRules] = useState(() => new Set());
+  const toggleWordRules = (sideIndex) => setExpandedWordRules(prev => {
+    const next = new Set(prev);
+    if (next.has(sideIndex)) next.delete(sideIndex); else next.add(sideIndex);
+    return next;
+  });
+  const [expandedPeculiar, setExpandedPeculiar] = useState(() => new Set());
+  const togglePeculiar = (sideIndex) => setExpandedPeculiar(prev => {
+    const next = new Set(prev);
+    if (next.has(sideIndex)) next.delete(sideIndex); else next.add(sideIndex);
+    return next;
+  });
 
   const player1BotName = useSandboxStore(state => state.player1BotName);
   const player2BotName = useSandboxStore(state => state.player2BotName);
@@ -318,131 +339,234 @@ const SandboxPlayerInfo = React.memo(() => {
                 />
               </Box>
             )}
-            {/* Speedy-only override modes (simulate.go's
-                BotConfig.SpecialSelection) - absolute, no conjunction with
-                rank/leave rules/bingo aversion, so selecting either one
-                disables all of those below instead of trying to combine
-                them. */}
-            {side.botName === 'Static' && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: '32px', rowGap: '4px', marginBottom: '10px' }}>
-                {[
-                  { value: '', label: 'Normal' },
-                  { value: 'longestWord', label: 'Longest word' },
-                  { value: 'mostTiles', label: 'Most tiles' },
-                ].map((opt) => {
-                  // Entering a special-selection mode also actually clears
-                  // (not just visually disables) both bingo-aversion
-                  // checkboxes - leaving them checked-but-disabled would
-                  // look like they're still in effect when they're not.
-                  const selectOpt = () => {
-                    if (isRunning) return;
-                    side.setSpecialSelection(opt.value);
-                    if (opt.value !== '') {
-                      side.setBingoAv({ probabilityEnabled: false, rankLimitEnabled: false });
-                    }
-                  };
-                  return (
-                    <Box
-                      key={opt.value || 'normal'}
-                      onClick={selectOpt}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: isRunning ? 'default' : 'pointer' }}
-                    >
-                      <Radio
-                        size="small"
-                        checked={side.specialSelection === opt.value}
-                        disabled={isRunning}
-                        onChange={selectOpt}
-                        sx={checkboxSx}
-                      />
-                      <Box sx={{ fontSize: '11px', color: textColor }}>{opt.label}</Box>
-                    </Box>
-                  );
-                })}
-              </Box>
-            )}
             {/* Tess ignores LeaveRules entirely server-side (simulate.go's
                 pickTessCandidate always uses the plain baselineTotal) -
                 hiding the editor for her keeps the UI honest instead of
-                letting someone configure rules that silently do nothing. */}
+                letting someone configure rules that silently do nothing.
+                Collapsed by default (same caret pattern as the other
+                sections here); the header shows a rule count when
+                collapsed so a configured-but-hidden list is never
+                mistaken for empty. The whole header (not just the rule
+                rows inside) is disabled while a Peculiar mode is active -
+                SpecialSelection ignores LeaveRules entirely server-side,
+                so there's nothing here to toggle open/closed either. */}
             {side.botName !== 'Tess' && (
-              <SandboxLeaveRules
-                rules={side.leaveRules}
-                onAdd={side.addRule}
-                onUpdate={side.updateRule}
-                onRemove={side.removeRule}
-                disabled={isRunning || specialActive}
-                textColor={textColor}
-                mutedTextColor={mutedTextColor}
-                borderColor={borderColor}
-                accentColor={accentColor}
-              />
+              <Box sx={{ marginBottom: '10px' }}>
+                <Box
+                  onClick={specialActive ? undefined : () => toggleLeaveRules(i)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    cursor: specialActive ? 'default' : 'pointer',
+                    fontSize: '12px', fontWeight: 600,
+                    color: specialActive ? mutedTextColor : accentColor,
+                    opacity: specialActive ? 0.5 : 1,
+                  }}
+                >
+                  {expandedLeaveRules.has(i) ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+                  Leave rules
+                  {!expandedLeaveRules.has(i) && side.leaveRules.length > 0 && (
+                    <Box component="span" sx={{ fontWeight: 400, fontStyle: 'italic', color: mutedTextColor }}>
+                      ({side.leaveRules.length})
+                    </Box>
+                  )}
+                </Box>
+                {expandedLeaveRules.has(i) && (
+                  <Box sx={{ marginTop: '6px' }}>
+                    <SandboxLeaveRules
+                      rules={side.leaveRules}
+                      onAdd={side.addRule}
+                      onUpdate={side.updateRule}
+                      onRemove={side.removeRule}
+                      disabled={isRunning || specialActive}
+                      textColor={textColor}
+                      mutedTextColor={mutedTextColor}
+                      borderColor={borderColor}
+                      accentColor={accentColor}
+                    />
+                  </Box>
+                )}
+              </Box>
             )}
             {/* Comedically self-defeating: excludes 7-tile plays from this
                 bot's own candidate pool before ranking, so she'll pass up
                 a bingo even if it's the best move on the board. simulate.go
                 actually applies this uniformly regardless of Tess/rank-based
                 (it filters the pool before either selection mechanism sees
-                it) - hidden for Tess here anyway, UI-only for now. */}
+                it) - hidden for Tess here anyway, UI-only for now. Grouped
+                as a collapsible "Word rules" section (both checkboxes
+                govern which words this bot is willing to play) - same
+                caret pattern as the sections around it, header names
+                whichever mechanism(s) are active when collapsed. Whole
+                header disabled (not just the checkboxes inside) while a
+                Peculiar mode is active, same reasoning as Leave rules
+                above - a Peculiar mode actively seeks out bingos, so
+                there's nothing to reconcile with a rule that excludes
+                them. */}
             {side.botName !== 'Tess' && (
-              <>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <Checkbox
-                    size="small"
-                    checked={side.bingoAversion.probabilityEnabled}
-                    disabled={isRunning || specialActive}
-                    onChange={(e) => side.setBingoAv({ probabilityEnabled: e.target.checked })}
-                    sx={checkboxSx}
-                  />
-                  <Box sx={{ fontSize: '11px', color: textColor }}>Avoid bingos</Box>
-                </Box>
-                {side.bingoAversion.probabilityEnabled && (
-                  <Box sx={{ padding: '0 10px 4px' }}>
-                    <Box sx={{ fontSize: '10px', color: mutedTextColor, marginBottom: '2px' }}>
-                      Chance to skip a bingo: {Math.round(side.bingoAversion.probability * 100)}%
+              <Box sx={{ marginBottom: '10px' }}>
+                <Box
+                  onClick={specialActive ? undefined : () => toggleWordRules(i)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    cursor: specialActive ? 'default' : 'pointer',
+                    fontSize: '12px', fontWeight: 600,
+                    color: specialActive ? mutedTextColor : accentColor,
+                    opacity: specialActive ? 0.5 : 1,
+                  }}
+                >
+                  {expandedWordRules.has(i) ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+                  Word rules
+                  {!expandedWordRules.has(i) && (side.bingoAversion.probabilityEnabled || side.bingoAversion.rankLimitEnabled) && (
+                    <Box component="span" sx={{ fontWeight: 400, fontStyle: 'italic', color: mutedTextColor }}>
+                      ({[
+                        side.bingoAversion.probabilityEnabled && 'avoid bingos',
+                        side.bingoAversion.rankLimitEnabled && 'vocab limit',
+                      ].filter(Boolean).join(', ')})
                     </Box>
-                    <Slider
-                      size="small"
-                      value={side.bingoAversion.probability}
-                      onChange={(e, val) => side.setBingoAv({ probability: val })}
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      disabled={isRunning || specialActive}
-                      sx={sliderSx}
-                    />
-                  </Box>
-                )}
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                  <Checkbox
-                    size="small"
-                    checked={side.bingoAversion.rankLimitEnabled}
-                    disabled={isRunning || specialActive}
-                    onChange={(e) => side.setBingoAv({ rankLimitEnabled: e.target.checked })}
-                    sx={checkboxSx}
-                  />
-                  <Box sx={{ fontSize: '11px', color: textColor }}>Limit bingo vocabulary</Box>
+                  )}
                 </Box>
-                {side.bingoAversion.rankLimitEnabled && (
-                  <Box sx={{ padding: '0 10px 4px' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Only knows the top</Box>
-                      <SandboxNumberField
-                        value={side.bingoAversion.maxProbabilityRank}
-                        onCommit={(n) => side.setBingoAv({ maxProbabilityRank: n })}
-                        parse={(s) => parseInt(s, 10)}
-                        min={1}
+                {expandedWordRules.has(i) && (
+                  <Box sx={{ marginTop: '6px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Checkbox
+                        size="small"
+                        checked={side.bingoAversion.probabilityEnabled}
                         disabled={isRunning || specialActive}
-                        sx={{ '& .MuiInputBase-input': { fontSize: '11px', color: textColor, width: '56px', padding: '3px 6px' } }}
+                        onChange={(e) => side.setBingoAv({ probabilityEnabled: e.target.checked })}
+                        sx={checkboxSx}
                       />
-                      <Box sx={{ fontSize: '10px', color: mutedTextColor }}>most common 7s/8s</Box>
+                      <Box sx={{ fontSize: '11px', color: textColor }}>Avoid bingos</Box>
                     </Box>
-                    <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '4px', lineHeight: 1.4 }}>
-                      Ranked by NWL23 probability order, separately for 7s and 8s. 9+ letter bingos are never restricted by this.
+                    {side.bingoAversion.probabilityEnabled && (
+                      <Box sx={{ padding: '0 10px 4px' }}>
+                        <Box sx={{ fontSize: '10px', color: mutedTextColor, marginBottom: '2px' }}>
+                          Chance to skip a bingo: {Math.round(side.bingoAversion.probability * 100)}%
+                        </Box>
+                        <Slider
+                          size="small"
+                          value={side.bingoAversion.probability}
+                          onChange={(e, val) => side.setBingoAv({ probability: val })}
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          disabled={isRunning || specialActive}
+                          sx={sliderSx}
+                        />
+                      </Box>
+                    )}
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                      <Checkbox
+                        size="small"
+                        checked={side.bingoAversion.rankLimitEnabled}
+                        disabled={isRunning || specialActive}
+                        onChange={(e) => side.setBingoAv({ rankLimitEnabled: e.target.checked })}
+                        sx={checkboxSx}
+                      />
+                      <Box sx={{ fontSize: '11px', color: textColor }}>Limit bingo vocabulary</Box>
                     </Box>
+                    {side.bingoAversion.rankLimitEnabled && (
+                      <Box sx={{ padding: '0 10px 4px' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Only knows the top</Box>
+                          <SandboxNumberField
+                            value={side.bingoAversion.maxProbabilityRank}
+                            onCommit={(n) => side.setBingoAv({ maxProbabilityRank: n })}
+                            parse={(s) => parseInt(s, 10)}
+                            min={1}
+                            disabled={isRunning || specialActive}
+                            sx={{ '& .MuiInputBase-input': { fontSize: '11px', color: textColor, width: '56px', padding: '3px 6px' } }}
+                          />
+                          <Box sx={{ fontSize: '10px', color: mutedTextColor }}>most common 7s/8s</Box>
+                        </Box>
+                        <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '4px', lineHeight: 1.4 }}>
+                          Ranked by NWL23 probability order, separately for 7s and 8s. 9+ letter bingos are never restricted by this.
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
                 )}
-              </>
+              </Box>
+            )}
+            {/* Speedy-only override modes (simulate.go's
+                BotConfig.SpecialSelection) - absolute, no conjunction with
+                rank/leave rules/bingo aversion, so selecting either one
+                disables all of those above instead of trying to combine
+                them. Grouped as a collapsible "Peculiar" section, last in
+                this card since both modes are intentionally weird
+                deviations from normal play rather than everyday
+                configuration. Collapsed by default, but the header names
+                the active mode if one's set and the section is collapsed,
+                so switching bots or glancing past it never hides that it's
+                in effect. Radios stacked vertically rather than a
+                horizontal group; there's no explicit "Normal" radio -
+                clicking whichever one is already checked deselects it back
+                to normal instead, since plain MUI radios can't do that on
+                their own. */}
+            {side.botName === 'Static' && (
+              <Box sx={{ marginBottom: '10px' }}>
+                <Box
+                  onClick={() => togglePeculiar(i)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                    fontSize: '12px', fontWeight: 600, color: accentColor,
+                  }}
+                >
+                  {expandedPeculiar.has(i) ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+                  Peculiar
+                  {!expandedPeculiar.has(i) && specialActive && (
+                    <Box component="span" sx={{ fontWeight: 400, fontStyle: 'italic', color: mutedTextColor }}>
+                      ({side.specialSelection === 'longestWord' ? 'Longest word' : 'Most tiles'})
+                    </Box>
+                  )}
+                </Box>
+                {expandedPeculiar.has(i) && (
+                  <Box sx={{ padding: '8px', marginTop: '6px', borderRadius: '6px', border: `1px dashed ${borderColor}` }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {[
+                        { value: 'longestWord', label: 'Longest word' },
+                        { value: 'mostTiles', label: 'Most tiles' },
+                      ].map((opt) => {
+                        const isChecked = side.specialSelection === opt.value;
+                        const selectOpt = () => {
+                          if (isRunning) return;
+                          const next = isChecked ? '' : opt.value;
+                          side.setSpecialSelection(next);
+                          // Entering a special-selection mode also actually
+                          // clears (not just visually disables) both bingo-
+                          // aversion checkboxes - leaving them checked-but-
+                          // disabled would look like they're still in
+                          // effect when they're not.
+                          if (next !== '') {
+                            side.setBingoAv({ probabilityEnabled: false, rankLimitEnabled: false });
+                          }
+                        };
+                        return (
+                          <Box
+                            key={opt.value}
+                            onClick={selectOpt}
+                            sx={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: isRunning ? 'default' : 'pointer' }}
+                          >
+                            <Radio
+                              size="small"
+                              checked={isChecked}
+                              disabled={isRunning}
+                              onChange={selectOpt}
+                              sx={checkboxSx}
+                            />
+                            <Box sx={{ fontSize: '11px', color: textColor }}>{opt.label}</Box>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                    {specialActive && (
+                      <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '6px', lineHeight: 1.4 }}>
+                        Overrides rank, leave rules, and bingo aversion above - tap the active option again to return to normal.
+                      </Box>
+                    )}
+                  </Box>
+                )}
+              </Box>
             )}
           </Box>
         </React.Fragment>
