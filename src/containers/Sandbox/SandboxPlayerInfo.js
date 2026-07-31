@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, RadioGroup, Radio, FormControlLabel } from '@mui/material';
+import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio } from '@mui/material';
 import { Play, Stop, Download, CaretDown, CaretUp } from '@phosphor-icons/react';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import LatestMove from '../Play/components/LatestMove.js';
@@ -214,16 +214,6 @@ const SandboxPlayerInfo = React.memo(() => {
     '&.Mui-checked': { color: accentColor },
   };
 
-  const radioSx = {
-    padding: '2px 4px', color: mutedTextColor,
-    '&.Mui-checked': { color: accentColor },
-  };
-
-  const radioLabelSx = {
-    marginRight: '6px',
-    '& .MuiFormControlLabel-label': { fontSize: '11px', color: textColor },
-  };
-
   const gamesCompleted = seriesResults.length;
   const realProgressPercent = totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
   // Whichever signal is further along wins - the time-based estimate covers
@@ -303,8 +293,6 @@ const SandboxPlayerInfo = React.memo(() => {
                   max={15}
                   step={1}
                   disabled={isRunning || specialActive}
-                  valueLabelDisplay="on"
-                  valueLabelFormat={(v) => `Speedy${v}`}
                   sx={sliderSx}
                 />
               </Box>
@@ -315,36 +303,27 @@ const SandboxPlayerInfo = React.memo(() => {
                 disables all of those below instead of trying to combine
                 them. */}
             {side.botName === 'Static' && (
-              <Box sx={{ marginBottom: '10px' }}>
-                <Box sx={{ fontSize: '10px', fontWeight: 600, color: textColor, marginBottom: '2px' }}>
-                  Play style
-                </Box>
-                <RadioGroup
-                  row
-                  value={side.specialSelection}
-                  onChange={(e) => side.setSpecialSelection(e.target.value)}
-                  sx={{ flexWrap: 'wrap' }}
-                >
-                  {[
-                    { value: '', label: 'Normal' },
-                    { value: 'longestWord', label: 'Longest word' },
-                    { value: 'mostTiles', label: 'Most tiles' },
-                  ].map((opt) => (
-                    <FormControlLabel
-                      key={opt.value || 'normal'}
-                      value={opt.value}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: '32px', rowGap: '4px', marginBottom: '10px' }}>
+                {[
+                  { value: '', label: 'Normal' },
+                  { value: 'longestWord', label: 'Longest word' },
+                  { value: 'mostTiles', label: 'Most tiles' },
+                ].map((opt) => (
+                  <Box
+                    key={opt.value || 'normal'}
+                    onClick={() => !isRunning && side.setSpecialSelection(opt.value)}
+                    sx={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: isRunning ? 'default' : 'pointer' }}
+                  >
+                    <Radio
+                      size="small"
+                      checked={side.specialSelection === opt.value}
                       disabled={isRunning}
-                      control={<Radio size="small" sx={radioSx} />}
-                      label={opt.label}
-                      sx={radioLabelSx}
+                      onChange={() => side.setSpecialSelection(opt.value)}
+                      sx={checkboxSx}
                     />
-                  ))}
-                </RadioGroup>
-                {specialActive && (
-                  <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '2px', lineHeight: 1.4 }}>
-                    Ignores rank, leave rules, and bingo aversion - picks purely by {side.specialSelection === 'longestWord' ? 'word length' : 'tiles played'}, then score, then leave, then randomly among ties.
+                    <Box sx={{ fontSize: '11px', color: textColor }}>{opt.label}</Box>
                   </Box>
-                )}
+                ))}
               </Box>
             )}
             {/* Tess ignores LeaveRules entirely server-side (simulate.go's
@@ -395,8 +374,6 @@ const SandboxPlayerInfo = React.memo(() => {
                       max={1}
                       step={0.05}
                       disabled={isRunning || specialActive}
-                      valueLabelDisplay="auto"
-                      valueLabelFormat={(v) => `${Math.round(v * 100)}%`}
                       sx={sliderSx}
                     />
                   </Box>
