@@ -28,6 +28,7 @@ const SandboxPlayerInfo = React.memo(() => {
     if (next.has(gameIndex)) next.delete(gameIndex); else next.add(gameIndex);
     return next;
   });
+  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
   const player1BotName = useSandboxStore(state => state.player1BotName);
   const player2BotName = useSandboxStore(state => state.player2BotName);
@@ -121,6 +122,29 @@ const SandboxPlayerInfo = React.memo(() => {
       / (Math.pow(totalPlayer1Points, exponent) + Math.pow(totalPlayer2Points, exponent));
     pythPlayer1Wins = player1WinPct * gamesPlayed;
     pythPlayer2Wins = gamesPlayed - pythPlayer1Wins;
+  }
+
+  // 95% confidence interval (Wilson score interval) for player 1's true
+  // win probability - "if this series ran forever, what win% would it
+  // converge to." Wilson rather than the naive p̂ ± z·SE (Wald) interval:
+  // Wald produces nonsensical out-of-[0,1] bounds and has poor coverage at
+  // small sample sizes or when p̂ is near 0/1, both common in a short
+  // series - Wilson stays well-behaved in exactly those cases. Ties count
+  // as "not a win" in the denominator (same as any standard win-rate),
+  // consistent with how Tally/player1Wins above are already computed.
+  const Z_95 = 1.959963985;
+  let player1WinRate = gamesPlayed > 0 ? player1Wins / gamesPlayed : 0.5;
+  let winRateCiLow = player1WinRate;
+  let winRateCiHigh = player1WinRate;
+  if (gamesPlayed > 0) {
+    const z2 = Z_95 * Z_95;
+    const denominator = 1 + z2 / gamesPlayed;
+    const center = (player1WinRate + z2 / (2 * gamesPlayed)) / denominator;
+    const margin = (Z_95 / denominator) * Math.sqrt(
+      (player1WinRate * (1 - player1WinRate)) / gamesPlayed + z2 / (4 * gamesPlayed * gamesPlayed)
+    );
+    winRateCiLow = Math.max(0, center - margin);
+    winRateCiHigh = Math.min(1, center + margin);
   }
 
   const sectionSx = {
@@ -447,24 +471,51 @@ const SandboxPlayerInfo = React.memo(() => {
       {gamesPlayed > 0 && (
         <Box sx={{ ...sectionSx, marginTop: '16px' }}>
           <Box sx={labelSx}>Series Results</Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: '8px', marginBottom: '10px', fontSize: '12px', color: textColor }}>
-            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px', fontSize: '12px', color: textColor }}>
+            <Box sx={{ textAlign: 'center' }}>
               <Box sx={{ fontWeight: 'bold' }}>{player1Wins}-{player2Wins}{ties > 0 ? `-${ties}` : ''}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Tally</Box>
             </Box>
-            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
-              <Box sx={{ fontWeight: 'bold' }}>{pythPlayer1Wins.toFixed(1)}-{pythPlayer2Wins.toFixed(1)}</Box>
-              <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Pyth. W-L</Box>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
+            <Box sx={{ textAlign: 'center' }}>
               <Box sx={{ fontWeight: 'bold' }}>{avgPlayer1Score}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Avg {seriesResults[0]?.player1Name}</Box>
             </Box>
-            <Box sx={{ textAlign: 'center', minWidth: '40%' }}>
+            <Box sx={{ textAlign: 'center' }}>
               <Box sx={{ fontWeight: 'bold' }}>{avgPlayer2Score}</Box>
               <Box sx={{ fontSize: '10px', color: mutedTextColor }}>Avg {seriesResults[0]?.player2Name}</Box>
             </Box>
           </Box>
+
+          <Box
+            onClick={() => setShowAdvancedStats(v => !v)}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+              fontSize: '10px', fontWeight: 600, color: accentColor, marginBottom: showAdvancedStats ? '8px' : '10px',
+            }}
+          >
+            {showAdvancedStats ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
+            Advanced stats
+          </Box>
+          {showAdvancedStats && (
+            <Box sx={{ padding: '8px', marginBottom: '10px', borderRadius: '6px', border: `1px dashed ${borderColor}` }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: '10px', fontSize: '12px', color: textColor }}>
+                <Box sx={{ textAlign: 'center', minWidth: '45%' }}>
+                  <Box sx={{ fontWeight: 'bold' }}>{pythPlayer1Wins.toFixed(1)}-{pythPlayer2Wins.toFixed(1)}</Box>
+                  <Box sx={{ fontSize: '10px', color: mutedTextColor, marginTop: '2px' }}>Pythagorean W-L</Box>
+                </Box>
+                <Box sx={{ textAlign: 'center', minWidth: '45%' }}>
+                  <Box sx={{ fontWeight: 'bold' }}>{Math.round(player1WinRate * 100)}%</Box>
+                  <Box sx={{ fontSize: '10px', color: mutedTextColor, marginTop: '2px' }}>
+                    {seriesResults[0]?.player1Name} true win rate
+                  </Box>
+                </Box>
+              </Box>
+              <Box sx={{ fontSize: '9px', color: mutedTextColor, marginTop: '8px', lineHeight: 1.4 }}>
+                Pythagorean W-L: expected record based on total points scored/allowed (Pythagenpat), rather than who actually won each game - a big gap from the Tally above signals close-game variance.
+                {' '}95% CI: {Math.round(winRateCiLow * 100)}-{Math.round(winRateCiHigh * 100)}% is the range {seriesResults[0]?.player1Name}'s true win probability would most likely fall in in an infinitely long series, given this sample (Wilson score interval).
+              </Box>
+            </Box>
+          )}
           <Box sx={{ maxHeight: '260px', overflowY: 'auto' }}>
             {seriesResults.map((result) => {
               const impactedCount = result.impactedTurns?.length || 0;
