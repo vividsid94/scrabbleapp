@@ -9,6 +9,7 @@ import { origPool, origBoard } from "../../components/AppContent/References/stat
 import { TEST_RACKS } from "../../components/AppContent/References/testRacks.js";
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
+import { returnStagedTilesToRack } from '../../functions/play/exchangeFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import Rack from '../../components/AppContent/Board/Rack';
 import { handleKeyDown } from '../../functions/play/keyboardFunctions';
@@ -791,6 +792,7 @@ const Scrabble3DPlay = () => {
         const target = e.target && e.target.closest ? e.target.closest('input, textarea, [contenteditable="true"]') : null;
         if (!target) {
           e.preventDefault();
+          returnStagedTilesToRack();
           setTilesToExchange([]);
           setShowExchangeModal(true);
           return;
@@ -1651,6 +1653,9 @@ const Scrabble3DPlay = () => {
   };
 
   const handleExchangeClick = () => {
+    // Return any tiles typed onto the board but not yet submitted to the
+    // rack first, so the modal always shows the player's true full rack.
+    returnStagedTilesToRack();
     // Open exchange modal instead of directly exchanging
     setTilesToExchange([]); // Clear any previously selected tiles
     setShowExchangeModal(true);

@@ -23,7 +23,8 @@
     font-size: 30px;
 }
 .Tile.selected {
-    border: 2px solid #4CAF50;
+    border: 3px solid #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35), 0 0 12px rgba(245, 158, 11, 0.55);
 }
 .Protile{
     display: flex;
@@ -33,9 +34,13 @@
     font-size: 30px;
     filter: brightness(0.85);
     margin: 2px;
+    transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
 }
 .Protile.selected {
-    border: 2px solid #4CAF50;
+    border-radius: 6px;
+    filter: brightness(1.1);
+    box-shadow: 0 0 0 3px #F59E0B, 0 0 14px 2px rgba(245, 158, 11, 0.65);
+    transform: scale(1.1) translateY(-3px);
 }
 
 @media screen and (max-width: 676px) {

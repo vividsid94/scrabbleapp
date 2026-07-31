@@ -35,6 +35,7 @@ import CameraScan from "./containers/CameraScan/CameraScan";
 import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
 import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
 import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
+import EscapeRoomDemo from "./containers/EscapeRoom3D/EscapeRoomDemo";
 import { useColorSchemeStore, getDefaultTileColor, LEGACY_TILE_DEFAULTS } from "./stores/colorSchemeStore";
 import { useGameStore } from "./stores/gameStore";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -47,7 +48,7 @@ export const ThemeContext = React.createContext();
 const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
   const location = useLocation();
   const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
-  const is3DViewerRoute = location.pathname === '/3dviewer' || location.pathname === '/3dplay';
+  const is3DViewerRoute = location.pathname === '/3dviewer' || location.pathname === '/3dplay' || location.pathname === '/escape-room-3d';
   // const { user } = useAuth(); // not currently needed here
 
   const getHeaderBackground = () => {
@@ -121,6 +122,7 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
         <Routes>
           <Route path="/3dviewer" element={<Scrabble3D/>}/>
           <Route path="/3dplay" element={<Scrabble3DPlay/>}/>
+          <Route path="/escape-room-3d" element={<EscapeRoomDemo/>}/>
         </Routes>
       )}
       {!isWidgetRoute && <Footer></Footer>}

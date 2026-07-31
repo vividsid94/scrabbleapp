@@ -28,6 +28,7 @@ import { makeTheoYell } from '../../functions/play/theoYellFunctions';
 import { initializeDictionary } from '../../utils/localDictionary';
 import { useGameStore } from '../../stores/gameStore';
 import { makeBotMove as runBotMove } from '../../functions/play/botFunctions';
+import { returnStagedTilesToRack } from '../../functions/play/exchangeFunctions';
 import { buildGhostOverlayGrid, buildSelectedMoveFrame } from '../../functions/analysisBoardFunctions';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import styles from './Play.module.css';
@@ -558,6 +559,10 @@ export default function Play({ isMultiplayer = false }) {
   };
 
   const handleExchangeModalOpen = () => {
+    // Return any tiles typed onto the board but not yet submitted to the
+    // rack first, so the modal always shows (and can exchange from) the
+    // player's true full rack rather than whatever's left after placement.
+    returnStagedTilesToRack();
     setTilesToExchange([]);
     setShowExchangeModal(true);
   };

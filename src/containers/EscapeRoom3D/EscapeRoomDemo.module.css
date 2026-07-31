@@ -1,0 +1,67 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: linear-gradient(135deg, #1a1330 0%, #2d1f4a 100%);
+  overflow: hidden;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.homeLink {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  color: #cbb4ff;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+}
+
+.overlayPanel {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(90vw, 760px);
+}
+
+.hint {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  color: #e9dcff;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.solvedBanner {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  color: #a7f3d0;
+  background: rgba(6, 40, 26, 0.7);
+  border: 1px solid rgba(45, 106, 79, 0.6);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+}

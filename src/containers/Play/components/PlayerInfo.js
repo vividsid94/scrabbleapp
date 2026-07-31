@@ -527,7 +527,7 @@ export default function PlayerInfo({
                   position: 'relative'
                 }}
               >
-                <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+                <AutoAwesomeIcon sx={{ fontSize: 20, color: lightMode === 'dark' ? '#fff' : '#1F2937' }} />
                 <Box sx={{
                   position: 'absolute',
                   top: -8,
