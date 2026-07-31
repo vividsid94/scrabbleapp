@@ -86,6 +86,12 @@ const SandboxPlayerInfo = React.memo(() => {
     : (player1BotName === 'RulesBot' || player2BotName === 'RulesBot') ? 200
     : (isStatic(player1BotName) && isStatic(player2BotName)) ? 500 : 30;
   const isRunning = useSandboxStore(state => state.isRunning);
+  // Series Setup's open/closed state (and the auto-collapse-on-completion
+  // logic) lives in sandboxStore.js, not as local state here - see that
+  // file's comment on showSetup for why (this component actually
+  // unmounts/remounts once early on, which local state doesn't survive).
+  const showSetup = useSandboxStore(state => state.showSetup);
+  const setShowSetup = useSandboxStore(state => state.setShowSetup);
   const currentGameIndex = useSandboxStore(state => state.currentGameIndex);
   const seriesResults = useSandboxStore(state => state.seriesResults);
   const estimatedProgressPercent = useSandboxStore(state => state.estimatedProgressPercent);
@@ -278,8 +284,39 @@ const SandboxPlayerInfo = React.memo(() => {
           pattern as the Live/Results sections below, instead of one giant
           block - matches how the rest of the app (e.g. Play's Candidates
           panel) stacks distinct elevated cards rather than one flat sheet. */}
-      <Box sx={labelSx}>Series Setup</Box>
-      {[
+      {/* .playerPanel is a flex column, so margins never collapse - the
+          element right after this header differs by state (Player 1's
+          card when open, which has no marginTop of its own; "Number of
+          games" when closed, which already carries marginTop:'10px'), so
+          matching this header's own marginBottom to that difference is
+          what keeps the visible gap the same (~10px) either way, instead
+          of the two margins stacking un-evenly. */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showSetup ? '10px' : 0 }}>
+        <Box sx={{ ...labelSx, marginBottom: 0, lineHeight: '14px' }}>Series Setup</Box>
+        {/* Label is the action the click performs (Close/Open Settings),
+            not the current state - "Open"/"Closed" read like a status
+            display, not something you'd think to click. Disabled (can't
+            close) until a series has actually run at least once - closing
+            it beforehand would just leave nothing useful showing below,
+            since there's no series to rerun yet. lineHeight matches the
+            label to its left exactly (both '14px') - left uppercase/
+            letter-spaced, right normal case, so left to their own default
+            line-heights they don't compute to the same value and the two
+            baselines drift apart despite the shared alignItems:'center'. */}
+        <Box
+          onClick={gamesPlayed > 0 ? () => setShowSetup(!showSetup) : undefined}
+          sx={{
+            display: 'flex', alignItems: 'center', gap: '4px', lineHeight: '14px',
+            cursor: gamesPlayed > 0 ? 'pointer' : 'default',
+            color: accentColor, fontSize: '10px', fontWeight: 600,
+            opacity: gamesPlayed > 0 ? 1 : 0.4,
+          }}
+        >
+          {showSetup ? 'Close Settings' : 'Open Settings'}
+          {showSetup ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
+        </Box>
+      </Box>
+      {showSetup && [
         {
           botName: player1BotName, setBotName: setPlayer1BotName, rank: player1StaticRank, setRank: setPlayer1StaticRank, label: 'Player 1',
           leaveRules: player1LeaveRules, addRule: () => addLeaveRule(1), updateRule: (i, patch) => updateLeaveRule(1, i, patch), removeRule: (i) => removeLeaveRule(1, i),
@@ -307,13 +344,27 @@ const SandboxPlayerInfo = React.memo(() => {
         return (
         <React.Fragment key={side.label}>
           {i === 1 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0' }}>
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
-              <Box sx={{ fontSize: '10px', fontWeight: 700, color: mutedTextColor }}>VS</Box>
-              <Box sx={{ flex: 1, height: '1px', backgroundColor: borderColor }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '14px 0' }}>
+              <Box sx={{ flex: 1, height: '1px', background: `linear-gradient(to right, transparent, ${borderColor})` }} />
+              <Box
+                sx={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, width: '26px', height: '26px', borderRadius: '50%',
+                  border: `1.5px solid ${accentColor}`,
+                  color: accentColor, fontSize: '10px', fontWeight: 800, letterSpacing: '0.02em',
+                }}
+              >
+                VS
+              </Box>
+              <Box sx={{ flex: 1, height: '1px', background: `linear-gradient(to left, transparent, ${borderColor})` }} />
             </Box>
           )}
-          <Box sx={i === 0 ? sectionSx : { ...sectionSx, marginTop: '10px' }}>
+          {/* Both cards use plain sectionSx now - the VS divider above
+              Player 2 already provides its own margin:'14px 0', so an
+              extra marginTop here on top of that was stacking (margins
+              don't collapse in this flex-column panel) into a bigger gap
+              below VS than above it. */}
+          <Box sx={sectionSx}>
             <Box sx={{ fontSize: '10px', fontWeight: 600, color: mutedTextColor, marginBottom: '6px' }}>{side.label}</Box>
             <ToggleButtonGroup
               value={side.botName}
@@ -595,12 +646,11 @@ const SandboxPlayerInfo = React.memo(() => {
             sx={{ '& .MuiInputBase-input': { fontSize: '13px', color: textColor, width: '50px' } }}
           />
         </Box>
-        <Box sx={{ fontSize: '11px', color: mutedTextColor, marginBottom: '4px', lineHeight: 1.4 }}>
-          Note: series with Tess are capped at 30 games; series with only static bots (Theo or Speedy, either side) are capped at 500.
-        </Box>
-        <Box sx={{ fontSize: '11px', color: mutedTextColor, marginBottom: '12px', lineHeight: 1.4 }}>
-          Series over 30 games skip the move-by-move animation and jump straight to the final board and results - every game still gets its own downloadable GCG.
-        </Box>
+        {showSetup && (
+          <Box sx={{ fontSize: '11px', color: mutedTextColor, marginBottom: '12px', lineHeight: 1.4 }}>
+            Note: series with Tess are capped at 30 games; series with only static bots (Theo or Speedy, either side) are capped at 500.
+          </Box>
+        )}
         <Button
           fullWidth
           variant="contained"
@@ -634,7 +684,7 @@ const SandboxPlayerInfo = React.memo(() => {
         >
           <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
             {isRunning ? <Stop weight="fill" size={16} /> : <Play weight="fill" size={16} />}
-            {isRunning ? `Stop (${progressLabel})` : 'Start Series'}
+            {isRunning ? `Stop (${progressLabel})` : (showSetup ? 'Start Series' : 'Rerun Series')}
           </Box>
         </Button>
       </Box>
@@ -736,18 +786,20 @@ const SandboxPlayerInfo = React.memo(() => {
       )}
 
       {gameStarted && (
-        <LatestMove
-          latestMove={latestMove}
-          player1Name={player1Name}
-          player2Name={player2Name}
-          allMoves={moveHistory}
-          boardCoords={boardCoords}
-          player1Rack={player1Rack}
-          player2Rack={player2Rack}
-          blankTiles={blankTiles}
-          pool={pool}
-          lightMode={lightMode}
-        />
+        <Box sx={{ display: viewingGameIndex === null ? 'none' : 'block' }}>
+          <LatestMove
+            latestMove={latestMove}
+            player1Name={player1Name}
+            player2Name={player2Name}
+            allMoves={moveHistory}
+            boardCoords={boardCoords}
+            player1Rack={player1Rack}
+            player2Rack={player2Rack}
+            blankTiles={blankTiles}
+            pool={pool}
+            lightMode={lightMode}
+          />
+        </Box>
       )}
 
       {/* Results */}

@@ -17,15 +17,6 @@ const dealRackFrom = (pool) => {
   return alphabetizeRack(rack);
 };
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// The whole series already arrived in one response by the time replay runs,
-// so there's nothing to wait on - this is 0 (not removed entirely) only so
-// each turn still yields one tick back to the event loop between set()
-// calls, keeping the tab responsive instead of blocking through a couple
-// hundred turns in one synchronous burst.
-const REPLAY_DELAY_MS = 0;
-
 // Which of RulesBot's six named rules (rulesbot.go) map to which per-turn
 // flag simulate.go sets - see RulesBotImpact's comment there for what each
 // one actually asks ("would dropping ONLY this rule have flipped the pick").
@@ -123,7 +114,6 @@ const MAX_GAMES_WITH_TESS = 30;
 // worst case (both sides RulesBot) at roughly the same order of magnitude
 // wait as Tess's own 30-game cap at her worst case.
 const MAX_GAMES_WITH_RULESBOT = 200;
-const REPLAY_GAME_LIMIT = 30;
 
 // /simulate-series returns one complete JSON response (not a stream), so
 // there's no real per-game progress to report while it's in flight - these
@@ -351,6 +341,24 @@ export const useSandboxStore = create((set, get) => ({
   // /simulate-series request is in flight - see SIMULATE_SERIES_BASE_MS.
   estimatedProgressPercent: 0,
 
+  // Whether SandboxPlayerInfo.js's "Series Setup" section (both players'
+  // full config) is expanded - lives here rather than as component-local
+  // state because SandboxPlayerInfo actually unmounts/remounts once early
+  // on (Sandbox.js renders it from two different JSX branches depending on
+  // gameStarted, and switching branches shifts its position in the tree,
+  // which React treats as a brand new instance). Component-local state
+  // doesn't survive that remount, so the auto-collapse-on-completion logic
+  // below (see startSeries's final set() calls) would silently lose track
+  // of it on a series's very first run specifically - global store state
+  // isn't affected by which components happen to be mounted, so it doesn't
+  // have this problem. Starts expanded; startSeries collapses it exactly
+  // once a series finishes (never at the start), so the first run stays
+  // open throughout, a plain rerun (already collapsed) stays collapsed,
+  // and reopening to change settings before rerunning stays open through
+  // that run too.
+  showSetup: true,
+  setShowSetup: (value) => set({ showSetup: value }),
+
   // "View" mode: replays one already-finished seriesResults game on the
   // board via buildSandboxViewState (sandboxViewFunctions.js), reusing the
   // exact same display fields (boardCoords/racks/etc) the live game writes
@@ -493,110 +501,14 @@ export const useSandboxStore = create((set, get) => ({
     return { gameIndex, player1Score, player2Score, winner, player1Name, player2Name, gcgContent };
   },
 
-  // Replays one already-simulated game (from the Go /simulate-series bulk
-  // endpoint) turn by turn into the store, so the board visibly steps
-  // through even though the whole game's outcome was already decided
-  // server-side in one shot. Mirrors playOneGame's per-turn set() shape so
-  // the UI (which just reads moveHistory/boardCoords/racks) can't tell the
-  // difference between this and a live-fetched game.
-  replayBulkGame: async ({ gameData, gameIndex, player1Name, player2Name }) => {
-    let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
-    let blankTiles = [];
-    let moveHistory = [];
-    let player1points = 0;
-    let player2points = 0;
-
-    set({
-      boardCoords, player1Rack: [], player2Rack: [], pool: [], currentPlayer: 1,
-      player1points, player2points, moveHistory, blankTiles,
-      gameStarted: true, player1Name, player2Name
-    });
-
-    for (const [turnIndex, turn] of (gameData.turns || []).entries()) {
-      if (get().shouldStop) return null;
-
-      const playerName = turn.player === 1 ? player1Name : player2Name;
-
-      if (turn.type === 'pass') {
-        moveHistory = [...moveHistory, {
-          boardDiff: [], player: playerName, score: 0,
-          rack: turn.rackBefore, total: turn.runningTotal, word: 'Pass'
-        }];
-      } else if (turn.type === 'exchange') {
-        moveHistory = [...moveHistory, {
-          boardDiff: [], player: playerName, score: 0,
-          rack: turn.rackBefore, tilesExchanged: turn.tilesExchanged,
-          total: turn.runningTotal, word: 'Exchange',
-          isBot: true // both sides are bots in Sandbox - hide exchanged tiles in display
-        }];
-      } else {
-        const newTiles = (turn.tiles || []).filter(t => t.isNew);
-        const boardDiff = newTiles.map(t => ({ row: t.row, col: t.col, value: t.letter }));
-        const newBoard = boardCoords.map(row => [...row]);
-        boardDiff.forEach(d => { newBoard[d.row][d.col] = d.value; });
-        boardCoords = newBoard;
-
-        // turnIndex tags which point in the game each blank was placed at -
-        // needed so a later turn-by-turn "View" replay of this finished game
-        // (sandboxViewFunctions.js) knows which blanks existed as of any
-        // given turn, not just the final set.
-        const newBlanks = newTiles.filter(t => t.isBlank).map(t => ({ row: t.row, col: t.col, turnIndex }));
-        blankTiles = [...blankTiles, ...newBlanks];
-
-        moveHistory = [...moveHistory, {
-          boardDiff, player: playerName, score: turn.score,
-          rack: turn.rackBefore, total: turn.runningTotal, word: turn.word
-        }];
-      }
-
-      if (turn.player === 1) player1points = turn.runningTotal; else player2points = turn.runningTotal;
-
-      const rackUpdate = turn.player === 1
-        ? { player1Rack: turn.rackBefore.split('') }
-        : { player2Rack: turn.rackBefore.split('') };
-
-      set({
-        boardCoords, moveHistory, blankTiles, player1points, player2points,
-        currentPlayer: turn.player, ...rackUpdate
-      });
-
-      await sleep(REPLAY_DELAY_MS);
-    }
-
-    const winner = gameData.winner === 1 ? player1Name : gameData.winner === 2 ? player2Name : null;
-    const player1FinalRack = (gameData.player1FinalRack || '').split('');
-    const player2FinalRack = (gameData.player2FinalRack || '').split('');
-    const finalPool = (gameData.finalPool || '').split('');
-
-    const gcgContent = generateGCGContent(
-      moveHistory, player1Name, player2Name, blankTiles,
-      player1FinalRack, player2FinalRack, finalPool
-    );
-
-    set({ player1Rack: player1FinalRack, player2Rack: player2FinalRack, pool: finalPool });
-
-    return {
-      gameIndex,
-      player1Score: gameData.player1Score,
-      player2Score: gameData.player2Score,
-      winner,
-      player1Name,
-      player2Name,
-      gcgContent,
-      impactedTurns: extractImpactedTurns(gameData, player1Name, player2Name),
-      // Full per-turn history, kept (not just used to build the GCG string
-      // and discarded) so a "View" action can replay this exact game
-      // turn-by-turn later - see sandboxViewFunctions.js.
-      moveHistory, blankTiles, player1FinalRack, player2FinalRack, finalPool
-    };
-  },
-
-  // Same data transform as replayBulkGame, but with no set()/delay per turn -
-  // for series too big to sensibly animate (REPLAY_GAME_LIMIT+), nobody's
-  // watching each of 30+ games play out, so just compute results and GCGs
-  // directly. Returns the game's result plus the final display state
-  // (board/racks/etc as of the LAST turn), which the caller applies only
-  // once, for the final game in the series.
+  // Converts one already-simulated game (from the Go /simulate-series bulk
+  // endpoint) into a result + display state, with no per-turn set()/delay -
+  // the move-by-move animated replay this used to feed was removed
+  // entirely (every series now jumps straight to final results, regardless
+  // of game count), so this is the only path bulk games go through.
+  // Returns the game's result plus the final display state (board/racks/
+  // etc as of the LAST turn), which the caller applies only once, for the
+  // final game in the series.
   finalizeBulkGame: ({ gameData, gameIndex, player1Name, player2Name }) => {
     let boardCoords = JSON.parse(origBoard).map(row => row.map(Number));
     let blankTiles = [];
@@ -696,8 +608,7 @@ export const useSandboxStore = create((set, get) => ({
 
     // Single source of truth for both display names (with same-bot
     // disambiguation) and ranks - computed once here and threaded through
-    // playOneGame/replayBulkGame/finalizeBulkGame rather than each
-    // re-deriving it.
+    // playOneGame/finalizeBulkGame rather than each re-deriving it.
     const player1BaseName = getBotDisplayName(player1BotName, player1StaticRank, player1SpecialSelection);
     const player2BaseName = getBotDisplayName(player2BotName, player2StaticRank, player2SpecialSelection);
     const sameBotName = player1BaseName === player2BaseName;
@@ -772,31 +683,20 @@ export const useSandboxStore = create((set, get) => ({
         const data = await response.json();
         const games = data.games || [];
 
-        // Past REPLAY_GAME_LIMIT games, skip the turn-by-turn animation
-        // entirely and just compute each game's result/GCG directly -
-        // nobody's watching 30+ games play out one move at a time. Only the
-        // very last game's ending position gets shown, once everything's done.
-        const skipReplay = games.length > REPLAY_GAME_LIMIT;
-
+        // No move-by-move animation for any series, regardless of game
+        // count - every game jumps straight to its final result/GCG. Only
+        // the very last game's ending position gets shown on the board,
+        // once everything's done.
         for (let gameIndex = 0; gameIndex < games.length; gameIndex++) {
           if (get().shouldStop) break;
           set({ currentGameIndex: gameIndex });
 
-          if (skipReplay) {
-            const { result, finalDisplayState } = get().finalizeBulkGame({
-              gameData: games[gameIndex], gameIndex, player1Name, player2Name
-            });
-            set(state => ({ seriesResults: [...state.seriesResults, result] }));
-            if (gameIndex === games.length - 1) {
-              set({ ...finalDisplayState, gameStarted: true });
-            }
-          } else {
-            const result = await get().replayBulkGame({
-              gameData: games[gameIndex], gameIndex, player1Name, player2Name
-            });
-            if (!result) break; // stopped mid-replay
-
-            set(state => ({ seriesResults: [...state.seriesResults, result] }));
+          const { result, finalDisplayState } = get().finalizeBulkGame({
+            gameData: games[gameIndex], gameIndex, player1Name, player2Name
+          });
+          set(state => ({ seriesResults: [...state.seriesResults, result] }));
+          if (gameIndex === games.length - 1) {
+            set({ ...finalDisplayState, gameStarted: true });
           }
           if (get().shouldStop) break;
         }
@@ -805,7 +705,7 @@ export const useSandboxStore = create((set, get) => ({
         console.error('Sandbox bulk series error:', error);
       }
 
-      set({ isRunning: false });
+      set({ isRunning: false, showSetup: false });
       return;
     }
 
@@ -822,14 +722,14 @@ export const useSandboxStore = create((set, get) => ({
       if (get().shouldStop) break;
     }
 
-    set({ isRunning: false });
+    set({ isRunning: false, showSetup: false });
   },
 
   // Loads a finished seriesResults game onto the board at its final turn.
   // Guarded against isRunning so it can never race the live per-turn set()
-  // calls in playOneGame/replayBulkGame/startSeries's own loop - both would
-  // be writing the exact same display fields (boardCoords, racks, etc) at
-  // the same time otherwise. Populates those fields from
+  // calls in playOneGame/startSeries's own loop - both would be writing
+  // the exact same display fields (boardCoords, racks, etc) at the same
+  // time otherwise. Populates those fields from
   // buildSandboxViewState (sandboxViewFunctions.js) instead of a live sim,
   // which is why Sandbox.js's <Board> and SandboxPlayerInfo.js's Live
   // section need no changes at all to support viewing - they only ever

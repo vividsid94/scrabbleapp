@@ -10,8 +10,8 @@ const removeRackFromPoolString = (pool, rack) =>
   rack.reduce((remaining, tile) => remaining.replace(tile, ''), pool);
 
 // Reconstructs everything the Sandbox board/rack/score UI needs to display
-// `result` (one finished game - see finalizeBulkGame/replayBulkGame in
-// sandboxStore.js for exactly what it carries) as of `turnIndex` (-1 =
+// `result` (one finished game - see finalizeBulkGame in sandboxStore.js
+// for exactly what it carries) as of `turnIndex` (-1 =
 // opening position before any turn has played, result.moveHistory.length-1
 // = final position). Returns a plain object meant to be spread straight
 // into the store's set() using the SAME field names the live game already
