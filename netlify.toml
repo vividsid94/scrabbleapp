@@ -5,14 +5,12 @@
     ignore = "node_modules"
     include = [
         "netlify_functions/dictionary.gaddag.json",
-        "netlify_functions/leaves.json",
         "netlify_functions/twl-wordlist.json",
         "netlify_functions/topeRetrievalIndex.json"
     ]
 
 [functions]
     included_files = [
-        "netlify_functions/leaves.json",
         "netlify_functions/dictionary.gaddag.json",
         "netlify_functions/twl-wordlist.json",
         "netlify_functions/topeRetrievalIndex.json"
@@ -52,10 +50,6 @@
     memory = 2048
 
 [functions.loadDictionary]
-    timeout = 10
-    memory = 1024
-
-[functions.getLeaveValues]
     timeout = 10
     memory = 1024
 
