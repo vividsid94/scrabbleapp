@@ -777,6 +777,25 @@ export const useSandboxStore = create((set, get) => ({
     set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
   },
 
+  // "Double rewind" - jumps straight to the opening position (turnIndex
+  // -1) instead of stepping back one turn at a time.
+  viewGoToStart: () => {
+    const state = get();
+    const result = state.seriesResults.find(r => r.gameIndex === state.viewingGameIndex);
+    if (!result) return;
+    set({ viewingTurnIndex: -1, ...buildSandboxViewState(result, -1) });
+  },
+
+  // Symmetric counterpart to viewGoToStart - jumps straight to the final
+  // turn, same position viewGame itself lands on when you first click View.
+  viewGoToEnd: () => {
+    const state = get();
+    const result = state.seriesResults.find(r => r.gameIndex === state.viewingGameIndex);
+    if (!result) return;
+    const turnIndex = result.moveHistory.length - 1;
+    set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+  },
+
   exitViewGame: () => {
     const { preViewState } = get();
     set({ ...(preViewState || {}), viewingGameIndex: null, viewingTurnIndex: -1, preViewState: null });

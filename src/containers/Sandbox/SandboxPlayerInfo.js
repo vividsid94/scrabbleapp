@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio, IconButton } from '@mui/material';
-import { Play, Stop, Download, CaretDown, CaretUp, Eye, ArrowLeft, ArrowRight, X } from '@phosphor-icons/react';
+import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio } from '@mui/material';
+import { Play, Stop, Download, CaretDown, CaretUp, Eye, X } from '@phosphor-icons/react';
+import SandboxViewNav from './SandboxViewNav.js';
 import Rack from '../../components/AppContent/Board/Rack.js';
-import LatestMove from '../Play/components/LatestMove.js';
+import SandboxLatestMove from './SandboxLatestMove.js';
 import SandboxLeaveRules from './SandboxLeaveRules.js';
 import SandboxNumberField from './SandboxNumberField.js';
 import { useSandboxStore } from '../../stores/sandboxStore';
@@ -96,7 +97,6 @@ const SandboxPlayerInfo = React.memo(() => {
   const seriesResults = useSandboxStore(state => state.seriesResults);
   const estimatedProgressPercent = useSandboxStore(state => state.estimatedProgressPercent);
   const viewingGameIndex = useSandboxStore(state => state.viewingGameIndex);
-  const viewingTurnIndex = useSandboxStore(state => state.viewingTurnIndex);
 
   const gameStarted = useSandboxStore(state => state.gameStarted);
   const currentPlayer = useSandboxStore(state => state.currentPlayer);
@@ -127,8 +127,6 @@ const SandboxPlayerInfo = React.memo(() => {
     stopSeries,
     downloadGameGCG,
     viewGame,
-    viewStepBack,
-    viewStepForward,
     exitViewGame,
   } = useSandboxStore();
 
@@ -295,26 +293,28 @@ const SandboxPlayerInfo = React.memo(() => {
         <Box sx={{ ...labelSx, marginBottom: 0, lineHeight: '14px' }}>Series Setup</Box>
         {/* Label is the action the click performs (Close/Open Settings),
             not the current state - "Open"/"Closed" read like a status
-            display, not something you'd think to click. Disabled (can't
-            close) until a series has actually run at least once - closing
-            it beforehand would just leave nothing useful showing below,
-            since there's no series to rerun yet. lineHeight matches the
-            label to its left exactly (both '14px') - left uppercase/
-            letter-spaced, right normal case, so left to their own default
-            line-heights they don't compute to the same value and the two
-            baselines drift apart despite the shared alignItems:'center'. */}
-        <Box
-          onClick={gamesPlayed > 0 ? () => setShowSetup(!showSetup) : undefined}
-          sx={{
-            display: 'flex', alignItems: 'center', gap: '4px', lineHeight: '14px',
-            cursor: gamesPlayed > 0 ? 'pointer' : 'default',
-            color: accentColor, fontSize: '10px', fontWeight: 600,
-            opacity: gamesPlayed > 0 ? 1 : 0.4,
-          }}
-        >
-          {showSetup ? 'Close Settings' : 'Open Settings'}
-          {showSetup ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
-        </Box>
+            display, not something you'd think to click. Hidden entirely
+            (not just disabled) until a series has actually run at least
+            once - closing it beforehand would just leave nothing useful
+            showing below, since there's no series to rerun yet, and a
+            toggle with nothing to toggle to is more confusing dimmed than
+            just absent. lineHeight matches the label to its left exactly
+            (both '14px') - left uppercase/letter-spaced, right normal
+            case, so left to their own default line-heights they don't
+            compute to the same value and the two baselines drift apart
+            despite the shared alignItems:'center'. */}
+        {gamesPlayed > 0 && (
+          <Box
+            onClick={() => setShowSetup(!showSetup)}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: '4px', lineHeight: '14px',
+              cursor: 'pointer', color: accentColor, fontSize: '10px', fontWeight: 600,
+            }}
+          >
+            {showSetup ? 'Close Settings' : 'Open Settings'}
+            {showSetup ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
+          </Box>
+        )}
       </Box>
       {showSetup && [
         {
@@ -716,10 +716,11 @@ const SandboxPlayerInfo = React.memo(() => {
         </Box>
       )}
 
-      {/* Viewing a finished game (sandboxStore.js's viewGame/viewStepBack/
-          viewStepForward) - unlike Live above, both racks are always shown
-          rather than just the current mover's, since Sandbox is bot-vs-bot
-          with no hidden information to preserve. */}
+      {/* Viewing a finished game (sandboxStore.js's viewGame + friends,
+          navigated via the shared SandboxViewNav below) - unlike Live
+          above, both racks are always shown rather than just the current
+          mover's, since Sandbox is bot-vs-bot with no hidden information
+          to preserve. */}
       {gameStarted && viewingGameIndex !== null && currentViewedResult && (
         <Box sx={{ ...sectionSx, marginTop: '16px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -743,51 +744,26 @@ const SandboxPlayerInfo = React.memo(() => {
               <Box sx={{ fontSize: '16px', fontWeight: 'bold', color: '#D97706' }}>{player2points}</Box>
             </Box>
           </Box>
-          {/* Stacked rather than side by side - two full racks side by
-              side don't fit the 380px sidebar (7 tiles each plus labels
-              way exceeds it), so each gets its own row instead. */}
-          <Box sx={{ marginBottom: '4px' }}>
-            <Box sx={{ fontSize: '10px', color: mutedTextColor, textAlign: 'center', marginBottom: '2px' }}>{player1Name}</Box>
-            <Box className={styles.Rack}>
-              <Rack rack={player1Rack} color={color.current} selectedTiles={[]} />
-            </Box>
-          </Box>
+          {/* Only the active player's rack/name shows, matching how
+              cross-tables' own game viewer works - even though Sandbox
+              has no real hidden information (it's bot-vs-bot), showing
+              both racks read as visual noise next to what you're actually
+              tracking turn to turn: whoever's up. */}
           <Box sx={{ marginBottom: '10px' }}>
-            <Box sx={{ fontSize: '10px', color: mutedTextColor, textAlign: 'center', marginBottom: '2px' }}>{player2Name}</Box>
+            <Box sx={{ fontSize: '10px', color: mutedTextColor, textAlign: 'center', marginBottom: '2px' }}>
+              {currentPlayer === 1 ? player1Name : player2Name}
+            </Box>
             <Box className={styles.Rack}>
-              <Rack rack={player2Rack} color={color.current} selectedTiles={[]} />
+              <Rack rack={currentPlayer === 1 ? player1Rack : player2Rack} color={color.current} selectedTiles={[]} />
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-            <IconButton
-              size="small"
-              disabled={viewingTurnIndex <= -1}
-              onClick={viewStepBack}
-              sx={{ color: viewingTurnIndex <= -1 ? mutedTextColor : accentColor, opacity: viewingTurnIndex <= -1 ? 0.4 : 1 }}
-            >
-              <ArrowLeft size={16} weight="bold" />
-            </IconButton>
-            <Box sx={{ fontSize: '11px', color: textColor, minWidth: '76px', textAlign: 'center' }}>
-              {viewingTurnIndex === -1 ? 'Start' : `Turn ${viewingTurnIndex + 1} / ${currentViewedResult.moveHistory.length}`}
-            </Box>
-            <IconButton
-              size="small"
-              disabled={viewingTurnIndex >= currentViewedResult.moveHistory.length - 1}
-              onClick={viewStepForward}
-              sx={{
-                color: viewingTurnIndex >= currentViewedResult.moveHistory.length - 1 ? mutedTextColor : accentColor,
-                opacity: viewingTurnIndex >= currentViewedResult.moveHistory.length - 1 ? 0.4 : 1,
-              }}
-            >
-              <ArrowRight size={16} weight="bold" />
-            </IconButton>
-          </Box>
+          <SandboxViewNav />
         </Box>
       )}
 
       {gameStarted && (
         <Box sx={{ display: viewingGameIndex === null ? 'none' : 'block' }}>
-          <LatestMove
+          <SandboxLatestMove
             latestMove={latestMove}
             player1Name={player1Name}
             player2Name={player2Name}
@@ -852,7 +828,11 @@ const SandboxPlayerInfo = React.memo(() => {
             </Box>
           )}
           <Box sx={{ maxHeight: '260px', overflowY: 'auto' }}>
-            {seriesResults.map((result) => {
+            {/* Newest game first - slice() first so this doesn't mutate
+                seriesResults itself (used elsewhere in original order for
+                Tally/Pythagorean/CI, which don't care about order but
+                shouldn't be silently reversed as a side effect anyway). */}
+            {seriesResults.slice().reverse().map((result) => {
               const impactedCount = result.impactedTurns?.length || 0;
               const isExpanded = expandedGames.has(result.gameIndex);
               return (
@@ -870,7 +850,7 @@ const SandboxPlayerInfo = React.memo(() => {
                     }}
                   >
                     <Box>Game {result.gameIndex + 1}</Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <Box sx={{ color: mutedTextColor }}>
                         {result.player1Score} - {result.player2Score}
                         {result.winner ? '' : ' (tie)'}
