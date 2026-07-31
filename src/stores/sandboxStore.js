@@ -25,18 +25,35 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // hundred turns in one synchronous burst.
 const REPLAY_DELAY_MS = 0;
 
-// Turns simulate.go's per-turn ruleImpacted/bingoAversionImpacted flags
-// into a display-ready list: which turns a custom leave rule and/or bingo
-// aversion actually changed the outcome of, vs. what this bot would have
-// played without that specific mechanism - each A/B is computed
-// server-side against the identical candidate list (see simulate.go's
-// sameCandidate), this just formats it. A turn can be impacted by both at
-// once, each with its own separate "instead of" counterfactual, since
-// they answer different what-if questions.
+// Which of RulesBot's six named rules (rulesbot.go) map to which per-turn
+// flag simulate.go sets - see RulesBotImpact's comment there for what each
+// one actually asks ("would dropping ONLY this rule have flipped the pick").
+const RULESBOT_RULE_LABELS = [
+  { key: 'rulesBotOpeningVowelImpacted', label: 'opening DLS vowel' },
+  { key: 'rulesBotOpeningStarImpacted', label: 'opening star S' },
+  { key: 'rulesBotClosenessImpacted', label: 'closeness' },
+  { key: 'rulesBotVowelPremiumImpacted', label: 'TLS/TWS vowel' },
+  { key: 'rulesBotHookImpacted', label: 'hook on premium' },
+  { key: 'rulesBotLaneCountImpacted', label: 'bingo lane count' },
+];
+
+// Turns simulate.go's per-turn ruleImpacted/bingoAversionImpacted/
+// rulesBotImpacted flags into a display-ready list: which turns a custom
+// leave rule, bingo aversion, and/or RulesBot's defense rules actually
+// changed the outcome of, vs. what this bot would have played without that
+// specific mechanism - each A/B is computed server-side against the
+// identical candidate list (see simulate.go's sameCandidate), this just
+// formats it. A turn can be impacted by more than one mechanism at once,
+// each with its own separate "instead of" counterfactual, since they
+// answer different what-if questions. For RulesBot specifically, it's
+// possible for the aggregate rulesBotImpacted to be true while none of the
+// six individual flags are - that happens when no SINGLE rule's removal
+// alone would have flipped the pick, only two or more together; the label
+// falls back to a bare "RulesBot" rather than naming a rule in that case.
 const extractImpactedTurns = (gameData, player1Name, player2Name) =>
   (gameData.turns || [])
     .map((turn, turnIndex) => ({ turn, turnIndex }))
-    .filter(({ turn }) => turn.ruleImpacted || turn.bingoAversionImpacted)
+    .filter(({ turn }) => turn.ruleImpacted || turn.bingoAversionImpacted || turn.rulesBotImpacted)
     .map(({ turn, turnIndex }) => {
       const reasons = [];
       if (turn.ruleImpacted) {
@@ -53,6 +70,15 @@ const extractImpactedTurns = (gameData, player1Name, player2Name) =>
           without: turn.withoutAversionType === 'exchange'
             ? `Exchange ${turn.withoutAversionTilesExchanged}`
             : `${turn.withoutAversionWord} (${turn.withoutAversionScore})`,
+        });
+      }
+      if (turn.rulesBotImpacted) {
+        const firedRules = RULESBOT_RULE_LABELS.filter(r => turn[r.key]).map(r => r.label);
+        reasons.push({
+          label: firedRules.length > 0 ? `RulesBot: ${firedRules.join(', ')}` : 'RulesBot',
+          without: turn.rulesBotBaselineType === 'exchange'
+            ? `Exchange ${turn.rulesBotBaselineTilesExchanged}`
+            : `${turn.rulesBotBaselineWord} (${turn.rulesBotBaselineScore})`,
         });
       }
       return {
@@ -89,6 +115,13 @@ const drawUpTo7 = (rack, pool) => {
 // nobody's watching 30+ games play out turn by turn.
 const MAX_GAMES_STATIC = 500;
 const MAX_GAMES_WITH_TESS = 30;
+// RulesBot (rulesbot.go) does real per-candidate board-copy work every turn
+// (unlike a rank-based pick, which is pure sorting) but nowhere near Tess's
+// cost - measured ~170ms/game with one RulesBot side, ~314ms/game with both,
+// vs ~28ms/game static-only and ~1.8-2.9s/game with Tess. 200 games caps the
+// worst case (both sides RulesBot) at roughly the same order of magnitude
+// wait as Tess's own 30-game cap at her worst case.
+const MAX_GAMES_WITH_RULESBOT = 200;
 const REPLAY_GAME_LIMIT = 30;
 
 // /simulate-series returns one complete JSON response (not a stream), so
@@ -118,6 +151,10 @@ const SIMULATE_SERIES_PER_GAME_MS = 22;
 // imprecise.
 const SIMULATE_SERIES_PER_GAME_MS_ONE_TESS = 1800;
 const SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS = 2900;
+// Same idea for RulesBot, measured against the same deployment - see
+// MAX_GAMES_WITH_RULESBOT's comment for the raw numbers this comes from.
+const SIMULATE_SERIES_PER_GAME_MS_ONE_RULESBOT = 175;
+const SIMULATE_SERIES_PER_GAME_MS_BOTH_RULESBOT = 320;
 // Never let the time-based estimate alone claim completion - real per-game
 // progress (from the finalize/replay loop below) always takes over for the
 // final stretch once the response actually lands.
@@ -136,9 +173,17 @@ const clearEstimateInterval = () => {
 };
 
 const isStaticBot = (botName) => botName === 'Theo' || botName === 'Static';
+const isTessBot = (botName) => botName === 'Tess';
 
-const getMaxGamesForBots = (player1BotName, player2BotName) =>
-  (isStaticBot(player1BotName) && isStaticBot(player2BotName)) ? MAX_GAMES_STATIC : MAX_GAMES_WITH_TESS;
+// Tess dominates cost whenever she's present on either side, regardless of
+// what's on the other side (including RulesBot) - checked first for that
+// reason. Otherwise, RulesBot on either side gets its own middle tier;
+// both-static is the only combination cheap enough for MAX_GAMES_STATIC.
+const getMaxGamesForBots = (player1BotName, player2BotName) => {
+  if (isTessBot(player1BotName) || isTessBot(player2BotName)) return MAX_GAMES_WITH_TESS;
+  if (player1BotName === 'RulesBot' || player2BotName === 'RulesBot') return MAX_GAMES_WITH_RULESBOT;
+  return (isStaticBot(player1BotName) && isStaticBot(player2BotName)) ? MAX_GAMES_STATIC : MAX_GAMES_WITH_TESS;
+};
 
 // Theo is just rank 1 of the same "pick the Nth-ranked move" mechanism a
 // user-chosen Static bot uses; Tess has no rank (she runs her own defense
@@ -640,8 +685,14 @@ export const useSandboxStore = create((set, get) => ({
       // arrives; real per-game progress (below) takes over for the last
       // stretch once results start coming in.
       const tessSideCount = (player1BotName === 'Tess' ? 1 : 0) + (player2BotName === 'Tess' ? 1 : 0);
+      const rulesBotSideCount = (player1BotName === 'RulesBot' ? 1 : 0) + (player2BotName === 'RulesBot' ? 1 : 0);
+      // Tess's estimate takes priority whenever she's on either side - her
+      // per-game cost dwarfs RulesBot's, so a mixed Tess/RulesBot matchup is
+      // still dominated by Tess's number.
       const perGameMs = tessSideCount === 2 ? SIMULATE_SERIES_PER_GAME_MS_BOTH_TESS
         : tessSideCount === 1 ? SIMULATE_SERIES_PER_GAME_MS_ONE_TESS
+        : rulesBotSideCount === 2 ? SIMULATE_SERIES_PER_GAME_MS_BOTH_RULESBOT
+        : rulesBotSideCount === 1 ? SIMULATE_SERIES_PER_GAME_MS_ONE_RULESBOT
         : SIMULATE_SERIES_PER_GAME_MS;
       const estimatedDurationMs = SIMULATE_SERIES_BASE_MS + perGameMs * totalGames;
       const fetchStartTime = Date.now();
@@ -662,11 +713,13 @@ export const useSandboxStore = create((set, get) => ({
           rank: player1Rank || 1, leaveRules: sanitizeLeaveRules(player1LeaveRules), isTess: player1BotName === 'Tess',
           bingoAversion: buildBingoAversionPayload(player1BingoAversion),
           specialSelection: player1SpecialSelection || undefined,
+          isRulesBot: player1BotName === 'RulesBot',
         };
         const player2Bot = {
           rank: player2Rank || 1, leaveRules: sanitizeLeaveRules(player2LeaveRules), isTess: player2BotName === 'Tess',
           bingoAversion: buildBingoAversionPayload(player2BingoAversion),
           specialSelection: player2SpecialSelection || undefined,
+          isRulesBot: player2BotName === 'RulesBot',
         };
         const response = await fetch('https://scrabble-move-generator-production.up.railway.app/simulate-series', {
           method: 'POST',

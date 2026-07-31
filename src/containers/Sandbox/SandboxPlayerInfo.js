@@ -22,6 +22,13 @@ import styles from './Sandbox.module.css';
 const BOT_OPTIONS = [
   { value: 'Static', label: 'Speedy' },
   { value: 'Tess', label: 'Tess' },
+  // RulesBot temporarily hidden while its rules get reworked (see
+  // rulesbot.go) - the backend/store wiring (sandboxStore.js's isRulesBot
+  // payload field, game-count tier, "Plays impacted" formatting, /rulesbot-
+  // debug) is all still intact and functional, just unreachable from here
+  // since botName can never become 'RulesBot' without this option. Re-add
+  // this line to bring it back.
+  // { value: 'RulesBot', label: 'RulesBot' },
 ];
 
 const SandboxPlayerInfo = React.memo(() => {
@@ -49,8 +56,14 @@ const SandboxPlayerInfo = React.memo(() => {
   // Any static-bot matchup (Theo or a chosen Nth static, either side) runs
   // server-side in bulk and can handle far more games than the per-move
   // client loop Tess still needs - mirrors sandboxStore.js's getMaxGamesForBots.
+  // Tess's cost dominates whenever she's present at all (checked first);
+  // RulesBot gets its own middle tier (real per-turn board-copy work, but
+  // nowhere near Tess's cost); both-static is the only combination cheap
+  // enough for 500.
   const isStatic = (name) => name === 'Theo' || name === 'Static';
-  const maxGames = (isStatic(player1BotName) && isStatic(player2BotName)) ? 500 : 30;
+  const maxGames = (player1BotName === 'Tess' || player2BotName === 'Tess') ? 30
+    : (player1BotName === 'RulesBot' || player2BotName === 'RulesBot') ? 200
+    : (isStatic(player1BotName) && isStatic(player2BotName)) ? 500 : 30;
   const isRunning = useSandboxStore(state => state.isRunning);
   const currentGameIndex = useSandboxStore(state => state.currentGameIndex);
   const seriesResults = useSandboxStore(state => state.seriesResults);
@@ -253,8 +266,14 @@ const SandboxPlayerInfo = React.memo(() => {
         // "Longest word"/"Most tiles" are absolute overrides (simulate.go's
         // BotConfig.SpecialSelection) - no conjunction with rank, leave
         // rules, or bingo aversion is allowed, so those controls are
-        // disabled outright rather than trying to reconcile them.
-        const specialActive = side.specialSelection !== '';
+        // disabled outright rather than trying to reconcile them. Gated on
+        // botName === 'Static' (not just specialSelection !== '') so a
+        // leftover selection from a previous Static session doesn't leak
+        // into disabling LeaveRules/BingoAversion after switching to Tess
+        // or RulesBot - those controls are hidden for Tess anyway, but
+        // RulesBot actually uses them, so a stale flag here would silently
+        // disable something that should work.
+        const specialActive = side.botName === 'Static' && side.specialSelection !== '';
         return (
         <React.Fragment key={side.label}>
           {i === 1 && (
