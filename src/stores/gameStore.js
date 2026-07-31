@@ -120,7 +120,6 @@ export const useGameStore = create((set, get) => {
     tessIsRunningSims: false,
     
     shouldTheoYell: false, // Signal to trigger Theo yell
-    theoYellIsBingoMiss: false, // Whether the yell is for missing a bingo
     theoYellPhrase: '', // The phrase Theo said
     // Populated by TheoYellOverlay's own background check (not the shared
     // "Ask Theo" topMoves) so bingo-miss detection works without requiring
@@ -320,10 +319,7 @@ export const useGameStore = create((set, get) => {
       gameEnded: false
     }),
     
-    setShouldTheoYell: (should, isBingoMiss = false) => set({ 
-      shouldTheoYell: should,
-      theoYellIsBingoMiss: isBingoMiss 
-    }),
+    setShouldTheoYell: (should) => set({ shouldTheoYell: should }),
     setTheoYellPhrase: (phrase) => set({ theoYellPhrase: phrase }),
     setTheoYellBingoAvailable: (available) => set({ theoYellBingoAvailable: available }),
     

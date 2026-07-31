@@ -30,6 +30,10 @@ import ShakeableMascot from '../../../components/AppContent/ShakeableMascot';
  *    opacity/transform only, no backdrop-filter and no board shake.
  */
 
+// Trimmed to the 11 phrases that actually have a generated voice line
+// (scripts/generateTheoVoiceLines.js hit Gemini TTS's free-tier daily quota
+// partway through the full 20+1 set) - keep this in sync with that script
+// and with public/sounds/theo/yell-*.wav.
 const YELL_PHRASES = [
   'What on earth are you thinking?!',
   'That is absolutely terrible!',
@@ -42,18 +46,20 @@ const YELL_PHRASES = [
   "That's not just bad, that's embarrassing!",
   'Think! Use your brain!',
   'What in the world was that?!',
-  "You're making me look bad!",
-  "That's a horrible, horrible move!",
-  "No way! That's unacceptable!",
-  'Seriously?! Did you even look at the board?!',
-  "That's the worst move I've ever seen!",
-  'You call that a move?!',
-  "I can't believe you just did that!",
-  "That's pathetic!",
-  "You're supposed to be good at this!",
 ];
-const BINGO_MISS_PHRASE = 'You missed a bingo!';
-const YELL_DURATION_MS = 1300;
+const YELL_DURATION_MS = 2200;
+
+// Real recorded lines (scripts/generateTheoVoiceLines.js, Gemini TTS,
+// pre-generated once - not called live) - index-matched to YELL_PHRASES so
+// the spoken line always matches the phrase shown in the bubble. Preloaded
+// at module load, same pattern as soundFunctions.js's SimpleSoundPlayer.
+const YELL_AUDIO = YELL_PHRASES.map((_, i) => {
+  const audio = new Audio(`/sounds/theo/yell-${i + 1}.wav`);
+  audio.volume = 0.85;
+  audio.preload = 'auto';
+  audio.load();
+  return audio;
+});
 
 // Module-level (not component state) so the voice list is only ever
 // filtered once per page load, not recomputed on every yell.
@@ -112,9 +118,23 @@ function speakPhrase(phrase) {
   }
 }
 
+// Plays the pre-generated recorded line for this phrase; falls back to
+// live speechSynthesis only if that specific file is missing/fails to
+// play (e.g. it wasn't successfully generated).
+function playVoiceLine(audio, phrase) {
+  try {
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => speakPhrase(phrase));
+    }
+  } catch (e) {
+    speakPhrase(phrase);
+  }
+}
+
 export default function TheoYellOverlay() {
   const shouldTheoYell = useGameStore(s => s.shouldTheoYell);
-  const theoYellIsBingoMiss = useGameStore(s => s.theoYellIsBingoMiss);
   const theoYellEnabled = useGameStore(s => s.theoYellEnabled);
   const theoYellCriteria = useGameStore(s => s.theoYellCriteria);
   const theoYellPhrase = useGameStore(s => s.theoYellPhrase);
@@ -201,19 +221,21 @@ export default function TheoYellOverlay() {
 
     setShouldTheoYell(false); // Consume the trigger right away.
 
-    const phrase = theoYellIsBingoMiss
-      ? BINGO_MISS_PHRASE
-      : YELL_PHRASES[Math.floor(Math.random() * YELL_PHRASES.length)];
+    // Bingo-miss no longer gets its own line - it just cycles the same
+    // generic criticisms (with real voice) as every other yell.
+    const index = Math.floor(Math.random() * YELL_PHRASES.length);
+    const phrase = YELL_PHRASES[index];
+    const audio = YELL_AUDIO[index];
     setTheoYellPhrase(phrase);
     setIsYelling(true);
-    speakPhrase(phrase);
+    playVoiceLine(audio, phrase);
 
     clearTimeout(hideTimeoutRef.current);
     hideTimeoutRef.current = setTimeout(() => {
       setIsYelling(false);
       setTheoYellPhrase('');
     }, YELL_DURATION_MS);
-  }, [shouldTheoYell, theoYellEnabled, theoYellIsBingoMiss, setShouldTheoYell, setTheoYellPhrase]);
+  }, [shouldTheoYell, theoYellEnabled, setShouldTheoYell, setTheoYellPhrase]);
 
   // Shake once the mascot has actually mounted (isYelling just flipped
   // true) - React guarantees this effect runs after that DOM commit, no

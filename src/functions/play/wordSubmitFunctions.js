@@ -289,7 +289,7 @@ export const handleWordSubmit = async (playerMoveSound) => {
       }
 
       if (shouldYell) {
-        useGameStore.getState().setShouldTheoYell(true, theoYellCriteria === 'bingo');
+        useGameStore.getState().setShouldTheoYell(true);
       }
     }
   } catch (error) {
