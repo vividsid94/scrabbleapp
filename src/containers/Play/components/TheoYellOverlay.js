@@ -141,14 +141,16 @@ export default function TheoYellOverlay() {
   // its own store field, not the shared topMoves, so it never leaks into
   // the Ask Theo panel.
   useEffect(() => {
-    if (!gameStarted || gameEnded || !theoYellEnabled || theoYellCriteria !== 'bingo') {
+    // Player 1 only - Theo Yell scolds the human, so there's no reason to
+    // spend a call checking bingo-availability on the bot's own turn.
+    if (!gameStarted || gameEnded || !theoYellEnabled || theoYellCriteria !== 'bingo' || currentPlayer !== 1) {
       return;
     }
     let cancelled = false;
     setTheoYellBingoAvailable(false);
 
-    const { player1Rack, player2Rack, boardCoords, blankTiles, pool, premiumSquares } = useGameStore.getState();
-    const rack = currentPlayer === 1 ? player1Rack : player2Rack;
+    const { player1Rack, boardCoords, blankTiles, pool, premiumSquares } = useGameStore.getState();
+    const rack = player1Rack;
     const requestBody = {
       board: markBlanksLowercase(boardCoords, blankTiles),
       letters: rack.map(t => (t === '?' ? '*' : t)),
