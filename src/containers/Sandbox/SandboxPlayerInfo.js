@@ -273,7 +273,7 @@ const SandboxPlayerInfo = React.memo(() => {
               size="small"
               disabled={isRunning}
               onChange={(e, val) => val && side.setBotName(val)}
-              sx={{ marginBottom: side.botName === 'Static' ? '2px' : '10px' }}
+              sx={{ marginBottom: '16px' }}
             >
               {BOT_OPTIONS.map(opt => (
                 <ToggleButton key={opt.value} value={opt.value} sx={toggleButtonSx}>
