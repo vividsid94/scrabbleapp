@@ -6,6 +6,13 @@ import { generateGCGContent, downloadGCGFile, formatPlayerName } from '../functi
 import { fetchSandboxMoves, pickBotMove } from '../functions/sandboxBotFunctions';
 import { checkGameEnd, computeFinalScores } from '../functions/sandboxGameFunctions';
 import { buildSandboxViewState } from '../functions/sandboxViewFunctions';
+import { markBlanksLowercase } from '../functions/play/boardApiUtils';
+// Store-agnostic - already shared by gameStore.js (Play) and viewerStore.js
+// (Viewer); see AnalysisPanel.js's own comment for why this one wasn't
+// forked the way LatestMove was - it's purely prop/callback-driven with no
+// store coupling, so Sandbox can wire into it the same way Play/Viewer do.
+import { DEFAULT_ANALYSIS_STATE, runMovePreviewEngine, runHeatMapEngine, runOpponentResponsesEngine, runLaneIsolationEngine } from '../functions/analysisEngine';
+import { toggleLaneCell, computeLaneDragSpan } from '../functions/analysisBoardFunctions';
 
 const dealRackFrom = (pool) => {
   const rack = [];
@@ -372,6 +379,15 @@ export const useSandboxStore = create((set, get) => ({
   // games never overwrites this with viewing data instead of the true
   // pre-viewing state.
   preViewState: null,
+
+  // Analysis Mode - only meaningful while viewing a specific turn (a real
+  // rack for a real position, per buildSandboxViewState), so entering it
+  // is gated on viewingGameIndex !== null and exitViewGame also resets it
+  // (see there). Same DEFAULT_ANALYSIS_STATE/engine Play and Viewer use -
+  // see the import comment above for why this one is shared, not forked.
+  analysis: DEFAULT_ANALYSIS_STATE,
+  analysisTopMoves: [],
+  isLoadingAnalysisTopMoves: false,
 
   stopSeries: () => {
     clearEstimateInterval();
@@ -759,6 +775,20 @@ export const useSandboxStore = create((set, get) => ({
       gameStarted: true, player1Name: result.player1Name, player2Name: result.player2Name,
       ...buildSandboxViewState(result, turnIndex)
     });
+    get().resetAnalysisForNewTurn();
+  },
+
+  // Any candidate list/preview/heat map/etc already fetched or running
+  // belongs to whichever position was on screen when it was requested - if
+  // the viewed turn (or game) then changes underneath it, it'd otherwise
+  // keep showing, silently stale and pointing at the wrong board/rack.
+  // Called from every action below that moves the viewed position. Leaves
+  // Analysis Mode itself open if it was (just clears back to its own empty
+  // "Ask Theo for candidates" state) rather than exiting it outright - the
+  // point is to stop it lying, not to make you re-open it every turn.
+  resetAnalysisForNewTurn: () => {
+    if (!get().analysis.active) return;
+    set({ analysis: { ...DEFAULT_ANALYSIS_STATE, active: true }, analysisTopMoves: [], isLoadingAnalysisTopMoves: false });
   },
 
   viewStepBack: () => {
@@ -767,6 +797,7 @@ export const useSandboxStore = create((set, get) => ({
     if (!result) return; // stale reference (e.g. a new series started) - nothing to step through
     const turnIndex = Math.max(-1, state.viewingTurnIndex - 1);
     set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+    get().resetAnalysisForNewTurn();
   },
 
   viewStepForward: () => {
@@ -775,6 +806,7 @@ export const useSandboxStore = create((set, get) => ({
     if (!result) return;
     const turnIndex = Math.min(result.moveHistory.length - 1, state.viewingTurnIndex + 1);
     set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+    get().resetAnalysisForNewTurn();
   },
 
   // "Double rewind" - jumps straight to the opening position (turnIndex
@@ -784,6 +816,7 @@ export const useSandboxStore = create((set, get) => ({
     const result = state.seriesResults.find(r => r.gameIndex === state.viewingGameIndex);
     if (!result) return;
     set({ viewingTurnIndex: -1, ...buildSandboxViewState(result, -1) });
+    get().resetAnalysisForNewTurn();
   },
 
   // Symmetric counterpart to viewGoToStart - jumps straight to the final
@@ -794,11 +827,83 @@ export const useSandboxStore = create((set, get) => ({
     if (!result) return;
     const turnIndex = result.moveHistory.length - 1;
     set({ viewingTurnIndex: turnIndex, ...buildSandboxViewState(result, turnIndex) });
+    get().resetAnalysisForNewTurn();
   },
 
   exitViewGame: () => {
     const { preViewState } = get();
-    set({ ...(preViewState || {}), viewingGameIndex: null, viewingTurnIndex: -1, preViewState: null });
+    set({
+      ...(preViewState || {}), viewingGameIndex: null, viewingTurnIndex: -1, preViewState: null,
+      // Analysis only makes sense pinned to the turn it was opened on -
+      // leaving that turn should leave analysis mode too, rather than
+      // stranding it pointed at a position that's no longer displayed.
+      analysis: DEFAULT_ANALYSIS_STATE, analysisTopMoves: [], isLoadingAnalysisTopMoves: false
+    });
+  },
+
+  setAnalysisState: (partial) => set(state => ({ analysis: { ...state.analysis, ...partial } })),
+
+  enterAnalysisMode: () => {
+    if (get().viewingGameIndex === null) return; // needs a real pinned position/rack - see the analysis state comment above
+    set({ analysis: { ...DEFAULT_ANALYSIS_STATE, active: true }, analysisTopMoves: [], isLoadingAnalysisTopMoves: false });
+  },
+
+  exitAnalysisMode: () => set({ analysis: { ...DEFAULT_ANALYSIS_STATE }, analysisTopMoves: [], isLoadingAnalysisTopMoves: false }),
+
+  runAnalysisMovePreview: async (move) => {
+    const { boardCoords, currentPlayer, player1Rack, player2Rack, pool } = get();
+    const rack = currentPlayer === 1 ? player1Rack : player2Rack;
+    await runMovePreviewEngine({ move, boardCoords, rack, pool }, get().setAnalysisState);
+  },
+
+  runAnalysisHeatMap: async (move, numSimulations = 200) => {
+    const { boardCoords, pool } = get();
+    await runHeatMapEngine({ move, boardCoords, pool, numSimulations }, get().setAnalysisState);
+  },
+
+  runAnalysisOpponentResponses: async (moves, iterations = 20) => {
+    const { boardCoords, pool } = get();
+    await runOpponentResponsesEngine({ moves, boardCoords, pool, iterations }, get().setAnalysisState);
+  },
+
+  toggleAnalysisLaneCell: (cell) => {
+    const { analysis, boardCoords } = get();
+    const newSelection = toggleLaneCell(analysis.laneSelection, analysis.selectedMove, boardCoords, cell);
+    if (newSelection === analysis.laneSelection) return;
+    set(state => ({ analysis: { ...state.analysis, laneSelection: newSelection, laneResult: null } }));
+  },
+
+  setAnalysisLaneDragSelection: (anchor, current) => {
+    const { analysis, boardCoords } = get();
+    const cells = computeLaneDragSpan(anchor, current, analysis.selectedMove, boardCoords);
+    set(state => ({ analysis: { ...state.analysis, laneSelection: cells, laneResult: null } }));
+  },
+
+  clearAnalysisLaneSelection: () => set(state => ({ analysis: { ...state.analysis, laneSelection: [], laneResult: null } })),
+
+  runAnalysisLaneIsolation: async (numSimulations = 200) => {
+    const { boardCoords, pool, analysis } = get();
+    await runLaneIsolationEngine({ move: analysis.selectedMove, boardCoords, laneSelection: analysis.laneSelection, pool, numSimulations }, get().setAnalysisState);
+  },
+
+  // Mirrors viewerStore.js's own fetchAnalysisTopMoves (same getTopMoves
+  // pipeline via fetchSandboxMoves), scoped to whichever player's turn is
+  // pinned at the currently-viewed position - markBlanksLowercase matches
+  // Viewer's defensive board formatting before this hits the Go service.
+  fetchAnalysisTopMoves: async () => {
+    const { boardCoords, blankTiles, currentPlayer, player1Rack, player2Rack, pool, isLoadingAnalysisTopMoves } = get();
+    if (isLoadingAnalysisTopMoves) return;
+
+    set({ isLoadingAnalysisTopMoves: true });
+    try {
+      const rack = currentPlayer === 1 ? player1Rack : player2Rack;
+      const moves = await fetchSandboxMoves({ boardCoords: markBlanksLowercase(boardCoords, blankTiles), rack, pool });
+      set({ analysisTopMoves: moves.slice(0, 15) });
+    } catch (error) {
+      console.error('Error fetching Sandbox analysis top moves:', error);
+    } finally {
+      set({ isLoadingAnalysisTopMoves: false });
+    }
   },
 
   downloadGameGCG: (result) => {

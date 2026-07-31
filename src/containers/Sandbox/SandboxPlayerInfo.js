@@ -1,12 +1,14 @@
 import React, { useContext, useState } from 'react';
 import Box from '@mui/material/Box';
 import { Button, ToggleButton, ToggleButtonGroup, Slider, Checkbox, Radio } from '@mui/material';
-import { Play, Stop, Download, CaretDown, CaretUp, Eye, X } from '@phosphor-icons/react';
+import { Play, Stop, Download, CaretDown, CaretUp, Eye, X, Brain } from '@phosphor-icons/react';
 import SandboxViewNav from './SandboxViewNav.js';
 import Rack from '../../components/AppContent/Board/Rack.js';
 import SandboxLatestMove from './SandboxLatestMove.js';
 import SandboxLeaveRules from './SandboxLeaveRules.js';
 import SandboxNumberField from './SandboxNumberField.js';
+import AnalysisPanel from '../../components/Analysis/AnalysisPanel';
+import { buildSelectedMoveFrame } from '../../functions/analysisBoardFunctions';
 import { useSandboxStore } from '../../stores/sandboxStore';
 import { useColorSchemeStore } from '../../stores/colorSchemeStore';
 import { ThemeContext } from '../../App';
@@ -97,6 +99,9 @@ const SandboxPlayerInfo = React.memo(() => {
   const seriesResults = useSandboxStore(state => state.seriesResults);
   const estimatedProgressPercent = useSandboxStore(state => state.estimatedProgressPercent);
   const viewingGameIndex = useSandboxStore(state => state.viewingGameIndex);
+  const analysis = useSandboxStore(state => state.analysis);
+  const analysisTopMoves = useSandboxStore(state => state.analysisTopMoves);
+  const isLoadingAnalysisTopMoves = useSandboxStore(state => state.isLoadingAnalysisTopMoves);
 
   const gameStarted = useSandboxStore(state => state.gameStarted);
   const currentPlayer = useSandboxStore(state => state.currentPlayer);
@@ -128,6 +133,15 @@ const SandboxPlayerInfo = React.memo(() => {
     downloadGameGCG,
     viewGame,
     exitViewGame,
+    setAnalysisState,
+    enterAnalysisMode,
+    exitAnalysisMode,
+    runAnalysisMovePreview,
+    runAnalysisHeatMap,
+    runAnalysisOpponentResponses,
+    clearAnalysisLaneSelection,
+    runAnalysisLaneIsolation,
+    fetchAnalysisTopMoves,
   } = useSandboxStore();
 
   // mutedTextColor matches Play's own "secondary" tier (not its faintest
@@ -727,11 +741,28 @@ const SandboxPlayerInfo = React.memo(() => {
             <Box sx={labelSx}>
               Viewing Game {currentViewedResult.gameIndex + 1}
             </Box>
-            <Box
-              onClick={exitViewGame}
-              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: mutedTextColor, '&:hover': { color: textColor } }}
-            >
-              <X size={14} weight="bold" />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* Analysis Mode - same shared AnalysisPanel/analysisEngine.js
+                  Play and Viewer use, pinned to whichever position/rack is
+                  currently displayed above. Only meaningful while viewing a
+                  specific turn (enterAnalysisMode itself also guards this),
+                  so it's scoped to this header rather than shown live. */}
+              <Box
+                onClick={() => (analysis.active ? exitAnalysisMode() : enterAnalysisMode())}
+                sx={{
+                  display: 'flex', alignItems: 'center', cursor: 'pointer',
+                  color: analysis.active ? accentColor : mutedTextColor,
+                  '&:hover': { color: analysis.active ? accentColor : textColor },
+                }}
+              >
+                <Brain size={16} weight={analysis.active ? 'fill' : 'regular'} />
+              </Box>
+              <Box
+                onClick={exitViewGame}
+                sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: mutedTextColor, '&:hover': { color: textColor } }}
+              >
+                <X size={14} weight="bold" />
+              </Box>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
@@ -761,8 +792,42 @@ const SandboxPlayerInfo = React.memo(() => {
         </Box>
       )}
 
-      {gameStarted && (
-        <Box sx={{ display: viewingGameIndex === null ? 'none' : 'block' }}>
+      {/* While viewing a turn: Analysis Mode replaces Move History entirely
+          (same swap Play/Viewer do between AnalysisPanel and their own
+          move-history/candidate-list UI) rather than the two stacking -
+          AnalysisPanel already renders its own candidate list internally,
+          "Ask Theo for candidates" included.
+
+          Deliberately NOT adding a second, lightweight candidates panel
+          outside Analysis Mode (the way Viewer/components/TopMoves.js
+          exists independently of Viewer's own AnalysisPanel usage) -
+          Sandbox is meant to stay a simple sims-and-download tool rather
+          than growing Play/Viewer's level of sophistication, and folding
+          "Ask Theo" into Analysis Mode alone covers it. Revisit if that
+          stops feeling like enough - Viewer's TopMoves.js is the direct
+          model to copy from if so. */}
+      {gameStarted && viewingGameIndex !== null && (
+        analysis.active ? (
+          <AnalysisPanel
+            analysisState={analysis}
+            onSelectMove={runAnalysisMovePreview}
+            onSetSelectedMove={(move) => setAnalysisState({
+              selectedMove: move, frames: [buildSelectedMoveFrame(move, boardCoords)], stepIndex: 0,
+              heatMap: null, error: null, laneSelection: [], laneResult: null
+            })}
+            onSetLayer={(layer) => setAnalysisState({ layer, frames: [], stepIndex: 0, heatMap: null, opponentResponses: null })}
+            onStep={(stepIndex) => setAnalysisState({ stepIndex })}
+            onRunHeatMap={runAnalysisHeatMap}
+            onRunOpponentResponses={runAnalysisOpponentResponses}
+            onClearLaneSelection={clearAnalysisLaneSelection}
+            onRunLaneIsolation={runAnalysisLaneIsolation}
+            onGetTopMoves={fetchAnalysisTopMoves}
+            topMoves={analysisTopMoves}
+            isLoadingTopMoves={isLoadingAnalysisTopMoves}
+            lightMode={lightMode}
+            boardCoords={boardCoords}
+          />
+        ) : (
           <SandboxLatestMove
             latestMove={latestMove}
             player1Name={player1Name}
@@ -775,7 +840,7 @@ const SandboxPlayerInfo = React.memo(() => {
             pool={pool}
             lightMode={lightMode}
           />
-        </Box>
+        )
       )}
 
       {/* Results */}

@@ -1,6 +1,7 @@
 import { origBoard, origPool } from '../components/AppContent/References/staticData';
 import { calculatePoolFromBoard } from './poolFunctions';
 import { markBlanksLowercase } from './play/boardApiUtils';
+import { alphabetizeRack } from './play/rackFunctions';
 
 // Removes each letter in `rack` (array of single-char strings, '?' for a
 // blank) from `pool` (a string) once - same replace-once semantics
@@ -44,7 +45,7 @@ export const buildSandboxViewState = (result, turnIndex) => {
   // player's own first move, i.e. their initial 7-tile deal.
   const rackFor = (playerName, fallback) => {
     const upcoming = moveHistory.slice(turnIndex + 1).find(t => t.player === playerName);
-    return upcoming ? upcoming.rack.split('') : fallback;
+    return alphabetizeRack(upcoming ? upcoming.rack.split('') : fallback);
   };
   const player1Rack = rackFor(player1Name, player1FinalRack);
   const player2Rack = rackFor(player2Name, player2FinalRack);
