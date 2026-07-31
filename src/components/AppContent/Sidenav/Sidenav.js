@@ -8,27 +8,24 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import Modal from '@mui/material/Modal';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../../../App';
-import { useColorSchemeStore } from '../../../stores/colorSchemeStore';
-import { useGameStore } from '../../../stores/gameStore';
 import { useConsoleLogStore } from '../../../stores/consoleLogStore';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthModal from '../../Auth/AuthModal';
+import LoggedOutVisualSettings from '../../Modals/LoggedOutVisualSettings';
 import { Link as RouterLink } from 'react-router-dom';
 
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Tooltip, Select, FormControl, Divider } from "@mui/material";
+import { Tooltip, Divider } from "@mui/material";
 
 import {
   House,
   Binoculars,
   Upload,
   Palette,
-  Star,
   Sun,
   Moon,
   Cube,
@@ -36,7 +33,6 @@ import {
   Flask,
   User,
   SignOut,
-  SpeakerHigh,
   GameController,
   Terminal,
   X,
@@ -98,31 +94,15 @@ export default function MiniDrawer() {
   const { lightMode, setLightMode } = React.useContext(ThemeContext);
   const { user, profile, signOut } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [showColorPicker, setShowColorPicker] = React.useState(false);
-  const [isColorSectionExpanded, setIsColorSectionExpanded] = React.useState(false);
-  const [showDecorations, setShowDecorations] = React.useState(false);
-  const [isDecorationSectionExpanded, setIsDecorationSectionExpanded] = React.useState(false);
-  const [isSoundSectionExpanded, setIsSoundSectionExpanded] = React.useState(false);
   const [isModesExpanded, setIsModesExpanded] = React.useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = React.useState(false);
   const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
   const [hoveredIcon, setHoveredIcon] = React.useState(null);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('signin');
+  const [showVisualSettings, setShowVisualSettings] = React.useState(false);
   const drawerRef = React.useRef(null);
   const location = useLocation();
-  const color = useColorSchemeStore(state => state.color);
-  const boardColor = useColorSchemeStore(state => state.boardColor);
-  const showWoodenCircle = useColorSchemeStore(state => state.showWoodenCircle);
-  const showApplePolygon = useColorSchemeStore(state => state.showApplePolygon);
-  const updateColor = useColorSchemeStore(state => state.updateColor);
-  const updateBoardColor = useColorSchemeStore(state => state.updateBoardColor);
-  const updateShowWoodenCircle = useColorSchemeStore(state => state.updateShowWoodenCircle);
-  const updateShowApplePolygon = useColorSchemeStore(state => state.updateShowApplePolygon);
-  const playerMoveSoundType = useGameStore(state => state.playerMoveSoundType);
-  const botMoveSoundType = useGameStore(state => state.botMoveSoundType);
-  const setPlayerMoveSoundType = useGameStore(state => state.setPlayerMoveSoundType);
-  const setBotMoveSoundType = useGameStore(state => state.setBotMoveSoundType);
   const toggleDevConsole = useConsoleLogStore(state => state.toggleOpen);
 
   const getBackgroundColor = () => {
@@ -168,7 +148,7 @@ export default function MiniDrawer() {
   };
 
   const drawerMixin = () => ({
-    width: (sidebarExpanded || isColorSectionExpanded || isDecorationSectionExpanded || isSoundSectionExpanded || isModesExpanded || isSettingsExpanded) ? '160px' : '52px',
+    width: (sidebarExpanded || isModesExpanded || isSettingsExpanded) ? '160px' : '52px',
     overflowX: 'hidden',
     background: getBackgroundColor(),
     borderRight: lightMode === 'dark' ? 'none' : '1px solid rgba(140, 130, 110, 0.35)',
@@ -217,32 +197,6 @@ export default function MiniDrawer() {
 
   const toggleLightMode = () => {
     setLightMode(lightMode === 'dark' ? 'light' : 'dark');
-  };
-
-  const toggleColorPicker = () => {
-    setIsColorSectionExpanded(!isColorSectionExpanded);
-    setShowColorPicker(!showColorPicker);
-    setSidebarExpanded(true);
-  };
-
-  const toggleDecorations = () => {
-    setIsDecorationSectionExpanded(!isDecorationSectionExpanded);
-    setShowDecorations(!showDecorations);
-    setSidebarExpanded(true);
-  };
-
-  const toggleSoundOptions = () => {
-    setIsSoundSectionExpanded(!isSoundSectionExpanded);
-    setSidebarExpanded(true);
-  };
-
-  const handleColorChange = (event) => {
-    updateColor(event.target.value);
-  };
-
-  const handleBoardColorChange = (event) => {
-    updateBoardColor(event.target.value);
-    document.documentElement.style.setProperty('--board-color', event.target.value);
   };
 
   const getCurrentPage = () => {
@@ -304,9 +258,6 @@ export default function MiniDrawer() {
         setSidebarExpanded(false);
         setIsModesExpanded(false);
         setIsSettingsExpanded(false);
-        setIsColorSectionExpanded(false);
-        setIsDecorationSectionExpanded(false);
-        setIsSoundSectionExpanded(false);
       }
     };
 
@@ -469,17 +420,9 @@ export default function MiniDrawer() {
           <Divider sx={{ borderColor: mobileMenuBorder, margin: '8px 0' }} />
 
           <Box sx={mobileMenuSectionLabelSx}>Settings</Box>
-          <MobileMenuAction onClick={() => { handleClose(); toggleColorPicker(); }} colors={mobileMenuColors}>
-            <Palette size={20} weight={isColorSectionExpanded ? 'fill' : 'regular'} />
-            <Box sx={{ flex: 1 }}>Colors</Box>
-          </MobileMenuAction>
-          <MobileMenuAction onClick={() => { handleClose(); toggleDecorations(); }} colors={mobileMenuColors}>
-            <Star size={20} weight={isDecorationSectionExpanded ? 'fill' : 'regular'} />
-            <Box sx={{ flex: 1 }}>Decorations</Box>
-          </MobileMenuAction>
-          <MobileMenuAction onClick={() => { handleClose(); toggleSoundOptions(); }} colors={mobileMenuColors}>
-            <SpeakerHigh size={20} weight={isSoundSectionExpanded ? 'fill' : 'regular'} />
-            <Box sx={{ flex: 1 }}>Sound</Box>
+          <MobileMenuAction onClick={() => { handleClose(); setShowVisualSettings(true); }} colors={mobileMenuColors}>
+            <Palette size={20} />
+            <Box sx={{ flex: 1 }}>Visual Settings</Box>
           </MobileMenuAction>
           <MobileMenuAction onClick={() => { handleClose(); toggleDevConsole(); }} colors={mobileMenuColors}>
             <Terminal size={20} />
@@ -719,293 +662,24 @@ export default function MiniDrawer() {
             </List>
           </Box>
         )}
-        {/* Color Picker Section - Slides out when expanded (kept only for legacy direct access) */}
-        {false && isColorSectionExpanded && (
-          <Box
-            sx={{
-              padding: sidebarExpanded ? '16px' : '12px',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              minHeight: '120px',
-              justifyContent: 'center',
-              marginLeft: sidebarExpanded ? '20px' : '0',
-              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
-            }}
-          >
-            <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Tile</Box>
-                <input
-                  type="color"
-                  value={color.current}
-                  onChange={handleColorChange}
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8 }}>Board</Box>
-                <input
-                  type="color"
-                  value={boardColor.current}
-                  onChange={handleBoardColorChange}
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-              </Box>
-            </Box>
-            <Box 
-              sx={{ 
-                color: '#fff', 
-                fontSize: '10px', 
-                textAlign: 'center',
-                opacity: 0.7,
-                cursor: 'pointer',
-                '&:hover': { opacity: 1 }
-              }}
-              onClick={() => {
-                setIsColorSectionExpanded(false);
-                setShowColorPicker(false);
-              }}
-            >
-              Click to close
-            </Box>
-          </Box>
-        )}
-        
-        {/* Decorations Section - Slides out when expanded (disabled; moved to Profile) */}
-        {false && isDecorationSectionExpanded && (
-          <Box
-            sx={{
-              padding: sidebarExpanded ? '16px' : '12px',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              minHeight: '120px',
-              justifyContent: 'center',
-              marginLeft: sidebarExpanded ? '20px' : '0',
-              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
-            }}
-          >
-            <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
-              Board Decoration
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  padding: '8px', 
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: showWoodenCircle.current ? 'rgba(139, 69, 19, 0.3)' : 'transparent',
-                  border: showWoodenCircle.current ? '1px solid rgba(139, 69, 19, 0.5)' : '1px solid transparent',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                }}
-                onClick={() => {
-                  updateShowWoodenCircle(true);
-                  updateShowApplePolygon(false);
-                }}
-              >
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(45deg, #8B4513, #A0522D, #CD853F)',
-                  border: '1px solid rgba(255,255,255,0.3)'
-                }} />
-                <Box sx={{ color: '#fff', fontSize: '11px' }}>Wooden Circle</Box>
-              </Box>
-              
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  padding: '8px', 
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: showApplePolygon.current ? 'rgba(139, 0, 0, 0.3)' : 'transparent',
-                  border: showApplePolygon.current ? '1px solid rgba(139, 0, 0, 0.5)' : '1px solid transparent',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                }}
-                onClick={() => {
-                  updateShowWoodenCircle(false);
-                  updateShowApplePolygon(true);
-                }}
-              >
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(45deg, #FF6B6B, #E53E3E, #C53030)',
-                  border: '1px solid rgba(255,255,255,0.3)'
-                }} />
-                <Box sx={{ color: '#fff', fontSize: '11px' }}>Polygon</Box>
-              </Box>
-              
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  padding: '8px', 
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: (!showWoodenCircle.current && !showApplePolygon.current) ? 'rgba(255,255,255,0.2)' : 'transparent',
-                  border: (!showWoodenCircle.current && !showApplePolygon.current) ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                }}
-                onClick={() => {
-                  updateShowWoodenCircle(false);
-                  updateShowApplePolygon(false);
-                }}
-              >
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.5)'
-                }} />
-                <Box sx={{ color: '#fff', fontSize: '11px' }}>None</Box>
-              </Box>
-            </Box>
-            <Box 
-              sx={{ 
-                color: '#fff', 
-                fontSize: '10px', 
-                textAlign: 'center',
-                opacity: 0.7,
-                cursor: 'pointer',
-                '&:hover': { opacity: 1 }
-              }}
-              onClick={() => {
-                setIsDecorationSectionExpanded(false);
-                setShowDecorations(false);
-              }}
-            >
-              Click to close
-            </Box>
-          </Box>
-        )}
-        
-        {/* Sound Options Section - Slides out when expanded (disabled; moved to Profile) */}
-        {false && isSoundSectionExpanded && (
-          <Box
-            sx={{
-              padding: sidebarExpanded ? '16px' : '12px',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              minHeight: '120px',
-              justifyContent: 'center',
-              marginLeft: sidebarExpanded ? '20px' : '0',
-              borderLeft: sidebarExpanded ? '2px solid rgba(255,255,255,0.1)' : 'none'
-            }}
-          >
-            <Box sx={{ color: '#fff', fontSize: '12px', textAlign: 'center', opacity: 0.8, marginBottom: '8px' }}>
-              Sound Options
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <FormControl fullWidth size="small">
-                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>Player Move Sound</Box>
-                <Select
-                  value={playerMoveSoundType}
-                  onChange={(e) => setPlayerMoveSoundType(e.target.value)}
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(255,255,255,0.3)'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(255,255,255,0.5)'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10B981'
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: '#fff'
-                    }
-                  }}
-                >
-                  <MenuItem value="classic" sx={{ fontSize: '12px', color: '#1F2937' }}>Classic</MenuItem>
-                  <MenuItem value="sword" sx={{ fontSize: '12px', color: '#1F2937' }}>Sword</MenuItem>
-                  <MenuItem value="puzzle" sx={{ fontSize: '12px', color: '#1F2937' }}>Puzzle</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth size="small">
-                <Box sx={{ color: '#fff', fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>Bot Move Sound</Box>
-                <Select
-                  value={botMoveSoundType}
-                  onChange={(e) => setBotMoveSoundType(e.target.value)}
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(255,255,255,0.3)'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(255,255,255,0.5)'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#10B981'
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: '#fff'
-                    }
-                  }}
-                >
-                  <MenuItem value="classic" sx={{ fontSize: '12px', color: '#1F2937' }}>Classic</MenuItem>
-                  <MenuItem value="sword" sx={{ fontSize: '12px', color: '#1F2937' }}>Sword</MenuItem>
-                  <MenuItem value="puzzle" sx={{ fontSize: '12px', color: '#1F2937' }}>Puzzle</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box 
-              sx={{ 
-                color: '#fff', 
-                fontSize: '10px', 
-                textAlign: 'center',
-                opacity: 0.7,
-                cursor: 'pointer',
-                '&:hover': { opacity: 1 }
-              }}
-              onClick={() => {
-                setIsSoundSectionExpanded(false);
-              }}
-            >
-              Click to close
-            </Box>
-          </Box>
-        )}
-        
+        {/* Visual Settings - board color, tile color, decorations, sound */}
+        <List className={styles.btnContainer}>
+          <ListItem className={styles.listItem} onClick={() => setShowVisualSettings(true)} sx={{ ...listItemStyle, cursor: 'pointer' }}>
+            <ListItemIcon sx={iconStyle}>
+              <Tooltip title="Visual Settings" placement="right">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '12px' : '0', width: '100%', justifyContent: sidebarExpanded ? 'flex-start' : 'center', paddingLeft: sidebarExpanded ? '12px' : '0' }}>
+                  <Palette style={{ color: getTextColor(), fontSize: '20px' }} />
+                  {sidebarExpanded && (
+                    <Box sx={{ color: getTextColor(), fontSize: '14px' }}>
+                      Visual Settings
+                    </Box>
+                  )}
+                </Box>
+              </Tooltip>
+            </ListItemIcon>
+          </ListItem>
+        </List>
+
         {/* Dev Console toggle - At bottom */}
         <List className={styles.btnContainer}>
           <ListItem className={styles.listItem} onClick={toggleDevConsole} sx={{ ...listItemStyle, cursor: 'pointer' }}>
@@ -1081,232 +755,18 @@ export default function MiniDrawer() {
         )}
         
       </Drawer>
-      
-      {/* Mobile Color Picker Modal */}
-      <Modal
-        open={showColorPicker && window.innerWidth <= 992}
-        onClose={() => {
-          setShowColorPicker(false);
-          setIsColorSectionExpanded(false);
-        }}
-        aria-labelledby="mobile-color-picker-modal"
-        aria-describedby="mobile-color-picker-description"
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: '#1F2937',
-            padding: '24px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-            minWidth: '280px',
-            maxWidth: '90vw'
-          }}
-        >
-          <Box sx={{ 
-            color: '#fff', 
-            fontSize: '18px', 
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: '8px'
-          }}>
-            Color Scheme
-          </Box>
-          
-          <Box sx={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <Box sx={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>Tile Color</Box>
-              <input
-                type="color"
-                value={color.current}
-                onChange={handleColorChange}
-                style={{
-                  width: '60px',
-                  height: '60px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  backgroundColor: 'transparent'
-                }}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <Box sx={{ color: '#fff', fontSize: '14px', opacity: 0.9 }}>Board Color</Box>
-              <input
-                type="color"
-                value={boardColor.current}
-                onChange={handleBoardColorChange}
-                style={{
-                  width: '60px',
-                  height: '60px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  backgroundColor: 'transparent'
-                }}
-              />
-            </Box>
-          </Box>
-          
-          <Box 
-            sx={{ 
-              color: '#fff', 
-              fontSize: '14px', 
-              textAlign: 'center',
-              opacity: 0.8,
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '4px',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              '&:hover': { 
-                opacity: 1,
-                backgroundColor: 'rgba(255,255,255,0.15)'
-              }
-            }}
-            onClick={() => {
-              setShowColorPicker(false);
-              setIsColorSectionExpanded(false);
-            }}
-          >
-            Close
-          </Box>
-        </Box>
-      </Modal>
-      
-      {/* Mobile Decorations Modal */}
-      <Modal
-        open={showDecorations && window.innerWidth <= 992}
-        onClose={() => {
-          setShowDecorations(false);
-          setIsDecorationSectionExpanded(false);
-        }}
-        aria-labelledby="mobile-decorations-modal"
-        aria-describedby="mobile-decorations-description"
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: '#1F2937',
-            padding: '24px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            minWidth: '280px'
-          }}
-        >
-          <Box sx={{ color: '#fff', fontSize: '16px', textAlign: 'center', fontWeight: 'bold' }}>
-            Board Decoration
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '12px', 
-                borderRadius: '8px',
-                cursor: 'pointer',
-                backgroundColor: showWoodenCircle.current ? 'rgba(139, 69, 19, 0.3)' : 'transparent',
-                border: showWoodenCircle.current ? '1px solid rgba(139, 69, 19, 0.5)' : '1px solid transparent',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-              }}
-              onClick={() => {
-                updateShowWoodenCircle(true);
-                updateShowApplePolygon(false);
-                setShowDecorations(false);
-                setIsDecorationSectionExpanded(false);
-              }}
-            >
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                background: 'linear-gradient(45deg, #8B4513, #A0522D, #CD853F)',
-                border: '1px solid rgba(255,255,255,0.3)'
-              }} />
-              <Box sx={{ color: '#fff', fontSize: '14px' }}>Wood</Box>
-            </Box>
-            
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '12px', 
-                borderRadius: '8px',
-                cursor: 'pointer',
-                backgroundColor: showApplePolygon.current ? 'rgba(139, 0, 0, 0.3)' : 'transparent',
-                border: showApplePolygon.current ? '1px solid rgba(139, 0, 0, 0.5)' : '1px solid transparent',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-              }}
-              onClick={() => {
-                updateShowWoodenCircle(false);
-                updateShowApplePolygon(true);
-                setShowDecorations(false);
-                setIsDecorationSectionExpanded(false);
-              }}
-            >
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                background: 'linear-gradient(45deg, #FF6B6B, #E53E3E, #C53030)',
-                border: '1px solid rgba(255,255,255,0.3)'
-              }} />
-              <Box sx={{ color: '#fff', fontSize: '14px' }}>Red Circle</Box>
-            </Box>
-            
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '12px', 
-                borderRadius: '8px',
-                cursor: 'pointer',
-                backgroundColor: (!showWoodenCircle.current && !showApplePolygon.current) ? 'rgba(255,255,255,0.2)' : 'transparent',
-                border: (!showWoodenCircle.current && !showApplePolygon.current) ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-              }}
-              onClick={() => {
-                updateShowWoodenCircle(false);
-                updateShowApplePolygon(false);
-                setShowDecorations(false);
-                setIsDecorationSectionExpanded(false);
-              }}
-            >
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.5)'
-              }} />
-              <Box sx={{ color: '#fff', fontSize: '14px' }}>None</Box>
-            </Box>
-          </Box>
-        </Box>
-      </Modal>
 
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+      <LoggedOutVisualSettings
+        open={showVisualSettings}
+        onClose={() => setShowVisualSettings(false)}
+      />
+
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
       />
-      
+
     </Box>
   );
 }

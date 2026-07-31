@@ -11,8 +11,6 @@ import Sidenav from '../../components/AppContent/Sidenav/Sidenav.js';
 import Board from "../../components/AppContent/Board/Board.js";
 import Rack from "../../components/AppContent/Board/Rack.js";
 import PlayPool from "../../components/AppContent/Board/PlayPool.js";
-import GameModal from '../../components/Modals/GameModal';
-import DefenseModal from '../../components/Modals/DefenseModal';
 import MoveCoach from './components/MoveCoach';
 import PlayerInfo from './components/PlayerInfo';
 import Confetti from '../../components/Confetti/Confetti';
@@ -142,7 +140,6 @@ export default function Play({ isMultiplayer = false }) {
     handleConfettiComplete,
 
     // UI handler functions
-    handleSettingsOpen,
     handleWordSubmitClick,
     handlePassClick,
     handleExchangeClick,
@@ -166,16 +163,6 @@ export default function Play({ isMultiplayer = false }) {
     makeBotMove,
     selectedBot,
     setSelectedBot,
-
-    // Defense modal
-    showDefenseModal,
-    defenseMove,
-    defenseResults,
-    isDefenseLoading,
-    updateDefenseResults,
-    setShowDefenseModal,
-    setDefenseMove,
-
 
     // Analysis Mode (board-based)
     analysis,
@@ -1092,7 +1079,6 @@ export default function Play({ isMultiplayer = false }) {
             gameStarted={gameStarted}
             isDictionaryLoading={isDictionaryLoading}
             isLoadingTopMoves={isLoadingTopMoves}
-            onSettingsOpen={handleSettingsOpen}
             onBotModeToggle={isMultiplayerMode ? null : handleBotModeToggleWithSounds}
             onGetTopMoves={handleGetTopMovesForExpandable}
             onWordSubmit={handleWordSubmitWithMultiplayer}
@@ -1355,8 +1341,6 @@ export default function Play({ isMultiplayer = false }) {
           label="Type your move"
         />
 
-        <GameModal />
-
         {/* Exchange Modal - same look as 3D Play */}
         <Modal
           open={showExchangeModal}
@@ -1464,19 +1448,6 @@ export default function Play({ isMultiplayer = false }) {
             </Box>
           </Box>
         </Modal>
-
-              <DefenseModal
-          open={showDefenseModal}
-          onClose={() => {
-            setShowDefenseModal(false);
-          }}
-          move={defenseMove}
-          boardCoords={boardCoords}
-          pool={pool}
-          defenseResults={defenseResults}
-          isLoading={isDefenseLoading}
-          onUpdateResults={updateDefenseResults}
-        />
 
         <MoveCoach
           open={showMoveCoach}

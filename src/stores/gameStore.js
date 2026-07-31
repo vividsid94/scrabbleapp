@@ -116,12 +116,6 @@ export const useGameStore = create((set, get) => {
     // shown in the UI so you can see exactly what it's "thinking"
     topeThinking: null,
 
-    // Defense modal state
-    showDefenseModal: false,
-    defenseMove: null,
-    defenseResults: null,
-    isDefenseLoading: false,
-    
     // Tess opponent simulation state
     tessOpponentSims: {},
     tessIsRunningSims: false,
@@ -326,12 +320,6 @@ export const useGameStore = create((set, get) => {
       gameStarted: true,
       gameEnded: false
     }),
-    
-    // Actions - Defense Modal
-    setShowDefenseModal: (show) => set({ showDefenseModal: show }),
-    setDefenseMove: (move) => set({ defenseMove: move }),
-    setDefenseResults: (results) => set({ defenseResults: results }),
-    setIsDefenseLoading: (loading) => set({ isDefenseLoading: loading }),
     
     // Move Coach actions
     setShowMoveCoach: (show) => set({ showMoveCoach: show }),
@@ -916,13 +904,6 @@ export const useGameStore = create((set, get) => {
       // Don't hide the victory card - let it stay open until user clicks rematch
     },
 
-    // UI handler functions
-    handleSettingsOpen: () => {
-      const { setModalContent, setOpen } = get();
-      setModalContent("settings");
-      setOpen(true);
-    },
-
 
 
     handleClose: () => {
@@ -1283,91 +1264,6 @@ export const useGameStore = create((set, get) => {
       // eslint-disable-next-line global-require
       const { makeBotMove: makeBotMoveFunction } = require('../functions/play/botFunctions');
       return makeBotMoveFunction(botMoveSound);
-    },
-
-    // Defense analysis
-    analyzeDefense: async (move) => {
-      const { 
-        boardCoords, 
-        pool, 
-        setDefenseMove, 
-        setShowDefenseModal, 
-        setIsDefenseLoading, 
-        setDefenseResults 
-      } = get();
-      
-      // Set the move and show modal
-      setDefenseMove(move);
-      setShowDefenseModal(true);
-      setIsDefenseLoading(true);
-      setDefenseResults(null);
-      
-      try {
-        // Create a clean 15x15 board with only strings
-        const cleanBoard = Array(15).fill().map(() => Array(15).fill(''));
-        
-        // Copy existing board state (only string values)
-        for (let row = 0; row < 15; row++) {
-          for (let col = 0; col < 15; col++) {
-            if (boardCoords[row] && boardCoords[row][col] && typeof boardCoords[row][col] === 'string') {
-              cleanBoard[row][col] = boardCoords[row][col];
-            }
-          }
-        }
-        
-        // Apply the move to the clean board
-        move.tiles.forEach(tile => {
-          if (tile.isNew) {
-            cleanBoard[tile.row][tile.col] = tile.letter;
-          }
-        });
-        
-        // Convert pool array to string
-        const tilePoolString = pool.join('');
-        
-        // Create the request body
-        const requestBody = {
-          board: cleanBoard,
-          tilePool: tilePoolString,
-          iterations: 5
-        };
-        
-        // Log the parameters being sent to the API
-        console.log('🛡️ Bulk API Parameters:', {
-          board: cleanBoard,
-          tilePool: tilePoolString,
-          iterations: 5
-        });
-        
-        // Call bulk move generation endpoint
-        const response = await fetch('https://scrabble-move-generator-production.up.railway.app/bulk-move-gen', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const results = await response.json();
-        setDefenseResults(results);
-      } catch (error) {
-        console.error('Error analyzing defense:', error);
-        setDefenseResults({
-          error: 'Failed to analyze defense',
-          message: error.message
-        });
-      } finally {
-        setIsDefenseLoading(false);
-      }
-    },
-
-    // Listen for updated defense results from modal
-    updateDefenseResults: (results) => {
-      set({ defenseResults: results });
     },
 
     // Tess opponent simulation function

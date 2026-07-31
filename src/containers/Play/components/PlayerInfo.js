@@ -305,8 +305,6 @@ export default function PlayerInfo({
   gameStarted,
   isDictionaryLoading,
   isLoadingTopMoves,
-  onSettingsOpen,
-  onColorSchemeOpen,
   onBotModeToggle,
   onGetTopMoves,
   onWordSubmit,
