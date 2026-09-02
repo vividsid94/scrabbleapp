@@ -29,23 +29,22 @@ export default function SiteClosed() {
         sx={{
           fontWeight: 700,
           color: isDark ? '#F9FAFB' : '#1F2937',
-          mb: 2,
-          maxWidth: 520,
+          mb: 1.5,
+          maxWidth: 420,
         }}
       >
-        This chapter has ended
+        Reboot coming soon
       </Typography>
       <Typography
         variant="body1"
         sx={{
           color: isDark ? 'rgba(209, 213, 219, 0.9)' : '#6B7280',
-          maxWidth: 480,
-          lineHeight: 1.7,
-          fontSize: { xs: 16, sm: 18 },
+          maxWidth: 360,
+          lineHeight: 1.6,
+          fontSize: { xs: 16, sm: 17 },
         }}
       >
-        Thanks for every game, puzzle, and late-night bingo chase.
-        Tile Turnover is no longer running here — but the tiles never stop turning.
+        Thanks for playing.
       </Typography>
     </Box>
   );
