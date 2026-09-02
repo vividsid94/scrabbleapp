@@ -20,7 +20,11 @@
       "Bash(grep -n \"Scrabble3DPlay.js$\" /tmp/build18.txt)",
       "Bash(timeout 60 bash -c 'until curl -sf http://localhost:3000 >/dev/null 2>&1; do sleep 2; done')",
       "Bash(tail -50 /tmp/cra-dev.log)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:BXujqvUBaXJAxUFNHVFJYSfQzTkJdDiq@altaria.proxy.rlwy.net:36209/railway\" PORT=4003 node index.js)",
+      "Bash(curl -s \"http://localhost:4003/players/rankings?limit=5\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>console.log\\(JSON.stringify\\(JSON.parse\\(d\\),null,2\\)\\)\\)\")",
+      "Bash(curl -s \"http://localhost:4003/players/search?q=edley\")"
     ]
   }
 }

@@ -32,5 +32,7 @@ yarn-error.log*
 # netlify_functions/topeRetrievalIndex.json (the trimmed runtime index) is
 # actually deployed; everything here is offline data-prep tooling output.
 scripts/bot-training/raw-games/
+scripts/bot-training/randomracer-cache/
 scripts/bot-training/*.jsonl
+scripts/bot-training/*.txt
 scripts/bot-training/retrieval/*.jsonl

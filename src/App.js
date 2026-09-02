@@ -1,56 +1,50 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  BrowserRouter as Router, Route, Routes, useLocation, Navigate
+  BrowserRouter as Router, Route, Routes
 } from "react-router-dom";
 import "./App.css";
-import Viewer from "./containers/Viewer/Viewer";
+// import Viewer from "./containers/Viewer/Viewer";
 import Home from "./containers/Home/Home";
-import Memory from "./containers/Memory/Memory";
-import Footer from "./components/AppContent/Footer/Footer";
+// import Memory from "./containers/Memory/Memory";
+// import Footer from "./components/AppContent/Footer/Footer";
 import DevConsoleOverlay from "./components/DevConsole/DevConsoleOverlay";
-import WordTable from "./containers/Words/Words";
-import Series from "./containers/Series/Series";
-import Play from "./containers/Play/Play";
-import Changelog from "./containers/Changelog/Changelog";
-import Boggle from "./containers/Boggle/Boggle";
-import Puzzle from "./containers/Puzzle/Puzzle";
-import Sandbox from "./containers/Sandbox/Sandbox";
-import Scrabble3D from "./containers/Scrabble3D/Scrabble3D";
-import Scrabble3DPlay from "./containers/Scrabble3D/Scrabble3DPlay";
-import WidgetPage from "./containers/Widget/WidgetPage";
-import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
-import SubmitGame from "./containers/SubmitGame/SubmitGame";
-import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
-import About from "./containers/About/About";
-import TestTheoShake from "./containers/Home/TestTheoShake";
-import TestMindBlow from "./containers/Home/TestMindBlow";
-import Jigsaw from "./containers/Home/Jigsaw";
-import Minigames from "./containers/Minigames/Minigames";
-import Snakes from "./containers/Snakes/Snakes";
-import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
-import Tournament from "./containers/Tournament/Tournament";
-import Tournaments from "./containers/Tournaments/Tournaments";
-import Profile from "./containers/Profile/Profile";
-import CameraScan from "./containers/CameraScan/CameraScan";
-import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
-import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
-import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
-import EscapeRoomDemo from "./containers/EscapeRoom3D/EscapeRoomDemo";
+// import WordTable from "./containers/Words/Words";
+// import Series from "./containers/Series/Series";
+// import Play from "./containers/Play/Play";
+// import Changelog from "./containers/Changelog/Changelog";
+// import Boggle from "./containers/Boggle/Boggle";
+// import Puzzle from "./containers/Puzzle/Puzzle";
+// import Sandbox from "./containers/Sandbox/Sandbox";
+// import Scrabble3D from "./containers/Scrabble3D/Scrabble3D";
+// import Scrabble3DPlay from "./containers/Scrabble3D/Scrabble3DPlay";
+// import WidgetPage from "./containers/Widget/WidgetPage";
+// import WidgetLanding from "./containers/WidgetLanding/WidgetLanding";
+// import SubmitGame from "./containers/SubmitGame/SubmitGame";
+// import AdminSubmissions from "./containers/AdminSubmissions/AdminSubmissions";
+// import About from "./containers/About/About";
+// import TestTheoShake from "./containers/Home/TestTheoShake";
+// import TestMindBlow from "./containers/Home/TestMindBlow";
+// import Jigsaw from "./containers/Home/Jigsaw";
+// import Minigames from "./containers/Minigames/Minigames";
+// import Snakes from "./containers/Snakes/Snakes";
+// import PlayerProfile from "./containers/PlayerProfile/PlayerProfile";
+// import Tournament from "./containers/Tournament/Tournament";
+// import Tournaments from "./containers/Tournaments/Tournaments";
+// import Profile from "./containers/Profile/Profile";
+// import CameraScan from "./containers/CameraScan/CameraScan";
+// import MultiplayerLobby from "./containers/Multiplayer/MultiplayerLobby";
+// import MultiplayerGame from "./containers/Multiplayer/MultiplayerGame";
+// import EscapeRoom from "./containers/EscapeRoom/EscapeRoom";
+// import EscapeRoomDemo from "./containers/EscapeRoom3D/EscapeRoomDemo";
 import { useColorSchemeStore, getDefaultTileColor, LEGACY_TILE_DEFAULTS } from "./stores/colorSchemeStore";
 import { useGameStore } from "./stores/gameStore";
 import { AuthProvider } from "./contexts/AuthContext";
-import Topbar from "./components/AppContent/Topbar/Topbar";
+// import Topbar from "./components/AppContent/Topbar/Topbar";
 import { supabase } from "./utils/supabase";
 
 export const ThemeContext = React.createContext();
 
-// Component to conditionally render footer
-const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
-  const location = useLocation();
-  const isWidgetRoute = location.pathname === '/widget' || location.pathname === '/widget-landing';
-  const is3DViewerRoute = location.pathname === '/3dviewer' || location.pathname === '/3dplay' || location.pathname === '/escape-room-3d';
-  // const { user } = useAuth(); // not currently needed here
-
+const AppContent = ({ lightMode }) => {
   const getHeaderBackground = () => {
     if (lightMode === 'dark') {
       return `
@@ -77,61 +71,21 @@ const AppContent = ({ appState, setAppState, lightMode, setLightMode }) => {
 
   return (
     <div className="App">
-      {!is3DViewerRoute && <Topbar />}
-      {!is3DViewerRoute ? (
-        <header className="App-header" style={{
-          background: getHeaderBackground(),
-          color: lightMode === 'dark' ? '#fff' : '#1F2937',
-          marginTop: '20px'
-        }}>
-          <Routes>
-            <Route path="/minigames" element={<Minigames/>} />
-            <Route path="/viewer" element={<Viewer onChange={setAppState}/>} />
-            <Route path="/" element={<Home/>} />
-            <Route path="/memory" element={<Memory/>} />
-            <Route path="/words" element={<WordTable/>}/>
-            <Route path="/series" element={<Series/>}/>
-            <Route path="/playground" element={<Play/>}/>
-            <Route path="/play" element={<Play/>}/>
-            <Route path="/changelog" element={<Changelog/>}/>
-            <Route path="/boggle" element={<Boggle/>}/>
-            <Route path="/puzzle" element={<Puzzle/>}/>
-            <Route path="/sandbox" element={<Sandbox/>}/>
-            <Route path="/widget" element={<WidgetPage/>}/>
-            <Route path="/widget-landing" element={<WidgetLanding/>}/>
-            <Route path="/submit-game" element={<SubmitGame/>}/>
-            <Route path="/admin-submissions" element={<AdminSubmissions/>}/>
-            <Route path="/about" element={<About/>} />
-            <Route path="/test-theo-shake" element={<TestTheoShake/>} />
-            <Route path="/test-mind-blow" element={<TestMindBlow />} />
-            <Route path="/jigsaw" element={<Jigsaw />} />
-            <Route path="/test-jigsaw" element={<Jigsaw />} />
-            <Route path="/player/:playerId" element={<PlayerProfile />} />
-            <Route path="/tournament/:tournamentId" element={<Tournament />} />
-            <Route path="/tournaments" element={<Tournaments />} />
-            <Route path="/players" element={<Navigate to="/tournaments?view=players" replace />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/camera-scan" element={<CameraScan />} />
-            <Route path="/multiplayer" element={<MultiplayerLobby />} />
-            <Route path="/multiplayer/:gameCode" element={<MultiplayerGame />} />
-            <Route path="/escape-room" element={<EscapeRoom />} />
-            <Route path="/snakes" element={<Snakes />} />
-          </Routes>
-        </header>
-      ) : (
+      <header className="App-header" style={{
+        background: getHeaderBackground(),
+        color: lightMode === 'dark' ? '#fff' : '#1F2937',
+        marginTop: '20px'
+      }}>
         <Routes>
-          <Route path="/3dviewer" element={<Scrabble3D/>}/>
-          <Route path="/3dplay" element={<Scrabble3DPlay/>}/>
-          <Route path="/escape-room-3d" element={<EscapeRoomDemo/>}/>
+          {/* All routes disabled — catch-all shows shutdown page */}
+          <Route path="*" element={<Home/>} />
         </Routes>
-      )}
-      {!isWidgetRoute && <Footer></Footer>}
+      </header>
     </div>
   );
 };
 
 function App() {
-  const [appState, setAppState] = useState('VIEWER');
   const [lightMode, setLightMode] = useState(() => {
     if (typeof window === 'undefined') return 'light';
     const stored = window.localStorage.getItem('lightMode');
@@ -281,10 +235,7 @@ function App() {
       <AuthProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppContent
-            appState={appState}
-            setAppState={setAppState}
             lightMode={lightMode}
-            setLightMode={setLightMode}
           />
         </Router>
         <DevConsoleOverlay />
